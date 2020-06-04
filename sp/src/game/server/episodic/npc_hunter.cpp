@@ -628,12 +628,12 @@ void CHunterFlechette::StickTo( CBaseEntity *pOther, trace_t &tr )
 	// Get ready to explode.
 	if ( !bAttachedToBuster )
 	{
-		SetThink( &CHunterFlechette::DangerSoundThink );
-		SetNextThink( gpGlobals->curtime + (hunter_flechette_explode_delay.GetFloat() - HUNTER_FLECHETTE_WARN_TIME) );
+		SetThink( &CHunterFlechette::ExplodeThink );
+		SetNextThink( gpGlobals->curtime );
 	}
 	else
 	{
-		DangerSoundThink();
+		SetThink(&CHunterFlechette::ExplodeThink);
 	}
 
 	// Play our impact animation.

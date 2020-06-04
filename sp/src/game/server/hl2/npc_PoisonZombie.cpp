@@ -23,6 +23,7 @@
 #include "activitylist.h"
 #include "engine/IEngineSound.h"
 #include "npc_BaseZombie.h"
+#include "hlr/hlr_projectile.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -32,20 +33,20 @@
 //
 // Controls how soon he throws the first headcrab after seeing his enemy (also when the first headcrab leaps off)
 //
-#define ZOMBIE_THROW_FIRST_MIN_DELAY	1	// min seconds before first crab throw
-#define ZOMBIE_THROW_FIRST_MAX_DELAY	2	// max seconds before first crab throw
+#define ZOMBIE_THROW_FIRST_MIN_DELAY	0	// min seconds before first crab throw
+#define ZOMBIE_THROW_FIRST_MAX_DELAY	1	// max seconds before first crab throw
 
 //
 // Controls how often he throws headcrabs (also how often headcrabs leap off)
 //
-#define ZOMBIE_THROW_MIN_DELAY	4			// min seconds between crab throws
-#define ZOMBIE_THROW_MAX_DELAY	10			// max seconds between crab throws
+#define ZOMBIE_THROW_MIN_DELAY	0			// min seconds between crab throws
+#define ZOMBIE_THROW_MAX_DELAY	1			// max seconds between crab throws
 
 //
 // Ranges for throwing headcrabs.
 //
 #define ZOMBIE_THROW_RANGE_MIN	250
-#define ZOMBIE_THROW_RANGE_MAX	800
+#define ZOMBIE_THROW_RANGE_MAX	4500
 #define ZOMBIE_THROW_CONE		0.6
 
 //
@@ -104,7 +105,7 @@ enum
 // The maximum number of headcrabs we can have riding on our back.
 // NOTE: If you change this value you must also change the lookup table in Spawn!
 //-----------------------------------------------------------------------------
-#define MAX_CRABS	3	
+#define MAX_CRABS	20	
 
 int AE_ZOMBIE_POISON_THROW_WARN_SOUND;
 int AE_ZOMBIE_POISON_PICKUP_CRAB;
@@ -212,7 +213,7 @@ private:
 	void BreatheOffShort( void );
 
 	void EnableCrab( int nCrab, bool bEnable );
-	int RandomThrowCrab( void );
+	//int RandomThrowCrab( void );
 	void EvacuateNest( bool bExplosion, float flDamage, CBaseEntity *pAttacker );
 
 	CSoundPatch *m_pFastBreathSound;
@@ -314,7 +315,7 @@ void CNPC_PoisonZombie::Spawn( void )
 	{
 		nCrabs = MAX_CRABS;
 	}
-	m_nCrabCount = 0;
+	m_nCrabCount = MAX_CRABS;
 
 	//
 	// Generate a random set of crabs based on the crab count
@@ -436,11 +437,11 @@ void CNPC_PoisonZombie::Event_Killed( const CTakeDamageInfo &info )
 		EmitSound( "NPC_PoisonZombie.Die" );
 	}
 
-	if ( !m_fIsTorso )
+	/*if ( !m_fIsTorso )
 	{
 		EvacuateNest(info.GetDamageType() == DMG_BLAST, info.GetDamage(), info.GetAttacker() );
 	}
-
+	*/
 	BaseClass::Event_Killed( info );
 }
 
@@ -509,7 +510,7 @@ void CNPC_PoisonZombie::SetZombieModel( void )
 		SetHullType(HULL_HUMAN);
 	}
 
-	SetBodygroup( ZOMBIE_BODYGROUP_HEADCRAB, !m_fIsHeadless );
+	SetBodygroup( ZOMBIE_BODYGROUP_HEADCRAB, m_fIsHeadless );
 
 	SetHullSizeNormal( true );
 	SetDefaultEyeOffset();
@@ -562,7 +563,7 @@ int CNPC_PoisonZombie::RangeAttack1Conditions( float flDot, float flDist )
 		return COND_NOT_FACING_ATTACK;
 	}
 
-	m_nThrowCrab = RandomThrowCrab();
+	//m_nThrowCrab = RandomThrowCrab();
 
 	//DevMsg("*** Range1: Can range attack\n");
 	return COND_CAN_RANGE_ATTACK1;
@@ -604,7 +605,7 @@ int CNPC_PoisonZombie::RangeAttack2Conditions( float flDot, float flDist )
 		return COND_NOT_FACING_ATTACK;
 	}
 
-	m_nThrowCrab = RandomThrowCrab();
+	//m_nThrowCrab = RandomThrowCrab();
 
 	//DevMsg("*** Range2: Can range attack\n");
 	return COND_CAN_RANGE_ATTACK2;
@@ -673,9 +674,22 @@ void CNPC_PoisonZombie::HandleAnimEvent( animevent_t *pEvent )
 	if ( pEvent->event == AE_ZOMBIE_POISON_THROW_CRAB )
 	{
 		SetBodygroup( ZOMBIE_BODYGROUP_THROW, 0 );
+		CBaseEntity *pEnemy = GetEnemy();
+		if (pEnemy)
+		{
+			Vector vecSrc = GetAbsOrigin() + GetViewOffset();
+			Vector vecEnemyEyePos = pEnemy->EyePosition();
+			Vector vecAim = GetShootEnemyDir(vecSrc, false);
+			Vector vecVelocity = vecAim * 2500.0f;
+			CHLRFireball *pFire = (CHLRFireball*)CreateEntityByName("hlr_fireball");
+			pFire->SetOwnerEntity(this);
+			pFire->SetAbsOrigin(vecSrc);
+			pFire->Spawn();
+			pFire->SetMoveType(MOVETYPE_FLY);
+			pFire->SetAbsVelocity(vecVelocity);
+		}
 
-		CBlackHeadcrab *pCrab = (CBlackHeadcrab *)CreateNoSpawn( GetHeadcrabClassname(), EyePosition(), vec3_angle, this );
-		pCrab->AddSpawnFlags( SF_NPC_FALL_TO_GROUND );
+		/*pCrab->AddSpawnFlags( SF_NPC_FALL_TO_GROUND );
 		
 		// Fade if our parent is supposed to
 		if ( HasSpawnFlags( SF_NPC_FADE_CORPSE ) )
@@ -700,18 +714,13 @@ void CNPC_PoisonZombie::HandleAnimEvent( animevent_t *pEvent )
 			pCrab->Ignite( 100.0 );
 		}
 
-		CBaseEntity *pEnemy = GetEnemy();
-		if ( pEnemy )
-		{
-			Vector vecEnemyEyePos = pEnemy->EyePosition();
-			pCrab->ThrowAt( vecEnemyEyePos );
-		}
+
 
 		if (m_nCrabCount == 0)
 		{
 			CapabilitiesRemove( bits_CAP_INNATE_RANGE_ATTACK1 | bits_CAP_INNATE_RANGE_ATTACK2 );
 		}
-
+		*/
 		m_flNextCrabThrowTime = gpGlobals->curtime + random->RandomInt( ZOMBIE_THROW_MIN_DELAY, ZOMBIE_THROW_MAX_DELAY );
 		return;
 	}
@@ -733,10 +742,10 @@ void CNPC_PoisonZombie::HandleAnimEvent( animevent_t *pEvent )
 //-----------------------------------------------------------------------------
 // Purpose: Returns the index of a randomly chosen crab to throw.
 //-----------------------------------------------------------------------------
-int CNPC_PoisonZombie::RandomThrowCrab( void )
+/*int CNPC_PoisonZombie::RandomThrowCrab( void )
 {
 	// FIXME: this could take a long time, theoretically
-	int nCrab = -1;
+	int nCrab = 0;
 	do
 	{
 		int nTest = random->RandomInt( 0, 2 );
@@ -746,8 +755,8 @@ int CNPC_PoisonZombie::RandomThrowCrab( void )
 		}
 	} while ( nCrab == -1 );
 	
-	return nCrab;
-}
+	return nCrab;*/
+//}
 
 
 //-----------------------------------------------------------------------------

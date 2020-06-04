@@ -16,6 +16,7 @@
 #include "ai_behavior_standoff.h"
 #include "ai_behavior_assault.h"
 #include "npc_playercompanion.h"
+#include "hlr/hlr_projectile.h"
 
 #define		VORTIGAUNT_MAX_BEAMS				8
 
@@ -26,6 +27,7 @@
 
 class CBeam;
 class CSprite;
+class CSpriteTrail;
 class CVortigauntChargeToken;
 class CVortigauntEffectDispel;
 
@@ -62,7 +64,7 @@ public:
 
 	virtual int		RangeAttack1Conditions( float flDot, float flDist );	// Primary zap
 	virtual int		RangeAttack2Conditions( float flDot, float flDist );	// Concussive zap (larger)
-	virtual bool	InnateWeaponLOSCondition( const Vector &ownerPos, const Vector &targetPos, bool bSetConditions );
+	//virtual bool	InnateWeaponLOSCondition( const Vector &ownerPos, const Vector &targetPos, bool bSetConditions );
 	virtual int		MeleeAttack1Conditions( float flDot, float flDist );	// Dispel
 	virtual float	InnateRange1MinRange( void ) { return 0.0f; }
 	virtual float	InnateRange1MaxRange( void ) { return sk_vortigaunt_zap_range.GetFloat()*12; }
@@ -75,7 +77,7 @@ public:
 
 	virtual void		Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	virtual void		AlertSound( void );
-	virtual Class_T		Classify ( void ) { return IsGameEndAlly() ? CLASS_PLAYER_ALLY_VITAL : CLASS_VORTIGAUNT; }
+	virtual Class_T		Classify ( void ) { return CLASS_VORTIGAUNT; }
 	virtual void		HandleAnimEvent( animevent_t *pEvent );
 	virtual Activity	NPC_TranslateActivity( Activity eNewActivity );
 
@@ -204,9 +206,17 @@ private:
 	inline bool		InAttackSequence( void );
 	void			ClearBeams( void );
 	void			ArmBeam( int beamType, int nHand );
-	void			ZapBeam( int nHand );
+	void			ZapBeam(void);
+
 	int				m_nLightningSprite;
 
+
+	// hand trails and eye glow sprite
+	//CHandle<CSprite>	m_sEyeSprite;
+	//CHandle<CSpriteTrail>	m_tLeftHand;
+	//CHandle<CSpriteTrail>	m_tRightHand;
+
+	//void DrawStuff(void);
 	// ---------------
 	//  Glow
 	// ----------------

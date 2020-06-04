@@ -30,7 +30,8 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
+#define MINFIRERATE 0.34f
+#define MAXFIRERATE 0.04f
 ConVar sk_weapon_ar2_alt_fire_radius( "sk_weapon_ar2_alt_fire_radius", "10" );
 ConVar sk_weapon_ar2_alt_fire_duration( "sk_weapon_ar2_alt_fire_duration", "2" );
 ConVar sk_weapon_ar2_alt_fire_mass( "sk_weapon_ar2_alt_fire_mass", "150" );
@@ -39,7 +40,8 @@ ConVar sk_weapon_ar2_alt_fire_mass( "sk_weapon_ar2_alt_fire_mass", "150" );
 //=========================================================
 
 BEGIN_DATADESC( CWeaponAR2 )
-
+	
+	DEFINE_FIELD( m_flfirerate,		FIELD_FLOAT),
 	DEFINE_FIELD( m_flDelayedFire,	FIELD_TIME ),
 	DEFINE_FIELD( m_bShotDelayed,	FIELD_BOOLEAN ),
 	//DEFINE_FIELD( m_nVentPose, FIELD_INTEGER ),
@@ -116,6 +118,7 @@ CWeaponAR2::CWeaponAR2( )
 
 	m_nShotsFired	= 0;
 	m_nVentPose		= -1;
+	m_flfirerate = MINFIRERATE;
 
 	m_bAltFiresUnderwater = false;
 }
@@ -123,7 +126,7 @@ CWeaponAR2::CWeaponAR2( )
 void CWeaponAR2::Precache( void )
 {
 	BaseClass::Precache();
-
+	PrecacheScriptSound("Weapon_AR2.Wine");
 	UTIL_PrecacheOther( "prop_combine_ball" );
 	UTIL_PrecacheOther( "env_entity_dissolver" );
 }
@@ -157,10 +160,28 @@ void CWeaponAR2::ItemPostFrame( void )
 			pVM->SetPoseParameter( m_nVentPose, flVentPose );
 		}
 	}
+	if (m_flfirerate > MINFIRERATE)
+	{
+		m_flfirerate = MINFIRERATE;
+	}
+	if (m_flfirerate < MAXFIRERATE)
+	{
+		m_flfirerate = MAXFIRERATE;
+	}
+	if (pOwner->m_nButtons & IN_ATTACK)
+	{
+		
+		m_flfirerate -= 0.003f;
 
+
+	}
 	BaseClass::ItemPostFrame();
 }
-
+void CWeaponAR2::WeaponIdle(void)
+{
+	m_flfirerate += 0.01f;	
+	BaseClass::WeaponIdle();
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Output : Activity
@@ -176,7 +197,7 @@ Activity CWeaponAR2::GetPrimaryAttackActivity( void )
 	if ( m_nShotsFired < 4 )
 		return ACT_VM_RECOIL2;
 
-	return ACT_VM_RECOIL3;
+	return ACT_VM_RECOIL1;
 }
 
 //-----------------------------------------------------------------------------
@@ -217,7 +238,6 @@ void CWeaponAR2::DelayedAttack( void )
 	pOwner->SetMuzzleFlashTime( gpGlobals->curtime + 0.5 );
 	
 	WeaponSound( WPN_DOUBLE );
-
 	pOwner->RumbleEffect(RUMBLE_SHOTGUN_DOUBLE, 0, RUMBLE_FLAG_RESTART );
 
 	// Fire the bullets
@@ -226,7 +246,7 @@ void CWeaponAR2::DelayedAttack( void )
 	Vector impactPoint = vecSrc + ( vecAiming * MAX_TRACE_LENGTH );
 
 	// Fire the bullets
-	Vector vecVelocity = vecAiming * 1000.0f;
+	Vector vecVelocity = vecAiming * 50000.0f;
 
 	// Fire the combine ball
 	CreateCombineBall(	vecSrc, 
@@ -243,19 +263,19 @@ void CWeaponAR2::DelayedAttack( void )
 	//Disorient the player
 	QAngle angles = pOwner->GetLocalAngles();
 
-	angles.x += random->RandomInt( -4, 4 );
-	angles.y += random->RandomInt( -4, 4 );
+	angles.x += random->RandomInt( -2, 2 );
+	angles.y += random->RandomInt( -2, 2 );
 	angles.z = 0;
 
 	pOwner->SnapEyeAngles( angles );
 	
-	pOwner->ViewPunch( QAngle( random->RandomInt( -8, -12 ), random->RandomInt( 1, 2 ), 0 ) );
+	pOwner->ViewPunch( QAngle( random->RandomInt( -2, -4 ), random->RandomInt( 1, 2 ), 0 ) );
 
 	// Decrease ammo
 	pOwner->RemoveAmmo( 1, m_iSecondaryAmmoType );
 
 	// Can shoot again immediately
-	m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
+	m_flNextPrimaryAttack = gpGlobals->curtime + 0.01f;
 
 	// Can blow up after a short delay (so have time to release mouse button)
 	m_flNextSecondaryAttack = gpGlobals->curtime + 1.0f;
@@ -279,7 +299,7 @@ void CWeaponAR2::SecondaryAttack( void )
 	}
 
 	m_bShotDelayed = true;
-	m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_flDelayedFire = gpGlobals->curtime + 0.5f;
+	m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_flDelayedFire = gpGlobals->curtime + 0.1f;
 
 	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
 	if( pPlayer )
@@ -470,9 +490,9 @@ void CWeaponAR2::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatChara
 //-----------------------------------------------------------------------------
 void CWeaponAR2::AddViewKick( void )
 {
-	#define	EASY_DAMPEN			0.5f
-	#define	MAX_VERTICAL_KICK	8.0f	//Degrees
-	#define	SLIDE_LIMIT			5.0f	//Seconds
+	#define	EASY_DAMPEN			0.1f
+	#define	MAX_VERTICAL_KICK	0.05f	//Degrees
+	#define	SLIDE_LIMIT			1.0f	//Seconds
 	
 	//Get the view kick
 	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );

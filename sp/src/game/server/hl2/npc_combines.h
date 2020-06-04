@@ -11,6 +11,7 @@
 #endif
 
 #include "npc_combine.h"
+#include "SpriteTrail.h"
 
 //=========================================================
 //	>> CNPC_CombineS
@@ -25,6 +26,8 @@ class CNPC_CombineS : public CNPC_Combine
 public: 
 	void		Spawn( void );
 	void		Precache( void );
+	void		Gib(void);
+	bool		DrawStuff(void);
 	void		DeathSound( const CTakeDamageInfo &info );
 	void		PrescheduleThink( void );
 	void		BuildScheduleTestBits( void );
@@ -42,10 +45,16 @@ public:
 	bool		IsLightDamage( const CTakeDamageInfo &info );
 	bool		IsHeavyDamage( const CTakeDamageInfo &info );
 
+
 	virtual	bool		AllowedToIgnite( void ) { return true; }
 
 private:
 	bool		ShouldHitPlayer( const Vector &targetDir, float targetDist );
+protected:
+	CHandle<CSprite>		m_pLeftEyeG;
+	CHandle<CSprite>		m_pRightEyeG;
+	CHandle<CSpriteTrail>	m_pLeftEyeT;
+	CHandle<CSpriteTrail>	m_pRightEyeT;
 
 #if HL2_EPISODIC
 public:

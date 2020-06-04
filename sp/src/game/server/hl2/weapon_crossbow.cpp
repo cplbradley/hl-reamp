@@ -13,8 +13,10 @@
 #include "gamerules.h"
 #include "in_buttons.h"
 #include "soundent.h"
+#include "explode.h"
 #include "game.h"
 #include "vstdlib/random.h"
+#include "hl2_shareddefs.h"
 #include "engine/IEngineSound.h"
 #include "IEffects.h"
 #include "te_effect_dispatch.h"
@@ -35,8 +37,8 @@
 //#define BOLT_MODEL			"models/crossbow_bolt.mdl"
 #define BOLT_MODEL	"models/weapons/w_missile_closed.mdl"
 
-#define BOLT_AIR_VELOCITY	2500
-#define BOLT_WATER_VELOCITY	1500
+#define BOLT_AIR_VELOCITY	1800
+#define BOLT_WATER_VELOCITY	800
 
 extern ConVar sk_plr_dmg_crossbow;
 extern ConVar sk_npc_dmg_crossbow;
@@ -62,7 +64,9 @@ public:
 public:
 	void Spawn( void );
 	void Precache( void );
+	void DoBuildup(void);
 	void BubbleThink( void );
+	void ExplodeThink(void);
 	void BoltTouch( CBaseEntity *pOther );
 	bool CreateVPhysics( void );
 	unsigned int PhysicsSolidMaskForEntity() const;
@@ -73,21 +77,22 @@ protected:
 	bool	CreateSprites( void );
 
 	CHandle<CSprite>		m_pGlowSprite;
-	//CHandle<CSpriteTrail>	m_pGlowTrail;
+	CHandle<CSpriteTrail>	m_pGlowTrail;
+	CHandle<CSprite>		m_pBuildSprite;
 
 	DECLARE_DATADESC();
 	DECLARE_SERVERCLASS();
 };
 LINK_ENTITY_TO_CLASS( crossbow_bolt, CCrossbowBolt );
 
-BEGIN_DATADESC( CCrossbowBolt )
-	// Function Pointers
-	DEFINE_FUNCTION( BubbleThink ),
-	DEFINE_FUNCTION( BoltTouch ),
+BEGIN_DATADESC(CCrossbowBolt)
+// Function Pointers
+DEFINE_FUNCTION(BubbleThink),
+DEFINE_FUNCTION(BoltTouch),
 
 	// These are recreated on reload, they don't need storage
 	DEFINE_FIELD( m_pGlowSprite, FIELD_EHANDLE ),
-	//DEFINE_FIELD( m_pGlowTrail, FIELD_EHANDLE ),
+	DEFINE_FIELD( m_pGlowTrail, FIELD_EHANDLE ),
 
 END_DATADESC()
 
@@ -148,11 +153,20 @@ bool CCrossbowBolt::CreateSprites( void )
 	if ( m_pGlowSprite != NULL )
 	{
 		m_pGlowSprite->FollowEntity( this );
-		m_pGlowSprite->SetTransparency( kRenderGlow, 255, 255, 255, 128, kRenderFxNoDissipation );
-		m_pGlowSprite->SetScale( 0.2f );
+		m_pGlowSprite->SetTransparency( kRenderGlow, 255, 35, 35, 128, kRenderFxNoDissipation );
+		m_pGlowSprite->SetScale( 20.0f );
 		m_pGlowSprite->TurnOff();
 	}
+	m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/lgtning.vmt", GetLocalOrigin(), false);
 
+		if (m_pGlowTrail != NULL)
+		{
+			m_pGlowTrail->FollowEntity(this);
+			m_pGlowTrail->SetTransparency(kRenderTransAdd, 255, 150, 150, 200, kRenderFxNone);
+			m_pGlowTrail->SetStartWidth(4.0f);
+			m_pGlowTrail->SetEndWidth(0.2f);
+			m_pGlowTrail->SetLifeTime(0.35f);
+		}
 	return true;
 }
 
@@ -168,6 +182,7 @@ void CCrossbowBolt::Spawn( void )
 	UTIL_SetSize( this, -Vector(0.3f,0.3f,0.3f), Vector(0.3f,0.3f,0.3f) );
 	SetSolid( SOLID_BBOX );
 	SetGravity( 0.05f );
+	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 	
 	// Make sure we're updated if we're underwater
 	UpdateWaterState();
@@ -190,8 +205,9 @@ void CCrossbowBolt::Precache( void )
 
 	// This is used by C_TEStickyBolt, despte being different from above!!!
 	PrecacheModel( "models/crossbow_bolt.mdl" );
-
+	PrecacheModel("sprites/lgtning.vmt");
 	PrecacheModel( "sprites/light_glow02_noz.vmt" );
+	PrecacheModel("sprites/redglow1.vmt");
 }
 
 //-----------------------------------------------------------------------------
@@ -203,6 +219,10 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 		// Some NPCs are triggers that can take damage (like antlion grubs). We should hit them.
 		if ( ( pOther->m_takedamage == DAMAGE_NO ) || ( pOther->m_takedamage == DAMAGE_EVENTS_ONLY ) )
 			return;
+	}
+	if (pOther->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE)
+	{
+		return;
 	}
 
 	if ( pOther->m_takedamage != DAMAGE_NO )
@@ -296,17 +316,24 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 		
 		SetTouch( NULL );
 		SetThink( NULL );
-
-		if ( !g_pGameRules->IsMultiplayer() )
+		SetParent(pOther);
+		SetSolid(SOLID_NONE);
+		SetSolidFlags(FSOLID_NOT_SOLID);
+		//BaseClass::SetParent(pOther);
+		/*if ( !g_pGameRules->IsMultiplayer() )
 		{
 			UTIL_Remove( this );
-		}
+		}*/
 	}
 	else
 	{
 		trace_t	tr;
 		tr = BaseClass::GetTouchTrace();
 
+		if (pOther->GetMoveType() == MOVETYPE_NONE && (tr.surface.flags & SURF_SKY))
+		{
+			UTIL_Remove(this);
+		}
 		// See if we struck the world
 		if ( pOther->GetMoveType() == MOVETYPE_NONE && !( tr.surface.flags & SURF_SKY ) )
 		{
@@ -377,20 +404,21 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 		}
 		else
 		{
-			// Put a mark unless we've hit the sky
-			if ( ( tr.surface.flags & SURF_SKY ) == false )
-			{
-				UTIL_ImpactTrace( &tr, DMG_BULLET );
-			}
-
 			UTIL_Remove( this );
 		}
 	}
-
-	if ( g_pGameRules->IsMultiplayer() )
+	trace_t	tr;
+		tr = BaseClass::GetTouchTrace();
+	if (pOther->GetMoveType() == MOVETYPE_NONE && (tr.surface.flags & SURF_SKY))
 	{
-//		SetThink( &CCrossbowBolt::ExplodeThink );
-//		SetNextThink( gpGlobals->curtime + 0.1f );
+		UTIL_Remove(this);
+	}
+	else
+	{
+		SetThink(&CCrossbowBolt::ExplodeThink); //set the next action to be explode
+		SetNextThink(gpGlobals->curtime + 1.3f); //execute said action after delay
+		DoBuildup(); //show buildup sprites and trigger buildup sound
+		SetMoveType(MOVETYPE_NONE);
 	}
 }
 
@@ -415,7 +443,26 @@ void CCrossbowBolt::BubbleThink( void )
 	UTIL_BubbleTrail( GetAbsOrigin() - GetAbsVelocity() * 0.1f, GetAbsOrigin(), 5 );
 }
 
+void CCrossbowBolt::ExplodeThink(void)
+{
+	ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), 200, 200,
+		SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NOSMOKE, 0.0f, this);
+	UTIL_Remove(this);
+}
+void CCrossbowBolt::DoBuildup(void)
+{
+	m_pBuildSprite = CSprite::SpriteCreate("sprites/redglow1.vmt", GetLocalOrigin(), false);
 
+	if (m_pBuildSprite != NULL)
+	{
+		m_pBuildSprite->FollowEntity(this);
+		m_pBuildSprite->SetTransparency(kRenderGlow, 255, 255, 255, 200, kRenderFxNoDissipation);
+		m_pBuildSprite->SetScale(0.45f);
+		m_pBuildSprite->SetGlowProxySize(10.0f);
+	}
+
+	EmitSound("Weapon_Crossbow.Buildup");
+}
 //-----------------------------------------------------------------------------
 // CWeaponCrossbow
 //-----------------------------------------------------------------------------
@@ -519,6 +566,7 @@ void CWeaponCrossbow::Precache( void )
 	PrecacheScriptSound( "Weapon_Crossbow.BoltHitBody" );
 	PrecacheScriptSound( "Weapon_Crossbow.BoltHitWorld" );
 	PrecacheScriptSound( "Weapon_Crossbow.BoltSkewer" );
+	PrecacheScriptSound("Weapon_Crossbow.Buildup");
 
 	PrecacheModel( CROSSBOW_GLOW_SPRITE );
 	PrecacheModel( CROSSBOW_GLOW_SPRITE2 );
@@ -643,8 +691,11 @@ void CWeaponCrossbow::FireBolt( void )
 	pOwner->RumbleEffect( RUMBLE_357, 0, RUMBLE_FLAG_RESTART );
 
 	Vector vecAiming	= pOwner->GetAutoaimVector( 0 );
-	Vector vecSrc		= pOwner->Weapon_ShootPosition();
+	Vector	vForward, vRight, vUp;
 
+	pOwner->EyeVectors(&vForward, &vRight, &vUp);
+
+	Vector vecSrc = pOwner->Weapon_ShootPosition()+vForward * 12.0f + vRight * 3.0f + vUp * -3.0f;
 	QAngle angAiming;
 	VectorAngles( vecAiming, angAiming );
 
@@ -745,7 +796,7 @@ void CWeaponCrossbow::ToggleZoom( void )
 	}
 	else
 	{
-		if ( pPlayer->SetFOV( this, 20, 0.1f ) )
+		if ( pPlayer->SetFOV( this, 75, 0.1f ) )
 		{
 			m_bInZoom = true;
 		}

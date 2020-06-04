@@ -16,6 +16,7 @@
 #include "vstdlib/random.h"
 #include "engine/IEngineSound.h"
 #include "world.h"
+#include "SpriteTrail.h"
 
 #ifdef PORTAL
 	#include "portal_util_shared.h"
@@ -96,23 +97,15 @@ void CGrenadeAR2::Spawn( void )
 	// -------------
 	if( g_CV_SmokeTrail.GetInt() && !IsXbox() )
 	{
-		m_hSmokeTrail = SmokeTrail::CreateSmokeTrail();
-		
-		if( m_hSmokeTrail )
-		{
-			m_hSmokeTrail->m_SpawnRate = 48;
-			m_hSmokeTrail->m_ParticleLifetime = 1;
-			m_hSmokeTrail->m_StartColor.Init(0.1f, 0.1f, 0.1f);
-			m_hSmokeTrail->m_EndColor.Init(0,0,0);
-			m_hSmokeTrail->m_StartSize = 12;
-			m_hSmokeTrail->m_EndSize = m_hSmokeTrail->m_StartSize * 4;
-			m_hSmokeTrail->m_SpawnRadius = 4;
-			m_hSmokeTrail->m_MinSpeed = 4;
-			m_hSmokeTrail->m_MaxSpeed = 24;
-			m_hSmokeTrail->m_Opacity = 0.2f;
+		m_hSmokeTrail = CSpriteTrail::SpriteTrailCreate("sprites/lgtning.vmt", GetLocalOrigin(), false);
 
-			m_hSmokeTrail->SetLifetime(10.0f);
+		if (m_hSmokeTrail != NULL)
+		{
 			m_hSmokeTrail->FollowEntity(this);
+			m_hSmokeTrail->SetTransparency(kRenderTransAdd, 255, 150, 150, 200, kRenderFxNone);
+			m_hSmokeTrail->SetStartWidth(4.0f);
+			m_hSmokeTrail->SetEndWidth(0.2f);
+			m_hSmokeTrail->SetLifeTime(0.35f);
 		}
 	}
 }
@@ -244,6 +237,7 @@ void CGrenadeAR2::Detonate(void)
 void CGrenadeAR2::Precache( void )
 {
 	PrecacheModel("models/Weapons/ar2_grenade.mdl"); 
+	PrecacheModel("sprites/lgtning.vmt");
 }
 
 

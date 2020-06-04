@@ -131,7 +131,7 @@ enum bodygroups
 #define STRIDER_SUBSEQUENT_TARGET_DURATION		1.5 // Spend this much time stitching to targets chosen by distributed fire.
 #define STRIDER_IGNORE_TARGET_DURATION			1.0
 #define STRIDER_IGNORE_PLAYER_DURATION			1.5
-#define STRIDER_DEFAULT_RATE_OF_FIRE			5	// Rounds per second
+#define STRIDER_DEFAULT_RATE_OF_FIRE			6	// Rounds per second
 
 #define STRIDER_EP1_RATE_OF_FIRE			10.0f
 #define STRIDER_EP1_SHOOT_ON_TARGET_TIME	 0.3f
@@ -754,10 +754,10 @@ Class_T CNPC_Strider::Classify()
 //---------------------------------------------------------
 bool CNPC_Strider::ShouldAttractAutoAim( CBaseEntity *pAimingEnt )
 {
-#ifdef HL2_EPISODIC
+//#ifdef HL2_EPISODIC
 	if( m_hAttachedBusters.Count() > 0 )
 		return false;
-#endif//HL2_EPISODIC
+//#endif//HL2_EPISODIC
 
 	return BaseClass::ShouldAttractAutoAim( pAimingEnt );
 }
@@ -1292,7 +1292,7 @@ void CNPC_Strider::BuildScheduleTestBits()
 		SetCustomInterruptCondition( COND_STRIDER_HAS_CANNON_TARGET );
 	}
 
-	if( IsCurSchedule( SCHED_IDLE_WALK ) || ( IsCurSchedule( SCHED_IDLE_STAND ) && hl2_episodic.GetBool() ) )
+	if( IsCurSchedule( SCHED_IDLE_WALK ) || ( IsCurSchedule( SCHED_IDLE_STAND ) /*&& hl2_episodic.GetBool()*/ ) )
 	{
 		SetCustomInterruptCondition(COND_STRIDER_SHOULD_CROUCH);
 	}
@@ -3013,7 +3013,7 @@ void CNPC_Strider::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &
 		}
 	}
 
-#ifdef HL2_EPISODIC
+//#ifdef HL2_EPISODIC
 
 	// Attempt to hit strider busters in the area
 	float flDistSqr;
@@ -3034,7 +3034,7 @@ void CNPC_Strider::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &
 		}
 	}
 
-#endif	//HL2_EPISODIC
+//#endif	//HL2_EPISODIC
 
 	if ( (info.GetDamageType() & DMG_BULLET) && ricochetBullets )
 	{
@@ -4769,7 +4769,7 @@ bool CNPC_Strider::ShouldProbeCollideAgainstEntity( CBaseEntity *pEntity )
 // Purpose: Lets us keep track of attached Strider busters
 // Input  : *pAttached - strider buster that is attached
 //-----------------------------------------------------------------------------
-#ifdef HL2_EPISODIC
+//#ifdef HL2_EPISODIC
 void CNPC_Strider::StriderBusterAttached( CBaseEntity *pAttached )
 {
 	// Add another to the list
@@ -4791,7 +4791,7 @@ void CNPC_Strider::StriderBusterDetached( CBaseEntity *pAttached )
 	}
 }
 
-#endif // HL2_EPISODIC
+//#endif // HL2_EPISODIC
 
 //-----------------------------------------------------------------------------
 //

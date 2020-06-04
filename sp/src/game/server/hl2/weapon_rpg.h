@@ -17,6 +17,7 @@
 #include "npcevent.h"
 #include "beam_shared.h"
 
+
 class CWeaponRPG;
 class CLaserDot;
 class RocketTrail;
@@ -97,6 +98,7 @@ protected:
 private:
 	float					m_flGracePeriodEndsAt;
 	bool					m_bCreateDangerSounds;
+
 
 	DECLARE_DATADESC();
 };
@@ -182,6 +184,7 @@ public:
 	void	Precache( void );
 
 	void	PrimaryAttack( void );
+	void	SecondaryAttack(void);
 	virtual float GetFireRate( void ) { return 1; };
 	void	ItemPostFrame( void );
 

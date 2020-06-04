@@ -317,6 +317,7 @@ void CNPC_Combine::Spawn( void )
 	m_flNextAlertSoundTime	= 0;
 	m_bShouldPatrol			= false;
 
+
 	//	CapabilitiesAdd( bits_CAP_TURN_HEAD | bits_CAP_MOVE_GROUND | bits_CAP_MOVE_JUMP | bits_CAP_MOVE_CLIMB);
 	// JAY: Disabled jump for now - hard to compare to HL1
 	CapabilitiesAdd( bits_CAP_TURN_HEAD | bits_CAP_MOVE_GROUND );
@@ -864,7 +865,7 @@ void CNPC_Combine::StartTask( const Task_t *pTask )
 				return;
 			}
 
-			float flMaxRange = 2000;
+			float flMaxRange = 10000;
 			float flMinRange = 0;
 
 			Vector vecEnemy = m_hForcedGrenadeTarget->GetAbsOrigin();
@@ -1224,18 +1225,7 @@ void CNPC_Combine::Event_Killed( const CTakeDamageInfo &info )
 
 			if ( pItem )
 			{
-				IPhysicsObject *pObj = pItem->VPhysicsGetObject();
-
-				if ( pObj )
-				{
-					Vector			vel;
-					vel.x = random->RandomFloat( -100.0f, 100.0f );
-					vel.y = random->RandomFloat( -100.0f, 100.0f );
-					vel.z = random->RandomFloat( 800.0f, 1200.0f );
-					AngularImpulse	angImp	= RandomAngularImpulse( -300.0f, 300.0f );
-
-					vel[2] = 0.0f;
-					pObj->AddVelocity( &vel, &angImp );
+				UTIL_RemoveImmediate(pItem);
 				}
 
 				// In the Citadel we need to dissolve this
@@ -1247,7 +1237,7 @@ void CNPC_Combine::Event_Killed( const CTakeDamageInfo &info )
 				}
 			}
 		}
-	}
+	
 
 	BaseClass::Event_Killed( info );
 }
@@ -2364,12 +2354,11 @@ void CNPC_Combine::HandleAnimEvent( animevent_t *pEvent )
 			}
 		case COMBINE_AE_RELOAD:
 
-			// We never actually run out of ammo, just need to refill the clip
 			if (GetActiveWeapon())
 			{
-				GetActiveWeapon()->WeaponSound( RELOAD_NPC );
-				GetActiveWeapon()->m_iClip1 = GetActiveWeapon()->GetMaxClip1(); 
-				GetActiveWeapon()->m_iClip2 = GetActiveWeapon()->GetMaxClip2();  
+				GetActiveWeapon()->WeaponSound(RELOAD_NPC);
+				GetActiveWeapon()->m_iClip1 = GetActiveWeapon()->GetMaxClip1();
+				GetActiveWeapon()->m_iClip2 = GetActiveWeapon()->GetMaxClip2();
 			}
 			ClearCondition(COND_LOW_PRIMARY_AMMO);
 			ClearCondition(COND_NO_PRIMARY_AMMO);

@@ -48,15 +48,15 @@ CGrenadeSpit::CGrenadeSpit( void ) : m_bPlaySound( true ), m_pHissSound( NULL )
 //-----------------------------------------------------------------------------
 void CGrenadeSpit::Spawn( void )
 {
-	Precache( );
+	Precache();
 	SetSolid( SOLID_BBOX );
 	SetMoveType( MOVETYPE_FLYGRAVITY );
 	SetSolidFlags( FSOLID_NOT_STANDABLE );
 
 	SetModel( "models/spitball_large.mdl" );
-	UTIL_SetSize( this, vec3_origin, vec3_origin );
+	UTIL_SetSize(this, -Vector(15.0f, 15.0f, 15.0f), Vector(15.0f, 15.0f, 15.0f));
 
-	SetUse( &CBaseGrenade::DetonateUse );
+	//SetUse( &CBaseGrenade::DetonateUse );
 	SetTouch( &CGrenadeSpit::GrenadeSpitTouch );
 	SetNextThink( gpGlobals->curtime + 0.1f );
 
@@ -64,11 +64,12 @@ void CGrenadeSpit::Spawn( void )
 	m_DmgRadius		= sk_antlion_worker_spit_grenade_radius.GetFloat();
 	m_takedamage	= DAMAGE_NO;
 	m_iHealth		= 1;
+	SetRenderColor(255, 150, 58);
 
-	SetGravity( UTIL_ScaleForGravity( SPIT_GRAVITY ) );
+	SetGravity( 1.0 );
 	SetFriction( 0.8f );
 
-	SetCollisionGroup( HL2COLLISION_GROUP_SPIT );
+	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 
 	AddEFlags( EFL_FORCE_CHECK_TRANSMIT );
 
@@ -81,7 +82,7 @@ void CGrenadeSpit::Spawn( void )
 	{
 		// Setup our basic parameters
 		m_hSpitEffect->KeyValue( "start_active", "1" );
-		m_hSpitEffect->KeyValue( "effect_name", "antlion_spit_trail" );
+		m_hSpitEffect->KeyValue( "effect_name", "skull_flame" );
 		m_hSpitEffect->SetParent( this );
 		m_hSpitEffect->SetLocalOrigin( vec3_origin );
 		DispatchSpawn( m_hSpitEffect );
@@ -91,36 +92,15 @@ void CGrenadeSpit::Spawn( void )
 }
 
 
-void CGrenadeSpit::SetSpitSize( int nSize )
+void CGrenadeSpit::SetSpitSize( void )
 {
-	switch (nSize)
-	{
-		case SPIT_LARGE:
-		{
 			m_bPlaySound = true;
 			SetModel( "models/spitball_large.mdl" );
-			break;
-		}
-		case SPIT_MEDIUM:
-		{
-			m_bPlaySound = true;
-			m_flDamage *= 0.5f;
-			SetModel( "models/spitball_medium.mdl" );
-			break;
-		}
-		case SPIT_SMALL:
-		{
-			m_bPlaySound = false;
-			m_flDamage *= 0.25f;
-			SetModel( "models/spitball_small.mdl" );
-			break;
-		}
-	}
 }
 
 void CGrenadeSpit::Event_Killed( const CTakeDamageInfo &info )
 {
-	Detonate( );
+	Detonate();
 }
 
 //-----------------------------------------------------------------------------
@@ -136,8 +116,12 @@ void CGrenadeSpit::GrenadeSpitTouch( CBaseEntity *pOther )
 	}
 
 	// Don't hit other spit
-	if ( pOther->GetCollisionGroup() == HL2COLLISION_GROUP_SPIT )
+	if ( pOther->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE )
 		return;
+	if (GetOwnerEntity() && GetOwnerEntity() == pOther)
+		return;
+	/*if (pOther->IsNPC())
+		return;*/
 
 	// We want to collide with water
 	const trace_t *pTrace = &CBaseEntity::GetTouchTrace();
@@ -174,8 +158,8 @@ void CGrenadeSpit::GrenadeSpitTouch( CBaseEntity *pOther )
 	// NOTE: assume that pTrace is invalidated from this line forward!
 	if ( pTraceEnt )
 	{
-		pTraceEnt->TakeDamage( CTakeDamageInfo( this, GetThrower(), m_flDamage * (1.0f-poisonratio), DMG_ACID ) );
-		pTraceEnt->TakeDamage( CTakeDamageInfo( this, GetThrower(), m_flDamage * poisonratio, DMG_POISON ) );
+		pTraceEnt->TakeDamage( CTakeDamageInfo( this, GetThrower(), m_flDamage * (1.0f-poisonratio), DMG_BURN ) );
+		pTraceEnt->TakeDamage( CTakeDamageInfo( this, GetThrower(), m_flDamage * poisonratio, DMG_BURN ) );
 	}
 
 	CSoundEnt::InsertSound( SOUND_DANGER, GetAbsOrigin(), m_DmgRadius * 2.0f, 0.5f, GetThrower() );
@@ -281,4 +265,5 @@ void CGrenadeSpit::Precache( void )
 
 	PrecacheParticleSystem( "antlion_spit_player" );
 	PrecacheParticleSystem( "antlion_spit" );
+	PrecacheParticleSystem("skull_flame");
 }

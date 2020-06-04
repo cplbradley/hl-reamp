@@ -167,9 +167,9 @@ int	CNPC_Stalker::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 //-----------------------------------------------------------------------------
 float CNPC_Stalker::MaxYawSpeed( void )
 {
-#ifdef HL2_EPISODIC
+//#ifdef HL2_EPISODIC
 	return 10.0f;
-#else
+/*#else
 	switch( GetActivity() )
 	{
 	case ACT_TURN_LEFT:
@@ -184,7 +184,7 @@ float CNPC_Stalker::MaxYawSpeed( void )
 		return 160;
 		break;
 	}
-#endif
+#endif*/
 }
 
 //-----------------------------------------------------------------------------
@@ -215,14 +215,14 @@ bool CNPC_Stalker::IsValidEnemy( CBaseEntity *pEnemy )
 {
 	Class_T enemyClass = pEnemy->Classify();
 
-	if( enemyClass == CLASS_PLAYER || enemyClass == CLASS_PLAYER_ALLY || enemyClass == CLASS_PLAYER_ALLY_VITAL )
+	/*if( enemyClass == CLASS_PLAYER || enemyClass == CLASS_PLAYER_ALLY || enemyClass == CLASS_PLAYER_ALLY_VITAL )
 	{
 		// Don't get angry at these folks unless provoked.
 		if( m_iPlayerAggression < STALKER_PLAYER_AGGRESSION )
 		{
 			return false;
 		}
-	}
+	}*/
 
 	if( enemyClass == CLASS_BULLSEYE && pEnemy->GetParent() )
 	{

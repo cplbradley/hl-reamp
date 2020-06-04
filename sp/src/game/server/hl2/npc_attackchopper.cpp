@@ -125,7 +125,7 @@ static const char *s_pChunkModelName[CHOPPER_MAX_CHUNKS] =
 #define CHOPPER_BULLRUSH_SLOW_SHOOT_SPEED_2_SQ	(CHOPPER_BULLRUSH_SLOW_SHOOT_SPEED_2 * CHOPPER_BULLRUSH_SLOW_SHOOT_SPEED_2)
 
 // CVars
-ConVar	sk_helicopter_health( "sk_helicopter_health","5600");
+ConVar	sk_helicopter_health( "sk_helicopter_health","2750");
 ConVar	sk_helicopter_firingcone( "sk_helicopter_firingcone","20.0", 0, "The angle in degrees of the cone in which the shots will be fired" );
 ConVar	sk_helicopter_burstcount( "sk_helicopter_burstcount","12", 0, "How many shot bursts to fire after charging up. The bigger the number, the longer the firing is" );
 ConVar	sk_helicopter_roundsperburst( "sk_helicopter_roundsperburst","5", 0, "How many shots to fire in a single burst" );
@@ -2811,6 +2811,8 @@ void CNPC_AttackHelicopter::CreateBomb( bool bCheckForFairness, Vector *pVecVelo
 	Vector vecActualVelocity;
 	if ( !pVecVelocity )
 	{
+		//CAI_BaseNPC *npcOwner = GetOwner()->MyNPCPointer();
+		//CBaseEntity *pEnemy = npcOwner->GetEnemy();
 		Vector vecAcross;
 		vecActualVelocity = GetAbsVelocity();
 		CrossProduct( vecActualVelocity, Vector( 0, 0, 1 ), vecAcross );

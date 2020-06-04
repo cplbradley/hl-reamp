@@ -11,9 +11,9 @@
 // $NoKeywords: $
 //=============================================================================//
 
-#ifndef	GRENADESPIT_H
+//#ifndef	GRENADESPIT_H
 #define	GRENADESPIT_H
-
+//#endif
 #include "basegrenade_shared.h"
 
 class CParticleSystem;
@@ -41,7 +41,7 @@ public:
 	virtual	unsigned int	PhysicsSolidMaskForEntity( void ) const { return ( BaseClass::PhysicsSolidMaskForEntity() | CONTENTS_WATER ); }
 
 	void 				GrenadeSpitTouch( CBaseEntity *pOther );
-	void				SetSpitSize( int nSize );
+	void				SetSpitSize( void );
 	void				Detonate( void );
 	void				Think( void );
 
@@ -55,4 +55,4 @@ private:
 	bool			m_bPlaySound;
 };
 
-#endif	//GRENADESPIT_H
+//#endif	GRENADESPIT_H

@@ -188,6 +188,8 @@ private:
 
 	void ShowHostile( bool hostile = true );
 
+	void StartFire(void);
+
 	bool IsFlyingActivity( Activity baseAct );
 
 	// Computes the slice bounce velocity

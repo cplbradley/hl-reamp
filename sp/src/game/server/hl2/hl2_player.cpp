@@ -16,6 +16,7 @@
 #include "ai_interactions.h"
 #include "ai_squad.h"
 #include "igamemovement.h"
+#include "gamemovement.h"
 #include "ai_hull.h"
 #include "hl2_shareddefs.h"
 #include "info_camera_link.h"
@@ -79,9 +80,9 @@ extern int gEvilImpulse101;
 
 ConVar sv_autojump( "sv_autojump", "0" );
 
-ConVar hl2_walkspeed( "hl2_walkspeed", "150" );
-ConVar hl2_normspeed( "hl2_normspeed", "190" );
-ConVar hl2_sprintspeed( "hl2_sprintspeed", "320" );
+ConVar hl2_walkspeed( "hl2_walkspeed", "250" );
+ConVar hl2_normspeed( "hl2_normspeed", "700" );
+ConVar hl2_sprintspeed( "hl2_sprintspeed", "700" );
 
 ConVar hl2_darkness_flashlight_factor ( "hl2_darkness_flashlight_factor", "1" );
 
@@ -642,6 +643,7 @@ void CHL2_Player::PreThink(void)
 			}
 		}
 	}
+	
 
 	VPROF_SCOPE_BEGIN( "CHL2_Player::PreThink-Speed" );
 	HandleSpeedChanges();
@@ -1166,11 +1168,12 @@ void CHL2_Player::InitSprinting( void )
 //-----------------------------------------------------------------------------
 bool CHL2_Player::CanSprint()
 {
-	return ( m_bSprintEnabled &&										// Only if sprint is enabled 
+	/*return ( m_bSprintEnabled &&										// Only if sprint is enabled 
 			!IsWalking() &&												// Not if we're walking
 			!( m_Local.m_bDucked && !m_Local.m_bDucking ) &&			// Nor if we're ducking
 			(GetWaterLevel() != 3) &&									// Certainly not underwater
-			(GlobalEntity_GetState("suit_no_sprint") != GLOBAL_ON) );	// Out of the question without the sprint module
+			(GlobalEntity_GetState("suit_no_sprint") != GLOBAL_ON) );	// Out of the question without the sprint module*/
+	return ( false );
 }
 
 //-----------------------------------------------------------------------------
@@ -1228,7 +1231,6 @@ void CHL2_Player::StopSprinting( void )
 	{
 		SuitPower_RemoveDevice( SuitDeviceSprint );
 	}
-
 	if( IsSuitEquipped() )
 	{
 		SetMaxSpeed( HL2_NORM_SPEED );
@@ -1237,6 +1239,7 @@ void CHL2_Player::StopSprinting( void )
 	{
 		SetMaxSpeed( HL2_WALK_SPEED );
 	}
+	
 
 	m_fIsSprinting = false;
 
@@ -1890,10 +1893,10 @@ void CHL2_Player::SuitPower_Charge( float flPower )
 {
 	m_HL2Local.m_flSuitPower += flPower;
 
-	if( m_HL2Local.m_flSuitPower > 100.0 )
+	if( m_HL2Local.m_flSuitPower > 200.0 )
 	{
 		// Full charge, clamp.
-		m_HL2Local.m_flSuitPower = 100.0;
+		m_HL2Local.m_flSuitPower = 200.0;
 	}
 }
 
@@ -1975,6 +1978,7 @@ bool CHL2_Player::SuitPower_ShouldRecharge( void )
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 ConVar	sk_battery( "sk_battery","0" );			
+ConVar	sk_armor("sk_armor", "30");
 
 bool CHL2_Player::ApplyBattery( float powerMultiplier )
 {
@@ -2009,6 +2013,42 @@ bool CHL2_Player::ApplyBattery( float powerMultiplier )
 		//UTIL_EmitSoundSuit(edict(), szcharge);
 		//SetSuitUpdate(szcharge, FALSE, SUIT_NEXT_IN_30SEC);
 		return true;		
+	}
+	return false;
+}
+bool CHL2_Player::ApplyArmor(float powerMultiplier)
+{
+	const float MAX_NORMAL_BATTERY = 100;
+	if ((ArmorValue() < MAX_NORMAL_BATTERY) && IsSuitEquipped())
+	{
+		int pct;
+		char szcharge[64];
+
+		IncrementArmorValue(sk_armor.GetFloat() * powerMultiplier, MAX_NORMAL_BATTERY);
+
+		CPASAttenuationFilter filter(this, "ItemBattery.Touch");
+		EmitSound(filter, entindex(), "ItemBattery.Touch");
+
+		CSingleUserRecipientFilter user(this);
+		user.MakeReliable();
+
+		UserMessageBegin(user, "ItemPickup");
+		WRITE_STRING("item_battery");
+		MessageEnd();
+
+
+		// Suit reports new power level
+		// For some reason this wasn't working in release build -- round it.
+		pct = (int)((float)(ArmorValue() * 100.0) * (1.0 / MAX_NORMAL_BATTERY) + 0.5);
+		pct = (pct / 5);
+		if (pct > 0)
+			pct--;
+
+		Q_snprintf(szcharge, sizeof(szcharge), "!HEV_%1dP", pct);
+
+		//UTIL_EmitSoundSuit(edict(), szcharge);
+		//SetSuitUpdate(szcharge, FALSE, SUIT_NEXT_IN_30SEC);
+		return true;
 	}
 	return false;
 }
@@ -3054,6 +3094,7 @@ bool CHL2_Player::Weapon_Lower( void )
 
 	if ( pWeapon == NULL )
 		return false;
+	
 
 	return pWeapon->Lower();
 }

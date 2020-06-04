@@ -273,7 +273,7 @@ void CZombie::Spawn( void )
 		m_fIsTorso = true;
 	}
 
-	m_fIsHeadless = false;
+	m_fIsHeadless = true;
 
 #ifdef HL2_EPISODIC
 	SetBloodColor( BLOOD_COLOR_ZOMBIE );

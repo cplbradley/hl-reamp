@@ -30,9 +30,9 @@ extern ConVar    sk_plr_dmg_smg1_grenade;
 extern ConVar	sk_plr_dmg_smg1;
 extern ConVar	 sk_npc_dmg_smg1;
 
-class CNPCPlasmaBall : public CBaseCombatCharacter
+class CPlasmaBall : public CBaseCombatCharacter
 {
-	DECLARE_CLASS(CNPCPlasmaBall, CBaseCombatCharacter);
+	DECLARE_CLASS(CPlasmaBall, CBaseCombatCharacter);
 public:
 	void	Spawn(void);
 	void	Precache(void);
@@ -43,22 +43,22 @@ public:
 	unsigned int PhysicsSolidMaskForEntity() const;
 
 
-	static CNPCPlasmaBall *Create(const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner = NULL);
+	static CPlasmaBall *Create(const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner = NULL);
 	CHandle<CSpriteTrail>	m_pGlowTrail;
 	CHandle<CSprite>		m_pMainGlow;
 	bool	CreateTrail(void);
 	bool	DrawSprite(void);
 	DECLARE_DATADESC();
 };
-LINK_ENTITY_TO_CLASS(npc_plasma_ball, CNPCPlasmaBall);
-BEGIN_DATADESC(CNPCPlasmaBall)
+LINK_ENTITY_TO_CLASS(plasma_ball, CPlasmaBall);
+BEGIN_DATADESC(CPlasmaBall)
 // Function Pointers
 DEFINE_FUNCTION(PlasmaTouch),
 END_DATADESC()
-CNPCPlasmaBall *CNPCPlasmaBall::Create(const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner)
+CPlasmaBall *CPlasmaBall::Create(const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner)
 {
-	// Create a new entity with CNPCPlasmaBall data
-	CNPCPlasmaBall *pBall = (CNPCPlasmaBall *)CreateEntityByName("npc_plasma_ball");
+	// Create a new entity with CPlasmaBall data
+	CPlasmaBall *pBall = (CPlasmaBall *)CreateEntityByName("plasma_ball");
 	UTIL_SetOrigin(pBall, vecOrigin);
 	pBall->SetAbsAngles(angAngles);
 	pBall->Spawn();
@@ -66,18 +66,18 @@ CNPCPlasmaBall *CNPCPlasmaBall::Create(const Vector &vecOrigin, const QAngle &an
 
 	return pBall;
 }
-bool CNPCPlasmaBall::CreateVPhysics(void)
+bool CPlasmaBall::CreateVPhysics(void)
 {
 	// Create the object in the physics system
-	VPhysicsInitNormal(SOLID_CUSTOM, FSOLID_NOT_SOLID, false);
+	VPhysicsInitNormal(SOLID_BBOX, FSOLID_NOT_SOLID, false);
 
 	return true;
 }
-unsigned int CNPCPlasmaBall::PhysicsSolidMaskForEntity() const
+unsigned int CPlasmaBall::PhysicsSolidMaskForEntity() const
 {
 	return (BaseClass::PhysicsSolidMaskForEntity() | CONTENTS_HITBOX) & ~CONTENTS_GRATE;
 }
-void CNPCPlasmaBall::Spawn(void)
+void CPlasmaBall::Spawn(void)
 {
 	Precache();
 	SetMoveType(MOVETYPE_FLY, MOVECOLLIDE_FLY_CUSTOM);
@@ -86,18 +86,18 @@ void CNPCPlasmaBall::Spawn(void)
 	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 	//SetSolidFlags(FSOLID_TRIGGER);
 	CreateTrail();
-	SetTouch(&CNPCPlasmaBall::PlasmaTouch);
-
+	SetTouch(&CPlasmaBall::PlasmaTouch);
 }
-void CNPCPlasmaBall::Precache(void)
+void CPlasmaBall::Precache(void)
 {
 	PrecacheModel(PLASMA_MODEL);
 	PrecacheModel(PLASMA_MODEL_NPC);
 	PrecacheParticleSystem("smg_plasmaball_core");
 	PrecacheModel("sprites/smoke.vmt");
 	PrecacheModel("sprites/physcannon_bluecore2b.vmt");
+
 }
-bool CNPCPlasmaBall::CreateTrail(void)
+bool CPlasmaBall::CreateTrail(void)
 {
 	m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/smoke.vmt", GetLocalOrigin(), false);
 	if (m_pGlowTrail != NULL)
@@ -109,7 +109,7 @@ bool CNPCPlasmaBall::CreateTrail(void)
 	}
 	return true;
 }
-bool CNPCPlasmaBall::DrawSprite(void)
+bool CPlasmaBall::DrawSprite(void)
 {
 	m_pMainGlow = CSprite::SpriteCreate("sprites/physcannon_bluecore2b.vmt", GetLocalOrigin(), false);
 	if (m_pMainGlow != NULL)
@@ -121,17 +121,17 @@ bool CNPCPlasmaBall::DrawSprite(void)
 	}
 	return true;
 }
-void CNPCPlasmaBall::PlasmaTouch(CBaseEntity *pOther) //i touched something
+void CPlasmaBall::PlasmaTouch(CBaseEntity *pOther) //i touched something
 {
 	if (pOther->IsSolid()) //is what i touched solid?
 	{
 		if (pOther->IsSolidFlagSet(FSOLID_TRIGGER)) //is it a trigger?
 		{
-			return; //carry on like nothing happened
+			return; //ignore it, keep going
 		}
-		if (pOther->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE)
+		if (pOther->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE) //is it another projectile?
 		{
-			return;
+			return; //ignore it, keep going
 		}
 		DispatchParticleEffect("smg_plasmaball_core", GetAbsOrigin(), GetAbsAngles(), this); //poof effect!
 
@@ -143,16 +143,15 @@ void CNPCPlasmaBall::PlasmaTouch(CBaseEntity *pOther) //i touched something
 
 			ClearMultiDamage();
 			VectorNormalize(vecNormalizedVel);
-			if (GetOwnerEntity() && GetOwnerEntity()->IsPlayer() && pOther->IsNPC()) //am i owned by the player and is what i touched an NPC? if so, i should do damage.
+			if (GetOwnerEntity() && GetOwnerEntity()->IsPlayer() && pOther->IsNPC()) //am i owned by the player and is what i touched an NPC? if so, i should do damage, adjusted for skill level
 			{
 				CTakeDamageInfo	dmgInfo(this, GetOwnerEntity(), sk_plr_dmg_smg1.GetFloat(), DMG_SHOCK);
 				dmgInfo.AdjustPlayerDamageInflictedForSkillLevel();
 				CalculateMeleeDamageForce(&dmgInfo, vecNormalizedVel, tr.endpos, 1.0f);
 				dmgInfo.SetDamagePosition(tr.endpos);
 				pOther->DispatchTraceAttack(dmgInfo, vecNormalizedVel, &tr);
-				//DispatchParticleEffect("smg_plasmaball_core", GetAbsOrigin(), GetAbsAngles(), this);
 			}
-			if (GetOwnerEntity() && GetOwnerEntity()->IsPlayer() && !pOther->IsNPC())
+			if (GetOwnerEntity() && GetOwnerEntity()->IsPlayer() && !pOther->IsNPC()) //am i owned by the player and is what i touched NOT an npc? if so, i should do damage
 			{
 				CTakeDamageInfo	dmgInfo(this, GetOwnerEntity(), sk_plr_dmg_smg1.GetFloat(), DMG_BULLET | DMG_NEVERGIB);
 				CalculateMeleeDamageForce(&dmgInfo, vecNormalizedVel, tr.endpos, 1.0f);
@@ -170,20 +169,19 @@ void CNPCPlasmaBall::PlasmaTouch(CBaseEntity *pOther) //i touched something
 			}
 			ApplyMultiDamage();
 		}
-		Vector vecStall = Vector(0, 0, 0);
-		SetAbsVelocity(vecStall); //freeze in place
-		SetThink(&CNPCPlasmaBall::KillIt); //schedule remove command
+		SetMoveType(MOVETYPE_NONE);
+		SetThink(&CPlasmaBall::KillIt); //schedule remove command
 		SetTouch(NULL);
-		SetNextThink(gpGlobals->curtime + 0.01f); //execute remove command after 0.01 seconds
+		SetNextThink(gpGlobals->curtime + 0.01f); //execute remove command after 0.01 seconds, this allows time to trigger the particle
 	}
 }
-void CNPCPlasmaBall::KillIt(void)
+void CPlasmaBall::KillIt(void)
 {
 	SetThink(NULL);
 	m_pGlowTrail == NULL;
 	UTIL_Remove(this); //remove it
 }
-void CNPCPlasmaBall::ItemPostFrame(void)
+void CPlasmaBall::ItemPostFrame(void)
 {
 	if (GetAbsVelocity() == 0)
 	{
@@ -192,33 +190,33 @@ void CNPCPlasmaBall::ItemPostFrame(void)
 }
 
 
-class CWeaponSMG1 : public CHLSelectFireMachineGun
+class CWeaponPlasmaRifle : public CHLSelectFireMachineGun
 {
 	DECLARE_DATADESC();
 public:
-	DECLARE_CLASS( CWeaponSMG1, CHLSelectFireMachineGun );
+	DECLARE_CLASS(CWeaponPlasmaRifle, CHLSelectFireMachineGun);
 
-	CWeaponSMG1();
+	CWeaponPlasmaRifle();
 
 	DECLARE_SERVERCLASS();
-	
-	void	Precache( void );
-	void	AddViewKick( void );
-	void	SecondaryAttack( void );
+
+	void	Precache(void);
+	void	AddViewKick(void);
+	void	SecondaryAttack(void);
 	void	PrimaryAttack(void);
 
 	int		GetMinBurst() { return 5; }
 	int		GetMaxBurst() { return 5; }
 
-	virtual void Equip( CBaseCombatCharacter *pOwner );
-	bool	Reload( void );
+	virtual void Equip(CBaseCombatCharacter *pOwner);
+	bool	Reload(void);
 
-	float	GetFireRate( void ) { return 0.15f; }	// 13.3hz
-	int		CapabilitiesGet( void ) { return bits_CAP_WEAPON_RANGE_ATTACK1; }
-	int		WeaponRangeAttack2Condition( float flDot, float flDist );
-	Activity	GetPrimaryAttackActivity( void );
+	float	GetFireRate(void) { return 0.15f; }	// 13.3hz
+	int		CapabilitiesGet(void) { return bits_CAP_WEAPON_RANGE_ATTACK1; }
+	int		WeaponRangeAttack2Condition(float flDot, float flDist);
+	Activity	GetPrimaryAttackActivity(void);
 
-	virtual const Vector& GetBulletSpread( void )
+	virtual const Vector& GetBulletSpread(void)
 	{
 		static const Vector cone = VECTOR_CONE_2DEGREES;
 		return cone;
@@ -226,9 +224,9 @@ public:
 
 	const WeaponProficiencyInfo_t *GetProficiencyValues();
 
-	void FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, Vector &vecShootOrigin, Vector &vecShootDir );
-	void Operator_ForceNPCFire( CBaseCombatCharacter  *pOperator, bool bSecondary );
-	void Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator );
+	void FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, Vector &vecShootOrigin, Vector &vecShootDir);
+	void Operator_ForceNPCFire(CBaseCombatCharacter  *pOperator, bool bSecondary);
+	void Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator);
 
 	DECLARE_ACTTABLE();
 
@@ -238,78 +236,78 @@ protected:
 	float	m_flNextGrenadeCheck;
 };
 
-IMPLEMENT_SERVERCLASS_ST(CWeaponSMG1, DT_WeaponSMG1)
+IMPLEMENT_SERVERCLASS_ST(CWeaponPlasmaRifle, DT_WeaponPlasmaRifle)
 END_SEND_TABLE()
 
-LINK_ENTITY_TO_CLASS( weapon_smg1, CWeaponSMG1 );
-PRECACHE_WEAPON_REGISTER(weapon_smg1);
+LINK_ENTITY_TO_CLASS(weapon_plasmarifle, CWeaponPlasmaRifle);
+PRECACHE_WEAPON_REGISTER(weapon_plasmarifle);
 
-BEGIN_DATADESC( CWeaponSMG1 )
+BEGIN_DATADESC(CWeaponPlasmaRifle)
 
-	DEFINE_FIELD( m_vecTossVelocity, FIELD_VECTOR ),
-	DEFINE_FIELD( m_flNextGrenadeCheck, FIELD_TIME ),
+DEFINE_FIELD(m_vecTossVelocity, FIELD_VECTOR),
+DEFINE_FIELD(m_flNextGrenadeCheck, FIELD_TIME),
 
 END_DATADESC()
 
-acttable_t	CWeaponSMG1::m_acttable[] = 
+acttable_t	CWeaponPlasmaRifle::m_acttable[] =
 {
-	{ ACT_RANGE_ATTACK1,			ACT_RANGE_ATTACK_SMG1,			true },
-	{ ACT_RELOAD,					ACT_RELOAD_SMG1,				true },
-	{ ACT_IDLE,						ACT_IDLE_SMG1,					true },
-	{ ACT_IDLE_ANGRY,				ACT_IDLE_ANGRY_SMG1,			true },
+	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_SMG1, true },
+	{ ACT_RELOAD, ACT_RELOAD_SMG1, true },
+	{ ACT_IDLE, ACT_IDLE_SMG1, true },
+	{ ACT_IDLE_ANGRY, ACT_IDLE_ANGRY_SMG1, true },
 
-	{ ACT_WALK,						ACT_WALK_RIFLE,					true },
-	{ ACT_WALK_AIM,					ACT_WALK_AIM_RIFLE,				true  },
-	
-// Readiness activities (not aiming)
-	{ ACT_IDLE_RELAXED,				ACT_IDLE_SMG1_RELAXED,			false },//never aims
-	{ ACT_IDLE_STIMULATED,			ACT_IDLE_SMG1_STIMULATED,		false },
-	{ ACT_IDLE_AGITATED,			ACT_IDLE_ANGRY_SMG1,			false },//always aims
+	{ ACT_WALK, ACT_WALK_RIFLE, true },
+	{ ACT_WALK_AIM, ACT_WALK_AIM_RIFLE, true },
 
-	{ ACT_WALK_RELAXED,				ACT_WALK_RIFLE_RELAXED,			false },//never aims
-	{ ACT_WALK_STIMULATED,			ACT_WALK_RIFLE_STIMULATED,		false },
-	{ ACT_WALK_AGITATED,			ACT_WALK_AIM_RIFLE,				false },//always aims
+	// Readiness activities (not aiming)
+	{ ACT_IDLE_RELAXED, ACT_IDLE_SMG1_RELAXED, false },//never aims
+	{ ACT_IDLE_STIMULATED, ACT_IDLE_SMG1_STIMULATED, false },
+	{ ACT_IDLE_AGITATED, ACT_IDLE_ANGRY_SMG1, false },//always aims
 
-	{ ACT_RUN_RELAXED,				ACT_RUN_RIFLE_RELAXED,			false },//never aims
-	{ ACT_RUN_STIMULATED,			ACT_RUN_RIFLE_STIMULATED,		false },
-	{ ACT_RUN_AGITATED,				ACT_RUN_AIM_RIFLE,				false },//always aims
+	{ ACT_WALK_RELAXED, ACT_WALK_RIFLE_RELAXED, false },//never aims
+	{ ACT_WALK_STIMULATED, ACT_WALK_RIFLE_STIMULATED, false },
+	{ ACT_WALK_AGITATED, ACT_WALK_AIM_RIFLE, false },//always aims
 
-// Readiness activities (aiming)
-	{ ACT_IDLE_AIM_RELAXED,			ACT_IDLE_SMG1_RELAXED,			false },//never aims	
-	{ ACT_IDLE_AIM_STIMULATED,		ACT_IDLE_AIM_RIFLE_STIMULATED,	false },
-	{ ACT_IDLE_AIM_AGITATED,		ACT_IDLE_ANGRY_SMG1,			false },//always aims
+	{ ACT_RUN_RELAXED, ACT_RUN_RIFLE_RELAXED, false },//never aims
+	{ ACT_RUN_STIMULATED, ACT_RUN_RIFLE_STIMULATED, false },
+	{ ACT_RUN_AGITATED, ACT_RUN_AIM_RIFLE, false },//always aims
 
-	{ ACT_WALK_AIM_RELAXED,			ACT_WALK_RIFLE_RELAXED,			false },//never aims
-	{ ACT_WALK_AIM_STIMULATED,		ACT_WALK_AIM_RIFLE_STIMULATED,	false },
-	{ ACT_WALK_AIM_AGITATED,		ACT_WALK_AIM_RIFLE,				false },//always aims
+	// Readiness activities (aiming)
+	{ ACT_IDLE_AIM_RELAXED, ACT_IDLE_SMG1_RELAXED, false },//never aims	
+	{ ACT_IDLE_AIM_STIMULATED, ACT_IDLE_AIM_RIFLE_STIMULATED, false },
+	{ ACT_IDLE_AIM_AGITATED, ACT_IDLE_ANGRY_SMG1, false },//always aims
 
-	{ ACT_RUN_AIM_RELAXED,			ACT_RUN_RIFLE_RELAXED,			false },//never aims
-	{ ACT_RUN_AIM_STIMULATED,		ACT_RUN_AIM_RIFLE_STIMULATED,	false },
-	{ ACT_RUN_AIM_AGITATED,			ACT_RUN_AIM_RIFLE,				false },//always aims
-//End readiness activities
+	{ ACT_WALK_AIM_RELAXED, ACT_WALK_RIFLE_RELAXED, false },//never aims
+	{ ACT_WALK_AIM_STIMULATED, ACT_WALK_AIM_RIFLE_STIMULATED, false },
+	{ ACT_WALK_AIM_AGITATED, ACT_WALK_AIM_RIFLE, false },//always aims
 
-	{ ACT_WALK_AIM,					ACT_WALK_AIM_RIFLE,				true },
-	{ ACT_WALK_CROUCH,				ACT_WALK_CROUCH_RIFLE,			true },
-	{ ACT_WALK_CROUCH_AIM,			ACT_WALK_CROUCH_AIM_RIFLE,		true },
-	{ ACT_RUN,						ACT_RUN_RIFLE,					true },
-	{ ACT_RUN_AIM,					ACT_RUN_AIM_RIFLE,				true },
-	{ ACT_RUN_CROUCH,				ACT_RUN_CROUCH_RIFLE,			true },
-	{ ACT_RUN_CROUCH_AIM,			ACT_RUN_CROUCH_AIM_RIFLE,		true },
-	{ ACT_GESTURE_RANGE_ATTACK1,	ACT_GESTURE_RANGE_ATTACK_SMG1,	true },
-	{ ACT_RANGE_ATTACK1_LOW,		ACT_RANGE_ATTACK_SMG1_LOW,		true },
-	{ ACT_COVER_LOW,				ACT_COVER_SMG1_LOW,				false },
-	{ ACT_RANGE_AIM_LOW,			ACT_RANGE_AIM_SMG1_LOW,			false },
-	{ ACT_RELOAD_LOW,				ACT_RELOAD_SMG1_LOW,			false },
-	{ ACT_GESTURE_RELOAD,			ACT_GESTURE_RELOAD_SMG1,		true },
+	{ ACT_RUN_AIM_RELAXED, ACT_RUN_RIFLE_RELAXED, false },//never aims
+	{ ACT_RUN_AIM_STIMULATED, ACT_RUN_AIM_RIFLE_STIMULATED, false },
+	{ ACT_RUN_AIM_AGITATED, ACT_RUN_AIM_RIFLE, false },//always aims
+	//End readiness activities
+
+	{ ACT_WALK_AIM, ACT_WALK_AIM_RIFLE, true },
+	{ ACT_WALK_CROUCH, ACT_WALK_CROUCH_RIFLE, true },
+	{ ACT_WALK_CROUCH_AIM, ACT_WALK_CROUCH_AIM_RIFLE, true },
+	{ ACT_RUN, ACT_RUN_RIFLE, true },
+	{ ACT_RUN_AIM, ACT_RUN_AIM_RIFLE, true },
+	{ ACT_RUN_CROUCH, ACT_RUN_CROUCH_RIFLE, true },
+	{ ACT_RUN_CROUCH_AIM, ACT_RUN_CROUCH_AIM_RIFLE, true },
+	{ ACT_GESTURE_RANGE_ATTACK1, ACT_GESTURE_RANGE_ATTACK_SMG1, true },
+	{ ACT_RANGE_ATTACK1_LOW, ACT_RANGE_ATTACK_SMG1_LOW, true },
+	{ ACT_COVER_LOW, ACT_COVER_SMG1_LOW, false },
+	{ ACT_RANGE_AIM_LOW, ACT_RANGE_AIM_SMG1_LOW, false },
+	{ ACT_RELOAD_LOW, ACT_RELOAD_SMG1_LOW, false },
+	{ ACT_GESTURE_RELOAD, ACT_GESTURE_RELOAD_SMG1, true },
 };
 
-IMPLEMENT_ACTTABLE(CWeaponSMG1);
+IMPLEMENT_ACTTABLE(CWeaponPlasmaRifle);
 
 //=========================================================
-CWeaponSMG1::CWeaponSMG1( )
+CWeaponPlasmaRifle::CWeaponPlasmaRifle()
 {
-	m_fMinRange1		= 0;// No minimum range. 
-	m_fMaxRange1		= 9600;
+	m_fMinRange1 = 0;// No minimum range. 
+	m_fMaxRange1 = 9600;
 
 	m_bAltFiresUnderwater = false;
 	//m_iClip1 = 50;
@@ -318,124 +316,134 @@ CWeaponSMG1::CWeaponSMG1( )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CWeaponSMG1::Precache( void )
+void CWeaponPlasmaRifle::Precache(void)
 {
 	UTIL_PrecacheOther("grenade_ar2");
-	UTIL_PrecacheOther("npc_plasma_ball");
-
+	UTIL_PrecacheOther("plasma_ball");
+	PrecacheScriptSound("NPC_CombineBall.Explosion");
+	PrecacheParticleSystem("plasma_beam");
+	PrecacheParticleSystem("smg_core");
 	BaseClass::Precache();
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Give this weapon longer range when wielded by an ally NPC.
 //-----------------------------------------------------------------------------
-void CWeaponSMG1::Equip( CBaseCombatCharacter *pOwner )
+void CWeaponPlasmaRifle::Equip(CBaseCombatCharacter *pOwner)
 {
-	if( pOwner->Classify() == CLASS_PLAYER_ALLY )
+	if (pOwner->Classify() == CLASS_PLAYER_ALLY)
 	{
 		m_fMaxRange1 = 3000;
 	}
 	else
 	{
-		m_fMaxRange1 = 3000;
+		m_fMaxRange1 = 2500;
 	}
 
-	BaseClass::Equip( pOwner );
+	BaseClass::Equip(pOwner);
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose: fires the projectile
 //-----------------------------------------------------------------------------
-void CWeaponSMG1::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, Vector &vecShootOrigin, Vector &vecShootDir )
+void CWeaponPlasmaRifle::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, Vector &vecShootOrigin, Vector &vecShootDir)
 {
 	// FIXME: use the returned number of bullets to account for >10hz firerate
-	WeaponSound( SINGLE_NPC );	//call weapon sound
-	CSoundEnt::InsertSound( SOUND_COMBAT|SOUND_CONTEXT_GUNFIRE, pOperator->GetAbsOrigin(), SOUNDENT_VOLUME_MACHINEGUN, 0.2, pOperator, SOUNDENT_CHANNEL_WEAPON, pOperator->GetEnemy() ); //emit with properties
-	pOperator->FireBullets( 0, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED,
-		MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2, entindex(), 0 ); //don't fire bullet, but register bullet as being fired
+	WeaponSound(SINGLE_NPC);//set up sound
+	CSoundEnt::InsertSound(SOUND_COMBAT | SOUND_CONTEXT_GUNFIRE, pOperator->GetAbsOrigin(), SOUNDENT_VOLUME_MACHINEGUN, 0.2, pOperator, SOUNDENT_CHANNEL_WEAPON, pOperator->GetEnemy());//emit with properties
+	pOperator->FireBullets(0, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED,
+		MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2, entindex(), 0);//don't actually fire a bullet, but register a bullet as being fired
 	QAngle angAiming;
 	GetAttachment(LookupAttachment("muzzle"), vecShootOrigin, angAiming);
 	VectorAngles(vecShootDir, angAiming);
-	
-	CNPCPlasmaBall *pBall = CNPCPlasmaBall::Create(vecShootOrigin, angAiming, pOperator); //create plasmaball
+	CPlasmaBall *pBall = CPlasmaBall::Create(vecShootOrigin, angAiming, pOperator); //create plasmaball
 	pBall->SetModel(PLASMA_MODEL_NPC);
-	pBall->SetAbsVelocity(vecShootDir * 1600);
+	pBall->SetAbsVelocity(vecShootDir * 1200);
 	pBall->m_pGlowTrail->SetTransparency(kRenderTransAdd, 255, 45, 45, 100, kRenderFxNone);
-	
-	pOperator->DoMuzzleFlash();
-	m_iClip1 -= 1;
+	pOperator->DoMuzzleFlash(); //emit muzzle flash
+	m_iClip1 -= 1;  //remove 1 bullet from clip
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CWeaponSMG1::Operator_ForceNPCFire( CBaseCombatCharacter *pOperator, bool bSecondary )
+void CWeaponPlasmaRifle::Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary)
 {
 	// Ensure we have enough rounds in the clip
 	m_iClip1++;
 
 	Vector vecShootOrigin, vecShootDir;
 	QAngle	angShootDir;
-	GetAttachment( LookupAttachment( "muzzle" ), vecShootOrigin, angShootDir );
-	AngleVectors( angShootDir, &vecShootDir );
-	FireNPCPrimaryAttack( pOperator, vecShootOrigin, vecShootDir );
+	GetAttachment(LookupAttachment("muzzle"), vecShootOrigin, angShootDir);
+	AngleVectors(angShootDir, &vecShootDir);
+	FireNPCPrimaryAttack(pOperator, vecShootOrigin, vecShootDir);
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CWeaponSMG1::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator )
+void CWeaponPlasmaRifle::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator)
 {
-	switch( pEvent->event )
+	switch (pEvent->event)
 	{
 	case EVENT_WEAPON_SMG1:
-		{
-			Vector vecShootOrigin, vecShootDir;
-			QAngle angDiscard;
-
-			// Support old style attachment point firing
-			if ((pEvent->options == NULL) || (pEvent->options[0] == '\0') || (!pOperator->GetAttachment(pEvent->options, vecShootOrigin, angDiscard)))
-			{
-				vecShootOrigin = pOperator->Weapon_ShootPosition();
-			}
-
-			CAI_BaseNPC *npc = pOperator->MyNPCPointer();
-			ASSERT(npc != NULL);
-			vecShootDir = npc->GetActualShootTrajectory(vecShootOrigin);
-
-			FireNPCPrimaryAttack(pOperator, vecShootOrigin, vecShootDir);
-		}
-		break;
-
-		/*//FIXME: Re-enable
-		case EVENT_WEAPON_AR2_GRENADE:
-		{
-		CAI_BaseNPC *npc = pOperator->MyNPCPointer();
-
+	{
 		Vector vecShootOrigin, vecShootDir;
-		vecShootOrigin = pOperator->Weapon_ShootPosition();
-		vecShootDir = npc->GetShootEnemyDir( vecShootOrigin );
+		QAngle angDiscard;
 
-		Vector vecThrow = m_vecTossVelocity;
-
-		CGrenadeAR2 *pGrenade = (CGrenadeAR2*)Create( "grenade_ar2", vecShootOrigin, vec3_angle, npc );
-		pGrenade->SetAbsVelocity( vecThrow );
-		pGrenade->SetLocalAngularVelocity( QAngle( 0, 400, 0 ) );
-		pGrenade->SetMoveType( MOVETYPE_FLYGRAVITY ); 
-		pGrenade->m_hOwner			= npc;
-		pGrenade->m_pMyWeaponAR2	= this;
-		pGrenade->SetDamage(sk_npc_dmg_ar2_grenade.GetFloat());
-
-		// FIXME: arrgg ,this is hard coded into the weapon???
-		m_flNextGrenadeCheck = gpGlobals->curtime + 6;// wait six seconds before even looking again to see if a grenade can be thrown.
-
-		m_iClip2--;
+		// Support old style attachment point firing
+		if ((pEvent->options == NULL) || (pEvent->options[0] == '\0') || (!pOperator->GetAttachment(pEvent->options, vecShootOrigin, angDiscard)))
+		{
+			vecShootOrigin = pOperator->Weapon_ShootPosition();
 		}
-		break;
-		*/
+
+		CAI_BaseNPC *npc = pOperator->MyNPCPointer();
+		ASSERT(npc != NULL);
+		vecShootDir = npc->GetActualShootTrajectory(vecShootOrigin);
+		QAngle angAiming;
+		GetAttachment(LookupAttachment("muzzle"), vecShootOrigin, angAiming);
+		VectorAngles(vecShootDir, angAiming);
+		CPlasmaBall *pBall = CPlasmaBall::Create(vecShootOrigin, angAiming, pOperator);
+		pBall->SetModel(PLASMA_MODEL_NPC);
+		pBall->SetAbsVelocity(vecShootDir * 1500);		pBall->m_pGlowTrail->SetTransparency(kRenderTransAdd, 255, 45, 45, 200, kRenderFxNone);
+		pBall->SetLocalAngularVelocity(
+			QAngle(random->RandomFloat(-250, -500),
+			random->RandomFloat(-250, -500),
+			random->RandomFloat(-250, -500)));
+		pOperator->DoMuzzleFlash();
+		//FireNPCPrimaryAttack( pOperator, vecShootOrigin, vecShootDir );
+	}
+	break;
+
+	/*//FIXME: Re-enable
+	case EVENT_WEAPON_AR2_GRENADE:
+	{
+	CAI_BaseNPC *npc = pOperator->MyNPCPointer();
+
+	Vector vecShootOrigin, vecShootDir;
+	vecShootOrigin = pOperator->Weapon_ShootPosition();
+	vecShootDir = npc->GetShootEnemyDir( vecShootOrigin );
+
+	Vector vecThrow = m_vecTossVelocity;
+
+	CGrenadeAR2 *pGrenade = (CGrenadeAR2*)Create( "grenade_ar2", vecShootOrigin, vec3_angle, npc );
+	pGrenade->SetAbsVelocity( vecThrow );
+	pGrenade->SetLocalAngularVelocity( QAngle( 0, 400, 0 ) );
+	pGrenade->SetMoveType( MOVETYPE_FLYGRAVITY );
+	pGrenade->m_hOwner			= npc;
+	pGrenade->m_pMyWeaponAR2	= this;
+	pGrenade->SetDamage(sk_npc_dmg_ar2_grenade.GetFloat());
+
+	// FIXME: arrgg ,this is hard coded into the weapon???
+	m_flNextGrenadeCheck = gpGlobals->curtime + 6;// wait six seconds before even looking again to see if a grenade can be thrown.
+
+	m_iClip2--;
+	}
+	break;
+	*/
 
 	default:
-		BaseClass::Operator_HandleAnimEvent( pEvent, pOperator );
+		BaseClass::Operator_HandleAnimEvent(pEvent, pOperator);
 		break;
 	}
 }
@@ -444,15 +452,15 @@ void CWeaponSMG1::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatChar
 // Purpose: 
 // Output : Activity
 //-----------------------------------------------------------------------------
-Activity CWeaponSMG1::GetPrimaryAttackActivity( void )
-{ 
-	if ( m_nShotsFired < 2 )
+Activity CWeaponPlasmaRifle::GetPrimaryAttackActivity(void)
+{
+	if (m_nShotsFired < 2)
 		return ACT_VM_PRIMARYATTACK;
 
-	if ( m_nShotsFired < 3 )
+	if (m_nShotsFired < 3)
 		return ACT_VM_RECOIL1;
-	
-	if ( m_nShotsFired < 4 )
+
+	if (m_nShotsFired < 4)
 		return ACT_VM_RECOIL2;
 
 	return ACT_VM_RECOIL3;
@@ -460,20 +468,20 @@ Activity CWeaponSMG1::GetPrimaryAttackActivity( void )
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-bool CWeaponSMG1::Reload( void )
+bool CWeaponPlasmaRifle::Reload(void)
 {
 	bool fRet;
 	float fCacheTime = m_flNextSecondaryAttack;
 
-	fRet = DefaultReload( GetMaxClip1(), GetMaxClip2(), ACT_VM_RELOAD );
-	if ( fRet )
+	fRet = DefaultReload(GetMaxClip1(), GetMaxClip2(), ACT_VM_RELOAD);
+	if (fRet)
 	{
 		// Undo whatever the reload process has done to our secondary
 		// attack timer. We allow you to interrupt reloading to fire
 		// a grenade.
 		m_flNextSecondaryAttack = GetOwner()->m_flNextAttack = fCacheTime;
 
-		WeaponSound( RELOAD );
+		WeaponSound(RELOAD);
 	}
 
 	return fRet;
@@ -482,43 +490,69 @@ bool CWeaponSMG1::Reload( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CWeaponSMG1::AddViewKick( void )
+void CWeaponPlasmaRifle::AddViewKick(void)
 {
-	#define	EASY_DAMPEN			0.5f
-	#define	MAX_VERTICAL_KICK	1.0f	//Degrees
-	#define	SLIDE_LIMIT			2.0f	//Seconds
-	
-	//Get the view kick
-	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
+#define	EASY_DAMPEN			0.5f
+#define	MAX_VERTICAL_KICK	1.0f	//Degrees
+#define	SLIDE_LIMIT			2.0f	//Seconds
 
-	if ( pPlayer == NULL )
+	//Get the view kick
+	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+
+	if (pPlayer == NULL)
 		return;
 
-	DoMachineGunKick( pPlayer, EASY_DAMPEN, MAX_VERTICAL_KICK, m_fFireDuration, SLIDE_LIMIT );
+	DoMachineGunKick(pPlayer, EASY_DAMPEN, MAX_VERTICAL_KICK, m_fFireDuration, SLIDE_LIMIT);
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CWeaponSMG1::SecondaryAttack( void )
+void CWeaponPlasmaRifle::SecondaryAttack(void)
 {
 	// Only the player fires this way so we can cast
-	/*CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
-	
+	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
 	if ( pPlayer == NULL )
+	return;
+	if ((UsesClipsForAmmo1() && m_iClip1 == 0) || (!UsesClipsForAmmo1() && !pPlayer->GetAmmoCount(m_iPrimaryAmmoType)))
 		return;
+	Vector	vForward, vRight, vUp;
+	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
+	Vector vecSrc = pPlayer->Weapon_ShootPosition();
+	Vector vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT);
+	/*RadiusDamage(CTakeDamageInfo (this, pPlayer, 200, DMG_DISSOLVE),GetAbsOrigin(),256,CLASS_PLAYER,NULL);
+	EmitSound("NPC_CombineBall.Explosion");
+	DispatchParticleEffect("plasma_altfire_core", vecSrc, GetAbsAngles(), this);
+	m_flNextSecondaryAttack = gpGlobals->curtime + 3.5f;
+	pPlayer->ViewPunch(QAngle(random->RandomFloat(-30, -15), random->RandomFloat(-20, 20), 0));
+	color32 white = { 255, 255, 255, 64 };
+	UTIL_ScreenFade(pPlayer , white, 0.1, 0, FFADE_IN);*/
+	pPlayer->FireBullets(1, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0, -1, -1, 1);
+	trace_t tr; // Create our trace_t class to hold the end result
+	// Do the TraceLine, and write our results to our trace_t class, tr.
+	Vector vecAbsStart = pPlayer->EyePosition();
+	pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);
+	Vector vecAbsEnd = vecAbsStart + (vecAiming * MAX_TRACE_LENGTH);
+	UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_ALL, pPlayer, COLLISION_GROUP_NONE, &tr);
+	m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
+	Vector vecPartStart;
+	Vector vecEndPos = tr.endpos;
+	DispatchParticleEffect("plasma_beam", vecSrc, tr.endpos, GetAbsAngles(), this);
+	/*
+	if ( pPlayer == NULL )
+	return;
 
 	//Must have ammo
 	if ( ( pPlayer->GetAmmoCount( m_iSecondaryAmmoType ) <= 0 ) || ( pPlayer->GetWaterLevel() == 3 ) )
 	{
-		SendWeaponAnim( ACT_VM_DRYFIRE );
-		BaseClass::WeaponSound( EMPTY );
-		m_flNextSecondaryAttack = gpGlobals->curtime + 0.5f;
-		return;
+	SendWeaponAnim( ACT_VM_DRYFIRE );
+	BaseClass::WeaponSound( EMPTY );
+	m_flNextSecondaryAttack = gpGlobals->curtime + 0.5f;
+	return;
 	}
 
 	if( m_bInReload )
-		m_bInReload = false;
+	m_bInReload = false;
 
 	// MUST call sound before removing a round from the clip of a CMachineGun
 	BaseClass::WeaponSound( WPN_DOUBLE );
@@ -530,7 +564,7 @@ void CWeaponSMG1::SecondaryAttack( void )
 	// Don't autoaim on grenade tosses
 	AngleVectors( pPlayer->EyeAngles() + pPlayer->GetPunchAngle(), &vecThrow );
 	VectorScale( vecThrow, 2000.0f, vecThrow );
-	
+
 	//Create the grenade
 	QAngle angles;
 	VectorAngles( vecThrow, angles );
@@ -538,7 +572,7 @@ void CWeaponSMG1::SecondaryAttack( void )
 	pGrenade->SetAbsVelocity( vecThrow );
 
 	pGrenade->SetLocalAngularVelocity( RandomAngle( -400, 400 ) );
-	pGrenade->SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE ); 
+	pGrenade->SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE );
 	pGrenade->SetThrower( GetOwner() );
 	pGrenade->SetDamage( sk_plr_dmg_smg1_grenade.GetFloat() );
 
@@ -559,15 +593,17 @@ void CWeaponSMG1::SecondaryAttack( void )
 	m_flNextSecondaryAttack = gpGlobals->curtime + 1.0f;
 
 	// Register a muzzleflash for the AI.
-	pPlayer->SetMuzzleFlashTime( gpGlobals->curtime + 0.5 );	
+	pPlayer->SetMuzzleFlashTime( gpGlobals->curtime + 0.5 );
 
 	m_iSecondaryAttacks++;
 	gamestats->Event_WeaponFired( pPlayer, false, GetClassname() );*/
 }
 ////////////////////////////////////////////////////////
+/////											   /////
 /////    check it out this is the primary attack   /////
+/////											   /////
 ////////////////////////////////////////////////////////
-void CWeaponSMG1::PrimaryAttack(void)
+void CWeaponPlasmaRifle::PrimaryAttack(void)
 {
 	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
 	if (!pPlayer)
@@ -590,11 +626,13 @@ void CWeaponSMG1::PrimaryAttack(void)
 	Vector vecSrc = pOwner->Weapon_ShootPosition() + vForward * 12.0f + vRight * 2.0f + vUp * -3.0f;
 	QAngle angAiming = pOwner->EyeAngles();
 	AngleVectors(angAiming, &vecAiming);
+
 	while (m_flNextPrimaryAttack <= gpGlobals->curtime) //while we're allowed to shoot
 	{
 		WeaponSound(SINGLE, m_flNextPrimaryAttack); //emit sound
-		m_flNextPrimaryAttack = m_flNextPrimaryAttack + 0.1f; //can't shoot again til after 0.1 seconds
-		CNPCPlasmaBall *pBall = CNPCPlasmaBall::Create(vecSrc, angAiming, pOwner); //emit plasma ball object
+		m_flNextPrimaryAttack = m_flNextPrimaryAttack + 0.1f;
+		m_flNextSecondaryAttack = gpGlobals->curtime + 1.0f;//can't shoot again til after 0.1 seconds
+		CPlasmaBall *pBall = CPlasmaBall::Create(vecSrc, angAiming, pOwner); //emit plasma ball object
 		pBall->SetModel(PLASMA_MODEL); //set model to player model
 		pBall->SetAbsVelocity(vecAiming * PLASMA_SPEED); //set speed and vector
 		pBall->m_pGlowTrail->SetTransparency(kRenderTransAdd, 0, 175, 255, 200, kRenderFxNone);//emit trail
@@ -608,6 +646,9 @@ void CWeaponSMG1::PrimaryAttack(void)
 			QAngle(random->RandomFloat(-250, -500),
 			random->RandomFloat(-250, -500),
 			random->RandomFloat(-250, -500)));
+
+		int iAttachment = LookupAttachment("barrel");
+		DispatchParticleEffect("smg_core", PATTACH_POINT_FOLLOW, pOwner->GetViewModel(), iAttachment, true);
 	}
 	m_iPrimaryAttacks++;
 	gamestats->Event_WeaponFired(pPlayer, true, GetClassname());
@@ -630,24 +671,24 @@ void CWeaponSMG1::PrimaryAttack(void)
 //			flDist - 
 // Output : int
 //-----------------------------------------------------------------------------
-int CWeaponSMG1::WeaponRangeAttack2Condition( float flDot, float flDist )
+int CWeaponPlasmaRifle::WeaponRangeAttack2Condition(float flDot, float flDist)
 {
 	CAI_BaseNPC *npcOwner = GetOwner()->MyNPCPointer();
 
 	return COND_NONE;
 
-/*
+	/*
 	// --------------------------------------------------------
 	// Assume things haven't changed too much since last time
 	// --------------------------------------------------------
 	if (gpGlobals->curtime < m_flNextGrenadeCheck )
-		return m_lastGrenadeCondition;
-*/
+	return m_lastGrenadeCondition;
+	*/
 
 	// -----------------------
 	// If moving, don't check.
 	// -----------------------
-	if ( npcOwner->IsMoving())
+	if (npcOwner->IsMoving())
 		return COND_NONE;
 
 	CBaseEntity *pEnemy = npcOwner->GetEnemy();
@@ -656,19 +697,19 @@ int CWeaponSMG1::WeaponRangeAttack2Condition( float flDot, float flDist )
 		return COND_NONE;
 
 	Vector vecEnemyLKP = npcOwner->GetEnemyLKP();
-	if ( !( pEnemy->GetFlags() & FL_ONGROUND ) && pEnemy->GetWaterLevel() == 0 && vecEnemyLKP.z > (GetAbsOrigin().z + WorldAlignMaxs().z) )
+	if (!(pEnemy->GetFlags() & FL_ONGROUND) && pEnemy->GetWaterLevel() == 0 && vecEnemyLKP.z > (GetAbsOrigin().z + WorldAlignMaxs().z))
 	{
 		//!!!BUGBUG - we should make this check movetype and make sure it isn't FLY? Players who jump a lot are unlikely to 
 		// be grenaded.
 		// don't throw grenades at anything that isn't on the ground!
 		return COND_NONE;
 	}
-	
+
 	// --------------------------------------
 	//  Get target vector
 	// --------------------------------------
 	Vector vecTarget;
-	if (random->RandomInt(0,1))
+	if (random->RandomInt(0, 1))
 	{
 		// magically know where they are
 		vecTarget = pEnemy->WorldSpaceCenter();
@@ -683,7 +724,7 @@ int CWeaponSMG1::WeaponRangeAttack2Condition( float flDot, float flDist )
 	// vecTarget = vecTarget + pEnemy->m_vecVelocity * 2;
 
 
-	if ( ( vecTarget - npcOwner->GetLocalOrigin() ).Length2D() <= COMBINE_MIN_GRENADE_CLEAR_DIST )
+	if ((vecTarget - npcOwner->GetLocalOrigin()).Length2D() <= COMBINE_MIN_GRENADE_CLEAR_DIST)
 	{
 		// crap, I don't want to blow myself up
 		m_flNextGrenadeCheck = gpGlobals->curtime + 1; // one full second.
@@ -695,10 +736,10 @@ int CWeaponSMG1::WeaponRangeAttack2Condition( float flDot, float flDist )
 	// ---------------------------------------------------------------------
 	CBaseEntity *pTarget = NULL;
 
-	while ( ( pTarget = gEntList.FindEntityInSphere( pTarget, vecTarget, COMBINE_MIN_GRENADE_CLEAR_DIST ) ) != NULL )
+	while ((pTarget = gEntList.FindEntityInSphere(pTarget, vecTarget, COMBINE_MIN_GRENADE_CLEAR_DIST)) != NULL)
 	{
 		//Check to see if the default relationship is hatred, and if so intensify that
-		if ( npcOwner->IRelationType( pTarget ) == D_LI )
+		if (npcOwner->IRelationType(pTarget) == D_LI)
 		{
 			// crap, I might blow my own guy up. Don't throw a grenade and don't check again for a while.
 			m_flNextGrenadeCheck = gpGlobals->curtime + 1; // one full second.
@@ -711,8 +752,8 @@ int CWeaponSMG1::WeaponRangeAttack2Condition( float flDot, float flDist )
 	// ---------------------------------------------------------------------
 	// FIXME: speed is based on difficulty...
 
-	Vector vecToss = VecCheckThrow( this, npcOwner->GetLocalOrigin() + Vector(0,0,60), vecTarget, 600.0, 0.5 );
-	if ( vecToss != vec3_origin )
+	Vector vecToss = VecCheckThrow(this, npcOwner->GetLocalOrigin() + Vector(0, 0, 60), vecTarget, 600.0, 0.5);
+	if (vecToss != vec3_origin)
 	{
 		m_vecTossVelocity = vecToss;
 
@@ -731,18 +772,18 @@ int CWeaponSMG1::WeaponRangeAttack2Condition( float flDot, float flDist )
 }
 
 //-----------------------------------------------------------------------------
-const WeaponProficiencyInfo_t *CWeaponSMG1::GetProficiencyValues()
+const WeaponProficiencyInfo_t *CWeaponPlasmaRifle::GetProficiencyValues()
 {
 	static WeaponProficiencyInfo_t proficiencyTable[] =
 	{
-		{ 7.0,		0.75	},
-		{ 5.00,		0.75	},
-		{ 10.0/3.0, 0.75	},
-		{ 5.0/3.0,	0.75	},
-		{ 1.00,		1.0		},
+		{ 7.0, 0.75 },
+		{ 5.00, 0.75 },
+		{ 10.0 / 3.0, 0.75 },
+		{ 5.0 / 3.0, 0.75 },
+		{ 1.00, 1.0 },
 	};
 
-	COMPILE_TIME_ASSERT( ARRAYSIZE(proficiencyTable) == WEAPON_PROFICIENCY_PERFECT + 1);
+	COMPILE_TIME_ASSERT(ARRAYSIZE(proficiencyTable) == WEAPON_PROFICIENCY_PERFECT + 1);
 
 	return proficiencyTable;
 }

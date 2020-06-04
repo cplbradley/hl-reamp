@@ -11,6 +11,8 @@
 #include "items.h"
 #include "in_buttons.h"
 #include "engine/IEngineSound.h"
+#include "Sprite.h"
+#include "SpriteTrail.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -29,7 +31,10 @@ public:
 
 	void Spawn( void );
 	void Precache( void );
+	void CreateEffects(void);
 	bool MyTouch( CBasePlayer *pPlayer );
+protected:
+	CHandle<CSpriteTrail>	m_pGlowTrail;
 };
 
 LINK_ENTITY_TO_CLASS( item_healthkit, CHealthKit );
@@ -43,18 +48,31 @@ void CHealthKit::Spawn( void )
 {
 	Precache();
 	SetModel( "models/items/healthkit.mdl" );
-
+	CreateEffects();
 	BaseClass::Spawn();
 }
 
+void CHealthKit::CreateEffects(void)
+{
+	m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/bluelaser1.vmt", GetLocalOrigin(), false);
 
+	if (m_pGlowTrail != NULL)
+	{
+		m_pGlowTrail->FollowEntity(this);
+		m_pGlowTrail->SetTransparency(kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone);
+		m_pGlowTrail->SetStartWidth(14.0f);
+		m_pGlowTrail->SetEndWidth(1.0f);
+		m_pGlowTrail->SetLifeTime(1.0f);
+	}
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CHealthKit::Precache( void )
 {
 	PrecacheModel("models/items/healthkit.mdl");
-
+	PrecacheModel("sprites/bluelaser1.vmt");
+	PrecacheModel("sprites/glow04.vmt");
 	PrecacheScriptSound( "HealthKit.Touch" );
 }
 
@@ -101,22 +119,50 @@ class CHealthVial : public CItem
 {
 public:
 	DECLARE_CLASS( CHealthVial, CItem );
-
+protected:
+	CHandle<CSpriteTrail>	m_pGlowTrail;
+	CHandle<CSprite>		m_pMainGlow;
 	void Spawn( void )
 	{
 		Precache();
 		SetModel( "models/healthvial.mdl" );
-
+		CreateEffects();
+		SetThink(&CHealthVial::DelayedKill);
+		SetNextThink(gpGlobals->curtime + 10.0f);
 		BaseClass::Spawn();
 	}
 
 	void Precache( void )
 	{
 		PrecacheModel("models/healthvial.mdl");
-
+		PrecacheModel("sprites/bluelaser1.vmt");
+		PrecacheModel("sprites/glow04.vmt");
 		PrecacheScriptSound( "HealthVial.Touch" );
 	}
+	void CreateEffects( void )
+	{
+		m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/bluelaser1.vmt", GetLocalOrigin(), false);
 
+		if (m_pGlowTrail != NULL)
+		{
+			m_pGlowTrail->FollowEntity(this);
+			m_pGlowTrail->SetTransparency(kRenderTransAdd, 0, 255, 0, 255, kRenderFxNone);
+			m_pGlowTrail->SetStartWidth(14.0f);
+			m_pGlowTrail->SetEndWidth(1.0f);
+			m_pGlowTrail->SetLifeTime(1.0f);
+		}
+		m_pMainGlow = CSprite::SpriteCreate("sprites/animglow01.vmt", GetLocalOrigin(), false);
+
+
+		if (m_pMainGlow != NULL)
+		{
+			m_pMainGlow->FollowEntity(this);
+			m_pMainGlow->SetTransparency(kRenderGlow, 0, 255, 0, 200, kRenderFxNoDissipation);
+			m_pMainGlow->SetScale(0.45f);
+			m_pMainGlow->SetGlowProxySize(4.0f);
+		}
+
+	}
 	bool MyTouch( CBasePlayer *pPlayer )
 	{
 		if ( pPlayer->TakeHealth( sk_healthvial.GetFloat(), DMG_GENERIC ) )
@@ -144,6 +190,10 @@ public:
 		}
 
 		return false;
+	}
+	void DelayedKill(void)
+	{
+		UTIL_Remove(this);
 	}
 };
 

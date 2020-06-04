@@ -46,11 +46,9 @@ ConVar	g_debug_antlionguard( "g_debug_antlionguard", "0" );
 ConVar	sk_antlionguard_dmg_charge( "sk_antlionguard_dmg_charge", "0" );
 ConVar	sk_antlionguard_dmg_shove( "sk_antlionguard_dmg_shove", "0" );
 
-#if HL2_EPISODIC
-// When enabled, add code to have the antlion bleed profusely as it is badly injured.
 #define ANTLIONGUARD_BLOOD_EFFECTS 2
 ConVar	g_antlionguard_hemorrhage( "g_antlionguard_hemorrhage", "1", FCVAR_NONE, "If 1, guard will emit a bleeding particle effect when wounded." );
-#endif
+
 
 // Spawnflags 
 #define	SF_ANTLIONGUARD_SERVERSIDE_RAGDOLL	( 1 << 16 )
@@ -89,7 +87,7 @@ ConVar	g_antlionguard_hemorrhage( "g_antlionguard_hemorrhage", "1", FCVAR_NONE, 
 #endif
 
 #define	ANTLIONGUARD_CHARGE_MIN			256
-#define	ANTLIONGUARD_CHARGE_MAX			2048
+#define	ANTLIONGUARD_CHARGE_MAX			99999
 
 ConVar	sk_antlionguard_health( "sk_antlionguard_health", "0" );
 
@@ -1161,7 +1159,7 @@ bool CNPC_AntlionGuard::ShouldCharge( const Vector &startPos, const Vector &endP
 	// Only update this if we've requested it
 	if ( useTime )
 	{
-		m_flChargeTime = gpGlobals->curtime + 4.0f;
+		m_flChargeTime = gpGlobals->curtime;
 	}
 
 	return true;
@@ -1322,25 +1320,25 @@ float CNPC_AntlionGuard::MaxYawSpeed( void )
 
 	// Turn slowly when you're charging
 	if ( eActivity == ACT_ANTLIONGUARD_CHARGE_START )
-		return 4.0f;
+		return 10.0f;
 
 	if ( hl2_episodic.GetBool() && m_bInCavern )
 	{
 		// Allow a better turning rate when moving quickly but not charging the player
 		if ( ( eActivity == ACT_ANTLIONGUARD_CHARGE_RUN ) && IsCurSchedule( SCHED_ANTLIONGUARD_CHARGE ) == false )
-			return 16.0f;
+			return 0.0f;
 	}
 
 	// Turn more slowly as we close in on our target
 	if ( eActivity == ACT_ANTLIONGUARD_CHARGE_RUN )
 	{
 		if ( pEnemy == NULL )
-			return 2.0f;
+			return 0.0f;
 
 		float dist = UTIL_DistApprox2D( GetEnemy()->WorldSpaceCenter(), WorldSpaceCenter() );
 
-		if ( dist > 512 )
-			return 16.0f;
+		if ( dist > 50 )
+			return 0.0f;
 
 		//FIXME: Alter by skill level
 		float yawSpeed = RemapVal( dist, 0, 512, 1.0f, 2.0f );
@@ -2283,14 +2281,14 @@ void CNPC_AntlionGuard::TraceAttack( const CTakeDamageInfo &inputInfo, const Vec
 	CTakeDamageInfo info = inputInfo;
 
 	// Bullets are weak against us, buckshot less so
-	if ( info.GetDamageType() & DMG_BUCKSHOT )
+	/*if ( info.GetDamageType() & DMG_BUCKSHOT )
 	{
 		info.ScaleDamage( 0.5f );
 	}
 	else if ( info.GetDamageType() & DMG_BULLET )
 	{
 		info.ScaleDamage( 0.25f );
-	}
+	}*/
 
 	// Make sure we haven't rounded down to a minimal amount
 	if ( info.GetDamage() < 1.0f )
@@ -2558,7 +2556,7 @@ void ApplyChargeDamage( CBaseEntity *pAntlionGuard, CBaseEntity *pTarget, float 
 	Vector offset = RandomVector( -32, 32 ) + pTarget->WorldSpaceCenter();
 
 	// Generate enough force to make a 75kg guy move away at 700 in/sec
-	Vector vecForce = attackDir * ImpulseScale( 75, 700 );
+	Vector vecForce = attackDir * ImpulseScale( 75, 1200 );
 
 	// Deal the damage
 	CTakeDamageInfo	info( pAntlionGuard, pAntlionGuard, vecForce, offset, flDamage, DMG_CLUB );
@@ -2729,7 +2727,7 @@ bool CNPC_AntlionGuard::HandleChargeImpact( Vector vecImpact, CBaseEntity *pEnti
 	}
 
 	// Hit anything we don't like
-	if ( IRelationType( pEntity ) == D_HT && ( GetNextAttack() < gpGlobals->curtime ) )
+	if ( (IRelationType( pEntity ) == D_NU || D_HT) && ( GetNextAttack() < gpGlobals->curtime ) )
 	{
 		EmitSound( "NPC_AntlionGuard.Shove" );
 
@@ -4827,7 +4825,6 @@ AI_BEGIN_CUSTOM_NPC( npc_antlionguard, CNPC_AntlionGuard )
 	//		If we're here, the guard can't chase enemy, can't find a physobject to attack with, and can't summon
 	//==================================================
 
-#ifdef HL2_EPISODIC
 
 	DEFINE_SCHEDULE
 	( 
@@ -4846,20 +4843,6 @@ AI_BEGIN_CUSTOM_NPC( npc_antlionguard, CNPC_AntlionGuard )
 		"		COND_ANTLIONGUARD_PHYSICS_TARGET"
 		"		COND_HEAVY_DAMAGE"
 	)
-
-#else
-
-	DEFINE_SCHEDULE
-	( 
-	SCHED_ANTLIONGUARD_CANT_ATTACK,
-
-	"	Tasks"
-	"		TASK_WAIT								5"
-	""
-	"	Interrupts"
-	)
-
-#endif
 
 	//==================================================
 	// SCHED_ANTLIONGUARD_PHYSICS_DAMAGE_HEAVY

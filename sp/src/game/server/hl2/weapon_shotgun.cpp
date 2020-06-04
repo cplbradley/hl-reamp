@@ -17,11 +17,154 @@
 #include "in_buttons.h"
 #include "soundent.h"
 #include "vstdlib/random.h"
+#include "hl2_shareddefs.h"
 #include "gamestats.h"
+#include "Sprite.h"
+#include "SpriteTrail.h"
+#include "te_effect_dispatch.h"
+#include "weapon_grapple.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+class CShotgunPellet : public CBaseCombatCharacter
+{
+	DECLARE_CLASS(CShotgunPellet, CBaseCombatCharacter);
+public:
+	void	Spawn(void);
+	void	Precache(void);
+	void	ItemPostFrame(void);
+	void	PelletTouch(CBaseEntity *pOther);
+	void	KillIt(void);
+	//void	EnableTouch(void);
+	bool	CreateVPhysics(void);
+	unsigned int PhysicsSolidMaskForEntity() const;
 
+
+	static CShotgunPellet *Create(const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner = NULL);
+	CHandle<CSpriteTrail>	m_pGlowTrail;
+	bool	CreateTrail(void);
+	DECLARE_DATADESC();
+};
+LINK_ENTITY_TO_CLASS(shotgun_pellet, CShotgunPellet);
+BEGIN_DATADESC(CShotgunPellet)
+// Function Pointers
+DEFINE_FUNCTION(PelletTouch),
+END_DATADESC()
+CShotgunPellet *CShotgunPellet::Create(const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner)
+{
+	// Create a new entity with CShotgunPellet data
+	CShotgunPellet *pPellet = (CShotgunPellet *)CreateEntityByName("shotgun_pellet");
+	UTIL_SetOrigin(pPellet, vecOrigin);
+	pPellet->SetAbsAngles(angAngles);
+	pPellet->Spawn();
+	pPellet->SetOwnerEntity(pentOwner);
+	pPellet->SetModel("models/spitball_small.mdl");
+	return pPellet;
+}
+bool CShotgunPellet::CreateVPhysics(void)
+{
+	// Create the object in the physics system
+	VPhysicsInitNormal(SOLID_BBOX, FSOLID_NOT_SOLID, false);
+
+	return true;
+}
+unsigned int CShotgunPellet::PhysicsSolidMaskForEntity() const
+{
+	return (BaseClass::PhysicsSolidMaskForEntity() | CONTENTS_HITBOX) & ~CONTENTS_GRATE;
+}
+void CShotgunPellet::Spawn(void)
+{
+	Precache();
+	SetMoveType(MOVETYPE_FLY, MOVECOLLIDE_FLY_CUSTOM);
+	UTIL_SetSize(this, -Vector(0.1f, 0.1f, 0.1f), Vector(0.1f, 0.1f, 0.1f));
+	SetSolid(SOLID_BBOX);
+	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
+	CreateTrail();
+	SetTouch(&CShotgunPellet::PelletTouch);
+}
+void CShotgunPellet::Precache(void)
+{
+	PrecacheModel("models/spitball_small.mdl");
+	//PrecacheModel(PLASMA_MODEL_NPC);
+	//PrecacheParticleSystem("smg_plasmaball_core");
+}
+bool CShotgunPellet::CreateTrail(void)
+{
+	m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/smoke.vmt", GetLocalOrigin(), false);
+	if (m_pGlowTrail != NULL)
+	{
+		m_pGlowTrail->FollowEntity(this);
+
+		m_pGlowTrail->SetStartWidth(6.0f);
+		m_pGlowTrail->SetEndWidth(0.2f);
+		m_pGlowTrail->SetLifeTime(0.15f);
+	}
+	return true;
+}
+void CShotgunPellet::PelletTouch(CBaseEntity *pOther) //i touched something
+{
+	if (pOther->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE)
+		return;
+
+	if (pOther->IsSolid()) //is what i touched solid?
+	{
+		if (pOther->IsSolidFlagSet(FSOLID_TRIGGER)) //is it a trigger?
+		{
+			return; //carry on like nothing happened
+		}
+		//DispatchParticleEffect("smg_plasmaball_core", GetAbsOrigin(), GetAbsAngles(), this); //poof effect!
+	
+		if (pOther->m_takedamage != DAMAGE_NO) //can what i hit take damage?
+		{
+			trace_t	tr, tr2; //initialize info
+			tr = BaseClass::GetTouchTrace(); //trace touch
+			Vector	vecNormalizedVel = GetAbsVelocity();
+
+			ClearMultiDamage();
+			VectorNormalize(vecNormalizedVel);
+			if (GetOwnerEntity() && GetOwnerEntity()->IsPlayer() && pOther->IsNPC()) //am i owned by the player and is what i touched an NPC? if so, i should do damage.
+			{
+				CTakeDamageInfo	dmgInfo(this, GetOwnerEntity(), 12.0f, DMG_SHOCK);
+				dmgInfo.AdjustPlayerDamageInflictedForSkillLevel();
+				CalculateMeleeDamageForce(&dmgInfo, vecNormalizedVel, tr.endpos, 1.0f);
+				dmgInfo.SetDamagePosition(tr.endpos);
+				pOther->DispatchTraceAttack(dmgInfo, vecNormalizedVel, &tr);
+				//DispatchParticleEffect("smg_plasmaball_core", GetAbsOrigin(), GetAbsAngles(), this);
+			}
+			if (GetOwnerEntity() && GetOwnerEntity()->IsPlayer() && !pOther->IsNPC())
+			{
+				CTakeDamageInfo	dmgInfo(this, GetOwnerEntity(), 12.0f, DMG_BULLET | DMG_NEVERGIB);
+				CalculateMeleeDamageForce(&dmgInfo, vecNormalizedVel, tr.endpos, 1.0f);
+				dmgInfo.SetDamagePosition(tr.endpos);
+				pOther->DispatchTraceAttack(dmgInfo, vecNormalizedVel, &tr);
+			}
+
+			if (GetOwnerEntity() && !GetOwnerEntity()->IsPlayer() && pOther->IsPlayer()) //am i owned by something other than the player? did i touch the player? if so, i should do damage
+			{
+				CTakeDamageInfo dmgInfo(this, GetOwnerEntity(), 12.0f, DMG_BULLET);
+				dmgInfo.AdjustPlayerDamageTakenForSkillLevel();
+				CalculateMeleeDamageForce(&dmgInfo, vecNormalizedVel, tr.endpos, 0.7f);//scale damage
+				dmgInfo.SetDamagePosition(tr.endpos);
+				pOther->DispatchTraceAttack(dmgInfo, vecNormalizedVel, &tr);
+			}
+			ApplyMultiDamage();
+			
+		}
+		UTIL_Remove(this);
+	}
+}
+void CShotgunPellet::KillIt(void)
+{
+	m_pGlowTrail == NULL;
+	UTIL_Remove(this); //remove it
+}
+void CShotgunPellet::ItemPostFrame(void)
+{
+	if (GetAbsVelocity() == 0)
+	{
+		KillIt();
+	}
+}
 extern ConVar sk_auto_reload_time;
 extern ConVar sk_plr_num_shotgun_pellets;
 
@@ -38,6 +181,7 @@ private:
 	bool	m_bDelayedFire1;	// Fire primary when finished reloading
 	bool	m_bDelayedFire2;	// Fire secondary when finished reloading
 
+
 public:
 	void	Precache( void );
 
@@ -46,12 +190,12 @@ public:
 	virtual const Vector& GetBulletSpread( void )
 	{
 		static Vector vitalAllyCone = VECTOR_CONE_3DEGREES;
-		static Vector cone = VECTOR_CONE_10DEGREES;
+		static Vector cone = VECTOR_HALFCONE_20DEGREES;
 
 		if( GetOwner() && (GetOwner()->Classify() == CLASS_PLAYER_ALLY_VITAL) )
 		{
 			// Give Alyx's shotgun blasts more a more directed punch. She needs
-			// to be at least as deadly as she would be with her pistol to stay interesting (sjb)
+			// to be at least as deadly as sfbhe would be with her pistol to stay interesting (sjb)
 			return vitalAllyCone;
 		}
 
@@ -66,6 +210,8 @@ public:
 
 	virtual float			GetFireRate( void );
 
+	const char *GetTracerType(void) { return "AR2Tracer"; }
+
 	bool StartReload( void );
 	bool Reload( void );
 	void FillClip( void );
@@ -79,12 +225,12 @@ public:
 	void SecondaryAttack( void );
 	void DryFire( void );
 
+
 	void FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool bUseWeaponAngles );
 	void Operator_ForceNPCFire( CBaseCombatCharacter  *pOperator, bool bSecondary );
 	void Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator );
 
 	DECLARE_ACTTABLE();
-
 	CWeaponShotgun(void);
 };
 
@@ -169,21 +315,27 @@ void CWeaponShotgun::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool
 	ASSERT( npc != NULL );
 	WeaponSound( SINGLE_NPC );
 	pOperator->DoMuzzleFlash();
-	m_iClip1 = m_iClip1 - 1;
+	m_iClip1 = m_iClip1 - 2;
 
-	if ( bUseWeaponAngles )
-	{
-		QAngle	angShootDir;
-		GetAttachment( LookupAttachment( "muzzle" ), vecShootOrigin, angShootDir );
-		AngleVectors( angShootDir, &vecShootDir );
-	}
-	else 
-	{
-		vecShootOrigin = pOperator->Weapon_ShootPosition();
-		vecShootDir = npc->GetActualShootTrajectory( vecShootOrigin );
-	}
+	QAngle	angShootDir;
+	vecShootOrigin = pOperator->Weapon_ShootPosition();
+	vecShootDir = npc->GetShootEnemyDir(vecShootOrigin);
 
-	pOperator->FireBullets( 8, vecShootOrigin, vecShootDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0 );
+	pOperator->FireBullets( 0, vecShootOrigin, vecShootDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0 );
+	for ( int i = 0; i < 5; i++ )
+	{
+		Vector vecSpread(random->RandomFloat(-0.08716, 0.08716), random->RandomFloat(-0.08716, 0.08716), random->RandomFloat(-0.08716, 0.08716));
+		Vector vecSpreadShot = (vecShootDir + vecSpread);
+		QAngle angAiming;
+		VectorAngles(vecShootDir, angAiming);
+		CShotgunPellet *pPellet = CShotgunPellet::Create(vecShootOrigin, angAiming, pOperator);
+		pPellet->SetAbsVelocity(vecSpreadShot * 1400);
+		pPellet->m_pGlowTrail->SetTransparency(kRenderTransAdd, 45, 45, 255, 100, kRenderFxNone);
+		pPellet->SetRenderColor(255, 0, 0);
+		QAngle angRand = RandomAngle(0, 360);
+		pPellet->SetLocalAngles(angRand);
+	}
+	
 }
 
 //-----------------------------------------------------------------------------
@@ -292,7 +444,7 @@ bool CWeaponShotgun::StartReload( void )
 
 	if (m_iClip1 <= 0)
 	{
-		m_bNeedPump = true;
+		m_bNeedPump = false;
 	}
 
 	int j = MIN(1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
@@ -391,10 +543,18 @@ void CWeaponShotgun::FillClip( void )
 	// Add them to the clip
 	if ( pOwner->GetAmmoCount( m_iPrimaryAmmoType ) > 0 )
 	{
-		if ( Clip1() < GetMaxClip1() )
+		if (Clip1() < GetMaxClip1())
 		{
-			m_iClip1++;
-			pOwner->RemoveAmmo( 1, m_iPrimaryAmmoType );
+			if (Clip1() > 0)
+			{
+				m_iClip1++;
+				pOwner->RemoveAmmo(1, m_iPrimaryAmmoType);
+			}
+			else
+			{
+				m_iClip1 += 2;
+				pOwner->RemoveAmmo(2, m_iPrimaryAmmoType);
+			}
 		}
 	}
 }
@@ -413,13 +573,13 @@ void CWeaponShotgun::Pump( void )
 	
 	m_bNeedPump = false;
 	
-	WeaponSound( SPECIAL1 );
+	//WeaponSound( SPECIAL1 );
 
 	// Finish reload animation
-	SendWeaponAnim( ACT_SHOTGUN_PUMP );
+	//SendWeaponAnim( ACT_SHOTGUN_PUMP );
 
-	pOwner->m_flNextAttack	= gpGlobals->curtime + SequenceDuration();
-	m_flNextPrimaryAttack	= gpGlobals->curtime + SequenceDuration();
+	pOwner->m_flNextAttack	= gpGlobals->curtime;
+	m_flNextPrimaryAttack	= gpGlobals->curtime;
 }
 
 //-----------------------------------------------------------------------------
@@ -440,64 +600,54 @@ void CWeaponShotgun::DryFire( void )
 //
 //
 //-----------------------------------------------------------------------------
-void CWeaponShotgun::PrimaryAttack( void )
+void CWeaponShotgun::SecondaryAttack( void )
 {
-	// Only the player fires this way so we can cast
-	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
-
+	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
 	if (!pPlayer)
 	{
 		return;
 	}
-
-	// MUST call sound before removing a round from the clip of a CMachineGun
+	if (m_iClip1 <= 0)
+	{
+		if (!m_bFireOnEmpty)
+		{
+			Reload();
+		}
+		else
+		{
+			WeaponSound(EMPTY);
+			m_flNextPrimaryAttack = 0.15;
+		}
+		return;
+	}
+	m_iPrimaryAttacks++;
+	gamestats->Event_WeaponFired(pPlayer, true, GetClassname());
 	WeaponSound(SINGLE);
-
 	pPlayer->DoMuzzleFlash();
-
-	SendWeaponAnim( ACT_VM_PRIMARYATTACK );
-
-	// player "shoot" animation
-	pPlayer->SetAnimation( PLAYER_ATTACK1 );
-
-	// Don't fire again until fire animation has completed
-	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
-	m_iClip1 -= 1;
-
-	Vector	vecSrc		= pPlayer->Weapon_ShootPosition( );
-	Vector	vecAiming	= pPlayer->GetAutoaimVector( AUTOAIM_SCALE_DEFAULT );	
-
-	pPlayer->SetMuzzleFlashTime( gpGlobals->curtime + 1.0 );
-	
-	// Fire the bullets, and force the first shot to be perfectly accuracy
-	pPlayer->FireBullets( sk_plr_num_shotgun_pellets.GetInt(), vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0, -1, -1, 0, NULL, true, true );
-	
-	pPlayer->ViewPunch( QAngle( random->RandomFloat( -2, -1 ), random->RandomFloat( -2, 2 ), 0 ) );
-
-	CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), SOUNDENT_VOLUME_SHOTGUN, 0.2, GetOwner() );
-
+	SendWeaponAnim(ACT_VM_PRIMARYATTACK);
+	m_flNextPrimaryAttack = gpGlobals->curtime + 0.75;
+	m_flNextSecondaryAttack = gpGlobals->curtime + 0.75;
+	//Disabled so we can shoot all the time that we want
+	//m_iClip1--;
+	Vector vecSrc = pPlayer->Weapon_ShootPosition();
+	Vector vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT);
+	//We will not shoot bullets anymore
+	pPlayer->FireBullets(14, vecSrc, vecAiming, (GetBulletSpread()/1.5), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false);
+	pPlayer->SetMuzzleFlashTime(gpGlobals->curtime + 0.5);
+	CSoundEnt::InsertSound(SOUND_COMBAT, GetAbsOrigin(), 600, 0.2, GetOwner());
 	if (!m_iClip1 && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
 	{
 		// HEV suit - indicate out of ammo condition
-		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0); 
+		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 	}
-
-	if( m_iClip1 )
-	{
-		// pump so long as some rounds are left.
-		m_bNeedPump = true;
-	}
-
-	m_iPrimaryAttacks++;
-	gamestats->Event_WeaponFired( pPlayer, true, GetClassname() );
+	
 }
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //
 //
 //-----------------------------------------------------------------------------
-void CWeaponShotgun::SecondaryAttack( void )
+void CWeaponShotgun::PrimaryAttack( void )
 {
 	// Only the player fires this way so we can cast
 	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
@@ -521,31 +671,33 @@ void CWeaponShotgun::SecondaryAttack( void )
 	// Don't fire again until fire animation has completed
 	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
 	m_iClip1 -= 2;	// Shotgun uses same clip for primary and secondary attacks
-
-	Vector vecSrc	 = pPlayer->Weapon_ShootPosition();
+	Vector	vForward, vRight, vUp;
+	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
+	Vector vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * 3.0f;
+	
 	Vector vecAiming = pPlayer->GetAutoaimVector( AUTOAIM_SCALE_DEFAULT );	
 
 	// Fire the bullets
-	pPlayer->FireBullets( 12, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0, -1, -1, 0, NULL, false, false );
-	pPlayer->ViewPunch( QAngle(random->RandomFloat( -5, 5 ),0,0) );
+	pPlayer->FireBullets( 28, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false );
+	//pPlayer->ViewPunch( QAngle(random->RandomFloat( -15, 15 ),0,0) );
 
 	pPlayer->SetMuzzleFlashTime( gpGlobals->curtime + 1.0 );
 
 	CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), SOUNDENT_VOLUME_SHOTGUN, 0.2 );
 
-	if (!m_iClip1 && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
+	/*if (!m_iClip1 && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
 	{
 		// HEV suit - indicate out of ammo condition
 		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0); 
 	}
-
+	*/
 	if( m_iClip1 )
 	{
 		// pump so long as some rounds are left.
-		m_bNeedPump = true;
+		m_bNeedPump = false;
 	}
 
-	m_iSecondaryAttacks++;
+	m_iPrimaryAttacks++;
 	gamestats->Event_WeaponFired( pPlayer, false, GetClassname() );
 }
 	
@@ -559,7 +711,7 @@ void CWeaponShotgun::ItemPostFrame( void )
 	{
 		return;
 	}
-
+	
 	if (m_bInReload)
 	{
 		// If I'm primary firing and have one round stop reloading and fire
@@ -606,7 +758,7 @@ void CWeaponShotgun::ItemPostFrame( void )
 
 	if ((m_bNeedPump) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
 	{
-		Pump();
+		//Pump();
 		return;
 	}
 	
@@ -620,7 +772,7 @@ void CWeaponShotgun::ItemPostFrame( void )
 			// If only one shell is left, do a single shot instead	
 			if ( m_iClip1 == 1 )
 			{
-				PrimaryAttack();
+				SecondaryAttack();
 			}
 			else if (!pOwner->GetAmmoCount(m_iPrimaryAmmoType))
 			{
@@ -717,6 +869,7 @@ void CWeaponShotgun::ItemPostFrame( void )
 		WeaponIdle( );
 		return;
 	}
+
 
 }
 

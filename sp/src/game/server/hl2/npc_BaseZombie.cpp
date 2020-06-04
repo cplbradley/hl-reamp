@@ -694,14 +694,14 @@ void CNPC_BaseZombie::TraceAttack( const CTakeDamageInfo &info, const Vector &ve
 		m_bHeadShot = true;
 	}
 
-	if( infoCopy.GetDamageType() & DMG_BUCKSHOT )
+	/*if( infoCopy.GetDamageType() & DMG_BUCKSHOT )
 	{
 		// Zombie gets across-the-board damage reduction for buckshot. This compensates for the recent changes which
 		// make the shotgun much more powerful, and returns the zombies to a level that has been playtested extensively.(sjb)
 		// This normalizes the buckshot damage to what it used to be on normal (5 dmg per pellet. Now it's 8 dmg per pellet). 
 		infoCopy.ScaleDamage( 0.625 );
 	}
-
+	*/
 	BaseClass::TraceAttack( infoCopy, vecDir, ptr, pAccumulator );
 }
 

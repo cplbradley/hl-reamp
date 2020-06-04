@@ -45,6 +45,7 @@ public:
 	void	Precache( void );
 	bool	CreateVPhysics( void );
 	void	CreateEffects( void );
+	void	NadeTouch(CBaseEntity *pOther);
 	void	SetTimer( float detonateDelay, float warnDelay );
 	void	SetVelocity( const Vector &velocity, const AngularImpulse &angVelocity );
 	int		OnTakeDamage( const CTakeDamageInfo &inputInfo );
@@ -125,9 +126,12 @@ void CGrenadeFrag::Spawn( void )
 	SetSize( -Vector(4,4,4), Vector(4,4,4) );
 	SetCollisionGroup( COLLISION_GROUP_WEAPON );
 	CreateVPhysics();
+	
 
 	BlipSound();
 	m_flNextBlipTime = gpGlobals->curtime + FRAG_GRENADE_BLIP_FREQUENCY;
+
+	SetTouch(&CGrenadeFrag::NadeTouch);
 
 	AddSolidFlags( FSOLID_NOT_STANDABLE );
 
@@ -185,7 +189,7 @@ void CGrenadeFrag::CreateEffects( void )
 bool CGrenadeFrag::CreateVPhysics()
 {
 	// Create the object in the physics system
-	VPhysicsInitNormal( SOLID_BBOX, 0, false );
+	VPhysicsInitNormal( SOLID_BBOX, 011+0, false );
 	return true;
 }
 
@@ -293,6 +297,17 @@ void CGrenadeFrag::SetTimer( float detonateDelay, float warnDelay )
 	SetNextThink( gpGlobals->curtime );
 
 	CreateEffects();
+}
+void CGrenadeFrag::NadeTouch(CBaseEntity *pOther)
+{
+	if (pOther->IsNPC())
+	{
+		Detonate();
+	}
+	else
+	{
+		return;
+	}
 }
 
 void CGrenadeFrag::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason )
@@ -418,7 +433,7 @@ void CGrenadeFrag::InputSetTimer( inputdata_t &inputdata )
 
 CBaseGrenade *Fraggrenade_Create( const Vector &position, const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, CBaseEntity *pOwner, float timer, bool combineSpawned )
 {
-	// Don't set the owner here, or the player can't interact with grenades he's thrown
+	// Don't set the owner here, or the player can't interact with grenades he's thrown-------------------------------------
 	CGrenadeFrag *pGrenade = (CGrenadeFrag *)CBaseEntity::Create( "npc_grenade_frag", position, angles, pOwner );
 	
 	pGrenade->SetTimer( timer, timer - FRAG_GRENADE_WARN_TIME );

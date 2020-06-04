@@ -1149,13 +1149,7 @@ void CPropCombineBall::InputFadeAndRespawn( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CPropCombineBall::CollisionEventToTrace( int index, gamevcollisionevent_t *pEvent, trace_t &tr )
 {
-	UTIL_ClearTrace( tr );
-	pEvent->pInternalData->GetSurfaceNormal( tr.plane.normal );
-	pEvent->pInternalData->GetContactPoint( tr.endpos );
-	tr.plane.dist = DotProduct( tr.plane.normal, tr.endpos );
-	VectorMA( tr.endpos, -1.0f, pEvent->preVelocity[index], tr.startpos );
-	tr.m_pEnt = pEvent->pEntities[!index];
-	tr.fraction = 0.01f;	// spoof!
+	DoExplosion();
 }
 
 //-----------------------------------------------------------------------------
@@ -1197,8 +1191,8 @@ bool CPropCombineBall::DissolveEntity( CBaseEntity *pEntity )
 void CPropCombineBall::OnHitEntity( CBaseEntity *pHitEntity, float flSpeed, int index, gamevcollisionevent_t *pEvent )
 {
 	// Detonate on the strider + the bone followers in the strider
-	if ( FClassnameIs( pHitEntity, "npc_strider" ) || 
-		(pHitEntity->GetOwnerEntity() && FClassnameIs( pHitEntity->GetOwnerEntity(), "npc_strider" )) )
+	if ( FClassnameIs( pHitEntity, "npc_antlionguard" ) || 
+		(pHitEntity->GetOwnerEntity() && FClassnameIs( pHitEntity->GetOwnerEntity(), "npc_antlionguard" )) )
 	{
 		DoExplosion();
 		return;

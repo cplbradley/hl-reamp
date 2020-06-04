@@ -39,9 +39,9 @@
 #define FASTZOMBIE_MAX_PITCH			130
 #define FASTZOMBIE_SOUND_UPDATE_FREQ	0.5
 
-#define FASTZOMBIE_MAXLEAP_Z		128
+#define FASTZOMBIE_MAXLEAP_Z		1024.0
 
-#define FASTZOMBIE_EXCITE_DIST 480.0
+#define FASTZOMBIE_EXCITE_DIST 960.0
 
 #define FASTZOMBIE_BASE_FREQ 1.5
 
@@ -945,7 +945,7 @@ void CFastZombie::AlertSound( void )
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 #define FASTZOMBIE_MINLEAP			200
-#define FASTZOMBIE_MAXLEAP			300
+#define FASTZOMBIE_MAXLEAP			1000
 float CFastZombie::InnateRange1MaxRange( void ) 
 { 
 	return FASTZOMBIE_MAXLEAP; 
@@ -1188,7 +1188,7 @@ void CFastZombie::LeapAttack( void )
 		{
 			height = 120;
 		}
-		float speed = sqrt( 2 * gravity * height );
+		float speed = sqrt( 3 * gravity * height );
 		float time = speed / gravity;
 
 		//
@@ -1205,7 +1205,7 @@ void CFastZombie::LeapAttack( void )
 		//
 		// Don't jump too far/fast.
 		//
-#define CLAMP 1000.0
+#define CLAMP 10000.0
 		float distance = vecJumpDir.Length();
 		if ( distance > CLAMP )
 		{

@@ -8,20 +8,23 @@
 #include "beam_shared.h"
 #include "globalstate.h"
 #include "npcevent.h"
+#include "basecombatcharacter.h"
 #include "Sprite.h"
+#include "SpriteTrail.h"
 #include "IEffects.h"
 #include "te_effect_dispatch.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "physics_prop_ragdoll.h"
+#include "gib.h"
 #include "RagdollBoogie.h"
 #include "ai_squadslot.h"
+#include "hl2_gamerules.h"
 #include "npc_antlion.h"
 #include "particle_parse.h"
 #include "particle_system.h"
 #include "ai_senses.h"
-
 #include "npc_vortigaunt_episodic.h"
-
+#include "hlr/hlr_projectile.h"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -555,27 +558,31 @@ Vector CNPC_Vortigaunt::BodyTarget( const Vector &posSrc, bool bNoisy )
 	if ( bNoisy )
 	{
 		// bell curve
-		float rand1 = random->RandomFloat( 0.0, 0.5 );
-		float rand2 = random->RandomFloat( 0.0, 0.5 );
+		float rand1 = random->RandomFloat( -25000.0, 25000.0 );
+		float rand2 = random->RandomFloat(-25000.0, 25000.0);
 		result = low + delta * rand1 + delta * rand2;
 	}
 	else
-		result = low + delta * 0.5; 
-
+	{
+		// bell curve
+		float rand1 = random->RandomFloat(-25000.0, 25000.0);
+		float rand2 = random->RandomFloat(-25000.0, 25000.0);
+		result = low + delta * rand1 + delta * rand2;
+	}
 	return result;
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Try a more predictive approach
 //-----------------------------------------------------------------------------
-bool CNPC_Vortigaunt::InnateWeaponLOSCondition( const Vector &ownerPos, const Vector &targetPos, bool bSetConditions )
+/*bool CNPC_Vortigaunt::InnateWeaponLOSCondition( const Vector &ownerPos, const Vector &targetPos, bool bSetConditions )
 {
 	// Try and figure out a rough idea of where we'll be after a certain time delta and base our
 	// conditions on that instead.  This is necessary because the vortigaunt takes a long time to
 	// deliver his attack and looks very strange if he starts to attack when he'd never be able to hit
 	// due to movement.
-
-	const float flTimeDelta = 0.5f;
+	//float rand = random->RandomFloat(-25.0f, 25.0f);
+	const float flTimeDelta = 25.5f;
 	Vector vecNewOwnerPos;
 	Vector vecNewTargetPos;
 	UTIL_PredictedPosition( this, flTimeDelta, &vecNewOwnerPos );
@@ -592,8 +599,8 @@ bool CNPC_Vortigaunt::InnateWeaponLOSCondition( const Vector &ownerPos, const Ve
 	NDebugOverlay::HorzArrow( vecNewOwnerPos, GetEnemy()->BodyTarget( vecNewOwnerPos ), 8.0f, 255, 255, 0, 32.0f, true, 3.0f );
 	*/
 
-	return BaseClass::InnateWeaponLOSCondition( vecNewOwnerPos, vecFinalTargetPos, bSetConditions );
-}
+	//return BaseClass::InnateWeaponLOSCondition( vecNewOwnerPos, vecFinalTargetPos, bSetConditions );
+//}
 
 //------------------------------------------------------------------------------
 // Purpose : For innate range attack
@@ -837,7 +844,8 @@ void CNPC_Vortigaunt::HandleAnimEvent( animevent_t *pEvent )
 
 		ClearMultiDamage();
 
-		int nHand = 0;
+		ZapBeam();
+		/*int nHand = 0;
 		if ( pEvent->options )
 		{
 			nHand = atoi( pEvent->options );
@@ -845,13 +853,13 @@ void CNPC_Vortigaunt::HandleAnimEvent( animevent_t *pEvent )
 
 		if ( ( nHand == HAND_LEFT ) || (nHand == HAND_BOTH ) )
 		{
-			ZapBeam( HAND_LEFT );
+			//ZapBeam( HAND_LEFT );
 		}
 		
 		if ( ( nHand == HAND_RIGHT ) || (nHand == HAND_BOTH ) )
 		{
-			ZapBeam( HAND_RIGHT );
-		}
+			//ZapBeam( HAND_RIGHT );
+		}*/
 
 		EndHandGlow();
 
@@ -1072,6 +1080,17 @@ void CNPC_Vortigaunt::Event_Killed( const CTakeDamageInfo &info )
 	ClearBeams();
 	ClearHandGlow();
 
+	if (info.GetDamage() >= (m_iMaxHealth * 1.5f) && (info.GetDamageType() != DMG_DISSOLVE))
+	{
+		SetSolid(SOLID_NONE);
+		AddEffects(EF_NODRAW);
+		DispatchParticleEffect("hgib_sploosh", WorldSpaceCenter(), GetAbsAngles());
+		CGib::SpawnSpecificGibs(this, 2, 1200, 500, "models/gibs/alien/agib_1.mdl", 5);
+		CGib::SpawnSpecificGibs(this, 2, 1200, 500, "models/gibs/alien/agib_2.mdl", 5);
+		CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_3.mdl", 5);
+		CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_4.mdl", 5);
+	}
+
 	BaseClass::Event_Killed( info );
 }
 
@@ -1092,6 +1111,8 @@ void CNPC_Vortigaunt::Spawn( void )
 		szModel = "models/vortigaunt.mdl";
 		SetModelName( AllocPooledString(szModel) );
 	}
+
+	//DrawStuff();
 
 	BaseClass::Spawn();
 
@@ -1136,6 +1157,7 @@ void CNPC_Vortigaunt::Spawn( void )
 void CNPC_Vortigaunt::Precache()
 {
 	UTIL_PrecacheOther( "vort_charge_token" );
+	UTIL_PrecacheOther("hlr_vortprojectile");
 
 	PrecacheModel( STRING( GetModelName() ) );
 
@@ -1173,10 +1195,54 @@ void CNPC_Vortigaunt::Precache()
 	PrecacheParticleSystem( "vortigaunt_hand_glow" );
 
 	PrecacheMaterial( "sprites/light_glow02_add" );
+	PrecacheModel("sprites/greenglow1.vmt");
+	PrecacheModel("sprites/smoke.vmt");
+
+	PrecacheModel("models/gibs/alien/agib_1.mdl");
+	PrecacheModel("models/gibs/alien/agib_2.mdl");
+	PrecacheModel("models/gibs/alien/agib_3.mdl");
+	PrecacheModel("models/gibs/alien/agib_4.mdl");
+	PrecacheModel("models/gibs/agibs.mdl");
+	PrecacheParticleSystem("hgib_sploosh");
+	
 
 	BaseClass::Precache();
 }	
+/*void CNPC_Vortigaunt::DrawStuff(void)
+{
+	int iLeftHand = LookupAttachment("nectar");
+	int iRightHand = LookupAttachment("cleaver_attachment");
+	int iEye = LookupAttachment("eyes");
 
+	m_tLeftHand = CSpriteTrail::SpriteTrailCreate("sprites/smoke.vmt", GetLocalOrigin(), false);
+	m_tRightHand = CSpriteTrail::SpriteTrailCreate("sprites/smoke.vmt", GetLocalOrigin(), false);
+	m_sEyeSprite = CSprite::SpriteCreate("sprites/greenglow1.vmt", GetLocalOrigin(), false);
+
+	if (m_tLeftHand != NULL)
+	{
+		m_tLeftHand->FollowEntity(this);
+		m_tLeftHand->SetAttachment(this, iLeftHand);
+		m_tLeftHand->SetStartWidth(8.0f);
+		m_tLeftHand->SetEndWidth(1.0f);
+		m_tLeftHand->SetLifeTime(0.5f);
+	}
+	if (m_tRightHand != NULL)
+	{
+		m_tRightHand->FollowEntity(this);
+		m_tRightHand->SetAttachment(this, iRightHand);
+		m_tRightHand->SetStartWidth(8.0f);
+		m_tRightHand->SetEndWidth(1.0f);
+		m_tRightHand->SetLifeTime(0.5f);
+	}
+	if (m_sEyeSprite != NULL)
+	{
+		m_sEyeSprite->FollowEntity(this);//my glow sticks to me 
+		m_sEyeSprite->SetAttachment(this, iEye);
+		m_sEyeSprite->SetTransparency(kRenderGlow, 255, 255, 255, 200, kRenderFxNoDissipation); //i'm a certain color
+		m_sEyeSprite->SetScale(1.0f); //this is how bing i am 
+		m_sEyeSprite->SetGlowProxySize(4.0f); //
+	}
+}*/
 //-----------------------------------------------------------------------------
 // Purpose: Interpret a player +USE'ing us
 //-----------------------------------------------------------------------------
@@ -1247,7 +1313,7 @@ void CNPC_Vortigaunt::DeathSound( const CTakeDamageInfo &info )
 void CNPC_Vortigaunt::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
 	CTakeDamageInfo info = inputInfo;
-
+	/*
 	if ( (info.GetDamageType() & DMG_SHOCK) && FClassnameIs( info.GetAttacker(), GetClassname() ) )
 	{
 		// mask off damage from other vorts for now
@@ -1260,7 +1326,7 @@ void CNPC_Vortigaunt::TraceAttack( const CTakeDamageInfo &inputInfo, const Vecto
 	case HITGROUP_STOMACH:
 		if (info.GetDamageType() & (DMG_BULLET | DMG_SLASH | DMG_BLAST))
 		{
-			info.ScaleDamage( 0.5f );
+			info.ScaleDamage( 1.0f );
 		}
 		break;
 	case 10:
@@ -1276,7 +1342,7 @@ void CNPC_Vortigaunt::TraceAttack( const CTakeDamageInfo &inputInfo, const Vecto
 		// always a head shot
 		ptr->hitgroup = HITGROUP_HEAD;
 		break;
-	}
+	}*/
 
 	BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
 }
@@ -1295,8 +1361,8 @@ int CNPC_Vortigaunt::TranslateSchedule( int scheduleType )
 	case SCHED_TAKE_COVER_FROM_BEST_SOUND:
 		
 		// Stand still if we're in the middle of an attack.  Failing to do so can make us miss our shot!
-		if ( IsPlayingGesture( ACT_GESTURE_RANGE_ATTACK1 ) )
-			return SCHED_COMBAT_FACE;
+		/*if ( IsPlayingGesture( ACT_GESTURE_RANGE_ATTACK1 ) )
+			return SCHED_COMBAT_FACE;*/
 
 		return SCHED_VORT_FLEE_FROM_BEST_SOUND;
 		break;
@@ -1363,8 +1429,8 @@ CBaseEntity *CNPC_Vortigaunt::FindHealTarget( void )
 	// Make sure we can heal that target
 	if ( ShouldHealTarget( pEntity ) == false )
 		return NULL;
-
-	return pEntity;
+	
+	return NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -2044,23 +2110,59 @@ void CNPC_Vortigaunt::CreateBeamBlast( const Vector &vecOrigin )
 }
 
 #define COS_30	0.866025404f // sqrt(3) / 2
-#define COS_60	0.5 // sqrt(1) / 2
+#define COS_60	1.5 // sqrt(1) / 2
 
 //-----------------------------------------------------------------------------
 // Purpose: Heavy damage directly forward
 // Input  : nHand - Handedness of the beam
 //-----------------------------------------------------------------------------
-void CNPC_Vortigaunt::ZapBeam( int nHand )
+void CNPC_Vortigaunt::ZapBeam(void)
 {
-	Vector forward;
-	GetVectors( &forward, NULL, NULL );
-
 	Vector vecSrc = GetAbsOrigin() + GetViewOffset();
-	Vector vecAim = GetShootEnemyDir( vecSrc, false );	// We want a clear shot to their core
+	Vector vecHandPos, vecCenter, vecLeft, vecRight;
+	QAngle vecHandAngle, angCenter, angLeft, angRight;
+	GetAttachment(m_iRightHandAttachment, vecHandPos, vecHandAngle);
+	Vector vecAim = GetShootEnemyDir(vecSrc, false);	// We want a clear shot to their core
+	QAngle angAim;
+	VectorAngles(vecAim,angAim);
+	
+
+
+	for (int i = 0; i < 3; i++)
+	{
+		CHLRVortProjectile *pVort = (CHLRVortProjectile*)CreateEntityByName("hlr_vortprojectile");
+		UTIL_SetOrigin(pVort, vecHandPos);
+		pVort->Spawn();
+		
+		if (i == 0)
+		{
+			angCenter = angAim;
+			AngleVectors(angCenter, &vecCenter);
+			pVort->SetAbsVelocity(vecCenter * 2500);
+		}
+		if (i == 1)
+		{
+			angLeft = angAim;
+			angLeft[1] += 10;
+			AngleVectors(angLeft, &vecLeft);
+			pVort->SetAbsVelocity(vecLeft * 2500);
+		}
+		if (i == 2)
+		{
+			angRight = angAim;
+			angRight[1] -= 10;
+			AngleVectors(angRight, &vecRight);
+			pVort->SetAbsVelocity(vecRight * 2500);
+		}
+	}
+	/*Vector forward;
+	GetVectors( &forward, NULL, NULL );
+	
+	
 
 	if ( GetEnemy() )
 	{
-		Vector vecTarget = GetEnemy()->BodyTarget( vecSrc, false );
+		Vector vecTarget = GetEnemy()->BodyTarget( vecSrc, true );
 				
 		if ( g_debug_vortigaunt_aim.GetBool() )
 		{
@@ -2072,9 +2174,7 @@ void CNPC_Vortigaunt::ZapBeam( int nHand )
 			}
 		}
 	}
-
-	// If we're too far off our center, the shot must miss!
-	if ( DotProduct( vecAim, forward ) < COS_60 )
+	if (DotProduct(vecAim, forward) < COS_60)
 	{
 		// Missed, so just shoot forward
 		vecAim = forward;
@@ -2157,7 +2257,7 @@ void CNPC_Vortigaunt::ZapBeam( int nHand )
 	}
 
 	// Create a cover for the end of the beam
-	CreateBeamBlast( tr.endpos );
+	CreateBeamBlast( tr.endpos );*/
 }
 
 //------------------------------------------------------------------------------
@@ -2268,7 +2368,7 @@ void CNPC_Vortigaunt::InputExtractBugbait( inputdata_t &data )
 //-----------------------------------------------------------------------------
 void CNPC_Vortigaunt::InputEnableHealthRegeneration( inputdata_t &data )
 {
-	m_bRegenerateHealth = true;
+	m_bRegenerateHealth = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -2635,13 +2735,13 @@ void CNPC_Vortigaunt::SetScriptedScheduleIgnoreConditions( Interruptability_t in
 //-----------------------------------------------------------------------------
 int CNPC_Vortigaunt::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 {
-	if( info.GetDamageType() & (DMG_CRUSH | DMG_BURN) )
-		return 0;
+	/*if( info.GetDamageType() & (DMG_CRUSH | DMG_BURN) )
+		return 0;*/
 
 	// vital vortigaunts (eg the vortigoth in ep2) take less damage from explosions
 	// so that zombines don't blow them up disappointingly. They take less damage
 	// still from antlion workers.
-	if ( Classify() == CLASS_PLAYER_ALLY_VITAL )
+	/*if ( Classify() == CLASS_PLAYER_ALLY_VITAL )
 	{
 		// half damage
 		CTakeDamageInfo subInfo = info;
@@ -2656,11 +2756,11 @@ int CNPC_Vortigaunt::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 		else if ( info.GetDamageType() & DMG_BLAST )
 		{
-			subInfo.ScaleDamage( 0.5f );
+			subInfo.ScaleDamage( 20.0f );
 		}
 
 		return BaseClass::OnTakeDamage_Alive( subInfo );
-	}
+	}*/
 
 	return BaseClass::OnTakeDamage_Alive( info );
 }
@@ -2909,7 +3009,7 @@ AI_BEGIN_CUSTOM_NPC( npc_vortigaunt, CNPC_Vortigaunt )
 		"	Tasks"
 		"		TASK_STOP_MOVING					0"
 		"		TASK_SET_ACTIVITY					ACTIVITY:ACT_IDLE"
-		"		TASK_WAIT							2"					// repick IDLESTAND every two seconds."
+		"		TASK_WAIT							0"					// repick IDLESTAND every two seconds."
 		""
 		"	Interrupts"
 		"		COND_NEW_ENEMY"
@@ -3115,6 +3215,7 @@ CVortigauntChargeToken *CVortigauntChargeToken::CreateChargeToken( const Vector 
 void CVortigauntChargeToken::Precache( void )
 {
 	PrecacheParticleSystem( "vortigaunt_charge_token" );
+	
 }
 
 //-----------------------------------------------------------------------------

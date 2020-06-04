@@ -9,6 +9,7 @@
 #include "player.h"
 #include "gamerules.h"
 #include "grenade_frag.h"
+#include "basegrenade_shared.h"
 #include "npcevent.h"
 #include "engine/IEngineSound.h"
 #include "items.h"
@@ -66,7 +67,8 @@ private:
 	
 	int		m_AttackPaused;
 	bool	m_fDrawbackFinished;
-
+protected:
+	CHandle<CBaseGrenade> m_Grenada;
 	DECLARE_ACTTABLE();
 
 	DECLARE_DATADESC();
@@ -75,6 +77,7 @@ private:
 
 BEGIN_DATADESC( CWeaponFrag )
 	DEFINE_FIELD( m_bRedraw, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_Grenada, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_AttackPaused, FIELD_INTEGER ),
 	DEFINE_FIELD( m_fDrawbackFinished, FIELD_BOOLEAN ),
 END_DATADESC()
@@ -228,26 +231,68 @@ bool CWeaponFrag::Reload( void )
 	return true;
 }
 
+
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CWeaponFrag::SecondaryAttack( void )
+void CWeaponFrag::PrimaryAttack( void )
 {
-	if ( m_bRedraw )
-		return;
+	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+	Vector	vecEye = pPlayer->EyePosition();
+	Vector	vForward, vRight;
+	Vector vecAng;
+	pPlayer->EyeVectors(&vecAng);
+	Vector vecSrc = vecEye + vForward * 18.0f + vRight * 8.0f + Vector(0, 0, -8);
+	//CheckThrowPosition(pPlayer, vecEye, vecSrc);
+
+
+	Vector vecThrow = vecAng * 1500 + Vector(0, 0, 150);
+	Fraggrenade_Create(vecSrc, vec3_angle, vecThrow, AngularImpulse(200, random->RandomInt(-600, 600), 0), pPlayer, 3.0f, false);
+	
+	m_flNextPrimaryAttack = gpGlobals->curtime + 0.4f;
+
+	WeaponSound(WPN_DOUBLE);
+
+	//m_bRedraw = true;
+
+	m_iPrimaryAttacks++;
+	gamestats->Event_WeaponFired(pPlayer, true, GetClassname());
+
+	DecrementAmmo(GetOwner());
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : *pOwner - 
+//-----------------------------------------------------------------------------
+void CWeaponFrag::DecrementAmmo( CBaseCombatCharacter *pOwner )
+{
+	pOwner->RemoveAmmo( 1, m_iPrimaryAmmoType );
+}
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CWeaponFrag::SecondaryAttack(void)
+{
+
+	
+	//if (!pBouncer) 
+	/*if ( m_bRedraw )
+	return;
 
 	if ( !HasPrimaryAmmo() )
-		return;
+	return;
 
 	CBaseCombatCharacter *pOwner  = GetOwner();
 
 	if ( pOwner == NULL )
-		return;
+	return;
 
 	CBasePlayer *pPlayer = ToBasePlayer( pOwner );
-	
+
 	if ( pPlayer == NULL )
-		return;
+	return;
 
 	// Note that this is a secondary attack and prepare the grenade attack to pause.
 	m_AttackPaused = GRENADE_PAUSED_SECONDARY;
@@ -260,55 +305,9 @@ void CWeaponFrag::SecondaryAttack( void )
 	// If I'm now out of ammo, switch away
 	if ( !HasPrimaryAmmo() )
 	{
-		pPlayer->SwitchToNextBestWeapon( this );
-	}
+	pPlayer->SwitchToNextBestWeapon( this );
+	}*/
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CWeaponFrag::PrimaryAttack( void )
-{
-	if ( m_bRedraw )
-		return;
-
-	CBaseCombatCharacter *pOwner  = GetOwner();
-	
-	if ( pOwner == NULL )
-	{ 
-		return;
-	}
-
-	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );;
-
-	if ( !pPlayer )
-		return;
-
-	// Note that this is a primary attack and prepare the grenade attack to pause.
-	m_AttackPaused = GRENADE_PAUSED_PRIMARY;
-	SendWeaponAnim( ACT_VM_PULLBACK_HIGH );
-	
-	// Put both of these off indefinitely. We do not know how long
-	// the player will hold the grenade.
-	m_flTimeWeaponIdle = FLT_MAX;
-	m_flNextPrimaryAttack = FLT_MAX;
-
-	// If I'm now out of ammo, switch away
-	if ( !HasPrimaryAmmo() )
-	{
-		pPlayer->SwitchToNextBestWeapon( this );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pOwner - 
-//-----------------------------------------------------------------------------
-void CWeaponFrag::DecrementAmmo( CBaseCombatCharacter *pOwner )
-{
-	pOwner->RemoveAmmo( 1, m_iPrimaryAmmoType );
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------

@@ -89,8 +89,7 @@ void CWeaponCrowbar::AddViewKick( void )
 //-----------------------------------------------------------------------------
 // Attempt to lead the target (needed because citizens can't hit manhacks with the crowbar!)
 //-----------------------------------------------------------------------------
-ConVar sk_crowbar_lead_time( "sk_crowbar_lead_time", "0.9" );
-
+ConVar sk_crowbar_lead_time("sk_crowbar_lead_time", "0.9");
 int CWeaponCrowbar::WeaponMeleeAttack1Condition( float flDot, float flDist )
 {
 	// Attempt to lead the target (needed because citizens can't hit manhacks with the crowbar!)

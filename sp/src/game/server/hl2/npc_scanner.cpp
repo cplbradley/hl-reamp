@@ -19,6 +19,7 @@
 #include "IEffects.h"
 #include "items.h"
 #include "ai_route.h"
+#include "weapon_rpg.h"
 #include "player_pickup.h"
 #include "weapon_physcannon.h"
 #include "hl2_player.h"
@@ -58,8 +59,8 @@ extern IMaterialSystemHardwareConfig *g_pMaterialSystemHardwareConfig;
 
 #define	SCANNER_FLASH_MAX_VALUE			240		// How bright is maximum flash
 
-#define SCANNER_PHOTO_NEAR_DIST			64
-#define SCANNER_PHOTO_FAR_DIST			128
+#define SCANNER_PHOTO_NEAR_DIST			256
+#define SCANNER_PHOTO_FAR_DIST			768
 
 #define	SCANNER_FOLLOW_DIST				128
 
@@ -290,6 +291,7 @@ void CNPC_CScanner::Spawn(void)
 	// --------------------------------------------
 
 	CapabilitiesAdd( bits_CAP_INNATE_MELEE_ATTACK1 );
+	CapabilitiesAdd(bits_CAP_INNATE_RANGE_ATTACK1);
 
 	m_bPhotoTaken = false;
 
@@ -358,18 +360,10 @@ void CNPC_CScanner::Gib( void )
 	}
 
 	// Add a random chance of spawning a battery...
-	if ( !HasSpawnFlags(SF_NPC_NO_WEAPON_DROP) && random->RandomFloat( 0.0f, 1.0f) < 0.3f )
-	{
-		CItem *pBattery = (CItem*)CreateEntityByName("item_battery");
-		if ( pBattery )
-		{
-			pBattery->SetAbsOrigin( GetAbsOrigin() );
-			pBattery->SetAbsVelocity( GetAbsVelocity() );
-			pBattery->SetLocalAngularVelocity( GetLocalAngularVelocity() );
-			pBattery->ActivateWhenAtRest();
-			pBattery->Spawn();
-		}
-	}
+	DropItem("item_box_buckshot", WorldSpaceCenter() + RandomVector(0, 4), RandomAngle(0, 360));
+	DropItem("item_ammo_smg1", WorldSpaceCenter() + RandomVector(0, 4), RandomAngle(0, 360));
+	DropItem("item_ammo_ar2_large", WorldSpaceCenter() + RandomVector(0, 4), RandomAngle(0, 360));
+	DropItem("item_rpg_round", WorldSpaceCenter() + RandomVector(0, 4), RandomAngle(0, 360));
 
 	DeployMine();
 
@@ -585,6 +579,10 @@ void CNPC_CScanner::Precache(void)
 	// Sprites
 	m_nHaloSprite = PrecacheModel("sprites/light_glow03.vmt");
 	PrecacheModel( "sprites/glow_test02.vmt" );
+	UTIL_PrecacheOther("item_ammo_smg1");
+	UTIL_PrecacheOther("item_ammo_ar2_large");
+	UTIL_PrecacheOther("item_rpg_round");
+	UTIL_PrecacheOther("item_box_buckshot");
 
 	BaseClass::Precache();
 }
@@ -1450,7 +1448,7 @@ int CNPC_CScanner::SelectSchedule(void)
 			return SCHED_CSCANNER_SPOTLIGHT_HOVER;
 
 		// Melee attack if possible
-		if ( HasCondition( COND_CAN_MELEE_ATTACK1 ) )
+		if (HasCondition(COND_CAN_MELEE_ATTACK1) && HasCondition(COND_ENEMY_FACING_ME))
 		{ 
 			if ( random->RandomInt(0,1) )
 				return SCHED_CSCANNER_ATTACK_FLASH;
@@ -1598,13 +1596,13 @@ void CNPC_CScanner::SpotlightCreate(void)
 	m_hSpotlightTarget->SetSimulatedEveryTick( false );
 
 	// Using the same color as the beam...
-	m_hSpotlightTarget->SetRenderColor( 255, 255, 255 );
+	m_hSpotlightTarget->SetRenderColor( 255, 0, 0 );
 	m_hSpotlightTarget->m_Radius = m_flSpotlightMaxLength;
 
 	m_hSpotlight = CBeam::BeamCreate( "sprites/glow_test02.vmt", SPOTLIGHT_WIDTH );
 	// Set the temporary spawnflag on the beam so it doesn't save (we'll recreate it on restore)
 	m_hSpotlight->AddSpawnFlags( SF_BEAM_TEMPORARY );
-	m_hSpotlight->SetColor( 255, 255, 255 ); 
+	m_hSpotlight->SetColor( 255, 0, 0 ); 
 	m_hSpotlight->SetHaloTexture( m_nHaloSprite );
 	m_hSpotlight->SetHaloScale( 32 );
 	m_hSpotlight->SetEndWidth( m_hSpotlight->GetWidth() );
@@ -1951,7 +1949,24 @@ void CNPC_CScanner::AttackFlash(void)
 //-----------------------------------------------------------------------------
 void CNPC_CScanner::BlindFlashTarget( CBaseEntity *pTarget )
 {
-	// Tell all the striders this person is here!
+	Vector vecSrc = GetAbsOrigin();
+	Vector vecEnd = pTarget->GetAbsOrigin();
+
+	
+	trace_t tr;
+	UTIL_TraceLine(vecSrc, vecEnd, MASK_ALL, this, COLLISION_GROUP_NONE, &tr);
+	debugoverlay->AddLineOverlay(tr.startpos, tr.endpos, 0, 255, 0, false, 3.0f);
+	Vector vecAim = tr.endpos - tr.startpos;
+	VectorNormalize(vecAim);
+	CMissile *pMissile = (CMissile *)CreateEntityByName("rpg_missile");
+	QAngle angAim;
+	VectorAngles(vecAim, angAim);
+	pMissile->SetAbsOrigin(tr.startpos);
+	pMissile->SetOwnerEntity(this);
+	pMissile->SetAbsAngles(angAim);
+	pMissile->Spawn();
+
+	/*// Tell all the striders this person is here!
 	CAI_BaseNPC **	ppAIs 	= g_AI_Manager.AccessAIs();
 	int 			nAIs 	= g_AI_Manager.NumAIs();
 	
@@ -1998,7 +2013,7 @@ void CNPC_CScanner::BlindFlashTarget( CBaseEntity *pTarget )
 			float flFadeTime = ( IsX360() ) ? 0.5f : 3.0f;
 			UTIL_ScreenFade( pTarget, white, flFadeTime, 0.5, FFADE_IN );
 		}
-	}
+	}*/
 }
 
 //------------------------------------------------------------------------------

@@ -82,7 +82,10 @@ void CHLMachineGun::PrimaryAttack( void )
 			iBulletsToFire = m_iClip1;
 		m_iClip1 -= iBulletsToFire;
 	}
-
+	if (!UsesClipsForAmmo1())
+	{
+		pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);
+	}
 	m_iPrimaryAttacks++;
 	gamestats->Event_WeaponFired( pPlayer, true, GetClassname() );
 
@@ -94,7 +97,7 @@ void CHLMachineGun::PrimaryAttack( void )
 	info.m_vecSpread = pPlayer->GetAttackSpread( this );
 	info.m_flDistance = MAX_TRACE_LENGTH;
 	info.m_iAmmoType = m_iPrimaryAmmoType;
-	info.m_iTracerFreq = 2;
+	info.m_iTracerFreq = 1;
 	FireBullets( info );
 
 	//Factor in the view kick

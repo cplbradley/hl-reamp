@@ -12,6 +12,7 @@
 #include "engine/IEngineSound.h"
 #include "soundent.h"
 #include "ndebugoverlay.h"
+#include "gib.h"
 #include "npcevent.h"
 #include "hl2/hl2_player.h"
 #include "game.h"
@@ -19,11 +20,14 @@
 #include "explode.h"
 #include "ai_memory.h"
 #include "Sprite.h"
+#include "SpriteTrail.h"
 #include "soundenvelope.h"
+#include "particle_parse.h"
 #include "weapon_physcannon.h"
 #include "hl2_gamerules.h"
 #include "gameweaponmanager.h"
 #include "vehicle_base.h"
+#include "npc_combines.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -58,7 +62,8 @@ void CNPC_CombineS::Spawn( void )
 {
 	Precache();
 	SetModel( STRING( GetModelName() ) );
-
+	DrawStuff();
+	AddSpawnFlags(SF_NPC_NO_WEAPON_DROP);
 	if( IsElite() )
 	{
 		// Stronger, tougher.
@@ -71,12 +76,12 @@ void CNPC_CombineS::Spawn( void )
 		SetHealth( sk_combine_s_health.GetFloat() );
 		SetMaxHealth( sk_combine_s_health.GetFloat() );
 		SetKickDamage( sk_combine_s_kick.GetFloat() );
+
 	}
 
 	CapabilitiesAdd( bits_CAP_ANIMATEDFACE );
 	CapabilitiesAdd( bits_CAP_MOVE_SHOOT );
 	CapabilitiesAdd( bits_CAP_DOORS_GROUP );
-
 	BaseClass::Spawn();
 
 #if HL2_EPISODIC
@@ -85,6 +90,7 @@ void CNPC_CombineS::Spawn( void )
 		Msg( "Soldier %s is set to use march anim, but is not an efficient AI. The blended march anim can only be used for dead-ahead walks!\n", GetDebugName() );
 	}
 #endif
+
 }
 
 //-----------------------------------------------------------------------------
@@ -111,14 +117,80 @@ void CNPC_CombineS::Precache()
 	}
 
 	PrecacheModel( STRING( GetModelName() ) );
-
+	PrecacheModel("sprites/glow03.vmt");
+	PrecacheModel("sprites/glow04.vmt");
 	UTIL_PrecacheOther( "item_healthvial" );
 	UTIL_PrecacheOther( "weapon_frag" );
 	UTIL_PrecacheOther( "item_ammo_ar2_altfire" );
+	UTIL_PrecacheOther("item_battery");
+	PrecacheModel("sprites/laser.vmt");
+	PrecacheModel("models/gibs/human/hgib_1.mdl");
+	PrecacheModel("models/gibs/human/hgib_2.mdl");
+	PrecacheModel("models/gibs/human/hgib_3.mdl");
+	PrecacheModel("models/gibs/human/hgib_4.mdl");
+	PrecacheModel("models/gibs/agibs.mdl");
+	PrecacheParticleSystem("hgib_sploosh");
 
 	BaseClass::Precache();
 }
 
+bool CNPC_CombineS::DrawStuff(void)
+{
+	m_pLeftEyeG = CSprite::SpriteCreate("sprites/glow03.vmt", GetLocalOrigin(), false);
+	m_pRightEyeG = CSprite::SpriteCreate("sprites/glow04.vmt", GetLocalOrigin(), false);
+	m_pLeftEyeT = CSpriteTrail::SpriteTrailCreate("sprites/laser.vmt", GetLocalOrigin(), false);
+	m_pRightEyeT = CSpriteTrail::SpriteTrailCreate("sprites/laser.vmt", GetLocalOrigin(), false);
+
+	int	nLeftEye = LookupAttachment("lefteye");
+	int	nRightEye = LookupAttachment("righteye");
+	if (m_pLeftEyeG != NULL)
+	{
+		m_pLeftEyeG->FollowEntity(this);
+		m_pLeftEyeG->SetAttachment(this, nLeftEye);
+		m_pLeftEyeG->SetScale(0.2f);
+		m_pLeftEyeG->SetGlowProxySize(4.0f);
+	}
+	if (m_pRightEyeG != NULL)
+	{
+		m_pRightEyeG->FollowEntity(this);
+		m_pRightEyeG->SetAttachment(this, nRightEye);
+		
+		m_pRightEyeG->SetScale(0.2f);
+		m_pRightEyeG->SetGlowProxySize(4.0f);
+	}
+	if (m_pLeftEyeT != NULL)
+	{
+		m_pLeftEyeT->FollowEntity(this);
+		m_pLeftEyeT->SetAttachment(this, nLeftEye);
+		
+		m_pLeftEyeT->SetStartWidth(8.0f);
+		m_pLeftEyeT->SetEndWidth(1.0f);
+		m_pLeftEyeT->SetLifeTime(0.5f);
+	}
+	if (m_pRightEyeT != NULL)
+	{
+		m_pRightEyeT->FollowEntity(this);
+		m_pRightEyeT->SetAttachment(this, nRightEye);
+		m_pRightEyeT->SetStartWidth(8.0f);
+		m_pRightEyeT->SetEndWidth(1.0f);
+		m_pRightEyeT->SetLifeTime(0.5f);
+	}
+	if (!HasShotgun())
+	{
+		m_pLeftEyeG->SetTransparency(kRenderGlow, 255, 190, 0, 200, kRenderFxNoDissipation);
+		m_pRightEyeG->SetTransparency(kRenderGlow, 255, 190, 0, 200, kRenderFxNoDissipation);
+		m_pLeftEyeT->SetTransparency(kRenderGlow, 255, 190, 0, 255, kRenderFxNone);
+		m_pRightEyeT->SetTransparency(kRenderGlow, 255, 190, 0, 255, kRenderFxNone);
+	}
+	else
+	{
+		m_pLeftEyeG->SetTransparency(kRenderGlow, 255, 0, 0, 200, kRenderFxNoDissipation);
+		m_pRightEyeG->SetTransparency(kRenderGlow, 255, 0, 0, 200, kRenderFxNoDissipation);
+		m_pLeftEyeT->SetTransparency(kRenderGlow, 255, 0, 0, 255, kRenderFxNone);
+		m_pRightEyeT->SetTransparency(kRenderGlow, 255, 0, 0, 255, kRenderFxNone);
+	}
+	return true;
+}
 
 void CNPC_CombineS::DeathSound( const CTakeDamageInfo &info )
 {
@@ -280,6 +352,16 @@ void CNPC_CombineS::OnListened()
 //-----------------------------------------------------------------------------
 void CNPC_CombineS::Event_Killed( const CTakeDamageInfo &info )
 {
+	
+		UTIL_RemoveImmediate(m_pRightEyeT);
+		m_pRightEyeT = NULL;
+		UTIL_RemoveImmediate(m_pRightEyeG);
+		m_pRightEyeG = NULL;
+		UTIL_RemoveImmediate(m_pLeftEyeT);
+		m_pLeftEyeT = NULL;
+		UTIL_RemoveImmediate(m_pLeftEyeG);
+		m_pLeftEyeG = NULL;
+
 	// Don't bother if we've been told not to, or the player has a megaphyscannon
 	if ( combine_spawn_health.GetBool() == false || PlayerHasMegaPhysCannon() )
 	{
@@ -342,11 +424,13 @@ void CNPC_CombineS::Event_Killed( const CTakeDamageInfo &info )
 		CHalfLife2 *pHL2GameRules = static_cast<CHalfLife2 *>(g_pGameRules);
 
 		// Attempt to drop health
-		if ( pHL2GameRules->NPC_ShouldDropHealth( pPlayer ) )
+		/*if ( pHL2GameRules->NPC_ShouldDropHealth( pPlayer ) )
 		{
 			DropItem( "item_healthvial", WorldSpaceCenter()+RandomVector(-4,4), RandomAngle(0,360) );
+			DropItem("item_healthvial", WorldSpaceCenter() + RandomVector(0, 4), RandomAngle(0, 360));
+			DropItem("item_battery", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360));
 			pHL2GameRules->NPC_DroppedHealth();
-		}
+		}*/
 		
 		if ( HasSpawnFlags( SF_COMBINE_NO_GRENADEDROP ) == false )
 		{
@@ -359,9 +443,24 @@ void CNPC_CombineS::Event_Killed( const CTakeDamageInfo &info )
 		}
 	}
 
+	if (info.GetDamage() >= (m_iMaxHealth * 1.5f) && (info.GetDamageType() != DMG_DISSOLVE))
+	{
+		DispatchParticleEffect("hgib_sploosh", WorldSpaceCenter(), GetAbsAngles());
+		Gib();
+	}
 	BaseClass::Event_Killed( info );
 }
 
+void CNPC_CombineS::Gib(void)
+{
+	SetSolid(SOLID_NONE);
+	AddEffects(EF_NODRAW);
+	CGib::SpawnSpecificGibs(this, 2, 1200, 500, "models/gibs/human/hgib_1.mdl", 5);
+	CGib::SpawnSpecificGibs(this, 2, 1200, 500, "models/gibs/human/hgib_2.mdl", 5);
+	CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/human/hgib_3.mdl", 5);
+	CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/human/hgib_4.mdl", 5);
+	
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : &info - 

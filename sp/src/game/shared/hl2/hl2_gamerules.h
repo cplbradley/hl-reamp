@@ -35,16 +35,19 @@ public:
 
 	// Damage Query Overrides.
 	virtual bool			Damage_IsTimeBased( int iDmgType );
+	//virtual bool			Damage_Quaddamage(void);
 	// TEMP:
 	virtual int				Damage_GetTimeBased( void );
 	
 	virtual bool			ShouldCollide( int collisionGroup0, int collisionGroup1 );
 	virtual bool			ShouldUseRobustRadiusDamage(CBaseEntity *pEntity);
+
 #ifndef CLIENT_DLL
 	virtual bool			ShouldAutoAim( CBasePlayer *pPlayer, edict_t *target );
 	virtual float			GetAutoAimScale( CBasePlayer *pPlayer );
 	virtual float			GetAmmoQuantityScale( int iAmmoIndex );
 	virtual void			LevelInitPreEntity();
+	virtual float			AdjustProjectileSpeed(float projspeed);
 #endif
 
 private:
@@ -85,6 +88,7 @@ public:
 	void	NPC_DroppedHealth( void );
 	void	NPC_DroppedGrenade( void );
 	bool	MegaPhyscannonActive( void ) { return m_bMegaPhysgun;	}
+	//bool	QuadDmg (int DmgOn);
 	
 	virtual bool IsAlyxInDarknessMode();
 
@@ -96,7 +100,8 @@ private:
 	void AdjustPlayerDamageTaken( CTakeDamageInfo *pInfo );
 	float AdjustPlayerDamageInflicted( float damage );
 
-	int						DefaultFOV( void ) { return 75; }
+
+	int						DefaultFOV( void ) { return 100; }
 #endif
 };
 

@@ -727,7 +727,7 @@ bool ShouldRemoveThisRagdoll( CBaseAnimating *pRagdoll )
 {
 	if ( g_RagdollLVManager.IsLowViolence() )
 	{
-		return true;
+		return false;
 	}
 
 #ifdef CLIENT_DLL

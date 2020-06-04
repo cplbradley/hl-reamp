@@ -282,43 +282,31 @@ void DispatchParticleEffect( const char *pszParticleName, ParticleAttachment_t i
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void DispatchParticleEffect( const char *pszParticleName, ParticleAttachment_t iAttachType, CBaseEntity *pEntity, int iAttachmentPoint, bool bResetAllParticlesOnEntity )
+void DispatchParticleEffect(const char *pszParticleName, ParticleAttachment_t iAttachType, CBaseEntity *pEntity, int iAttachmentPoint, bool bResetAllParticlesOnEntity)
 {
-	CEffectData	data;
+	CEffectData    data;
 
-	data.m_nHitBox = GetParticleSystemIndex( pszParticleName );
-	if ( pEntity )
+	data.m_nHitBox = GetParticleSystemIndex(pszParticleName);
+	if (pEntity)
 	{
+		data.m_vOrigin = pEntity->GetAbsOrigin();
 #ifdef CLIENT_DLL
 		data.m_hEntity = pEntity;
 #else
 		data.m_nEntIndex = pEntity->entindex();
 #endif
 		data.m_fFlags |= PARTICLE_DISPATCH_FROM_ENTITY;
-		data.m_vOrigin = pEntity->GetAbsOrigin();
 	}
 	data.m_nDamageType = iAttachType;
 	data.m_nAttachmentIndex = iAttachmentPoint;
 
-	if ( bResetAllParticlesOnEntity )
+	if (bResetAllParticlesOnEntity)
 	{
 		data.m_fFlags |= PARTICLE_DISPATCH_RESET_PARTICLES;
 	}
 
-#ifdef GAME_DLL
-	if ( ( data.m_fFlags & PARTICLE_DISPATCH_FROM_ENTITY ) != 0 &&
-		 ( iAttachType == PATTACH_ABSORIGIN_FOLLOW || iAttachType == PATTACH_POINT_FOLLOW || iAttachType == PATTACH_ROOTBONE_FOLLOW ) )
-	{
-		CBroadcastRecipientFilter filter;
-		DispatchEffect( "ParticleEffect", data, filter );
-	}
-	else
-#endif
-	{
-		DispatchEffect( "ParticleEffect", data );
-	}
+	DispatchEffect("ParticleEffect", data);
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 

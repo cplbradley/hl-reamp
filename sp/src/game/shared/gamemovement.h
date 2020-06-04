@@ -20,8 +20,8 @@
 #define CBTEXTURENAMEMAX	13			// only load first n chars of name
 
 #define GAMEMOVEMENT_DUCK_TIME				1000.0f		// ms
-#define GAMEMOVEMENT_JUMP_TIME				510.0f		// ms approx - based on the 21 unit height jump
-#define GAMEMOVEMENT_JUMP_HEIGHT			21.0f		// units
+#define GAMEMOVEMENT_JUMP_TIME				650.0f		// ms approx - based on the 21 unit height jump
+#define GAMEMOVEMENT_JUMP_HEIGHT			120000.0f		// units
 #define GAMEMOVEMENT_TIME_TO_UNDUCK			( TIME_TO_UNDUCK * 1000.0f )		// ms
 #define GAMEMOVEMENT_TIME_TO_UNDUCK_INV		( GAMEMOVEMENT_DUCK_TIME - GAMEMOVEMENT_TIME_TO_UNDUCK )
 
@@ -59,6 +59,7 @@ public:
 	// allows derived classes to exclude entities from trace
 	virtual void	TryTouchGround( const Vector& start, const Vector& end, const Vector& mins, const Vector& maxs, unsigned int fMask, int collisionGroup, trace_t& pm );
 
+	int m_iJumpCount;
 
 #define BRUSH_ONLY true
 	virtual unsigned int PlayerSolidMask( bool brushOnly = false );	///< returns the solid mask for the given player, so bots can have a more-restrictive set
@@ -71,6 +72,7 @@ protected:
 	int				m_nOldWaterLevel;
 	float			m_flWaterEntryTime;
 	int				m_nOnLadder;
+
 
 	Vector			m_vecForward;
 	Vector			m_vecRight;
@@ -95,17 +97,19 @@ protected:
 
 	void			WaterJump( void );
 
+	//bool			DoubleJump(void);
+
 	// Handles both ground friction and water friction
 	void			Friction( void );
 
 	virtual void	AirAccelerate( Vector& wishdir, float wishspeed, float accel );
 
 	virtual void	AirMove( void );
-	virtual float	GetAirSpeedCap( void ) { return 30.f; }
+	virtual float	GetAirSpeedCap( void ) { return 64.0f; }
 	
 	virtual bool	CanAccelerate();
 	virtual void	Accelerate( Vector& wishdir, float wishspeed, float accel);
-
+	
 	// Only used by players.  Moves along the ground when player is a MOVETYPE_WALK.
 	virtual void	WalkMove( void );
 
@@ -152,6 +156,7 @@ protected:
 
 	// Returns true if he started a jump (ie: should he play the jump animation)?
 	virtual bool	CheckJumpButton( void );	// Overridden by each game.
+
 
 	// Dead player flying through air., e.g.
 	virtual void    FullTossMove( void );
@@ -272,6 +277,7 @@ protected:
 	Vector			m_vecProximityMaxs;
 
 	float			m_fFrameTime;
+	bool			m_bHasDblJumped = false;
 
 //private:
 	int				m_iSpeedCropped;

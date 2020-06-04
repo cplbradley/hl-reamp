@@ -317,7 +317,7 @@ bool IsExplosionTraceBlocked( trace_t *ptr )
 //-----------------------------------------------------------------------------
 // Default implementation of radius damage
 //-----------------------------------------------------------------------------
-#define ROBUST_RADIUS_PROBE_DIST 16.0f // If a solid surface blocks the explosion, this is how far to creep along the surface looking for another way to the target
+#define ROBUST_RADIUS_PROBE_DIST 64.0f // If a solid surface blocks the explosion, this is how far to creep along the surface looking for another way to the target
 void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, CBaseEntity *pEntityIgnore )
 {
 	const int MASK_RADIUS_DAMAGE = MASK_SHOT&(~CONTENTS_HITBOX);
@@ -376,8 +376,10 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 			continue;
 
 		// Check that the explosion can 'see' this entity.
-		vecSpot = pEntity->BodyTarget( vecSrc, false );
+		vecSpot = pEntity->WorldSpaceCenter();
 		UTIL_TraceLine( vecSrc, vecSpot, MASK_RADIUS_DAMAGE, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
+		//debugoverlay->AddLineOverlay(tr.startpos, tr.endpos, 255, 0, 0, false, 3.0f);
+		//UTIL_TraceLine( vecSrc, vecSpot, MASK_SHOT, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
 
 		if( old_radius_damage.GetBool() )
 		{
@@ -414,7 +416,7 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 
 						// ...to see if there's a nearby edge that the explosion would 'spill over' if the blast were fully simulated.
 						UTIL_TraceLine( tr.endpos, vecSpot, MASK_RADIUS_DAMAGE, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
-						//NDebugOverlay::Line( tr.startpos, tr.endpos, 255, 0, 0, false, 10 );
+						NDebugOverlay::Line( tr.startpos, tr.endpos, 255, 0, 0, false, 10 );
 
 						if( tr.fraction != 1.0 && tr.DidHitWorld() )
 						{

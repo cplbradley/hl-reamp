@@ -99,6 +99,9 @@ struct sky3dparams_t
 	CNetworkVar( int, scale );
 	CNetworkVector( origin );
 	CNetworkVar( int, area );
+	// Skybox angle support
+	CNetworkQAngle(angles);
+	// Sky clearcolor
 
 	// 3d skybox fog data
 	CNetworkVarEmbedded( fogparams_t, fog );

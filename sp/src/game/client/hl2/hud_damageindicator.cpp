@@ -61,7 +61,7 @@ private:
 	CPanelAnimationVar( Color, m_DmgHighColorLeft, "DmgHighColorLeft", "255 0 0 0" );
 	CPanelAnimationVar( Color, m_DmgHighColorRight, "DmgHighColorRight", "255 0 0 0" );
 
-	CPanelAnimationVar( Color, m_DmgFullscreenColor, "DmgFullscreenColor", "255 0 0 0" );
+	CPanelAnimationVar( Color, m_DmgFullscreenColor, "DmgFullscreenColor", "120 0 0 0" );
 
 	void DrawDamageIndicator(int side);
 	void DrawFullscreenDamageIndicator();

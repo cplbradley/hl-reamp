@@ -1054,6 +1054,8 @@ void CHudWeaponSelection::OpenSelection( void )
 	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("OpenWeaponSelectionMenu");
 	m_iSelectedBoxPosition = 0;
 	m_iSelectedSlot = -1;
+	engine->ClientCmd_Unrestricted("sv_cheats 1");
+	engine->ClientCmd_Unrestricted("host_timescale 0.3");
 }
 
 //-----------------------------------------------------------------------------
@@ -1064,6 +1066,9 @@ void CHudWeaponSelection::HideSelection( void )
 	CBaseHudWeaponSelection::HideSelection();
 	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("CloseWeaponSelectionMenu");
 	m_bFadingOut = false;
+	engine->ClientCmd_Unrestricted("host_timescale 1");
+	engine->ClientCmd_Unrestricted("sv_cheats 0");
+
 }
 
 //-----------------------------------------------------------------------------

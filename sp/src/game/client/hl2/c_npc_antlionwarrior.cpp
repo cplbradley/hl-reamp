@@ -14,20 +14,20 @@
 
 
 // When enabled, add code to have the antlion bleed profusely as it is badly injured.
-#define ANTLIONGUARD_BLOOD_EFFECTS 2
+#define ANTLIONWARRIOR_BLOOD_EFFECTS 2
 
 
 
-class C_NPC_AntlionGuard : public C_AI_BaseNPC
+class C_NPC_AntlionWarrior : public C_AI_BaseNPC
 {
 public:
-	C_NPC_AntlionGuard() {}
+	C_NPC_AntlionWarrior() {}
 
-	DECLARE_CLASS( C_NPC_AntlionGuard, C_AI_BaseNPC );
+	DECLARE_CLASS(C_NPC_AntlionWarrior, C_AI_BaseNPC);
 	DECLARE_CLIENTCLASS();
- 	DECLARE_DATADESC();
+	DECLARE_DATADESC();
 
-	virtual void OnDataChanged( DataUpdateType_t type );
+	virtual void OnDataChanged(DataUpdateType_t type);
 	virtual void ClientThink();
 
 private:
@@ -41,38 +41,38 @@ private:
 	CNewParticleEffect *m_pBleedingFX;
 
 	/// update the hemorrhage particle effect
-	virtual void UpdateBleedingPerformance( void );
+	virtual void UpdateBleedingPerformance(void);
 
-	C_NPC_AntlionGuard( const C_NPC_AntlionGuard & );
+	C_NPC_AntlionWarrior(const C_NPC_AntlionWarrior &);
 };
 
 
 //-----------------------------------------------------------------------------
 // Save/restore
 //-----------------------------------------------------------------------------
-BEGIN_DATADESC( C_NPC_AntlionGuard )
+BEGIN_DATADESC(C_NPC_AntlionWarrior)
 END_DATADESC()
 
 
 //-----------------------------------------------------------------------------
 // Networking
 //-----------------------------------------------------------------------------
-IMPLEMENT_CLIENTCLASS_DT(C_NPC_AntlionGuard, DT_NPC_AntlionGuard, CNPC_AntlionGuard)
-	RecvPropBool( RECVINFO( m_bCavernBreed ) ),
-	RecvPropBool( RECVINFO( m_bInCavern ) ),
-	RecvPropInt(  RECVINFO( m_iBleedingLevel ) ),
+IMPLEMENT_CLIENTCLASS_DT(C_NPC_AntlionWarrior, DT_NPC_AntlionWarrior, CNPC_AntlionWarrior)
+RecvPropBool(RECVINFO(m_bCavernBreed)),
+RecvPropBool(RECVINFO(m_bInCavern)),
+RecvPropInt(RECVINFO(m_iBleedingLevel)),
 END_RECV_TABLE()
 
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-void C_NPC_AntlionGuard::OnDataChanged( DataUpdateType_t type )
+void C_NPC_AntlionWarrior::OnDataChanged(DataUpdateType_t type)
 {
-	BaseClass::OnDataChanged( type );
+	BaseClass::OnDataChanged(type);
 
-	if ( (type == DATA_UPDATE_CREATED) && m_bCavernBreed && m_bInCavern )
+	if ((type == DATA_UPDATE_CREATED) && m_bCavernBreed && m_bInCavern)
 	{
-		SetNextClientThink( CLIENT_THINK_ALWAYS );
+		SetNextClientThink(CLIENT_THINK_ALWAYS);
 	}
 
 
@@ -88,7 +88,7 @@ void C_NPC_AntlionGuard::OnDataChanged( DataUpdateType_t type )
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-void C_NPC_AntlionGuard::UpdateBleedingPerformance()
+void C_NPC_AntlionWarrior::UpdateBleedingPerformance()
 {
 	// get my particles
 	CParticleProperty * pProp = ParticleProp();
@@ -104,27 +104,27 @@ void C_NPC_AntlionGuard::UpdateBleedingPerformance()
 	switch (m_iBleedingLevel)
 	{
 	case 1: // light bleeding
+	{
+		m_pBleedingFX = pProp->Create("blood_antlionguard_injured_light", PATTACH_ABSORIGIN_FOLLOW);
+		AssertMsg1(m_pBleedingFX, "Particle system couldn't make %s", "blood_antlionguard_injured_light");
+		if (m_pBleedingFX)
 		{
-			m_pBleedingFX = pProp->Create( "blood_antlionguard_injured_light", PATTACH_ABSORIGIN_FOLLOW );
-			AssertMsg1( m_pBleedingFX, "Particle system couldn't make %s", "blood_antlionguard_injured_light" );
-			if ( m_pBleedingFX )
-			{
-				pProp->AddControlPoint( m_pBleedingFX, 1, this, PATTACH_ABSORIGIN_FOLLOW );
-			}
+			pProp->AddControlPoint(m_pBleedingFX, 1, this, PATTACH_ABSORIGIN_FOLLOW);
 		}
-		break;
+	}
+	break;
 
 	case 2: // severe bleeding
+	{
+		m_pBleedingFX = pProp->Create("blood_antlionguard_injured_heavy", PATTACH_ABSORIGIN_FOLLOW);
+		AssertMsg1(m_pBleedingFX, "Particle system couldn't make %s", "blood_antlionguard_injured_heavy");
+		if (m_pBleedingFX)
 		{
-			m_pBleedingFX = pProp->Create( "blood_antlionguard_injured_heavy", PATTACH_ABSORIGIN_FOLLOW );
-			AssertMsg1( m_pBleedingFX, "Particle system couldn't make %s", "blood_antlionguard_injured_heavy" );
-			if ( m_pBleedingFX )
-			{
-				pProp->AddControlPoint( m_pBleedingFX, 1, this, PATTACH_ABSORIGIN_FOLLOW );
-			}
-
+			pProp->AddControlPoint(m_pBleedingFX, 1, this, PATTACH_ABSORIGIN_FOLLOW);
 		}
-		break;
+
+	}
+	break;
 	}
 
 	m_iPerformingBleedingLevel = m_iBleedingLevel;
@@ -133,21 +133,21 @@ void C_NPC_AntlionGuard::UpdateBleedingPerformance()
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-void C_NPC_AntlionGuard::ClientThink()
+void C_NPC_AntlionWarrior::ClientThink()
 {
 	// update the dlight. (always done because clienthink only exists for cavernguard)
 	if (!m_dlight)
 	{
-		m_dlight = effects->CL_AllocDlight( index );
+		m_dlight = effects->CL_AllocDlight(index);
 		m_dlight->color.r = 220;
 		m_dlight->color.g = 255;
 		m_dlight->color.b = 80;
-		m_dlight->radius	= 180;
+		m_dlight->radius = 180;
 		m_dlight->minlight = 128.0 / 256.0f;
 		m_dlight->flags = DLIGHT_NO_MODEL_ILLUMINATION;
 	}
 
-	m_dlight->origin	= GetAbsOrigin();
+	m_dlight->origin = GetAbsOrigin();
 	// dl->die = gpGlobals->curtime + 0.1f;
 
 	BaseClass::ClientThink();

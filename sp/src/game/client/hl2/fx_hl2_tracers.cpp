@@ -212,8 +212,8 @@ void FX_PlayerAR2Tracer( const Vector &start, const Vector &end )
 	VectorMA( dStart, MIN( length, random->RandomFloat( 256.0f, 1024.0f ) ), shotDir, dEnd );
 
 	//Create the line
-	CFXStaticLine *tracerLine = new CFXStaticLine( "Tracer", dStart, dEnd, random->RandomFloat( 6.0f, 12.0f ), 0.01f, "effects/gunshiptracer", 0 );
-	assert( tracerLine );
+	CFXStaticLine *tracerLine = new CFXStaticLine("Tracer", dStart, dEnd, random->RandomFloat(6.0f, 12.0f), 0.1f, "effects/tracer_middle", 0);
+	assert( tracerLine );;
 
 	//Throw it into the list
 	clienteffects->AddEffect( tracerLine );
@@ -239,19 +239,45 @@ void FX_AR2Tracer( Vector& start, Vector& end, int velocity, bool makeWhiz )
 	dist = VectorNormalize( dir );
 
 	// Don't make short tracers.
-	if ( dist < 128 )
+	if ( dist < 64 )
 		return;
 
-	float length = random->RandomFloat( 128.0f, 256.0f );
-	float life = ( dist + length ) / velocity;	//NOTENOTE: We want the tail to finish its run as well
+	float length = random->RandomFloat(128.0f, 256.0f);
+	float life = ( dist + length ) / velocity;	//NOTENOTE: We `want the tail to finish its run as well
 	
 	//Add it
-	FX_AddDiscreetLine( start, dir, velocity, length, dist, random->RandomFloat( 0.5f, 1.5f ), life, "effects/gunshiptracer" );
+	FX_AddDiscreetLine( start, dir, velocity, length, dist, random->RandomFloat( 0.5f, 1.5f ), life, "effects/tracer_middle" );
 
 	if( makeWhiz )
 	{
 		FX_TracerSound( start, end, TRACER_TYPE_GUNSHIP );	
 	}
+
+
+	/*// Grab the data
+	Vector vecStart = GetTracerOrigin(data);
+	float flVelocity = data.m_flScale;
+
+	// Use default velocity if none specified
+	if (!flVelocity)
+	{
+		flVelocity = 10000;
+	}
+
+	//Get out shot direction and length
+	Vector vecShotDir;
+	VectorSubtract(data.m_vOrigin, vecStart, vecShotDir);
+	float flTotalDist = VectorNormalize(vecShotDir);
+
+	// Don't make small tracers
+	if (flTotalDist <= 64)
+		return;
+
+	float flLength = random->RandomFloat(256.0f, 384.0f);
+	float flLife = (flTotalDist + flLength) / flVelocity;	//NOTENOTE: We want the tail to finish its run as well
+
+	// Add it
+	FX_AddDiscreetLine(vecStart, vecShotDir, flVelocity, flLength, flTotalDist, 2.0f, flLife, "effects/gunshiptracer");*/
 }
 
 //-----------------------------------------------------------------------------
@@ -268,9 +294,9 @@ void AR2TracerCallback( const CEffectData &data )
 	Vector vecStart = GetTracerOrigin( data );
 	float flVelocity = data.m_flScale;
 	bool bWhiz = (data.m_fFlags & TRACER_FLAG_WHIZ);
-	int iEntIndex = data.entindex();
+//	int iEntIndex = data.entindex();
 
-	if ( iEntIndex && iEntIndex == player->index )
+	/*if ( iEntIndex && iEntIndex == player->index )
 	{
 		Vector	foo = data.m_vStart;
 		QAngle	vangles;
@@ -284,7 +310,7 @@ void AR2TracerCallback( const CEffectData &data )
 
 		FX_PlayerAR2Tracer( foo, (Vector&)data.m_vOrigin );
 		return;
-	}
+	}*/
 	
 	// Use default velocity if none specified
 	if ( !flVelocity )

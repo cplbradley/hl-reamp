@@ -14,6 +14,9 @@
 #include "glow_overlay.h"
 #include "fx_explosion.h"
 #include "tier1/KeyValues.h"
+#include "iefx.h"
+#include "r_efx.h"
+#include "dlight.h"
 #include "toolframework_client.h"
 #include "view.h"
 #include "clienteffectprecachesystem.h"
@@ -266,6 +269,7 @@ void C_SmokeTrail::Start( CParticleMgr *pParticleMgr, IPrototypeArgAccess *pArgs
 	m_MaterialHandle[1] = g_Mat_DustPuff[1];
 	
 	m_ParticleSpawn.Init( m_SpawnRate );
+
 }
 
 
@@ -565,7 +569,9 @@ C_RocketTrail::~C_RocketTrail()
 	if ( m_pParticleMgr )
 	{
 		m_pParticleMgr->RemoveEffect( &m_ParticleEffect );
+		m_pDLight->die = gpGlobals->curtime;
 	}
+
 }
 
 
@@ -646,6 +652,13 @@ void C_RocketTrail::Start( CParticleMgr *pParticleMgr, IPrototypeArgAccess *pArg
 	m_ParticleSpawn.Init( m_SpawnRate );
 
 	m_vecLastPosition = GetAbsOrigin();
+	m_pDLight = effects->CL_AllocDlight(index);
+	m_pDLight->origin = GetAbsOrigin();
+	m_pDLight->color.r = 255;
+	m_pDLight->color.g = 140;
+	m_pDLight->color.b = 0;
+	m_pDLight->radius = 512;
+	m_pDLight->die = FLT_MAX;
 }
 
 
@@ -657,13 +670,14 @@ void C_RocketTrail::Update( float fTimeDelta )
 {
 	if ( !m_pRocketEmitter )
 		return;
+	
 
 	if ( gpGlobals->frametime == 0.0f )
 		return;
 
 	CSmartPtr<CSimpleEmitter> pSimple = CSimpleEmitter::Create( "MuzzleFlash" );
 	pSimple->SetSortOrigin( GetAbsOrigin() );
-	
+
 	SimpleParticle *pParticle;
 	Vector			forward, offset;
 
@@ -815,10 +829,11 @@ void C_RocketTrail::Update( float fTimeDelta )
 				pParticle->m_flRoll			= random->RandomInt( 0, 360 );
 				pParticle->m_flRollDelta	= random->RandomFloat( -8.0f, 8.0f );
 			}
+
 		}
 	}
-
 	m_vecLastPosition = GetAbsOrigin();
+	m_pDLight->origin = GetAbsOrigin();
 }
 
 void C_RocketTrail::RenderParticles( CParticleRenderIterator *pIterator )

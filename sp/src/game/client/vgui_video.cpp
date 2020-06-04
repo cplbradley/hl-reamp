@@ -24,7 +24,7 @@ VideoPanel::VideoPanel( unsigned int nXPos, unsigned int nYPos, unsigned int nHe
 	m_nPlaybackHeight( 0 ),
 	m_bAllowAlternateMedia( allowAlternateMedia )
 {
-	vgui::VPANEL pParent = enginevgui->GetPanel( PANEL_GAMEUIDLL );
+	vgui::VPANEL pParent = enginevgui->GetPanel( PANEL_ROOT );
 	SetParent( pParent );
 	SetVisible( false );
 	
@@ -179,7 +179,7 @@ void VideoPanel::OnKeyCodeTyped( vgui::KeyCode code )
 void VideoPanel::OnKeyCodePressed( vgui::KeyCode code )
 {
 	// These keys cause the panel to shutdown
-	if ( code == KEY_ESCAPE || 
+	/*if ( code == KEY_ESCAPE || 
 		 code == KEY_BACKQUOTE || 
 		 code == KEY_SPACE || 
 		 code == KEY_ENTER ||
@@ -195,7 +195,7 @@ void VideoPanel::OnKeyCodePressed( vgui::KeyCode code )
 	else
 	{
 		BaseClass::OnKeyCodePressed( code );
-	}
+	}*/
 }
 
 //-----------------------------------------------------------------------------

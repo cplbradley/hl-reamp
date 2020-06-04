@@ -17,6 +17,7 @@
 #include "particles_simple.h"
 #include "c_baseentity.h"
 #include "baseparticleentity.h"
+#include "dlight.h"
 
 #include "fx_trail.h"
 
@@ -177,6 +178,7 @@ private:
 
 	CParticleMgr	*m_pParticleMgr;
 	CSmartPtr<CSimpleEmitter> m_pRocketEmitter;
+	dlight_t						*m_pDLight;
 };
 
 class SporeSmokeEffect;

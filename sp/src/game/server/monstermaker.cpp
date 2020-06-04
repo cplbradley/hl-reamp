@@ -16,6 +16,7 @@
 #include "ndebugoverlay.h"
 #include "mapentities.h"
 #include "IEffects.h"
+#include "particle_parse.h"
 #include "props.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -115,8 +116,11 @@ END_DATADESC()
 void CBaseNPCMaker::Spawn( void )
 {
 	SetSolid( SOLID_NONE );
+	
 	m_nLiveChildren		= 0;
 	Precache();
+	SetModel("models/props/null.mdl");
+
 
 	// If I can make an infinite number of NPC, force them to fade
 	if ( m_spawnflags & SF_NPCMAKER_INF_CHILD )
@@ -136,7 +140,13 @@ void CBaseNPCMaker::Spawn( void )
 		SetThink ( &CBaseNPCMaker::SUB_DoNothing );
 	}
 }
+void CBaseNPCMaker::Precache(void)
+{
+	BaseClass::Precache();
+	PrecacheModel("models/props/null.mdl");
+	PrecacheParticleSystem("npcspawn_core");
 
+}
 //-----------------------------------------------------------------------------
 // A not-very-robust check to see if a human hull could fit at this location.
 // used to validate spawn destinations.
@@ -304,7 +314,7 @@ void CBaseNPCMaker::InputSpawnNPC( inputdata_t &inputdata )
 {
 	if( !IsDepleted() )
 	{
-		MakeNPC();
+		TriggerMake();
 	}
 }
 
@@ -393,6 +403,7 @@ CNPCMaker::CNPCMaker( void )
 void CNPCMaker::Precache( void )
 {
 	BaseClass::Precache();
+	PrecacheParticleSystem("npcspawn_core");
 
 	const char *pszNPCName = STRING( m_iszNPCClassname );
 	if ( !pszNPCName || !pszNPCName[0] )
@@ -518,11 +529,17 @@ void CBaseNPCMaker::MakerThink ( void )
 {
 	SetNextThink( gpGlobals->curtime + m_flSpawnFrequency );
 
-	MakeNPC();
+	TriggerMake();
+}
+void CBaseNPCMaker::TriggerMake(void)
+{
+	Vector vecPartOrigin = GetAbsOrigin() + Vector(0, 0, 40);
+	SetThink(&CBaseNPCMaker::MakeNPC);
+	SetNextThink(gpGlobals->curtime + 2.0f);
+	DispatchParticleEffect("npcspawn_core", vecPartOrigin, GetAbsAngles(), this);
 }
 
-
-//-----------------------------------------------------------------------------
+//-------------------	----------------------------------------------------------
 // Purpose: 
 // Input  : *pVictim - 
 //-----------------------------------------------------------------------------
@@ -586,7 +603,7 @@ void CTemplateNPCMaker::PrecacheTemplateEntity( CBaseEntity *pEntity )
 void CTemplateNPCMaker::Precache()
 {
 	BaseClass::Precache();
-
+	PrecacheParticleSystem("npcspawn_core");
 	if ( !m_iszTemplateData )
 	{
 		//

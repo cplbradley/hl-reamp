@@ -276,7 +276,7 @@ void CGib::SpawnSpecificGibs(	CBaseEntity*	pVictim,
 	for (int i=0;i<nNumGibs;i++)
 	{
 		CGib *pGib = CREATE_ENTITY( CGib, "gib" );
-		pGib->Spawn( cModelName );
+		pGib->Spawn(cModelName, flLifetime);
 		pGib->m_nBody = i;
 		pGib->InitGib( pVictim, vMinVelocity, vMaxVelocity );
 		pGib->m_lifeTime = flLifetime;
@@ -529,13 +529,14 @@ void CGib::BounceGibTouch ( CBaseEntity *pOther )
 		{
 			vecSpot = GetAbsOrigin() + Vector ( 0 , 0 , 8 );//move up a bit, and trace down.
 			UTIL_TraceLine ( vecSpot, vecSpot + Vector ( 0, 0, -24 ),  MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr);
-
-			UTIL_BloodDecalTrace( &tr, m_bloodColor );
+			const trace_t *pTrace = &CBaseEntity::GetTouchTrace();
+			trace_t *pNewTrace = const_cast<trace_t*>(pTrace);
+			UTIL_BloodDecalTrace( pNewTrace, m_bloodColor );
 
 			m_cBloodDecals--; 
 		}
 
-		if ( m_material != matNone && random->RandomInt(0,2) == 0 )
+		if ( m_material != matNone)
 		{
 			float volume;
 			float zvel = fabs(GetAbsVelocity().z);

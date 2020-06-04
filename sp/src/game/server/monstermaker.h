@@ -45,16 +45,18 @@ public:
 	DECLARE_DATADESC();
 };
 
-abstract_class CBaseNPCMaker : public CBaseEntity
+abstract_class CBaseNPCMaker : public CBaseAnimating
 {
 public:
-	DECLARE_CLASS( CBaseNPCMaker, CBaseEntity );
+	DECLARE_CLASS( CBaseNPCMaker, CBaseAnimating );
 
 	void Spawn( void );
 	virtual int	ObjectCaps( void ) { return BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 	void MakerThink( void );
 	bool HumanHullFits( const Vector &vecLocation );
 	bool CanMakeNPC( bool bIgnoreSolidEntities = false );
+	void TriggerMake(void);
+	void Precache(void);
 
 	virtual void DeathNotice( CBaseEntity *pChild );// NPC maker children use this to tell the NPC maker that they have died.
 	virtual void MakeNPC( void ) = 0;

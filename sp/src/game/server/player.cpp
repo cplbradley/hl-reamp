@@ -1022,7 +1022,7 @@ void CBasePlayer::DamageEffect(float flDamage, int fDamageType)
 #define OLD_ARMOR_BONUS  0.5	// Each Point of Armor is work 1/x points of health
 
 // New values
-#define ARMOR_RATIO	0.2
+#define ARMOR_RATIO	0.0
 #define ARMOR_BONUS	1.0
 
 //---------------------------------------------------------
@@ -3228,7 +3228,7 @@ void CBasePlayer::PhysicsSimulate( void )
 	// Build a list of all available commands
 	CUtlVector< CUserCmd >	vecAvailCommands;
 
-	// Contexts go from oldest to newest
+	// Contexts go from _est to newest
 	for ( int context_number = 0; context_number < command_context_count; context_number++ )
 	{
 		// Get oldest ( newer are added to tail )
@@ -6141,11 +6141,11 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 		GiveAmmo( 255,	"Pistol");
 		GiveAmmo( 255,	"AR2");
 		GiveAmmo( 5,	"AR2AltFire");
-		GiveAmmo( 255,	"SMG1");
+		GiveAmmo( 350,	"SMG1");
 		GiveAmmo( 255,	"Buckshot");
 		GiveAmmo( 3,	"smg1_grenade");
-		GiveAmmo( 3,	"rpg_round");
-		GiveAmmo( 5,	"grenade");
+		GiveAmmo( 10,	"rpg_round");
+		GiveAmmo( 25,	"grenade");
 		GiveAmmo( 32,	"357" );
 		GiveAmmo( 16,	"XBowBolt" );
 #ifdef HL2_EPISODIC
@@ -6162,6 +6162,10 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 		GiveNamedItem( "weapon_rpg" );
 		GiveNamedItem( "weapon_357" );
 		GiveNamedItem( "weapon_crossbow" );
+		//HLR
+		GiveNamedItem( "weapon_pumpshotgun");
+		GiveNamedItem( "weapon_bfg" );
+
 #ifdef HL2_EPISODIC
 		// GiveNamedItem( "weapon_magnade" );
 #endif

@@ -297,7 +297,7 @@ bool CAI_BaseNPC::CanStandOn( CBaseEntity *pSurface ) const
 bool CAI_BaseNPC::IsJumpLegal( const Vector &startPos, const Vector &apex, const Vector &endPos, 
 							   float maxUp, float maxDown, float maxDist ) const
 {
-	if ((endPos.z - startPos.z) > maxUp + 0.1) 
+	/*if ((endPos.z - startPos.z) > maxUp + 0.1) 
 		return false;
 	if ((startPos.z - endPos.z) > maxDown + 0.1) 
 		return false;
@@ -307,7 +307,7 @@ bool CAI_BaseNPC::IsJumpLegal( const Vector &startPos, const Vector &apex, const
 
 	float dist = (startPos - endPos).Length();
 	if ( dist > maxDist + 0.1) 
-		return false;
+		return false;*/
 	return true;
 }
 
@@ -318,9 +318,9 @@ bool CAI_BaseNPC::IsJumpLegal( const Vector &startPos, const Vector &apex, const
 //-----------------------------------------------------------------------------
 bool CAI_BaseNPC::IsJumpLegal( const Vector &startPos, const Vector &apex, const Vector &endPos ) const
 {
-	const float MAX_JUMP_RISE		= 80.0f;
-	const float MAX_JUMP_DISTANCE	= 250.0f;
-	const float MAX_JUMP_DROP		= 192.0f;
+	const float MAX_JUMP_RISE		= 512.0f;
+	const float MAX_JUMP_DISTANCE	= 512.0f;
+	const float MAX_JUMP_DROP		= 512.0f;
 
 	return IsJumpLegal( startPos, apex, endPos, MAX_JUMP_RISE, MAX_JUMP_DROP, MAX_JUMP_DISTANCE );
 }

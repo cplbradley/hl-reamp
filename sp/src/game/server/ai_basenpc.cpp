@@ -600,7 +600,7 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 	}
 
 	BaseClass::Event_Killed( info );
-
+	CBasePlayer *pPlayer = ToBasePlayer(info.GetAttacker());
 	if ( m_bFadeCorpse )
 	{
 		m_bImportanRagdoll = RagdollManager_SaveImportant( this );
@@ -622,6 +622,23 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 	if ( CanBecomeRagdoll() || IsRagdoll() )
 		 SetState( NPC_STATE_DEAD );
 
+
+	// Just Wax - Dynamic Health Spawn Call
+	CHalfLife2 *pHL2GameRules = static_cast<CHalfLife2 *>(g_pGameRules); //Call gamerules, where whether or not to drop heath is decided
+	if (pHL2GameRules->NPC_ShouldDropHealth(pPlayer)) //Am I supposed to drop health?
+	{
+		DropItem("item_healthvial", WorldSpaceCenter() + RandomVector(0, 4), RandomAngle(0, 360)); //Drop health
+		DropItem("item_healthvial", WorldSpaceCenter() + RandomVector(0, 4), RandomAngle(0, 360)); //Drop Health
+		DropItem("item_batterydrop", WorldSpaceCenter() + RandomVector(0, 4), RandomAngle(0, 360)); //Drop Armor
+		pHL2GameRules->NPC_DroppedHealth(); //Let game know we dropped health
+		if (pPlayer->m_iHealth < pPlayer->m_iMaxHealth * 0.4) //Does the player have less than 40% of their health left? If so, I should drop double the health.
+		{
+			DropItem("item_healthvial", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360)); //Drop More Health
+			DropItem("item_healthvial", WorldSpaceCenter() + RandomVector(0, 4), RandomAngle(0, 360)); //Drop More Health
+			DropItem("item_batterydrop", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360)); //Drop more armor
+		}
+
+	}
 	// If the remove-no-ragdoll flag is set in the damage type, we're being
 	// told to remove ourselves immediately on death. This is used when something
 	// else has some special reason for us to vanish instead of creating a ragdoll.
@@ -785,6 +802,10 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 				{
 					m_OnDamagedByPlayerSquad.FireOutput( info.GetAttacker(), this );
 				}
+			}
+			if (pAttacker && !pAttacker->IsPlayer())
+			{
+				this->AddEntityRelationship(pAttacker, D_HT, 99);
 			}
 		}
 	}
@@ -4090,7 +4111,7 @@ int CAI_BaseNPC::RangeAttack1Conditions ( float flDot, float flDist )
 	{
 		return COND_TOO_CLOSE_TO_ATTACK;
 	}
-	else if (flDist > 784)
+	else if (flDist > 2048)
 	{
 		return COND_TOO_FAR_TO_ATTACK;
 	}
@@ -4111,7 +4132,7 @@ int CAI_BaseNPC::RangeAttack2Conditions ( float flDot, float flDist )
 	{
 		return COND_TOO_CLOSE_TO_ATTACK;
 	}
-	else if (flDist > 512)
+	else if (flDist > 2048)
 	{
 		return COND_TOO_FAR_TO_ATTACK;
 	}
@@ -10371,10 +10392,10 @@ CBaseEntity *CAI_BaseNPC::DropItem ( const char *pszItemName, Vector vecPos, QAn
 		if ( pPhys )
 		{
 			// Add an extra push in a random direction
-			Vector			vel		= RandomVector( -64.0f, 64.0f );
-			AngularImpulse	angImp	= RandomAngularImpulse( -300.0f, 300.0f );
+			Vector			vel		= RandomVector( 0.0f, 0.0f );
+			AngularImpulse	angImp	= RandomAngularImpulse( 0, 90 );
 
-			vel[2] = 0.0f;
+			vel[2] = 50.0f;
 			pPhys->AddVelocity( &vel, &angImp );
 		}
 		else
@@ -10889,6 +10910,8 @@ void CAI_BaseNPC::Precache( void )
 	PrecacheScriptSound( "AI_BaseNPC.BodyDrop_Heavy" );
 	PrecacheScriptSound( "AI_BaseNPC.BodyDrop_Light" );
 	PrecacheScriptSound( "AI_BaseNPC.SentenceStop" );
+	UTIL_PrecacheOther("item_batterydrop");
+	UTIL_PrecacheOther("item_healthvial");
 
 	BaseClass::Precache();
 }

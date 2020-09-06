@@ -21,6 +21,8 @@
 #include "ai_behavior_actbusy.h"
 #include "ai_sentence.h"
 #include "ai_baseactor.h"
+#include "SpriteTrail.h"
+#include "Sprite.h"
 
 // Used when only what combine to react to what the spotlight sees
 #define SF_COMBINE_NO_LOOK	(1 << 16)
@@ -76,7 +78,7 @@ public:
 	void			Spawn( void );
 	void			Precache( void );
 	void			Activate();
-
+	void			DrawStuff(void);
 	Class_T			Classify( void );
 	bool			IsElite() { return m_fIsElite; }
 	void			DelayAltFireAttack( float flDelay );
@@ -152,6 +154,10 @@ public:
 protected:
 	void			SetKickDamage( int nDamage ) { m_nKickDamage = nDamage; }
 	CAI_Sentence< CNPC_Combine > *GetSentences() { return &m_Sentences; }
+	CHandle<CSprite>		m_pLeftEyeG;
+	CHandle<CSprite>		m_pRightEyeG;
+	CHandle<CSpriteTrail>	m_pLeftEyeT;
+	CHandle<CSpriteTrail>	m_pRightEyeT;
 
 private:
 	//=========================================================

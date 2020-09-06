@@ -41,7 +41,7 @@ extern ConVar sv_vehicle_autoaim_scale;
 
 #define AIRBOAT_LOCK_SPEED			10		// Airboat must be going slower than this for player to enter or exit, in in/sec
 
-#define AIRBOAT_DELTA_LENGTH_MAX	24.0f			// 1 foot
+#define AIRBOAT_DELTA_LENGTH_MAX	2.0f			// 1 foot
 #define AIRBOAT_FRAMETIME_MIN		1e-6
 
 #define AIRBOAT_SPLASH_RIPPLE		0
@@ -793,7 +793,7 @@ Vector CPropAirboat::BodyTarget( const Vector &posSrc, bool bNoisy )
 // Smoothed velocity
 //-----------------------------------------------------------------------------
 #define SMOOTHED_MIN_VELOCITY 75.0f
-#define SMOOTHED_MAX_VELOCITY 500.0f
+#define SMOOTHED_MAX_VELOCITY 5000.0f
 
 Vector CPropAirboat::GetSmoothedVelocity( void )
 {

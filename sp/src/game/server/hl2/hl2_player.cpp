@@ -81,7 +81,7 @@ extern int gEvilImpulse101;
 ConVar sv_autojump( "sv_autojump", "0" );
 
 ConVar hl2_walkspeed( "hl2_walkspeed", "250" );
-ConVar hl2_normspeed( "hl2_normspeed", "700" );
+ConVar hl2_normspeed( "hl2_normspeed", "450" );
 ConVar hl2_sprintspeed( "hl2_sprintspeed", "700" );
 
 ConVar hl2_darkness_flashlight_factor ( "hl2_darkness_flashlight_factor", "1" );
@@ -1982,7 +1982,7 @@ ConVar	sk_armor("sk_armor", "30");
 
 bool CHL2_Player::ApplyBattery( float powerMultiplier )
 {
-	const float MAX_NORMAL_BATTERY = 100;
+	const float MAX_NORMAL_BATTERY = 200;
 	if ((ArmorValue() < MAX_NORMAL_BATTERY) && IsSuitEquipped())
 	{
 		int pct;
@@ -2018,7 +2018,7 @@ bool CHL2_Player::ApplyBattery( float powerMultiplier )
 }
 bool CHL2_Player::ApplyArmor(float powerMultiplier)
 {
-	const float MAX_NORMAL_BATTERY = 100;
+	const float MAX_NORMAL_BATTERY = 200;
 	if ((ArmorValue() < MAX_NORMAL_BATTERY) && IsSuitEquipped())
 	{
 		int pct;
@@ -2329,7 +2329,7 @@ int	CHL2_Player::OnTakeDamage( const CTakeDamageInfo &info )
 {
 	if ( GlobalEntity_GetState( "gordon_invulnerable" ) == GLOBAL_ON )
 		return 0;
-
+	
 	// ignore fall damage if instructed to do so by input
 	if ( ( info.GetDamageType() & DMG_FALL ) && m_flTimeIgnoreFallDamage > gpGlobals->curtime )
 	{
@@ -2364,7 +2364,11 @@ int	CHL2_Player::OnTakeDamage( const CTakeDamageInfo &info )
 	
 	// Modify the amount of damage the player takes, based on skill.
 	CTakeDamageInfo playerDamage = info;
-
+	CBaseCombatWeapon *pWeapon = GetActiveWeapon();
+	if (pWeapon && pWeapon->ClassMatches("weapon_furybar"))
+	{
+		playerDamage.ScaleDamage(0.1f);
+	}
 	// Should we run this damage through the skill level adjustment?
 	bool bAdjustForSkillLevel = true;
 

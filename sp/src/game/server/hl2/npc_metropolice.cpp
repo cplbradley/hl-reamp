@@ -653,7 +653,7 @@ void CNPC_MetroPolice::Spawn( void )
 		CapabilitiesAdd( bits_CAP_TURN_HEAD | bits_CAP_ANIMATEDFACE );
 		CapabilitiesAdd( bits_CAP_AIM_GUN | bits_CAP_MOVE_SHOOT );
 	}
-	CapabilitiesAdd( bits_CAP_MOVE_GROUND );
+	CapabilitiesAdd(bits_CAP_MOVE_GROUND | bits_CAP_MOVE_JUMP);
 	CapabilitiesAdd( bits_CAP_USE_WEAPONS | bits_CAP_NO_HIT_SQUADMATES );
 	CapabilitiesAdd( bits_CAP_SQUAD );
 	CapabilitiesAdd( bits_CAP_DUCK | bits_CAP_DOORS_GROUP );
@@ -3055,6 +3055,9 @@ Activity CNPC_MetroPolice::NPC_TranslateActivity( Activity newActivity )
 void CNPC_MetroPolice::ReleaseManhack( void )
 {
 	Assert( m_hManhack );
+
+	if (!m_hManhack)
+		return;
 
 	// Make us physical
 	m_hManhack->RemoveSpawnFlags( SF_MANHACK_CARRIED );

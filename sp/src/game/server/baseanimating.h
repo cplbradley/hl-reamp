@@ -527,5 +527,5 @@ EXTERN_SEND_TABLE(DT_BaseAnimating);
 #define ANIMATION_POSEPARAMETER_BITS	11	// pose parameter resolution
 #endif
 #define ANIMATION_PLAYBACKRATE_BITS		8	// default playback rate, only used on leading edge detect sequence changes
-
+#define NULL_MODEL "models/props/null.mdl"
 #endif // BASEANIMATING_H

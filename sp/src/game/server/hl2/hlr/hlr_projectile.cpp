@@ -28,7 +28,8 @@
 LINK_ENTITY_TO_CLASS(hlr_vortprojectile, CHLRVortProjectile); //ooh i'm being assigned a class
 BEGIN_DATADESC(CHLRVortProjectile) //let's store some data
 // Function Pointers
-DEFINE_FUNCTION(Touch), //i can touch stuff, i need outputs
+DEFINE_FUNCTION(Touch),
+DEFINE_THINKFUNC(KillIt),//i can touch stuff, i need outputs
 END_DATADESC() //all done!
 CHLRVortProjectile *CHLRVortProjectile::Create(const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner) //dunno why this is here honestly it's useless and doesn't actually work how i want it to
 {
@@ -99,15 +100,15 @@ void CHLRVortProjectile::Touch(CBaseEntity *pOther) //i touched something
 
 		if (pOther->m_takedamage != DAMAGE_NO) //can what i hit take damage?
 		{
-			trace_t	tr, tr2; //initialize info
+			trace_t	tr; //initialize info
 			tr = BaseClass::GetTouchTrace(); //trace touch
 			Vector	vecNormalizedVel = GetAbsVelocity(); //this is how fast i'm going!
 
 			ClearMultiDamage(); //gotta reset everything before i zap ya
-			VectorNormalize(vecNormalizedVel); //i need to have a clear shot 
-			CTakeDamageInfo	dmgInfo(this, GetOwnerEntity(), 15, DMG_SHOCK); //i'm loading my damage data
-			dmgInfo.AdjustPlayerDamageInflictedForSkillLevel(); //how fair do i feel?
-			dmgInfo.SetDamagePosition(tr.endpos); //gotcha, there's my target 
+			VectorNormalize(vecNormalizedVel); //convert the vector into a direction
+			CTakeDamageInfo	dmgInfo(this, GetOwnerEntity(), 15, DMG_SHOCK); //i'm setting up some damage info
+			dmgInfo.AdjustPlayerDamageTakenForSkillLevel(); //how fair do i feel?
+			dmgInfo.SetDamagePosition(tr.endpos); //gotta attack at the exact point of impact
 			pOther->DispatchTraceAttack(dmgInfo, vecNormalizedVel, &tr); //you're getting zapped!
 			//DispatchParticleEffect("smg_plasmaball_core", GetAbsOrigin(), GetAbsAngles(), this);
 			ApplyMultiDamage(); //zap!
@@ -127,13 +128,16 @@ void CHLRVortProjectile::KillIt(void)
 	StopParticleEffects(this); //stop my poofs
 	m_pGlowTrail == NULL; //no more trail
 	m_pMainGlow == NULL; //no more sprite
-	UTIL_Remove(this); //i have now killed myself
+	RemoveDeferred(); //i have now killed myself
 	
 }
 LINK_ENTITY_TO_CLASS(hlr_pistolprojectile, CHLRPistolProjectile);
 BEGIN_DATADESC(CHLRPistolProjectile)
 // Function Pointers
 DEFINE_FUNCTION(Touch),
+DEFINE_FUNCTION(CreateTrail),
+DEFINE_FUNCTION(DrawSprite),
+DEFINE_THINKFUNC(KillIt),
 END_DATADESC()
 CHLRPistolProjectile *CHLRPistolProjectile::Create(const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner)
 {
@@ -164,20 +168,14 @@ void CHLRPistolProjectile::Spawn(void)
 	SetMoveType(MOVETYPE_FLY, MOVECOLLIDE_FLY_CUSTOM);
 	UTIL_SetSize(this, -Vector(10.0f, 10.0f, 1.0f), Vector(10.0f, 10.0f, 10.0f));
 	SetSolid(SOLID_BBOX);
+	AddSolidFlags(FSOLID_NOT_STANDABLE);
 	SetModel("models/spitball_small.mdl");
 	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 	//SetSolidFlags(FSOLID_TRIGGER);
 	SetRenderColor(255, 135, 115);
+	SetTouch(&CHLRPistolProjectile::Touch);
 	CreateTrail();
 	DrawSprite();
-	SetNextThink(gpGlobals->curtime + 0.2f);
-	SetThink(&CHLRPistolProjectile::EnableTouch);
-	
-
-}
-void CHLRPistolProjectile::EnableTouch(void)
-{
-	SetTouch(&CHLRPistolProjectile::Touch);
 }
 void CHLRPistolProjectile::Precache(void)
 {
@@ -232,26 +230,33 @@ void CHLRPistolProjectile::Touch(CBaseEntity *pOther) //i touched something
 		
 		if (pOther->m_takedamage != DAMAGE_NO) //can what i hit take damage?
 		{
-			trace_t	tr, tr2; //initialize info
-			tr = BaseClass::GetTouchTrace(); //trace touch
-			Vector	vecNormalizedVel = GetAbsVelocity();
-			ClearMultiDamage();
-			VectorNormalize(vecNormalizedVel);
-			CTakeDamageInfo	dmgInfo(this, GetOwnerEntity(), 7, DMG_SHOCK);
-			dmgInfo.AdjustPlayerDamageInflictedForSkillLevel();
+			trace_t	tr; //initialize a trace
+			tr = BaseClass::GetTouchTrace(); //assing the trace information from the touch
+			Vector	vecNormalizedVel = GetAbsVelocity(); //save the current velocity for use later
+			ClearMultiDamage(); //clear out any potential unwanted damage calls
+			VectorNormalize(vecNormalizedVel); //convert the velocity into a direction
+			CTakeDamageInfo	dmgInfo(this, GetOwnerEntity(), 12, DMG_CLUB); //initialize the damage information
+			if (GetOwnerEntity() && GetOwnerEntity()->IsPlayer())
+			{
+				dmgInfo.AdjustPlayerDamageInflictedForSkillLevel();
+			}
+			else
+			{
+				dmgInfo.AdjustPlayerDamageTakenForSkillLevel();
+			}
+			dmgInfo.SetDamagePosition(tr.endpos); //set the damage point at the end of the trace
 			//CalculateMeleeDamageForce(&dmgInfo, vecNormalizedVel, tr.endpos, 1.0f);
-			dmgInfo.SetDamagePosition(tr.endpos);
-			pOther->DispatchTraceAttack(dmgInfo, vecNormalizedVel, &tr);
+			pOther->DispatchTraceAttack(dmgInfo, vecNormalizedVel, &tr); //set off the effects
 			//DispatchParticleEffect("smg_plasmaball_core", GetAbsOrigin(), GetAbsAngles(), this);
 			ApplyMultiDamage();
 		}
-		SetSolid(SOLID_NONE);
-		SetSolidFlags(FSOLID_NOT_SOLID);
-		SetMoveType(MOVETYPE_NONE);
+		SetSolid(SOLID_NONE); //no longer solid at all
+		SetSolidFlags(FSOLID_NOT_SOLID); //same thing
+		SetMoveType(MOVETYPE_NONE); //stop moving
 		DispatchParticleEffect("pistol_core", GetAbsOrigin(), GetAbsAngles(), this);
 		const trace_t *pTrace = &CBaseEntity::GetTouchTrace();
 		trace_t *pNewTrace = const_cast<trace_t*>(pTrace);
-		UTIL_DecalTrace(pNewTrace, "SmallScorch");
+		UTIL_DecalTrace(pNewTrace, "FadingScorch");
 		SetThink(&CHLRPistolProjectile::KillIt); //schedule remove command
 		SetTouch(NULL);
 		SetNextThink(gpGlobals->curtime + 0.01f); //execute remove command after 0.01 seconds
@@ -259,16 +264,15 @@ void CHLRPistolProjectile::Touch(CBaseEntity *pOther) //i touched something
 }
 void CHLRPistolProjectile::KillIt(void)
 {
-	SetThink(NULL);
-	m_pGlowTrail == NULL;
-	m_pMainGlow == NULL;
-	UTIL_Remove(this); //remove it
+	RemoveDeferred();
 }
 
 LINK_ENTITY_TO_CLASS(hlr_fireball, CHLRFireball);
 BEGIN_DATADESC(CHLRFireball)
 // Function Pointers
 DEFINE_FUNCTION(Touch),
+DEFINE_FUNCTION(Detonate),
+DEFINE_THINKFUNC(Kill),
 END_DATADESC()
 
 
@@ -299,6 +303,7 @@ void CHLRFireball::Precache(void)
 {
 	PrecacheModel("models/spitball_small.mdl");
 	PrecacheParticleSystem("antlionwarrior_fireball_core");
+	PrecacheParticleSystem("hlr_base_explosion2");
 	UTIL_PrecacheOther("hlr_fireballtemp");
 }
 void CHLRFireball::Touch(CBaseEntity *pOther)
@@ -322,43 +327,132 @@ void CHLRFireball::Touch(CBaseEntity *pOther)
 		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 		pPlayer->IgniteLifetime(2.5);
 	}*/
+	SetTouch(NULL);
 	Detonate();
 }
 void CHLRFireball::Detonate(void)
 {
+
+	DispatchParticleEffect("hlr_base_explosion2", GetAbsOrigin(), GetAbsAngles(), this);
 	const trace_t *pTrace = &CBaseEntity::GetTouchTrace();
 	trace_t *pNewTrace = const_cast<trace_t*>( pTrace );
 	UTIL_DecalTrace( pNewTrace, "Scorch" );
 	CBaseEntity *pOwner = GetOwnerEntity();
-	QAngle angCent = QAngle(0, 0, 0);
-	SetAbsAngles(angCent);
 	RadiusDamage(CTakeDamageInfo(this, pOwner, 40, DMG_BURN), GetAbsOrigin(), 128, CLASS_ANTLION, NULL);
-	CHLRFireballTemp *pTemp = (CHLRFireballTemp*)CreateEntityByName("hlr_fireballtemp");
-	pTemp->SetAbsOrigin(this->GetAbsOrigin());
-	pTemp->SetAbsAngles(this->GetAbsAngles());
-	pTemp->Spawn();
-	UTIL_Remove(this);
 
+	if (GetOwnerEntity() && GetOwnerEntity()->ClassMatches("npc_antlionwarrior"))
+	{
+		trace_t tr;
+		Vector Startpos = GetAbsOrigin();
+		Vector Endpos = Startpos + (Vector(0, 0, -1) * MAX_TRACE_LENGTH);
+		UTIL_TraceLine(Startpos, Endpos, MASK_PLAYERSOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr);
+		CHLRFireballTemp *pTemp = (CHLRFireballTemp*)CreateEntityByName("hlr_fireballtemp");
+		pTemp->SetAbsOrigin(tr.endpos);
+		pTemp->SetAbsAngles(this->GetAbsAngles());
+		pTemp->Spawn();
+	}
+	SetMoveType(MOVETYPE_NONE);
+
+	SetThink(&CHLRFireball::Kill);
+	SetNextThink(gpGlobals->curtime + 0.05f);
+}
+void CHLRFireball::Kill(void)
+{
+	RemoveDeferred();
 }
 LINK_ENTITY_TO_CLASS(hlr_fireballtemp, CHLRFireballTemp);
+BEGIN_DATADESC(CHLRFireballTemp)
+DEFINE_FUNCTION(Touch),
+DEFINE_THINKFUNC(Kill),
+END_DATADESC()
 void CHLRFireballTemp::Spawn(void)
 {
+
 	Precache();
 	UTIL_SetSize(this, -Vector(64.0f, 64.0f, 32.0f), Vector(64.0f, 64.0f, 64.0f));
 	SetModel("models/props/null.mdl");
-	SetSolid(SOLID_NONE);
+	SetSolid(SOLID_BBOX);
+	SetSolidFlags(FSOLID_VOLUME_CONTENTS && FSOLID_NOT_STANDABLE);
 	SetMoveType(MOVETYPE_NONE);
 	DispatchParticleEffect("antlionwarrior_fireball_groundfire_sheet", GetAbsOrigin(), GetAbsAngles(), this);
 	SetNextThink(gpGlobals->curtime + 8.0f);
 	SetThink(&CHLRFireballTemp::Kill);
+	m_flNextDamage = gpGlobals->curtime;
+
+
 }
 void CHLRFireballTemp::Precache(void)
 {
 	PrecacheParticleSystem("antlionwarrior_fireball_groundfire_sheet");
 	PrecacheModel("models/props/null.mdl");
 }
+void CHLRFireballTemp::Touch(CBaseEntity *pOther)
+{
+	if (pOther && pOther->m_takedamage && (m_flNextDamage < gpGlobals->curtime))
+	{
+		pOther->TakeDamage(CTakeDamageInfo(this, this, 1, (DMG_BULLET | DMG_BURN)));
+		m_flNextDamage = gpGlobals->curtime + 1.0f;
+	}
+}
 void CHLRFireballTemp::Kill(void)
 {
 	StopParticleEffects(this);
 	UTIL_Remove(this);
+}
+
+
+LINK_ENTITY_TO_CLASS(hlr_scannerprojectile, CHLRScannerProjectile);
+BEGIN_DATADESC(CHLRScannerProjectile)
+// Function Pointers
+DEFINE_FUNCTION(Touch),
+DEFINE_FUNCTION(DispatchEffects),
+DEFINE_THINKFUNC(Kill),
+END_DATADESC()
+void CHLRScannerProjectile::Spawn(void)
+{
+	Precache();
+	SetModel("models/spitball_large.mdl");
+	SetMoveType(MOVETYPE_FLY);
+	SetSolid(SOLID_BBOX);
+	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
+	SetTouch(&CHLRScannerProjectile::Touch);
+	DispatchEffects();
+}
+void CHLRScannerProjectile::DispatchEffects(void)
+{
+	DispatchParticleEffect("scanner_projectile_core", PATTACH_ABSORIGIN_FOLLOW, this, "root", false);
+}
+void CHLRScannerProjectile::Precache(void)
+{
+	PrecacheModel("models/spitball_large.mdl");
+	PrecacheParticleSystem("scanner_projectile_core");
+	PrecacheParticleSystem("scanner_projectile_poof");
+}
+void CHLRScannerProjectile::Touch(CBaseEntity *pOther)
+{
+	if (pOther == NULL)
+		return;
+	if (pOther->IsSolidFlagSet(FSOLID_VOLUME_CONTENTS | FSOLID_TRIGGER))
+	{
+		// Some NPCs are triggers that can take damage (like antlion grubs). We should hit them.
+		if ((pOther->m_takedamage == DAMAGE_NO) || (pOther->m_takedamage == DAMAGE_EVENTS_ONLY))
+			return;
+	}
+
+	// Don't hit other spit
+	if (pOther->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE)
+		return;
+	if (GetOwnerEntity() && GetOwnerEntity() == pOther)
+		return;
+
+	SetMoveType(MOVETYPE_NONE);
+	RadiusDamage(CTakeDamageInfo(this, this->GetOwnerEntity(), 30, DMG_ENERGYBEAM, 0), GetAbsOrigin(), 64, CLASS_NONE, NULL);
+	DispatchParticleEffect("scanner_projectile_poof", GetAbsOrigin(), GetAbsAngles(), this);
+	SetThink(&CHLRScannerProjectile::Kill);
+	SetNextThink(gpGlobals->curtime + 0.1f);
+
+}
+void CHLRScannerProjectile::Kill(void)
+{
+	RemoveDeferred();
 }

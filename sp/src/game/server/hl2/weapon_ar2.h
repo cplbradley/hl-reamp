@@ -37,6 +37,8 @@ public:
 
 	void	AddViewKick( void );
 
+	void PrimaryAttack(void);
+
 	void	FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool bUseWeaponAngles );
 	void	FireNPCSecondaryAttack( CBaseCombatCharacter *pOperator, bool bUseWeaponAngles );
 	void	Operator_ForceNPCFire( CBaseCombatCharacter  *pOperator, bool bSecondary );

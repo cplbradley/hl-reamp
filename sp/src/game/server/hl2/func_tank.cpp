@@ -3083,6 +3083,7 @@ void CFuncTankAPCRocket::Spawn( void )
 {
 	BaseClass::Spawn();
 	AddEffects( EF_NODRAW );
+	SetEFlags(EFL_DIRTY_ABSTRANSFORM);
 	m_nSide = 0;
 	m_bDying = false;
 	m_hLaserDot = CreateLaserDot( GetAbsOrigin(), this, false );
@@ -3184,10 +3185,10 @@ void CFuncTankAPCRocket::Think()
 	}
 
 	BaseClass::Think();
-	m_hLaserDot->SetAbsOrigin( m_sightOrigin );
-	SetLaserDotTarget( m_hLaserDot, m_hFuncTankTarget );
-	EnableLaserDot( m_hLaserDot, m_hFuncTankTarget != NULL );
 
+	m_hLaserDot->SetAbsOrigin(m_sightOrigin);
+	SetLaserDotTarget(m_hLaserDot, m_hFuncTankTarget);
+	EnableLaserDot(m_hLaserDot, m_hFuncTankTarget != NULL);
 	if ( m_bDying )
 	{
 		FireDying( WorldBarrelPosition() );

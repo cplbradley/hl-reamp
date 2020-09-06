@@ -24,6 +24,8 @@
 #include "vstdlib/random.h"
 #include "engine/IEngineSound.h"
 #include "globals.h"
+#include "Sprite.h"
+#include "SpriteTrail.h"
 #include "grenade_frag.h"
 #include "ndebugoverlay.h"
 #include "weapon_physcannon.h"
@@ -173,6 +175,7 @@ DEFINE_FIELD( m_iLastAnimEventHandled, FIELD_INTEGER ),
 DEFINE_FIELD( m_fIsElite, FIELD_BOOLEAN ),
 DEFINE_FIELD( m_vecAltFireTarget, FIELD_VECTOR ),
 
+
 DEFINE_KEYFIELD( m_iTacticalVariant, FIELD_INTEGER, "tacticalvariant" ),
 DEFINE_KEYFIELD( m_iPathfindingVariant, FIELD_INTEGER, "pathfindingvariant" ),
 
@@ -318,9 +321,9 @@ void CNPC_Combine::Spawn( void )
 	m_bShouldPatrol			= false;
 
 
-	//	CapabilitiesAdd( bits_CAP_TURN_HEAD | bits_CAP_MOVE_GROUND | bits_CAP_MOVE_JUMP | bits_CAP_MOVE_CLIMB);
+	CapabilitiesAdd( bits_CAP_TURN_HEAD | bits_CAP_MOVE_GROUND | bits_CAP_MOVE_JUMP | bits_CAP_MOVE_CLIMB);
 	// JAY: Disabled jump for now - hard to compare to HL1
-	CapabilitiesAdd( bits_CAP_TURN_HEAD | bits_CAP_MOVE_GROUND );
+	//CapabilitiesAdd( bits_CAP_TURN_HEAD | bits_CAP_MOVE_GROUND );
 
 	CapabilitiesAdd( bits_CAP_AIM_GUN );
 
@@ -382,10 +385,66 @@ void CNPC_Combine::PostNPCInit()
 			DevWarning("**Combine Elite Soldier MUST be equipped with AR2\n");
 		}
 	}
+	DrawStuff();
 
 	BaseClass::PostNPCInit();
 }
+void CNPC_Combine::DrawStuff(void)
+{
+	m_pLeftEyeG = CSprite::SpriteCreate("sprites/glow03.vmt", GetLocalOrigin(), false);
+	m_pRightEyeG = CSprite::SpriteCreate("sprites/glow04.vmt", GetLocalOrigin(), false);
+	m_pLeftEyeT = CSpriteTrail::SpriteTrailCreate("sprites/laser.vmt", GetLocalOrigin(), false);
+	m_pRightEyeT = CSpriteTrail::SpriteTrailCreate("sprites/laser.vmt", GetLocalOrigin(), false);
 
+	int	nLeftEye = LookupAttachment("lefteye");
+	int	nRightEye = LookupAttachment("righteye");
+	if (m_pLeftEyeG != NULL)
+	{
+		m_pLeftEyeG->FollowEntity(this);
+		m_pLeftEyeG->SetAttachment(this, nLeftEye);
+		m_pLeftEyeG->SetScale(0.2f);
+		m_pLeftEyeG->SetGlowProxySize(4.0f);
+	}
+	if (m_pRightEyeG != NULL)
+	{
+		m_pRightEyeG->FollowEntity(this);
+		m_pRightEyeG->SetAttachment(this, nRightEye);
+
+		m_pRightEyeG->SetScale(0.2f);
+		m_pRightEyeG->SetGlowProxySize(4.0f);
+	}
+	if (m_pLeftEyeT != NULL)
+	{
+		m_pLeftEyeT->FollowEntity(this);
+		m_pLeftEyeT->SetAttachment(this, nLeftEye);
+
+		m_pLeftEyeT->SetStartWidth(8.0f);
+		m_pLeftEyeT->SetEndWidth(1.0f);
+		m_pLeftEyeT->SetLifeTime(0.5f);
+	}
+	if (m_pRightEyeT != NULL)
+	{
+		m_pRightEyeT->FollowEntity(this);
+		m_pRightEyeT->SetAttachment(this, nRightEye);
+		m_pRightEyeT->SetStartWidth(8.0f);
+		m_pRightEyeT->SetEndWidth(1.0f);
+		m_pRightEyeT->SetLifeTime(0.5f);
+	}
+	if (!HasShotgun())
+	{
+		m_pLeftEyeG->SetTransparency(kRenderGlow, 255, 190, 0, 200, kRenderFxNoDissipation);
+		m_pRightEyeG->SetTransparency(kRenderGlow, 255, 190, 0, 200, kRenderFxNoDissipation);
+		m_pLeftEyeT->SetTransparency(kRenderGlow, 255, 190, 0, 255, kRenderFxNone);
+		m_pRightEyeT->SetTransparency(kRenderGlow, 255, 190, 0, 255, kRenderFxNone);
+	}
+	else
+	{
+		m_pLeftEyeG->SetTransparency(kRenderGlow, 255, 0, 0, 200, kRenderFxNoDissipation);
+		m_pRightEyeG->SetTransparency(kRenderGlow, 255, 0, 0, 200, kRenderFxNoDissipation);
+		m_pLeftEyeT->SetTransparency(kRenderGlow, 255, 0, 0, 255, kRenderFxNone);
+		m_pRightEyeT->SetTransparency(kRenderGlow, 255, 0, 0, 255, kRenderFxNone);
+	}
+}
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 void CNPC_Combine::GatherConditions()
@@ -1238,6 +1297,15 @@ void CNPC_Combine::Event_Killed( const CTakeDamageInfo &info )
 			}
 		}
 	
+	if (m_pLeftEyeG != NULL)
+		UTIL_Remove(m_pLeftEyeG);
+	if (m_pRightEyeG != NULL)
+		UTIL_Remove(m_pRightEyeG);
+	if (m_pLeftEyeT != NULL)
+		UTIL_Remove(m_pLeftEyeT);
+	if (m_pRightEyeT != NULL)
+		UTIL_Remove(m_pRightEyeT);
+
 
 	BaseClass::Event_Killed( info );
 }

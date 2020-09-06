@@ -61,6 +61,7 @@ void CBaseHLBludgeonWeapon::Precache( void )
 {
 	//Call base class first
 	BaseClass::Precache();
+	PrecacheScriptSound("Furybar.Hit");
 }
 
 int CBaseHLBludgeonWeapon::CapabilitiesGet()
@@ -135,7 +136,7 @@ void CBaseHLBludgeonWeapon::SecondaryAttack()
 void CBaseHLBludgeonWeapon::Hit( trace_t &traceHit, Activity nHitActivity, bool bIsSecondary )
 {
 	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
-	
+	Msg("hit!\n");
 	//Do view kick
 	AddViewKick();
 
@@ -159,7 +160,9 @@ void CBaseHLBludgeonWeapon::Hit( trace_t &traceHit, Activity nHitActivity, bool 
 		if( pPlayer && pHitEntity->IsNPC() )
 		{
 			// If bonking an NPC, adjust damage.
+			Msg("hit enemy!\n");
 			info.AdjustPlayerDamageInflictedForSkillLevel();
+			EmitSound("Furybar.Hit");
 		}
 
 		CalculateMeleeDamageForce( &info, hitDirection, traceHit.endpos );

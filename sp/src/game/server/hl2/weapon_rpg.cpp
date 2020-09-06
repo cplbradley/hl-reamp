@@ -44,7 +44,7 @@ extern int g_interactionPlayerLaunchedRPG;
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#define	RPG_SPEED	1600
+#define	RPG_SPEED	1500
 
 static ConVar sk_apc_missile_damage("sk_apc_missile_damage", "15");
 ConVar rpg_missle_use_custom_detonators("rpg_missle_use_custom_detonators", "1");
@@ -171,8 +171,8 @@ void CMissile::Spawn(void)
 	SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE);
 	SetThink(&CMissile::IgniteThink);
 
-	SetNextThink(gpGlobals->curtime + 0.0f);
-	SetDamage(200.0f);
+	SetNextThink(gpGlobals->curtime);
+	SetDamage(125.0f);
 
 	m_takedamage = DAMAGE_YES;
 	m_iHealth = m_iMaxHealth = 100;
@@ -181,6 +181,8 @@ void CMissile::Spawn(void)
 
 	AddFlag(FL_OBJECT);
 }
+
+
 //---------------------------------------------------------
 //---------------------------------------------------------
 void CMissile::Event_Killed(const CTakeDamageInfo &info)
@@ -270,8 +272,8 @@ void CMissile::AccelerateThink(void)
 	AngleVectors(GetLocalAngles(), &vecForward);
 	SetAbsVelocity(vecForward * RPG_SPEED);
 
-	//SetThink(&CMissile::SeekThink);
-	//SetNextThink(gpGlobals->curtime + 0.1f);
+	SetThink(&CMissile::SeekThink);
+	SetNextThink(gpGlobals->curtime + 0.1f);
 }
 
 #define AUGER_YDEVIANCE 20.0f
@@ -382,6 +384,7 @@ void CMissile::Explode(void)
 		m_hOwner->NotifyRocketDied();
 		m_hOwner = NULL;
 	}
+
 	StopSound("Missile.Ignite");
 	UTIL_Remove(this);
 }
@@ -395,10 +398,12 @@ void CMissile::MissileTouch(CBaseEntity *pOther)
 	Assert(pOther);
 
 	// Don't touch triggers (but DO hit weapons)
-	if (pOther->IsSolidFlagSet(FSOLID_TRIGGER | FSOLID_VOLUME_CONTENTS) && pOther->GetCollisionGroup() != COLLISION_GROUP_WEAPON)
+	if (pOther->IsSolidFlagSet(FSOLID_TRIGGER | FSOLID_VOLUME_CONTENTS))
 	{
 		// Some NPCs are triggers that can take damage (like antlion grubs). We should hit them.
 		if ((pOther->m_takedamage == DAMAGE_NO) || (pOther->m_takedamage == DAMAGE_EVENTS_ONLY))
+			return;
+		if (pOther->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE)
 			return;
 	}
 
@@ -418,12 +423,12 @@ void CMissile::CreateSmokeTrail(void)
 	{
 		m_hRocketTrail->m_Opacity = 0.2f;
 		m_hRocketTrail->m_SpawnRate = 100;
-		m_hRocketTrail->m_ParticleLifetime = 0.2f;
-		m_hRocketTrail->m_StartColor.Init(0.25f, 0.25f, 0.25f);
+		m_hRocketTrail->m_ParticleLifetime = 0.3f;
+		m_hRocketTrail->m_StartColor.Init(0.65f, 0.65f, 0.65f);
 		m_hRocketTrail->m_EndColor.Init(0.0, 0.0, 0.0);
-		m_hRocketTrail->m_StartSize = 4;
-		m_hRocketTrail->m_EndSize = 1;
-		m_hRocketTrail->m_SpawnRadius = 8;
+		m_hRocketTrail->m_StartSize = 8;
+		m_hRocketTrail->m_EndSize = 0;
+		m_hRocketTrail->m_SpawnRadius = 16;
 		m_hRocketTrail->m_MinSpeed = 2;
 		m_hRocketTrail->m_MaxSpeed = 16;
 
@@ -452,8 +457,8 @@ void CMissile::IgniteThink(void)
 	AngleVectors(GetLocalAngles(), &vecForward);
 	SetAbsVelocity(vecForward * RPG_SPEED);
 
-	SetThink(NULL);
-	SetNextThink(gpGlobals->curtime);
+	//SetThink(&CMissile::SeekThink);
+	//SetNextThink(gpGlobals->curtime);
 
 	if (m_hOwner && m_hOwner->GetOwner())
 	{
@@ -756,6 +761,7 @@ void CMissile::RemoveCustomDetonator(CBaseEntity *pEntity)
 		}
 	}
 }
+
 
 
 //-----------------------------------------------------------------------------
@@ -1161,7 +1167,7 @@ void CAPCMissile::DoExplosion(void)
 #ifdef HL2_EPISODIC
 		ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), this, APC_MISSILE_DAMAGE, 100, true, 20000);
 #else
-		ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), APC_MISSILE_DAMAGE, 100, true, 20000);
+		ExplosionCreate( GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), APC_MISSILE_DAMAGE, 100, true, 20000 );
 #endif
 	}
 }
@@ -1576,13 +1582,13 @@ bool CWeaponRPG::HasAnyAmmo(void)
 bool CWeaponRPG::WeaponShouldBeLowered(void)
 {
 	// Lower us if we're out of ammo
-	if (!HasAnyAmmo())
-		return true;
+	//if (!HasAnyAmmo())
+		//return true;
 
 	return BaseClass::WeaponShouldBeLowered();
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------	-----------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CWeaponRPG::PrimaryAttack(void)
@@ -1596,8 +1602,8 @@ void CWeaponRPG::PrimaryAttack(void)
 	Vector	muzzlePoint = pPlayer ->Weapon_ShootPosition() + vForward * 12.0f + vRight * 6.0f + vUp * -3.0f;
 	m_hMissile = CMissile::Create(muzzlePoint, vecAngles, GetOwner()->edict());
 	m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
-
-	WeaponSound(WPN_DOUBLE);
+	SuppressGuiding();
+	WeaponSound(SINGLE);
 	SendWeaponAnim(GetPrimaryAttackActivity());
 	//m_bRedraw = true;
 	pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);
@@ -2231,6 +2237,7 @@ CLaserDot *CLaserDot::Create(const Vector &origin, CBaseEntity *pOwner, bool bVi
 	pLaserDot->SetMoveType(MOVETYPE_NONE);
 	pLaserDot->AddSolidFlags(FSOLID_NOT_SOLID);
 	pLaserDot->AddEffects(EF_NOSHADOW);
+	pLaserDot->AddEFlags(EFL_DIRTY_ABSTRANSFORM);
 	UTIL_SetSize(pLaserDot, vec3_origin, vec3_origin);
 
 	//Create the graphic

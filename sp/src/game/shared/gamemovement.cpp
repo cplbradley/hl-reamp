@@ -625,6 +625,7 @@ CGameMovement::CGameMovement( void )
 	m_flWaterEntryTime	= 0;
 	m_nOnLadder			= 0;
 	m_iJumpCount = 0;
+	m_iMaxJumps = 2;
 
 	mv					= NULL;
 
@@ -2380,7 +2381,7 @@ bool CGameMovement::CheckJumpButton( void )
 		return false;
 	}
 
-	if (m_iJumpCount >= 2)
+	if (m_iJumpCount >= m_iMaxJumps)
 		return false;
 	// See if we are waterjumping.  If so, decrement count and return.
 	if (player->m_flWaterJumpTime)
@@ -2391,7 +2392,7 @@ bool CGameMovement::CheckJumpButton( void )
 
 		return false;
 	}
-
+	
 	// If we are in the water most of the way...
 	if (player->GetWaterLevel() >= 2)
 	{
@@ -2520,7 +2521,14 @@ bool CGameMovement::CheckJumpButton( void )
 #endif*/
 
 	FinishGravity();
-
+/*#ifndef CLIENT_DLL
+	CSingleUserRecipientFilter user(player);
+	user.MakeReliable();
+	UserMessageBegin(user, "JumpCount");
+	WRITE_FLOAT(m_iJumpCount);
+	MessageEnd();
+	
+#endif*/
 	CheckV(player->CurrentCommandNumber(), "CheckJump", mv->m_vecVelocity);
 
 	mv->m_outJumpVel.z += mv->m_vecVelocity[2] - startz;
@@ -2863,10 +2871,8 @@ inline bool CGameMovement::OnLadder( trace_t &trace )
 // HPE_BEGIN
 // [sbodenbender] make ladders easier to climb in cstrike
 //=============================================================================
-#if defined (CSTRIKE_DLL)
 ConVar sv_ladder_dampen ( "sv_ladder_dampen", "0.2", FCVAR_REPLICATED, "Amount to dampen perpendicular movement on a ladder", true, 0.0f, true, 1.0f );
 ConVar sv_ladder_angle( "sv_ladder_angle", "-0.707", FCVAR_REPLICATED, "Cos of angle of incidence to ladder perpendicular for applying ladder_dampen", true, -1.0f, true, 1.0f );
-#endif
 //=============================================================================
 // HPE_END
 //=============================================================================
@@ -3000,7 +3006,7 @@ bool CGameMovement::LadderMove( void )
 			// HPE_BEGIN
 			// [sbodenbender] make ladders easier to climb in cstrike
 			//=============================================================================
-#if defined (CSTRIKE_DLL)
+
 			// break lateral into direction along tmp (up the ladder) and direction along perp (perpendicular to ladder)
 			float tmpDist = DotProduct ( tmp, lateral );
 			float perpDist = DotProduct ( perp, lateral );
@@ -3014,7 +3020,7 @@ bool CGameMovement::LadderMove( void )
 
 			if (angleDot < sv_ladder_angle.GetFloat())
 				lateral = (tmp * tmpDist) + (perp * sv_ladder_dampen.GetFloat() * perpDist);
-#endif // CSTRIKE_DLL
+
 			//=============================================================================
 			// HPE_END
 			//=============================================================================
@@ -3654,6 +3660,14 @@ void CGameMovement::SetGroundEntity( trace_t *pm )
 
 		mv->m_vecVelocity.z = 0.0f;
 		m_iJumpCount = 0;
+/*#ifndef CLIENT_DLL
+		
+		CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+		user.MakeReliable();
+		UserMessageBegin(user, "JumpCount");
+		WRITE_SHORT(m_iJumpCount);
+		MessageEnd();
+#endif*/
 	}
 }
 

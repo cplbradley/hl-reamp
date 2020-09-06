@@ -143,8 +143,9 @@ public:
 	virtual bool SwitchToNextBestWeapon( CBaseCombatCharacter *pPlayer, CBaseCombatWeapon *pCurrentWeapon ); // Switch to the next best weapon
 	virtual CBaseCombatWeapon *GetNextBestWeapon( CBaseCombatCharacter *pPlayer, CBaseCombatWeapon *pCurrentWeapon ); // I can't use this weapon anymore, get me the next best one.
 	virtual bool ShouldCollide( int collisionGroup0, int collisionGroup1 );
+		
 
-	virtual int DefaultFOV( void ) { return 100; }
+	virtual int DefaultFOV(void) { return 100.0f; }
 
 	// This function is here for our CNetworkVars.
 	inline void NetworkStateChanged()
@@ -306,6 +307,7 @@ public:
 	// Determines how much damage Player's attacks inflict, based on skill level.
 	virtual float AdjustPlayerDamageInflicted( float damage ) { return damage; }
 	virtual void  AdjustPlayerDamageTaken( CTakeDamageInfo *pInfo ) {}; // Base class does nothing.
+	virtual float AdjustProjectileSpeed(float projspeed);
 
 // Weapon retrieval
 	virtual bool CanHavePlayerItem( CBasePlayer *pPlayer, CBaseCombatWeapon *pWeapon );// The player is touching an CBaseCombatWeapon, do I give it to him?

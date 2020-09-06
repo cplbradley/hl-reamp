@@ -1686,7 +1686,7 @@ void CNPC_BaseZombie::Spawn( void )
 
 	m_NPCState			= NPC_STATE_NONE;
 
-	CapabilitiesAdd( bits_CAP_MOVE_GROUND | bits_CAP_INNATE_MELEE_ATTACK1 );
+	CapabilitiesAdd(bits_CAP_MOVE_GROUND | bits_CAP_INNATE_MELEE_ATTACK1 | bits_CAP_MOVE_JUMP);
 	CapabilitiesAdd( bits_CAP_SQUAD );
 
 	m_flNextSwat = gpGlobals->curtime;

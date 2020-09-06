@@ -11,6 +11,7 @@
 #include "ai_moveprobe.h"
 #include "npcevent.h"
 #include "IEffects.h"
+#include "weapon_rpg.h"
 #include "ndebugoverlay.h"
 #include "soundent.h"
 #include "movevars_shared.h"
@@ -121,6 +122,7 @@ enum
 	SCHED_ANTLIONWARRIOR_CANT_ATTACK,
 	SCHED_ANTLIONWARRIOR_TAKE_COVER_FROM_ENEMY,
 	SCHED_ANTLIONWARRIOR_RANGE_ATTACK1,
+	SCHED_ANTLIONWARRIOR_RANGE_ATTACK2,
 	SCHED_ANTLIONWARRIOR_CHASE_ENEMY
 };
 
@@ -135,6 +137,8 @@ enum
 	TASK_ANTLIONWARRIOR_GET_PATH_TO_PHYSOBJECT,
 	TASK_ANTLIONWARRIOR_SHOVE_PHYSOBJECT,
 	TASK_ANTLIONWARRIOR_SUMMON,
+	TASK_DISABLE_LAUNCHER,
+	TASK_ENABLE_LAUNCHER,
 	TASK_ANTLIONWARRIOR_SET_FLINCH_ACTIVITY,
 	TASK_ANTLIONWARRIOR_GET_PATH_TO_CHARGE_POSITION,
 	TASK_ANTLIONWARRIOR_GET_PATH_TO_NEAREST_NODE,
@@ -193,6 +197,8 @@ Activity ACT_ANTLIONWARRIOR_CHARGE_STOP;
 Activity ACT_ANTLIONWARRIOR_CHARGE_HIT;
 Activity ACT_ANTLIONWARRIOR_CHARGE_ANTICIPATION;
 Activity ACT_ANTLIONWARRIOR_FIREBALL_THROW;
+Activity ACT_ANTLIONWARRIOR_ROCKET_BARAGE;
+
 
 // Anim events
 int AE_ANTLIONWARRIOR_CHARGE_HIT;
@@ -210,6 +216,7 @@ int AE_ANTLIONWARRIOR_VOICE_GRUNT;
 int AE_ANTLIONWARRIOR_VOICE_ROAR;
 int AE_ANTLIONWARRIOR_BURROW_OUT;
 int AE_ANTLIONWARRIOR_SPIT;
+int AE_ANTLIONWARRIOR_FIRE_ROCKET;
 
 struct PhysicsObjectCriteria_t
 {
@@ -255,6 +262,7 @@ public:
 	virtual void	Precache(void);
 	virtual void	Spawn(void);
 	virtual void	Activate(void);
+	virtual void	PostNPCInit(void);
 	virtual void	HandleAnimEvent(animevent_t *pEvent);
 	virtual void	UpdateEfficiency(bool bInPVS)	{ SetEfficiency((GetSleepState() != AISS_AWAKE) ? AIE_DORMANT : AIE_NORMAL); SetMoveEfficiency(AIME_NORMAL); }
 	virtual void	PrescheduleThink(void);
@@ -264,7 +272,6 @@ public:
 	virtual void	RunTask(const Task_t *pTask);
 	virtual void	StopLoopingSounds();
 	virtual bool	HandleInteraction(int interactionType, void *data, CBaseCombatCharacter *sender);
-
 
 	Vector	m_vecSaveSpitVelocity;
 
@@ -371,6 +378,9 @@ private:
 	int				m_iChargeMisses;
 	bool			m_bDecidedNotToStop;
 	bool			m_bPreferPhysicsAttack;
+	bool			m_bIsAlive;
+	float			gHealth;
+	float			gMaxHealth;
 
 	CNetworkVar(bool, m_bCavernBreed);	// If this guard is meant to be a cavern dweller (uses different assets)
 	CNetworkVar(bool, m_bInCavern);		// Behavioral hint telling the guard to change his behavior
@@ -386,7 +396,13 @@ private:
 
 	CUtlVectorFixed<EHANDLE, MAX_FAILED_PHYSOBJECTS>		m_FailedPhysicsTargets;
 
+	EHANDLE			m_hLaserDotP;
+
+	CHandle< CParticleSystem >	m_hSpitEffect;
+
 	COutputEvent	m_OnSummon;
+	COutputEvent	m_OnBarageEnd;
+	COutputEvent	m_OnBarageStart;
 
 	CSoundPatch		*m_pGrowlHighSound;
 	CSoundPatch		*m_pGrowlLowSound;
@@ -435,6 +451,7 @@ DEFINE_FIELD(m_flAngerNoiseTime, FIELD_TIME),
 DEFINE_FIELD(m_flBreathTime, FIELD_TIME),
 DEFINE_FIELD(m_flChargeTime, FIELD_TIME),
 
+
 DEFINE_FIELD(m_hShoveTarget, FIELD_EHANDLE),
 DEFINE_FIELD(m_hChargeTarget, FIELD_EHANDLE),
 DEFINE_FIELD(m_hChargeTargetPosition, FIELD_EHANDLE),
@@ -462,6 +479,8 @@ DEFINE_KEYFIELD(m_strShoveTargets, FIELD_STRING, "shovetargets"),
 DEFINE_AUTO_ARRAY(m_hCaveGlow, FIELD_CLASSPTR),
 
 DEFINE_OUTPUT(m_OnSummon, "OnSummon"),
+DEFINE_OUTPUT(m_OnBarageStart, "OnBarageStart"),
+DEFINE_OUTPUT(m_OnBarageEnd, "OnBarageEnd"),
 
 DEFINE_SOUNDPATCH(m_pGrowlHighSound),
 DEFINE_SOUNDPATCH(m_pGrowlLowSound),
@@ -777,6 +796,7 @@ void CNPC_AntlionWarrior::CreateGlow(CSprite **pSprite, const char *pAttachName)
 //-----------------------------------------------------------------------------
 void CNPC_AntlionWarrior::Spawn(void)
 {
+	Msg("i spawned\n");
 	Precache();
 
 
@@ -801,7 +821,11 @@ void CNPC_AntlionWarrior::Spawn(void)
 	SetHullSizeNormal();
 	SetDefaultEyeOffset();
 
-	DispatchParticleEffect("antlionwarrior_burn", PATTACH_ABSORIGIN_FOLLOW, this);
+
+	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+	m_hLaserDotP = CreateLaserDot(GetAbsOrigin(), this, false);
+	SetLaserDotTarget(m_hLaserDotP, pPlayer);
+	m_hSpitEffect = (CParticleSystem *)CreateEntityByName("info_particle_system");
 
 	SetSolid(SOLID_BBOX);
 	AddSolidFlags(FSOLID_NOT_STANDABLE);
@@ -838,8 +862,10 @@ void CNPC_AntlionWarrior::Spawn(void)
 
 	CapabilitiesClear();
 	CapabilitiesAdd(bits_CAP_INNATE_RANGE_ATTACK1);
+	CapabilitiesAdd(bits_CAP_INNATE_RANGE_ATTACK2);
 	CapabilitiesAdd(bits_CAP_MOVE_GROUND | bits_CAP_INNATE_MELEE_ATTACK1 | bits_CAP_SQUAD);
 	CapabilitiesAdd(bits_CAP_SKIP_NAV_GROUND_CHECK);
+	CapabilitiesAdd(bits_CAP_MOVE_JUMP);
 
 	NPCInit();
 
@@ -877,7 +903,22 @@ void CNPC_AntlionWarrior::Spawn(void)
 
 	CollisionProp()->SetSurroundingBoundsType(USE_SPECIFIED_BOUNDS, &absMin, &absMax);
 }
-
+void CNPC_AntlionWarrior::PostNPCInit(void)
+{
+	if (m_hSpitEffect != NULL)
+	{
+		// Setup our basic parameters
+		m_hSpitEffect->KeyValue("start_active", "1");
+		m_hSpitEffect->KeyValue("effect_name", "antlionwarrior_burn");
+		m_hSpitEffect->SetParent(this);
+		m_hSpitEffect->SetLocalOrigin(vec3_origin);
+		DispatchSpawn(m_hSpitEffect);
+		if (gpGlobals->curtime > 0.5f)
+			m_hSpitEffect->Activate();
+	}
+	Msg("i particled\n");
+	BaseClass::PostNPCInit();
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -1248,9 +1289,9 @@ int CNPC_AntlionWarrior::SelectSchedule(void)
 			switch (i)
 			{
 			case 1:
-				return SCHED_ANTLIONWARRIOR_CHARGE_TARGET;
-			case 2:
 				return SCHED_ANTLIONWARRIOR_RANGE_ATTACK1;
+			case 2:
+				return SCHED_ANTLIONWARRIOR_RANGE_ATTACK2;
 			case 3:
 				return SCHED_ANTLIONWARRIOR_CHARGE_TARGET;
 			}
@@ -1787,14 +1828,15 @@ void CNPC_AntlionWarrior::GetPhysicsShoveDir(CBaseEntity *pObject, float flMass,
 bool CNPC_AntlionWarrior::GetSpitVector(const Vector &vecStartPos, const Vector &vecTarget, Vector *vecOut)
 {
 	// antlion workers exist only in episodic.
+	float adjustedspd = g_pGameRules->AdjustProjectileSpeed(sk_antlion_warrior_spit_speed.GetFloat());
 	//#if HL2_EPISODIC
 	// Try the most direct route
-	Vector vecToss = CheckThrowTolerance(this, vecStartPos, vecTarget, sk_antlion_warrior_spit_speed.GetFloat(), (10.0f*12.0f));
+	Vector vecToss = CheckThrowTolerance(this, vecStartPos, vecTarget, adjustedspd, (10.0f*12.0f));
 
 	// If this failed then try a little faster (flattens the arc)
 	if (vecToss == vec3_origin)
 	{
-		vecToss = CheckThrowTolerance(this, vecStartPos, vecTarget, sk_antlion_warrior_spit_speed.GetFloat() * 1.5f, (10.0f*12.0f));
+		vecToss = CheckThrowTolerance(this, vecStartPos, vecTarget, adjustedspd * 1.5f, (10.0f*12.0f));
 		if (vecToss == vec3_origin)
 			return false;
 	}
@@ -1850,7 +1892,8 @@ void CNPC_AntlionWarrior::HandleAnimEvent(animevent_t *pEvent)
 			Vector	vTarget;
 
 			// If our enemy is looking at us and far enough away, lead him
-			if (HasCondition(COND_ENEMY_FACING_ME) && UTIL_DistApprox(GetAbsOrigin(), GetEnemy()->GetAbsOrigin()) > (40 * 12))
+			//if (HasCondition(COND_ENEMY_FACING_ME) && UTIL_DistApprox(GetAbsOrigin(), GetEnemy()->GetAbsOrigin()) > (40 * 12))
+			if (HasCondition(COND_ENEMY_FACING_ME))
 			{
 				UTIL_PredictedPosition(GetEnemy(), 0.5f, &vTarget);
 				vTarget.z = GetEnemy()->GetAbsOrigin().z;
@@ -1925,6 +1968,26 @@ void CNPC_AntlionWarrior::HandleAnimEvent(animevent_t *pEvent)
 			}*/
 
 			EmitSound("NPC_Antlion.PoisonShoot");
+			Vector vecVelocity;
+			Vector vecDir = Vector(0, 0, 1);
+			VectorMultiply(vecDir, 800, vecVelocity);
+
+			QAngle angles;
+			VectorAngles(vecDir, angles);
+			CAPCMissile *pRocket = (CAPCMissile *)CAPCMissile::Create(GetAbsOrigin(), angles, vecVelocity, this);
+			pRocket->IgniteDelay();
+		}
+		return;
+	}
+	if (pEvent->event == AE_ANTLIONWARRIOR_FIRE_ROCKET)
+	{
+		if (GetEnemy())
+		{
+			/*CAPCMissile *pRocket = (CAPCMissile *)CAPCMissile::Create(GetAbsVelocity(), GetAbsAngles(), , this);
+			pRocket->IgniteDelay();
+			CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+			pRocket->IgniteDelay();
+			pRocket->AimAtSpecificTarget(pPlayer);*/
 		}
 		return;
 	}
@@ -2362,7 +2425,6 @@ int CNPC_AntlionWarrior::OnTakeDamage_Alive(const CTakeDamageInfo &info)
 			return 0;
 		}
 	}
-
 	// Hack to make antlion guard harder in HARD
 	if (g_pGameRules->IsSkillLevel(SKILL_HARD) && !(info.GetDamageType() & DMG_CRUSH))
 	{
@@ -2530,6 +2592,16 @@ void CNPC_AntlionWarrior::StartTask(const Task_t *pTask)
 	case TASK_ANTLIONWARRIOR_SUMMON:
 		SummonAntlions();
 		m_OnSummon.FireOutput(this, this, 0);
+		TaskComplete();
+		break;
+	case TASK_DISABLE_LAUNCHER:
+		m_OnBarageEnd.FireOutput(this, this, 0);
+		Msg("finished barage \n");
+		TaskComplete();
+		break;
+	case TASK_ENABLE_LAUNCHER:
+		m_OnBarageStart.FireOutput(this, this, 0);
+		Msg("starting barage\n");
 		TaskComplete();
 		break;
 
@@ -3145,7 +3217,11 @@ void CNPC_AntlionWarrior::RunTask(const Task_t *pTask)
 		}
 		break;
 		*/
-
+	/*case TASK_RANGE_ATTACK2:
+	{
+		BaseClass::RunTask(pTask);
+		break;
+	}*/
 	case TASK_ANTLIONWARRIOR_CHARGE:
 	{
 		Activity eActivity = GetActivity();
@@ -3782,6 +3858,9 @@ void CNPC_AntlionWarrior::PrescheduleThink(void)
 	}
 
 	UpdateHead();
+
+	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+	SetLaserDotTarget(m_hLaserDotP, pPlayer);
 
 	if ((m_flGroundSpeed <= 0.0f))
 	{
@@ -4865,6 +4944,8 @@ DECLARE_TASK(TASK_ANTLIONWARRIOR_GET_PATH_TO_NEAREST_NODE)
 DECLARE_TASK(TASK_ANTLIONWARRIOR_GET_CHASE_PATH_ENEMY_TOLERANCE)
 DECLARE_TASK(TASK_ANTLIONWARRIOR_OPPORTUNITY_THROW)
 DECLARE_TASK(TASK_ANTLIONWARRIOR_FIND_PHYSOBJECT)
+DECLARE_TASK(TASK_DISABLE_LAUNCHER)
+DECLARE_TASK(TASK_ENABLE_LAUNCHER)
 
 //Activities
 DECLARE_ACTIVITY(ACT_ANTLIONWARRIOR_SEARCH)
@@ -4988,6 +5069,23 @@ SCHED_ANTLIONWARRIOR_RANGE_ATTACK1,
 "		TASK_STOP_MOVING					0"
 "		TASK_FACE_ENEMY						0"
 "		TASK_RANGE_ATTACK1					0"
+""
+"	Interrupts"
+"		COND_TASK_FAILED"
+"		COND_ENEMY_DEAD"
+//"		COND_HEAVY_DAMAGE"
+)
+DEFINE_SCHEDULE
+(
+SCHED_ANTLIONWARRIOR_RANGE_ATTACK2,
+
+"	Tasks"
+"		TASK_STOP_MOVING					0"
+"		TASK_FACE_ENEMY						0"
+"		TASK_ENABLE_LAUNCHER				0"
+"		TASK_PLAY_SEQUENCE					ACTIVITY : ACT_RANGE_ATTACK2"
+"		TASK_RANGE_ATTACK2					0"
+"		TASK_DISABLE_LAUNCHER				0"
 ""
 "	Interrupts"
 "		COND_TASK_FAILED"

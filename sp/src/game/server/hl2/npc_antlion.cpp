@@ -1005,12 +1005,13 @@ bool CNPC_Antlion::GetSpitVector( const Vector &vecStartPos, const Vector &vecTa
 	// antlion workers exist only in episodic.
 //#if HL2_EPISODIC
 	// Try the most direct route
-	Vector vecToss = VecCheckThrowTolerance( this, vecStartPos, vecTarget, sk_antlion_worker_spit_speed.GetFloat(), (10.0f*12.0f) );
+	float adjustedspd = g_pGameRules->AdjustProjectileSpeed(sk_antlion_worker_spit_speed.GetFloat());
+	Vector vecToss = VecCheckThrowTolerance( this, vecStartPos, vecTarget, adjustedspd, (10.0f*12.0f) );
 
 	// If this failed then try a little faster (flattens the arc)
 	if ( vecToss == vec3_origin )
 	{
-		vecToss = VecCheckThrowTolerance( this, vecStartPos, vecTarget, sk_antlion_worker_spit_speed.GetFloat() * 1.5f, (10.0f*12.0f) );
+		vecToss = VecCheckThrowTolerance(this, vecStartPos, vecTarget, adjustedspd * 1.5f, (10.0f*12.0f));
 		if ( vecToss == vec3_origin )
 			return false;
 	}
@@ -1073,7 +1074,7 @@ void CNPC_Antlion::HandleAnimEvent( animevent_t *pEvent )
 				vTarget[2] += random->RandomFloat( 0.0f, 32.0f );
 				
 				// Try and spit at our target
-				Vector	vecToss;				
+				Vector	vecToss;
 				if ( GetSpitVector( vSpitPos, vTarget, &vecToss ) == false )
 				{
 					// Now try where they were
@@ -4385,9 +4386,9 @@ void CNPC_Antlion::DoPoisonBurst()
 {
 	if ( GetWaterLevel() < 2 )
 	{
-		CTakeDamageInfo info( this, this, sk_antlion_worker_burst_damage.GetFloat(), DMG_BLAST_SURFACE | ( ANTLION_WORKER_BURST_IS_POISONOUS() ? DMG_POISON : DMG_ACID ) );
+		//CTakeDamageInfo info( this, this, sk_antlion_worker_burst_damage.GetFloat(), DMG_BLAST_SURFACE | ( ANTLION_WORKER_BURST_IS_POISONOUS() ? DMG_POISON : DMG_ACID ) );
 
-		RadiusDamage( info, GetAbsOrigin(), sk_antlion_worker_burst_radius.GetFloat(), CLASS_NONE, this );
+		//RadiusDamage( info, GetAbsOrigin(), sk_antlion_worker_burst_radius.GetFloat(), CLASS_NONE, this );
 
 		DispatchParticleEffect( "antlion_gib_02", WorldSpaceCenter(), GetAbsAngles() );
 	}

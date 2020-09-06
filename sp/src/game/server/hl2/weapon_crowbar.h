@@ -34,6 +34,9 @@ public:
 
 	CWeaponCrowbar();
 
+	void		ItemPostFrame(void);
+	void		ItemHolsterFrame(void);
+	void		Precache(void);
 	float		GetRange( void )		{	return	CROWBAR_RANGE;	}
 	float		GetFireRate( void )		{	return	CROWBAR_REFIRE;	}
 

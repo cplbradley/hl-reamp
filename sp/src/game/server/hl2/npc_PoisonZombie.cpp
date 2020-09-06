@@ -507,7 +507,7 @@ void CNPC_PoisonZombie::SetZombieModel( void )
 	else
 	{
 		SetModel( "models/zombie/poison.mdl" );
-		SetHullType(HULL_HUMAN);
+		SetHullType(HULL_MEDIUM_TALL);
 	}
 
 	SetBodygroup( ZOMBIE_BODYGROUP_HEADCRAB, m_fIsHeadless );
@@ -675,12 +675,13 @@ void CNPC_PoisonZombie::HandleAnimEvent( animevent_t *pEvent )
 	{
 		SetBodygroup( ZOMBIE_BODYGROUP_THROW, 0 );
 		CBaseEntity *pEnemy = GetEnemy();
+		float adjustspd = g_pGameRules->AdjustProjectileSpeed(2000.0f);
 		if (pEnemy)
 		{
 			Vector vecSrc = GetAbsOrigin() + GetViewOffset();
 			Vector vecEnemyEyePos = pEnemy->EyePosition();
 			Vector vecAim = GetShootEnemyDir(vecSrc, false);
-			Vector vecVelocity = vecAim * 2500.0f;
+			Vector vecVelocity = vecAim * adjustspd;
 			CHLRFireball *pFire = (CHLRFireball*)CreateEntityByName("hlr_fireball");
 			pFire->SetOwnerEntity(this);
 			pFire->SetAbsOrigin(vecSrc);

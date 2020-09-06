@@ -14,6 +14,7 @@
 #include "in_buttons.h"
 #include "soundent.h"
 #include "basebludgeonweapon.h"
+#include "particle_parse.h"
 #include "vstdlib/random.h"
 #include "npcevent.h"
 #include "ai_basenpc.h"
@@ -51,6 +52,23 @@ IMPLEMENT_ACTTABLE(CWeaponCrowbar);
 //-----------------------------------------------------------------------------
 CWeaponCrowbar::CWeaponCrowbar( void )
 {
+}
+void CWeaponCrowbar::Precache(void)
+{
+	PrecacheParticleSystem("crowbar_burn");	
+	BaseClass::Precache();
+}
+void CWeaponCrowbar::ItemPostFrame(void)
+{
+	CBasePlayer *pOwner = UTIL_GetLocalPlayer();
+	int iAttachment = LookupAttachment("root");
+	DispatchParticleEffect("crowbar_burn", PATTACH_POINT_FOLLOW, pOwner->GetViewModel(), iAttachment, true);
+	BaseClass::ItemPostFrame();
+}
+void CWeaponCrowbar::ItemHolsterFrame(void)
+{
+	StopParticleEffects(this);
+	BaseClass::ItemHolsterFrame();
 }
 
 //-----------------------------------------------------------------------------

@@ -21,7 +21,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#define ITEM_PICKUP_BOX_BLOAT		24
+#define ITEM_PICKUP_BOX_BLOAT		64
 
 class CWorldItem : public CBaseAnimating
 {
@@ -95,6 +95,8 @@ BEGIN_DATADESC( CItem )
 
 	// Function Pointers
 	DEFINE_ENTITYFUNC( ItemTouch ),
+	DEFINE_THINKFUNC(SeekThink),
+	DEFINE_THINKFUNC(TraceThink),
 	DEFINE_THINKFUNC( Materialize ),
 	DEFINE_THINKFUNC( ComeToRest ),
 
@@ -116,8 +118,11 @@ END_DATADESC()
 CItem::CItem()
 {
 	m_bActivateWhenAtRest = false;
+	m_bShouldSeek = false;
 }
-
+void CItem::CheckQuantity(void)
+{
+}
 bool CItem::CreateItemVPhysicsObject( void )
 {
 	// Create the object in the physics system
@@ -147,29 +152,33 @@ bool CItem::CreateItemVPhysicsObject( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CItem::Spawn( void )
+void CItem::Spawn(void)
 {
-	if ( g_pGameRules->IsAllowedToSpawn( this ) == false )
+	/*if ( g_pGameRules->IsAllowedToSpawn( this ) == false )
 	{
-		UTIL_Remove( this );
-		return;
+	UTIL_Remove( this );
+	return;
+	}
+	*/
+	SetMoveType(MOVETYPE_FLYGRAVITY);
+	SetSolid(SOLID_BBOX);
+	SetBlocksLOS(false);
+	AddEFlags(EFL_NO_ROTORWASH_PUSH);
+
+	if (IsX360())
+	{
+		AddEffects(EF_ITEM_BLINK);
 	}
 
-	SetMoveType( MOVETYPE_FLYGRAVITY );
-	SetSolid( SOLID_BBOX );
-	SetBlocksLOS( false );
-	AddEFlags( EFL_NO_ROTORWASH_PUSH );
-	
-	if( IsX360() )
-	{
-		AddEffects( EF_ITEM_BLINK );
-	}
-
+	RegisterThinkContext("SeekContext");
+	RegisterThinkContext("TraceContext");
 	// This will make them not collide with the player, but will collide
 	// against other items + weapons
-	SetCollisionGroup( COLLISION_GROUP_WEAPON );
+	SetCollisionGroup(COLLISION_GROUP_WEAPON);
 	CollisionProp()->UseTriggerBounds( true, ITEM_PICKUP_BOX_BLOAT );
 	SetTouch(&CItem::ItemTouch);
+	SetContextThink(&CItem::TraceThink, gpGlobals->curtime+1.0f, "TraceContext");
+	//Msg("seeking\n");
 
 	if ( CreateItemVPhysicsObject() == false )
 		return;
@@ -268,8 +277,97 @@ void CItem::ComeToRest( void )
 	{
 		m_bActivateWhenAtRest = false;
 		AddSolidFlags( FSOLID_TRIGGER );
-		SetThink( NULL );
+		SetThink(NULL);
 	}
+	
+}
+float CItem::FindPlayer()
+{
+	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+	float flNearest = (512*512) + 1;
+	if (pPlayer)
+	{
+		float flDist = (pPlayer->GetAbsOrigin() - GetAbsOrigin()).LengthSqr();
+
+		if (flDist < flNearest && FVisible(pPlayer, MASK_SOLID_BRUSHONLY))
+		{
+			flNearest = flDist;
+		}
+	}
+	return sqrt(flNearest);
+}
+void CItem::TraceThink(void)
+{
+	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+	if (!UTIL_FindClientInPVS(edict()))
+	{
+		// Sleep!
+		SetNextThink(gpGlobals->curtime + 0.5,"TraceContext");
+		return;
+	}
+	
+	float flPlayerDist = FindPlayer();
+
+	if (flPlayerDist <= 512)
+	{
+		CheckQuantity();
+		//Msg("checking quantity\n");
+		if (m_bShouldSeek == false || !pPlayer->IsSuitEquipped() || !pPlayer->IsAlive())
+		{
+			//Msg("nah you're full\n");
+			SetNextThink(gpGlobals->curtime + 0.5f, "TraceContext");
+			SetMoveType(MOVETYPE_FLYGRAVITY);
+			CreateItemVPhysicsObject();
+			return;
+		}
+		SetMoveType(MOVETYPE_FLY);
+		SetSolid(SOLID_NONE);
+		SetContextThink(&CItem::SeekThink,gpGlobals->curtime,"SeekContext");
+		//Msg("found you\n");
+	}
+	SetNextThink(gpGlobals->curtime + 0.5f, "TraceContext");
+	return;
+}
+
+
+void CItem::SeekThink(void)
+{
+	if (m_bShouldSeek != false)
+	{
+		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+		Vector vecDir = (pPlayer->WorldSpaceCenter() - GetAbsOrigin());
+		VectorNormalize(vecDir);
+
+		/*if (flSpeed < ITEM_MAGNET_SPEED)
+		{
+		// Accelerate by the desired amount
+		flSpeed += (ITEM_MAGNET_SPEED * flDelta);
+		if (flSpeed > ITEM_MAGNET_SPEED)
+		{
+		flSpeed = ITEM_MAGNET_SPEED;
+		}
+		}
+
+		// Steer!
+		Vector vecRight, vecUp;
+		VectorVectors(vecDir, vecRight, vecUp);
+		Vector vecOffset = vec3_origin;
+		vecOffset += vecUp * cos(gpGlobals->curtime * 20.0f) * 200.0f * gpGlobals->frametime;
+		vecOffset += vecRight * sin(gpGlobals->curtime * 15.0f) * 200.0f * gpGlobals->frametime;
+
+		vecOffset += GetSteerVector(vecDir);
+		*/
+		SetAbsVelocity(vecDir * 800);
+		SetNextThink(gpGlobals->curtime + 0.05f, "SeekContext");
+		return;
+	}
+	else
+	{
+		SetContextThink(&CItem::TraceThink, gpGlobals->curtime, "TraceContext");
+		SetMoveType(MOVETYPE_FLYGRAVITY);
+		CreateItemVPhysicsObject();
+	}
+	return;
 }
 
 #if defined( HL2MP ) || defined( TF_DLL )
@@ -414,9 +512,11 @@ void CItem::ItemTouch( CBaseEntity *pOther )
 	// Must be a valid pickup scenario (no blocking). Though this is a more expensive
 	// check than some that follow, this has to be first Obecause it's the only one
 	// that inhibits firing the output OnCacheInteraction.
-	if ( ItemCanBeTouchedByPlayer( pPlayer ) == false )
+	/*if (ItemCanBeTouchedByPlayer(pPlayer) == false)
+	{
+		Msg("can't be touched\n");
 		return;
-
+	}*/
 	m_OnCacheInteraction.FireOutput(pOther, this);
 
 	// Can I even pick stuff up?
@@ -427,6 +527,7 @@ void CItem::ItemTouch( CBaseEntity *pOther )
 	if ( !g_pGameRules->CanHaveItem( pPlayer, this ) )
 	{
 		// no? Ignore the touch.
+		//Msg("not allowed to touch\n");
 		return;
 	}
 
@@ -434,9 +535,10 @@ void CItem::ItemTouch( CBaseEntity *pOther )
 	{
 		m_OnPlayerTouch.FireOutput(pOther, this);
 
-		SetTouch( NULL );
+		//SetTouch( NULL );
 		SetThink( NULL );
 
+		//Msg("touched\n");
 		// player grabbed the item. 
 		g_pGameRules->PlayerGotItem( pPlayer, this );
 		if ( g_pGameRules->ItemShouldRespawn( this ) == GR_ITEM_RESPAWN_YES )

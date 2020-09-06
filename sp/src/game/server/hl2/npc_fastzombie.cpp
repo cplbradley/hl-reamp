@@ -1658,6 +1658,7 @@ void CFastZombie::OnChangeActivity( Activity NewActivity )
 	if ( NewActivity == ACT_LAND )
 	{
 		m_flNextAttack = gpGlobals->curtime + 1.0;
+		RadiusDamage(CTakeDamageInfo(this, this, 50, DMG_SONIC), GetAbsOrigin(), 800, CLASS_NONE, NULL);
 	}
 
 	if ( NewActivity == ACT_GLIDE )
@@ -2047,7 +2048,7 @@ AI_BEGIN_CUSTOM_NPC( npc_fastzombie, CFastZombie )
 	DECLARE_CONDITION( COND_FASTZOMBIE_CLIMB_TOUCH )
 
 	//Adrian: events go here
-	DECLARE_ANIMEVENT( AE_FASTZOMBIE_LEAP )
+	DECLARE_ANIMEVENT( AE_FASTZOMBIE_LEAP ) 
 	DECLARE_ANIMEVENT( AE_FASTZOMBIE_GALLOP_LEFT )
 	DECLARE_ANIMEVENT( AE_FASTZOMBIE_GALLOP_RIGHT )
 	DECLARE_ANIMEVENT( AE_FASTZOMBIE_CLIMB_LEFT )

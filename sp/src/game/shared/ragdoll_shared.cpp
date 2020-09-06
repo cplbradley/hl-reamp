@@ -741,6 +741,8 @@ bool ShouldRemoveThisRagdoll( CBaseAnimating *pRagdoll )
 	if ( pRagdoll->GetEffectEntity() )
 		return false;
 	*/
+	if (!pRagdoll->m_pRagdoll)
+		return true;
 
 	Vector vMins, vMaxs;
 		

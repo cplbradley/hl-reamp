@@ -150,15 +150,14 @@ void CWeapon357::PrimaryAttack(void)
 	Vector vecAbsStart, vecAbsEnd, vecDir;
 	Vector vecSrc = pPlayer->Weapon_ShootPosition(); //start at headlevel
 	Vector vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT); //autoaiming for lower difficulties
-	AngleVectors(pPlayer->EyeAngles(), &vecDir); vecAbsStart = pPlayer->EyePosition(); //convert angle into vector
-	vecAbsStart = pPlayer->EyePosition();
-	vecAbsEnd = vecAbsStart + (vecDir * 2000);
+	AngleVectors(pPlayer->EyeAngles(), &vecDir);//convert angle into vector
+
 
 	Vector vecRev = -vecDir;
 	pPlayer->VelocityPunch(vecRev * sk_plr_357_pushamount.GetFloat());
 
 	DrawBeam(); //trigger beam draw
-	pPlayer->FireBullets(15, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0); //shoot 15 bullets as 1 bullet
+	pPlayer->FireBullets(10, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0); //shoot 15 bullets as 1 bullet
 
 	pPlayer->SetMuzzleFlashTime(gpGlobals->curtime + 0.5);
 
@@ -209,36 +208,11 @@ void CWeapon357::DrawBeam(void)
 
 	trace_t tr; // Create our trace_t class to hold the end result
 	// Do the TraceLine, and write our results to our trace_t class, tr.
-	UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_ALL, pPlayer, COLLISION_GROUP_NONE, &tr);
+	UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_SHOT_HULL, pPlayer, COLLISION_GROUP_NONE, &tr);
 
 	Vector vecPartStart;
 	Vector vecEndPos = tr.endpos;
 	DispatchParticleEffect("railgun_beam", vecSrc, tr.endpos, GetAbsAngles(), this);
-
-	
-	/*
-	//Tracer down the middle
-	//UTIL_Tracer(startPos, endPos, 0, TRACER_DONT_USE_ATTACHMENT, 6500, false, "GaussTracer");
-
-	//Draw the main beam shaft
-	CBeam *pBeam = CBeam::BeamCreate(PHYSCANNON_BEAM_SPRITE, 15.5); //draw the beam
-
-	// It starts at startPos
-	pBeam->SetStartPos(startPos);
-
-	// This sets up some things that the beam uses to figure out where
-	// it should start and end
-	pBeam->PointEntInit(endPos, this);
-
-	pBeam->SetEndAttachment(LookupAttachment("muzzle"));
-	pBeam->SetWidth(width);
-
-	pBeam->SetBrightness(255);
-	pBeam->SetColor(255, 255, 255);
-	pBeam->RelinkBeam();
-
-	pBeam->LiveForTime(0.08f);
-	width -= 5;*/
 }
 void CWeapon357::SecondaryAttack(void)
 {

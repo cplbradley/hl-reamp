@@ -19,6 +19,7 @@
 #include "shareddefs.h"
 #include "timedevent.h"
 #include "smartptr.h"
+#include "colorcorrectionmgr.h"
 #include "fx_water.h"
 #include "hintsystem.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
@@ -200,7 +201,7 @@ public:
 	virtual float				GetDefaultAnimSpeed( void ) { return 1.0; }
 
 	void						SetMaxSpeed( float flMaxSpeed ) { m_flMaxspeed = flMaxSpeed; }
-	float						MaxSpeed() const		{ return m_flMaxspeed; }
+	float						MaxSpeed() const		{ return m_flMaxspeed * 2; }
 
 	// Should this object cast shadows?
 	virtual ShadowType_t		ShadowCastType() { return SHADOWS_NONE; }

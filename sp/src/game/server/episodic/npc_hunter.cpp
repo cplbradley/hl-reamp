@@ -33,6 +33,7 @@
 #include "npcevent.h"
 #include "saverestore_utlvector.h"
 #include "particle_parse.h"
+#include "gamerules.h"
 #include "te_particlesystem.h"
 #include "sceneentity.h"
 #include "shake.h"
@@ -78,7 +79,7 @@ static const char *HUNTER_ZAP_THINK = "HunterZap";
 static const char *HUNTER_JOSTLE_VEHICLE_THINK = "HunterJostle";
 
 
-ConVar sk_hunter_health( "sk_hunter_health", "210" );
+ConVar sk_hunter_health( "sk_hunter_health", "360" ); 
 
 // Melee attacks
 ConVar sk_hunter_dmg_one_slash( "sk_hunter_dmg_one_slash", "20" );
@@ -6254,8 +6255,9 @@ bool CNPC_Hunter::ShootFlechette( CBaseEntity *pTargetEntity, bool bSingleShot )
 	CHunterFlechette *pFlechette = CHunterFlechette::FlechetteCreate( vecSrc, angShoot, this );
 
 	pFlechette->AddEffects( EF_NOSHADOW );
-
-	vecShoot *= hunter_flechette_speed.GetFloat();
+	float basespd = hunter_flechette_speed.GetFloat();
+	float adjustedspd = g_pGameRules->AdjustProjectileSpeed(basespd);
+	vecShoot *= adjustedspd;
 
 	pFlechette->Shoot( vecShoot, bStriderBuster );
 

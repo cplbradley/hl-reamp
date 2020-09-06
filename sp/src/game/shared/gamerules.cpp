@@ -173,7 +173,31 @@ bool CGameRules::CanHaveAmmo( CBaseCombatCharacter *pPlayer, int iAmmoIndex )
 
 	return false;
 }
+float CGameRules::AdjustProjectileSpeed(float projspeed)
+{
+	switch (GetSkillLevel())
+	{
+	case SKILL_EASY:
+		//Msg("adjusting speed to easy\n");
+		return (projspeed * 0.75f);
+		break;
 
+	case SKILL_MEDIUM:
+		//Msg("adjusting speed to medium\n");
+		return (projspeed);
+		break;
+
+	case SKILL_HARD:
+		//Msg("adjusting speed to hard\n");
+		return (projspeed * 1.5f);
+		break;
+
+	default:
+		//Msg("adjusting speed to default\n");
+		return projspeed * 0.1f;
+		break;
+	}
+}
 //-----------------------------------------------------------------------------
 // Purpose: Return true if the specified player can carry any more of the ammo type
 //-----------------------------------------------------------------------------
@@ -861,7 +885,7 @@ void CGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	if ( pszFov )
 	{
 		int iFov = atoi(pszFov);
-		iFov = clamp( iFov, 75, 90 );
+		iFov = clamp( iFov, 90, 120 );
 		pPlayer->SetDefaultFOV( iFov );
 	}
 

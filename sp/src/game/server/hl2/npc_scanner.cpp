@@ -14,6 +14,7 @@
 #include "globalstate.h"
 #include "soundent.h"
 #include "npc_citizen17.h"
+#include "hlr/hlr_projectile.h"
 #include "gib.h"
 #include "spotlightend.h"
 #include "IEffects.h"
@@ -70,6 +71,7 @@ extern IMaterialSystemHardwareConfig *g_pMaterialSystemHardwareConfig;
 #define SCANNER_SCOUT_MAX_SPEED			150
 
 ConVar	sk_scanner_health( "sk_scanner_health","0");
+ConVar	sk_scanner_projectile_speed("sk_scanner_projectile_speed", "600");
 ConVar	g_debug_cscanner( "g_debug_cscanner", "0" );
 
 //-----------------------------------------------------------------------------
@@ -360,11 +362,6 @@ void CNPC_CScanner::Gib( void )
 	}
 
 	// Add a random chance of spawning a battery...
-	DropItem("item_box_buckshot", WorldSpaceCenter() + RandomVector(0, 4), RandomAngle(0, 360));
-	DropItem("item_ammo_smg1", WorldSpaceCenter() + RandomVector(0, 4), RandomAngle(0, 360));
-	DropItem("item_ammo_ar2_large", WorldSpaceCenter() + RandomVector(0, 4), RandomAngle(0, 360));
-	DropItem("item_rpg_round", WorldSpaceCenter() + RandomVector(0, 4), RandomAngle(0, 360));
-
 	DeployMine();
 
 	BaseClass::Gib();
@@ -1950,22 +1947,19 @@ void CNPC_CScanner::AttackFlash(void)
 void CNPC_CScanner::BlindFlashTarget( CBaseEntity *pTarget )
 {
 	Vector vecSrc = GetAbsOrigin();
-	Vector vecEnd = pTarget->GetAbsOrigin();
-
-	
-	trace_t tr;
-	UTIL_TraceLine(vecSrc, vecEnd, MASK_ALL, this, COLLISION_GROUP_NONE, &tr);
-	debugoverlay->AddLineOverlay(tr.startpos, tr.endpos, 0, 255, 0, false, 3.0f);
-	Vector vecAim = tr.endpos - tr.startpos;
+	Vector vecEnd = pTarget->WorldSpaceCenter();
+	Vector vecAim = vecEnd - vecSrc;
 	VectorNormalize(vecAim);
-	CMissile *pMissile = (CMissile *)CreateEntityByName("rpg_missile");
-	QAngle angAim;
-	VectorAngles(vecAim, angAim);
-	pMissile->SetAbsOrigin(tr.startpos);
-	pMissile->SetOwnerEntity(this);
-	pMissile->SetAbsAngles(angAim);
-	pMissile->Spawn();
 
+	float flSpd = g_pGameRules->AdjustProjectileSpeed(sk_scanner_projectile_speed.GetFloat());
+
+	CHLRScannerProjectile *pPew = (CHLRScannerProjectile*)CreateEntityByName("hlr_scannerprojectile");
+	pPew->SetAbsOrigin(vecSrc);
+	pPew->Spawn();
+
+	pPew->SetAbsVelocity(vecAim * flSpd);
+	pPew->SetOwnerEntity(this);
+	
 	/*// Tell all the striders this person is here!
 	CAI_BaseNPC **	ppAIs 	= g_AI_Manager.AccessAIs();
 	int 			nAIs 	= g_AI_Manager.NumAIs();

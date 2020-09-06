@@ -3014,6 +3014,7 @@ void CTriggerCamera::Enable( void )
 
 	m_nPlayerButtons = pPlayer->m_nButtons;
 
+	pPlayer->SetFOV(this, 75.0f, 0.2f);
 	
 	// Make the player invulnerable while under control of the camera.  This will prevent situations where the player dies while under camera control but cannot restart their game due to disabled player inputs.
 	m_nOldTakeDamage = m_hPlayer->m_takedamage;
@@ -3152,6 +3153,8 @@ void CTriggerCamera::Disable( void )
 
 		((CBasePlayer*)m_hPlayer.Get())->SetViewEntity( m_hPlayer );
 		((CBasePlayer*)m_hPlayer.Get())->EnableControl(TRUE);
+		((CBasePlayer*)m_hPlayer.Get())->SetFOV(this, 0, 0.2f);
+
 
 		// Restore the player's viewmodel
 		if ( ((CBasePlayer*)m_hPlayer.Get())->GetActiveWeapon() )
@@ -3161,6 +3164,7 @@ void CTriggerCamera::Disable( void )
 		//return the player to previous takedamage state
 		m_hPlayer->m_takedamage = m_nOldTakeDamage;
 	}
+
 
 	m_state = USE_OFF;
 	m_flReturnTime = gpGlobals->curtime;

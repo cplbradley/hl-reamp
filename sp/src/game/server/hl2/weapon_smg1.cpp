@@ -13,9 +13,11 @@
 #include "game.h"
 #include "in_buttons.h"
 #include "grenade_ar2.h"
+#include "hl2_gamerules.h"
 #include "hl2_shareddefs.h"
 #include "ai_memory.h"
 #include "soundent.h"
+#include "gamerules.h"
 #include "rumble_shared.h"
 #include "gamestats.h"
 #include "particle_parse.h"
@@ -25,7 +27,7 @@
 #include "tier0/memdbgon.h"
 #define PLASMA_MODEL "models/spitball_small.mdl"
 #define PLASMA_MODEL_NPC "models/spitball_medium.mdl"
-#define PLASMA_SPEED 3400
+#define PLASMA_SPEED 1500
 extern ConVar    sk_plr_dmg_smg1_grenade;
 extern ConVar	sk_plr_dmg_smg1;
 extern ConVar	 sk_npc_dmg_smg1;
@@ -83,6 +85,7 @@ void CNPCPlasmaBall::Spawn(void)
 	SetMoveType(MOVETYPE_FLY, MOVECOLLIDE_FLY_CUSTOM);
 	UTIL_SetSize(this, -Vector(1.0f, 1.0f, 1.0f), Vector(1.0f, 1.0f, 1.0f));
 	SetSolid(SOLID_BBOX);
+	SetSolidFlags(FSOLID_NOT_SOLID | FSOLID_TRIGGER);
 	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 	//SetSolidFlags(FSOLID_TRIGGER);
 	CreateTrail();
@@ -129,7 +132,7 @@ void CNPCPlasmaBall::PlasmaTouch(CBaseEntity *pOther) //i touched something
 		{
 			return; //carry on like nothing happened
 		}
-		if (pOther->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE)
+		if (pOther->GetCollisionGroup() == (COLLISION_GROUP_PROJECTILE | COLLISION_GROUP_WEAPON))
 		{
 			return;
 		}
@@ -207,8 +210,8 @@ public:
 	void	SecondaryAttack( void );
 	void	PrimaryAttack(void);
 
-	int		GetMinBurst() { return 5; }
-	int		GetMaxBurst() { return 5; }
+	int		GetMinBurst();
+	int		GetMaxBurst() { return GetMinBurst(); }
 
 	virtual void Equip( CBaseCombatCharacter *pOwner );
 	bool	Reload( void );
@@ -326,6 +329,23 @@ void CWeaponSMG1::Precache( void )
 	BaseClass::Precache();
 }
 
+int CWeaponSMG1::GetMinBurst()
+{
+	switch (g_iSkillLevel)
+	{
+	case SKILL_EASY:
+		return 3;
+
+	case SKILL_MEDIUM:
+		return 5;
+
+	case SKILL_HARD:
+		return 8;
+
+	default:
+		return 0.0f;
+	}
+}
 //-----------------------------------------------------------------------------
 // Purpose: Give this weapon longer range when wielded by an ally NPC.
 //-----------------------------------------------------------------------------
@@ -356,10 +376,12 @@ void CWeaponSMG1::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, Vector 
 	QAngle angAiming;
 	GetAttachment(LookupAttachment("muzzle"), vecShootOrigin, angAiming);
 	VectorAngles(vecShootDir, angAiming);
-	
+	VectorNormalize(vecShootDir);
+	float m_fProjectileSpeed = 1500;
+	float adjustspeed = g_pGameRules->AdjustProjectileSpeed(m_fProjectileSpeed);
 	CNPCPlasmaBall *pBall = CNPCPlasmaBall::Create(vecShootOrigin, angAiming, pOperator); //create plasmaball
 	pBall->SetModel(PLASMA_MODEL_NPC);
-	pBall->SetAbsVelocity(vecShootDir * 1600);
+	pBall->SetAbsVelocity(vecShootDir * adjustspeed);
 	pBall->m_pGlowTrail->SetTransparency(kRenderTransAdd, 255, 45, 45, 100, kRenderFxNone);
 	
 	pOperator->DoMuzzleFlash();
@@ -596,7 +618,9 @@ void CWeaponSMG1::PrimaryAttack(void)
 		m_flNextPrimaryAttack = m_flNextPrimaryAttack + 0.1f; //can't shoot again til after 0.1 seconds
 		CNPCPlasmaBall *pBall = CNPCPlasmaBall::Create(vecSrc, angAiming, pOwner); //emit plasma ball object
 		pBall->SetModel(PLASMA_MODEL); //set model to player model
-		pBall->SetAbsVelocity(vecAiming * PLASMA_SPEED); //set speed and vector
+		float fProjSpeed = PLASMA_SPEED;
+		g_pGameRules->AdjustProjectileSpeed(fProjSpeed);
+		pBall->SetAbsVelocity(vecAiming * fProjSpeed); //set speed and vector
 		pBall->m_pGlowTrail->SetTransparency(kRenderTransAdd, 0, 175, 255, 200, kRenderFxNone);//emit trail
 		pBall->DrawSprite();
 		pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);//remove 1 round from ammo count

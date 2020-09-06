@@ -32,7 +32,6 @@ class CHLRPistolProjectile : public CBaseCombatCharacter
 public:
 	void Spawn(void);
 	void Precache(void);
-	void EnableTouch(void);
 	void Touch(CBaseEntity *pOther);
 	void KillIt(void);
 	bool CreateVPhysics(void);
@@ -53,6 +52,7 @@ public:
 	void Precache(void);
 	void Touch(CBaseEntity *pOther);
 	void Detonate(void);
+	void Kill(void);
 	bool CreateVPhysics(void);
 	unsigned int	PhysicsSolidMaskForEntity(void) const { return (BaseClass::PhysicsSolidMaskForEntity() | CONTENTS_WATER); }
 	DECLARE_DATADESC();
@@ -64,4 +64,20 @@ public:
 	void Spawn(void);
 	void Precache(void);
 	void Kill(void);
+	void Touch(CBaseEntity *pOther);
+
+	float m_flNextDamage;
+	DECLARE_DATADESC();
+};
+
+class CHLRScannerProjectile : public CBaseAnimating
+{
+	DECLARE_CLASS(CHLRScannerProjectile,CBaseAnimating)
+public:
+	void Spawn(void);
+	void Precache(void);
+	void DispatchEffects(void);
+	void Kill(void);
+	void Touch(CBaseEntity *pOther);
+	DECLARE_DATADESC();
 };

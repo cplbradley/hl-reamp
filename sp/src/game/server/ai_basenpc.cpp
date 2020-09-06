@@ -512,11 +512,11 @@ void CAI_BaseNPC::CleanupOnDeath( CBaseEntity *pCulprit, bool bFireDeathOutput )
 			SetHintNode( NULL );
 		}
 
-		if( bFireDeathOutput )
+		/*if( bFireDeathOutput )
 		{
 			m_OnDeath.FireOutput( pCulprit, this );
 		}
-
+		*/
 		// Vacate any strategy slot I might have
 		VacateStrategySlot();
 
@@ -623,22 +623,54 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 		 SetState( NPC_STATE_DEAD );
 
 
+	
 	// Just Wax - Dynamic Health Spawn Call
+	/*int ArmorCount = pPlayer->ArmorValue(); //get the player's armor value and store it as an int
+	if (ArmorCount < 100) //if armor isn't full
+	{
+		DropItem("item_batterydrop", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360)); //Drop more armor
+		DropItem("item_batterydrop", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360)); //Drop more armor
+		if (ArmorCount < 50) //if it's less than half empty
+		{
+			DropItem("item_batterydrop", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360)); //Drop more armor
+			DropItem("item_batterydrop", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360)); //Drop more armor
+			DropItem("item_batterydrop", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360)); //Drop more armor
+		}
+	}
+	*/
 	CHalfLife2 *pHL2GameRules = static_cast<CHalfLife2 *>(g_pGameRules); //Call gamerules, where whether or not to drop heath is decided
 	if (pHL2GameRules->NPC_ShouldDropHealth(pPlayer)) //Am I supposed to drop health?
 	{
 		DropItem("item_healthvial", WorldSpaceCenter() + RandomVector(0, 4), RandomAngle(0, 360)); //Drop health
 		DropItem("item_healthvial", WorldSpaceCenter() + RandomVector(0, 4), RandomAngle(0, 360)); //Drop Health
-		DropItem("item_batterydrop", WorldSpaceCenter() + RandomVector(0, 4), RandomAngle(0, 360)); //Drop Armor
-		pHL2GameRules->NPC_DroppedHealth(); //Let game know we dropped health
+		DropItem("item_healthvial", WorldSpaceCenter() + RandomVector(0, 4), RandomAngle(0, 360));
 		if (pPlayer->m_iHealth < pPlayer->m_iMaxHealth * 0.4) //Does the player have less than 40% of their health left? If so, I should drop double the health.
 		{
 			DropItem("item_healthvial", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360)); //Drop More Health
 			DropItem("item_healthvial", WorldSpaceCenter() + RandomVector(0, 4), RandomAngle(0, 360)); //Drop More Health
-			DropItem("item_batterydrop", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360)); //Drop more armor
+			DropItem("item_healthvial", WorldSpaceCenter() + RandomVector(0, 4), RandomAngle(0, 360)); //Drop Health
 		}
 
 	}
+	if (info.GetDamageType() & DMG_BLAST) //if we're killed by an explosion drop some armor
+	{
+		DropItem("item_batterydrop", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360)); //Drop more armor
+		DropItem("item_batterydrop", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360)); //Drop more armor
+		DropItem("item_batterydrop", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360)); //Drop more armor
+		DropItem("item_batterydrop", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360)); //Drop more armor
+		DropItem("item_batterydrop", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360)); //Drop more armor
+	}
+
+	if (info.GetDamageType() & DMG_CLUB) //if we're killed by crowbar drop some ammo
+	{
+		DropItem("item_ammo_smg1", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360));
+		DropItem("item_drop_buckshot", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360));
+		DropItem("item_ammo_ar2", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360));
+		DropItem("item_rpg_drop", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360));
+		DropItem("item_ammo_crossbow", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360));
+	}
+
+	m_OnDeath.FireOutput(info.GetAttacker(), this);
 	// If the remove-no-ragdoll flag is set in the damage type, we're being
 	// told to remove ourselves immediately on death. This is used when something
 	// else has some special reason for us to vanish instead of creating a ragdoll.
@@ -795,7 +827,7 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 			// See if the person that injured me is an NPC.
 			CAI_BaseNPC *pAttacker = dynamic_cast<CAI_BaseNPC *>( info.GetAttacker() );
 			CBasePlayer *pPlayer = AI_GetSinglePlayer();
-
+			CTakeDamageInfo infoCopy = info;
 			if( pAttacker && pAttacker->IsAlive() && pPlayer )
 			{
 				if( pAttacker->GetSquad() != NULL && pAttacker->IsInPlayerSquad() )
@@ -805,7 +837,11 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 			}
 			if (pAttacker && !pAttacker->IsPlayer())
 			{
-				this->AddEntityRelationship(pAttacker, D_HT, 99);
+				infoCopy.ScaleDamage(0.25f);
+				if (infoCopy.GetDamage() && infoCopy.GetDamage() >= (0.5 * GetMaxHealth()))
+				{
+					this->AddEntityRelationship(pAttacker, D_HT, 99);
+				}
 			}
 		}
 	}
@@ -10395,7 +10431,7 @@ CBaseEntity *CAI_BaseNPC::DropItem ( const char *pszItemName, Vector vecPos, QAn
 			Vector			vel		= RandomVector( 0.0f, 0.0f );
 			AngularImpulse	angImp	= RandomAngularImpulse( 0, 90 );
 
-			vel[2] = 50.0f;
+			vel[2] = RandomFloat(150, 300);
 			pPhys->AddVelocity( &vel, &angImp );
 		}
 		else
@@ -10910,8 +10946,15 @@ void CAI_BaseNPC::Precache( void )
 	PrecacheScriptSound( "AI_BaseNPC.BodyDrop_Heavy" );
 	PrecacheScriptSound( "AI_BaseNPC.BodyDrop_Light" );
 	PrecacheScriptSound( "AI_BaseNPC.SentenceStop" );
+
 	UTIL_PrecacheOther("item_batterydrop");
 	UTIL_PrecacheOther("item_healthvial");
+
+	UTIL_PrecacheOther("item_ammo_ar2");
+	UTIL_PrecacheOther("item_drop_buckshot");
+	UTIL_PrecacheOther("item_rpg_drop");
+	UTIL_PrecacheOther("item_ammo_smg1");
+	UTIL_PrecacheOther("item_ammo_crossbow");
 
 	BaseClass::Precache();
 }

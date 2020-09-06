@@ -17,6 +17,9 @@
 #include "engine/IEngineSound.h"
 #include "world.h"
 #include "SpriteTrail.h"
+#include "explode.h"
+#include "particle_system.h"
+#include "particle_parse.h"
 
 #ifdef PORTAL
 	#include "portal_util_shared.h"
@@ -47,6 +50,7 @@ BEGIN_DATADESC( CGrenadeAR2 )
 	// Function pointers
 	DEFINE_ENTITYFUNC( GrenadeAR2Touch ),
 	DEFINE_THINKFUNC( GrenadeAR2Think ),
+	DEFINE_THINKFUNC( Kill ),
 
 END_DATADESC()
 
@@ -84,7 +88,7 @@ void CGrenadeAR2::Spawn( void )
 	m_bIsLive		= true;
 	m_iHealth		= 1;
 
-	SetGravity( UTIL_ScaleForGravity( 400 ) );	// use a lower gravity for grenades to make them easier to see
+	SetGravity( UTIL_ScaleForGravity( 800 ) );	// use a lower gravity for grenades to make them easier to see
 	SetFriction( 0.8 );
 	SetSequence( 0 );
 
@@ -107,6 +111,14 @@ void CGrenadeAR2::Spawn( void )
 			m_hSmokeTrail->SetEndWidth(0.2f);
 			m_hSmokeTrail->SetLifeTime(0.35f);
 		}
+	}
+	m_hSpitEffect = (CParticleSystem *)CreateEntityByName("info_particle_system");
+	if (m_hSpitEffect != NULL)
+	{
+		// Setup our basic parameters
+		m_hSpitEffect->KeyValue("effect_name", "hlr_base_explosion2");
+		m_hSpitEffect->SetParent(this);
+		m_hSpitEffect->SetLocalOrigin(vec3_origin);
 	}
 }
 
@@ -156,6 +168,10 @@ void CGrenadeAR2::Event_Killed( const CTakeDamageInfo &info )
 {
 	Detonate( );
 }
+void CGrenadeAR2::Kill(void)
+{
+	UTIL_Remove(this);
+}
 
 void CGrenadeAR2::GrenadeAR2Touch( CBaseEntity *pOther )
 {
@@ -187,6 +203,7 @@ void CGrenadeAR2::Detonate(void)
 	{
 		return;
 	}
+
 	m_bIsLive		= false;
 	m_takedamage	= DAMAGE_NO;	
 
@@ -195,18 +212,9 @@ void CGrenadeAR2::Detonate(void)
 		UTIL_Remove(m_hSmokeTrail);
 		m_hSmokeTrail = NULL;
 	}
-
-	CPASFilter filter( GetAbsOrigin() );
-
-	te->Explosion( filter, 0.0,
-		&GetAbsOrigin(), 
-		g_sModelIndexFireball,
-		2.0, 
-		15,
-		TE_EXPLFLAG_NONE,
-		m_DmgRadius,
-		m_flDamage );
-
+	ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), 0, 0,
+		SF_ENVEXPLOSION_NOPARTICLES, 0.0f, this);
+	DispatchParticleEffect("hlr_base_explosion2", GetAbsOrigin(), GetAbsAngles(), this);
 	Vector vecForward = GetAbsVelocity();
 	VectorNormalize(vecForward);
 	trace_t		tr;
@@ -227,17 +235,19 @@ void CGrenadeAR2::Detonate(void)
 		UTIL_DecalTrace( &tr, "Scorch" );
 	}
 
-	UTIL_ScreenShake( GetAbsOrigin(), 25.0, 150.0, 1.0, 750, SHAKE_START );
+	UTIL_ScreenShake( GetAbsOrigin(), 25.0, 150.0, 0.5, 500, SHAKE_START );
+	
 
-	RadiusDamage ( CTakeDamageInfo( this, GetThrower(), m_flDamage, DMG_BLAST ), GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
-
-	UTIL_Remove( this );
+	RadiusDamage(CTakeDamageInfo(this, GetThrower(), 150, DMG_BLAST), GetAbsOrigin(), 32, CLASS_PLAYER, NULL);
+	SetThink(&CGrenadeAR2::Kill);
+	SetNextThink(gpGlobals->curtime + 0.01f);
 }
 
 void CGrenadeAR2::Precache( void )
 {
 	PrecacheModel("models/Weapons/ar2_grenade.mdl"); 
 	PrecacheModel("sprites/lgtning.vmt");
+	PrecacheParticleSystem("hlr_base_explosion2");
 }
 
 

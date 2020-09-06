@@ -767,7 +767,7 @@ void CNPC_AntlionGuard::Spawn( void )
 	Precache();
 
 	SetModel( ANTLIONGUARD_MODEL );
-
+	SetModelScale(0.6, 0);
 	// Switch our skin (for now), if we're the cavern guard
 	if ( m_bCavernBreed )
 	{

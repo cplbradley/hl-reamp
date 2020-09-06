@@ -124,7 +124,7 @@ void CGrenadeFrag::Spawn( void )
 	m_iHealth		= 1;
 
 	SetSize( -Vector(4,4,4), Vector(4,4,4) );
-	SetCollisionGroup( COLLISION_GROUP_WEAPON );
+	SetCollisionGroup( COLLISION_GROUP_PROJECTILE );
 	CreateVPhysics();
 	
 
@@ -189,7 +189,7 @@ void CGrenadeFrag::CreateEffects( void )
 bool CGrenadeFrag::CreateVPhysics()
 {
 	// Create the object in the physics system
-	VPhysicsInitNormal( SOLID_BBOX, 011+0, false );
+	VPhysicsInitNormal(SOLID_BBOX, FSOLID_NOT_STANDABLE, false);
 	return true;
 }
 

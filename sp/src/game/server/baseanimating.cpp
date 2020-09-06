@@ -304,7 +304,7 @@ void CBaseAnimating::Precache()
 	// Anything derived from this class can potentially burn - true, but do we want it to!
 	PrecacheParticleSystem( "burning_character" );
 #endif
-
+	PrecacheModel(NULL_MODEL);
 	BaseClass::Precache();
 }
 

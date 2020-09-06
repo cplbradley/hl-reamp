@@ -36,7 +36,7 @@ public:
 	//Functions to select animation sequences 
 	virtual Activity	GetPrimaryAttackActivity( void )	{	return	ACT_VM_HITCENTER;	}
 	virtual Activity	GetSecondaryAttackActivity( void )	{	return	ACT_VM_HITCENTER2;	}
-
+	void			Hit(trace_t &traceHit, Activity nHitActivity, bool bIsSecondary);
 	virtual	float	GetFireRate( void )								{	return	0.05f;	}
 	virtual float	GetRange( void )								{	return	32.0f;	}
 	virtual	float	GetDamageForActivity( Activity hitActivity )	{	return	1.0f;	}
@@ -50,7 +50,6 @@ protected:
 private:
 	bool			ImpactWater( const Vector &start, const Vector &end );
 	void			Swing( int bIsSecondary );
-	void			Hit( trace_t &traceHit, Activity nHitActivity, bool bIsSecondary );
 	Activity		ChooseIntersectionPointAndActivity( trace_t &hitTrace, const Vector &mins, const Vector &maxs, CBasePlayer *pOwner );
 };
 

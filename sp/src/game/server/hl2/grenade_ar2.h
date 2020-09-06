@@ -16,6 +16,7 @@
 
 #include "basegrenade_shared.h"
 #include "SpriteTrail.h"
+#include "particle_system.h"
 
 #define	MAX_AR2_NO_COLLIDE_TIME 0.2
 
@@ -28,12 +29,14 @@ public:
 	DECLARE_CLASS( CGrenadeAR2, CBaseGrenade );
 
 	CHandle<CSpriteTrail>	m_hSmokeTrail;
+	CHandle< CParticleSystem >	m_hSpitEffect;
 	float				 m_fSpawnTime;
 	float				m_fDangerRadius;
 
 
 	void		Spawn( void );
 	void		Precache( void );
+	void		Kill(void);
 	void 		GrenadeAR2Touch( CBaseEntity *pOther );
 	void		GrenadeAR2Think( void );
 	void		Event_Killed( const CTakeDamageInfo &info );

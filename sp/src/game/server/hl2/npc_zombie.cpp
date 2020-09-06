@@ -234,7 +234,7 @@ void CZombie::Precache( void )
 {
 	BaseClass::Precache();
 
-	PrecacheModel( "models/zombie/classic.mdl" );
+	PrecacheModel( "models/zombie/zm_classic.mdl" );
 	PrecacheModel( "models/zombie/classic_torso.mdl" );
 	PrecacheModel( "models/zombie/classic_legs.mdl" );
 
@@ -487,12 +487,13 @@ void CZombie::SetZombieModel( void )
 	}
 	else
 	{
-		SetModel( "models/zombie/classic.mdl" );
+		SetModel( "models/zombie/zm_classic.mdl" );
 		SetHullType( HULL_HUMAN );
+		
 	}
-
-	SetBodygroup( ZOMBIE_BODYGROUP_HEADCRAB, !m_fIsHeadless );
-
+	static int BodyGroup_Limbs = FindBodygroupByName("body");
+	SetBodygroup( BodyGroup_Limbs, RandomInt(1,4));
+	m_nSkin = RandomInt(0, 2);
 	SetHullSizeNormal( true );
 	SetDefaultEyeOffset();
 	SetActivity( ACT_IDLE );

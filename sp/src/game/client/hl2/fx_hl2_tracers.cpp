@@ -110,7 +110,7 @@ void AirboatGunHeavyTracerCallback( const CEffectData &data )
 	float flLife = ( flTotalDist + flLength ) / flVelocity;	//NOTENOTE: We want the tail to finish its run as well
 	
 	// Add it
-	FX_AddDiscreetLine( vecStart, vecShotDir, flVelocity, flLength, flTotalDist, 5.0f, flLife, "effects/gunshiptracer" );
+	FX_AddDiscreetLine( vecStart, vecShotDir, flVelocity, flLength, flTotalDist, 5.0f, flLife, "sprites/chaintracer" );
 }
 
 DECLARE_CLIENT_EFFECT( "AirboatGunHeavyTracer", AirboatGunHeavyTracerCallback );
@@ -139,7 +139,7 @@ void AirboatGunTracerCallback( const CEffectData &data )
 	if ( flTotalDist <= 64 )
 		return;
 
-	float flLength = random->RandomFloat( 256.0f, 384.0f );
+	float flLength = random->RandomFloat( 64.0f, 128.0f );
 	float flLife = ( flTotalDist + flLength ) / flVelocity;	//NOTENOTE: We want the tail to finish its run as well
 	
 	// Add it

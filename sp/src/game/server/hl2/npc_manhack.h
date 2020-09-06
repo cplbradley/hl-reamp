@@ -110,6 +110,7 @@ public:
 	void			Precache(void);
 	void			RunTask( const Task_t *pTask );
 	void			Spawn(void);
+	void			Kill(void);
 	void			Activate();
 	void			StartTask( const Task_t *pTask );
 

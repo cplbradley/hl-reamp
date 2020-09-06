@@ -60,6 +60,7 @@ public:
 	virtual void	TryTouchGround( const Vector& start, const Vector& end, const Vector& mins, const Vector& maxs, unsigned int fMask, int collisionGroup, trace_t& pm );
 
 	int m_iJumpCount;
+	int m_iMaxJumps;
 
 #define BRUSH_ONLY true
 	virtual unsigned int PlayerSolidMask( bool brushOnly = false );	///< returns the solid mask for the given player, so bots can have a more-restrictive set

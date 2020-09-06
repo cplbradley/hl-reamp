@@ -20,6 +20,7 @@
 #include "soundent.h"
 #include "hl2_player.h"
 #include "EntityFlame.h"
+#include "particle_parse.h"
 #include "weapon_flaregun.h"
 #include "te_effect_dispatch.h"
 #include "prop_combine_ball.h"
@@ -31,7 +32,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 #define MINFIRERATE 0.34f
-#define MAXFIRERATE 0.04f
+#define MAXFIRERATE 0.06f
 ConVar sk_weapon_ar2_alt_fire_radius( "sk_weapon_ar2_alt_fire_radius", "10" );
 ConVar sk_weapon_ar2_alt_fire_duration( "sk_weapon_ar2_alt_fire_duration", "2" );
 ConVar sk_weapon_ar2_alt_fire_mass( "sk_weapon_ar2_alt_fire_mass", "150" );
@@ -129,6 +130,7 @@ void CWeaponAR2::Precache( void )
 	PrecacheScriptSound("Weapon_AR2.Wine");
 	UTIL_PrecacheOther( "prop_combine_ball" );
 	UTIL_PrecacheOther( "env_entity_dissolver" );
+	PrecacheParticleSystem("smg_core");
 }
 
 //-----------------------------------------------------------------------------
@@ -181,6 +183,13 @@ void CWeaponAR2::WeaponIdle(void)
 {
 	m_flfirerate += 0.01f;	
 	BaseClass::WeaponIdle();
+}
+void CWeaponAR2::PrimaryAttack(void)
+{
+	CBasePlayer *pOwner = UTIL_GetLocalPlayer();
+	int iAttachment = LookupAttachment("muzzle");
+	DispatchParticleEffect("smg_core", PATTACH_POINT_FOLLOW, pOwner->GetViewModel(), iAttachment, true);
+	BaseClass::PrimaryAttack();
 }
 //-----------------------------------------------------------------------------
 // Purpose: 

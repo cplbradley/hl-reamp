@@ -317,6 +317,8 @@ void CWeaponShotgun::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool
 	pOperator->DoMuzzleFlash();
 	m_iClip1 = m_iClip1 - 2;
 
+	float adjustedspeed = g_pGameRules->AdjustProjectileSpeed(1400.0f);
+
 	QAngle	angShootDir;
 	vecShootOrigin = pOperator->Weapon_ShootPosition();
 	vecShootDir = npc->GetShootEnemyDir(vecShootOrigin);
@@ -326,10 +328,11 @@ void CWeaponShotgun::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool
 	{
 		Vector vecSpread(random->RandomFloat(-0.08716, 0.08716), random->RandomFloat(-0.08716, 0.08716), random->RandomFloat(-0.08716, 0.08716));
 		Vector vecSpreadShot = (vecShootDir + vecSpread);
+		VectorNormalize(vecSpreadShot);
 		QAngle angAiming;
 		VectorAngles(vecShootDir, angAiming);
 		CShotgunPellet *pPellet = CShotgunPellet::Create(vecShootOrigin, angAiming, pOperator);
-		pPellet->SetAbsVelocity(vecSpreadShot * 1400);
+		pPellet->SetAbsVelocity(vecSpreadShot * adjustedspeed);
 		pPellet->m_pGlowTrail->SetTransparency(kRenderTransAdd, 45, 45, 255, 100, kRenderFxNone);
 		pPellet->SetRenderColor(255, 0, 0);
 		QAngle angRand = RandomAngle(0, 360);

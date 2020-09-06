@@ -1084,7 +1084,7 @@ void CNPC_Vortigaunt::Event_Killed( const CTakeDamageInfo &info )
 	{
 		SetSolid(SOLID_NONE);
 		AddEffects(EF_NODRAW);
-		DispatchParticleEffect("hgib_sploosh", WorldSpaceCenter(), GetAbsAngles());
+		DispatchParticleEffect("agib_sploosh", WorldSpaceCenter(), GetAbsAngles());
 		CGib::SpawnSpecificGibs(this, 2, 1200, 500, "models/gibs/alien/agib_1.mdl", 5);
 		CGib::SpawnSpecificGibs(this, 2, 1200, 500, "models/gibs/alien/agib_2.mdl", 5);
 		CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_3.mdl", 5);
@@ -1127,7 +1127,7 @@ void CNPC_Vortigaunt::Spawn( void )
 	m_iHealth			= sk_vortigaunt_health.GetFloat();
 	SetViewOffset( Vector ( 0, 0, 64 ) );// position of the eyes relative to monster's origin.
 
-	CapabilitiesAdd( bits_CAP_INNATE_MELEE_ATTACK1 | bits_CAP_INNATE_RANGE_ATTACK1 );
+	CapabilitiesAdd(bits_CAP_INNATE_MELEE_ATTACK1 | bits_CAP_INNATE_RANGE_ATTACK1 | bits_CAP_MOVE_JUMP);
 	CapabilitiesRemove( bits_CAP_USE_SHOT_REGULATOR );
 
 	m_flEyeIntegRate		= 0.6f;		// Got a big eyeball so turn it slower
@@ -1203,7 +1203,7 @@ void CNPC_Vortigaunt::Precache()
 	PrecacheModel("models/gibs/alien/agib_3.mdl");
 	PrecacheModel("models/gibs/alien/agib_4.mdl");
 	PrecacheModel("models/gibs/agibs.mdl");
-	PrecacheParticleSystem("hgib_sploosh");
+	PrecacheParticleSystem("agib_sploosh");
 	
 
 	BaseClass::Precache();
@@ -2125,6 +2125,8 @@ void CNPC_Vortigaunt::ZapBeam(void)
 	Vector vecAim = GetShootEnemyDir(vecSrc, false);	// We want a clear shot to their core
 	QAngle angAim;
 	VectorAngles(vecAim,angAim);
+	float basespd = 2500.0f;
+	float adjustedspd = g_pGameRules->AdjustProjectileSpeed(basespd);
 	
 
 
@@ -2138,21 +2140,21 @@ void CNPC_Vortigaunt::ZapBeam(void)
 		{
 			angCenter = angAim;
 			AngleVectors(angCenter, &vecCenter);
-			pVort->SetAbsVelocity(vecCenter * 2500);
+			pVort->SetAbsVelocity(vecCenter * adjustedspd);
 		}
 		if (i == 1)
 		{
 			angLeft = angAim;
 			angLeft[1] += 10;
 			AngleVectors(angLeft, &vecLeft);
-			pVort->SetAbsVelocity(vecLeft * 2500);
+			pVort->SetAbsVelocity(vecLeft * adjustedspd);
 		}
 		if (i == 2)
 		{
 			angRight = angAim;
 			angRight[1] -= 10;
 			AngleVectors(angRight, &vecRight);
-			pVort->SetAbsVelocity(vecRight * 2500);
+			pVort->SetAbsVelocity(vecRight * adjustedspd);
 		}
 	}
 	/*Vector forward;

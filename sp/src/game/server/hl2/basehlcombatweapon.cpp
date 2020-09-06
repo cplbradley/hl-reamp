@@ -292,7 +292,7 @@ float CHLSelectFireMachineGun::GetBurstCycleRate( void )
 	// this is the time it takes to fire an entire 
 	// burst, plus whatever amount of delay we want
 	// to have between bursts.
-	return 0.5f;
+	return 2.0f;
 }
 
 float CHLSelectFireMachineGun::GetFireRate( void )

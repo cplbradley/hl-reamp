@@ -81,6 +81,7 @@ $Project
         $Lib	mathlib
         $Lib	shaderlib
     }
+	
 
 	$File	"buildsdkshaders.bat"
 	$File	"buildshaders.bat"

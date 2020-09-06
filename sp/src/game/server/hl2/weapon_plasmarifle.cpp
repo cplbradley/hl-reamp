@@ -83,6 +83,7 @@ void CPlasmaBall::Spawn(void)
 	SetMoveType(MOVETYPE_FLY, MOVECOLLIDE_FLY_CUSTOM);
 	UTIL_SetSize(this, -Vector(1.0f, 1.0f, 1.0f), Vector(1.0f, 1.0f, 1.0f));
 	SetSolid(SOLID_BBOX);
+	AddSolidFlags(FSOLID_NOT_SOLID || FSOLID_TRIGGER);
 	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 	//SetSolidFlags(FSOLID_TRIGGER);
 	CreateTrail();
@@ -133,40 +134,29 @@ void CPlasmaBall::PlasmaTouch(CBaseEntity *pOther) //i touched something
 		{
 			return; //ignore it, keep going
 		}
+		if (pOther->GetCollisionGroup() == COLLISION_GROUP_WEAPON)
+		{
+			return;
+		}
+		if (pOther->IsPlayer())
+		{
+			return;
+		}
 		DispatchParticleEffect("smg_plasmaball_core", GetAbsOrigin(), GetAbsAngles(), this); //poof effect!
 
 		if (pOther->m_takedamage != DAMAGE_NO) //can what i hit take damage?
 		{
-			trace_t	tr, tr2; //initialize info
+			trace_t	tr; //initialize info
 			tr = BaseClass::GetTouchTrace(); //trace touch
 			Vector	vecNormalizedVel = GetAbsVelocity();
 
 			ClearMultiDamage();
 			VectorNormalize(vecNormalizedVel);
-			if (GetOwnerEntity() && GetOwnerEntity()->IsPlayer() && pOther->IsNPC()) //am i owned by the player and is what i touched an NPC? if so, i should do damage, adjusted for skill level
-			{
-				CTakeDamageInfo	dmgInfo(this, GetOwnerEntity(), sk_plr_dmg_smg1.GetFloat(), DMG_SHOCK);
-				dmgInfo.AdjustPlayerDamageInflictedForSkillLevel();
-				CalculateMeleeDamageForce(&dmgInfo, vecNormalizedVel, tr.endpos, 1.0f);
-				dmgInfo.SetDamagePosition(tr.endpos);
-				pOther->DispatchTraceAttack(dmgInfo, vecNormalizedVel, &tr);
-			}
-			if (GetOwnerEntity() && GetOwnerEntity()->IsPlayer() && !pOther->IsNPC()) //am i owned by the player and is what i touched NOT an npc? if so, i should do damage
-			{
-				CTakeDamageInfo	dmgInfo(this, GetOwnerEntity(), sk_plr_dmg_smg1.GetFloat(), DMG_BULLET | DMG_NEVERGIB);
-				CalculateMeleeDamageForce(&dmgInfo, vecNormalizedVel, tr.endpos, 1.0f);
-				dmgInfo.SetDamagePosition(tr.endpos);
-				pOther->DispatchTraceAttack(dmgInfo, vecNormalizedVel, &tr);
-			}
-
-			if (GetOwnerEntity() && !GetOwnerEntity()->IsPlayer() && pOther->IsPlayer()) //am i owned by something other than the player? did i touch the player? if so, i should do damage
-			{
-				CTakeDamageInfo dmgInfo(this, GetOwnerEntity(), sk_npc_dmg_smg1.GetFloat(), DMG_SHOCK);
-				dmgInfo.AdjustPlayerDamageTakenForSkillLevel();
-				CalculateMeleeDamageForce(&dmgInfo, vecNormalizedVel, tr.endpos, 0.7f);//scale damage
-				dmgInfo.SetDamagePosition(tr.endpos);
-				pOther->DispatchTraceAttack(dmgInfo, vecNormalizedVel, &tr);
-			}
+			CTakeDamageInfo	dmgInfo(this, GetOwnerEntity(), sk_plr_dmg_smg1.GetFloat(), DMG_SHOCK);
+			dmgInfo.AdjustPlayerDamageInflictedForSkillLevel();
+			CalculateMeleeDamageForce(&dmgInfo, vecNormalizedVel, tr.endpos, 1.0f);
+			dmgInfo.SetDamagePosition(tr.endpos);
+			pOther->DispatchTraceAttack(dmgInfo, vecNormalizedVel, &tr);
 			ApplyMultiDamage();
 		}
 		SetMoveType(MOVETYPE_NONE);
@@ -623,18 +613,28 @@ void CWeaponPlasmaRifle::PrimaryAttack(void)
 
 	pOwner->EyeVectors(&vForward, &vRight, &vUp);
 
-	Vector vecSrc = pOwner->Weapon_ShootPosition() + vForward * 12.0f + vRight * 2.0f + vUp * -3.0f;
+	Vector vecSrc = pPlayer->EyePosition() + vForward * 12.0f + vRight * 2.0f + vUp * -3.0f;
 	QAngle angAiming = pOwner->EyeAngles();
 	AngleVectors(angAiming, &vecAiming);
 
 	while (m_flNextPrimaryAttack <= gpGlobals->curtime) //while we're allowed to shoot
 	{
+		trace_t tr;
+		Vector vecDir;
+
+		// Take the Player's EyeAngles and turn it into a direction
+		AngleVectors(pPlayer->EyeAngles(), &vecDir);
+		Vector vecAbsStart = pPlayer->EyePosition();
+		Vector vecAbsEnd = vecAbsStart + (vecDir * MAX_TRACE_LENGTH);
+		UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_ALL, pPlayer, COLLISION_GROUP_NONE, &tr);
+		Vector vecShotDir = (tr.endpos - vecSrc).Normalized();
+		//debugoverlay->AddLineOverlay(tr.startpos, tr.endpos, 0, 255, 0, false, 3.0f);
 		WeaponSound(SINGLE, m_flNextPrimaryAttack); //emit sound
 		m_flNextPrimaryAttack = m_flNextPrimaryAttack + 0.1f;
 		m_flNextSecondaryAttack = gpGlobals->curtime + 1.0f;//can't shoot again til after 0.1 seconds
 		CPlasmaBall *pBall = CPlasmaBall::Create(vecSrc, angAiming, pOwner); //emit plasma ball object
 		pBall->SetModel(PLASMA_MODEL); //set model to player model
-		pBall->SetAbsVelocity(vecAiming * PLASMA_SPEED); //set speed and vector
+		pBall->SetAbsVelocity(vecShotDir * PLASMA_SPEED); //set speed and vector
 		pBall->m_pGlowTrail->SetTransparency(kRenderTransAdd, 0, 175, 255, 200, kRenderFxNone);//emit trail
 		pBall->DrawSprite();
 		pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);//remove 1 round from ammo count

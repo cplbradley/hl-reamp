@@ -239,7 +239,6 @@ public:
 	virtual bool			HolsterOnDetach() { return false; }
 	virtual bool			IsHolstered(){ return false; }
 	virtual void			Detach() {}
-
 	// Weapon behaviour
 	virtual void			ItemPreFrame( void );					// called each frame by the player PreThink
 	virtual void			ItemPostFrame( void );					// called each frame by the player PostThink

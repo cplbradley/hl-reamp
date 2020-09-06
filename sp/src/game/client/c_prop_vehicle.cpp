@@ -112,7 +112,6 @@ C_BaseCombatCharacter *C_PropVehicleDriveable::GetPassenger( int nRole )
 {
 	if ( nRole == VEHICLE_ROLE_DRIVER )
 		return m_hPlayer.Get();
-
 	return NULL;
 }
 

@@ -359,7 +359,7 @@ void CNPC_Manhack::DeathSound(const CTakeDamageInfo &info)
 //-----------------------------------------------------------------------------
 bool CNPC_Manhack::ShouldGib(const CTakeDamageInfo &info)
 {
-	return (m_bGib);
+	return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -369,11 +369,13 @@ bool CNPC_Manhack::ShouldGib(const CTakeDamageInfo &info)
 //-----------------------------------------------------------------------------
 void CNPC_Manhack::Event_Killed(const CTakeDamageInfo &info)
 {
+	DispatchParticleEffect("hlr_base_explosion2", GetAbsOrigin(), GetAbsAngles(), this);
+
 	// turn off the blur!
 	//SetBodygroup(MANHACK_BODYGROUP_BLUR, MANHACK_BODYGROUP_OFF);
 
 	// Sparks
-	for (int i = 0; i < 3; i++)
+	/*for (int i = 0; i < 3; i++)
 	{
 		Vector sparkPos = GetAbsOrigin();
 		sparkPos.x += random->RandomFloat(-12, 12);
@@ -381,7 +383,7 @@ void CNPC_Manhack::Event_Killed(const CTakeDamageInfo &info)
 		sparkPos.z += random->RandomFloat(-12, 12);
 		g_pEffects->Sparks(sparkPos, 2);
 	}
-
+	*/
 	// Light
 	CBroadcastRecipientFilter filter;
 	te->DynamicLight(filter, 0.0, &GetAbsOrigin(), 255, 180, 100, 0, 100, 0.1, 0);
@@ -409,12 +411,14 @@ void CNPC_Manhack::Event_Killed(const CTakeDamageInfo &info)
 		RemoveDeferred();
 	}
 	*/
-	ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), GetDamage(), 12.0f,
-		SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS | SF_ENVEXPLOSION_NOSMOKE, 0.0f, this);
-	UTIL_Remove(this);
 	BaseClass::Event_Killed(info);
+	SetModel("models/props/null.mdl");
+	RemoveDeferred();
 }
-
+void CNPC_Manhack::Kill(void)
+{
+	UTIL_Remove(this);
+}
 void CNPC_Manhack::HitPhysicsObject(CBaseEntity *pOther)
 {
 	IPhysicsObject *pOtherPhysics = pOther->VPhysicsGetObject();
@@ -706,7 +710,7 @@ int	CNPC_Manhack::OnTakeDamage_Alive(const CTakeDamageInfo &info)
 		// Being hit by a club means a couple of things:
 		//
 		//		-I'm going to be knocked away from the person that clubbed me.
-		//		 if fudging this vector a little bit could help me slam into a physics object,
+		//		 if fudging this vector a little bit could help me slam into a physics object,	
 		//		 then make that adjustment. This is a simple heuristic. The manhack will be
 		//		 directed towards the physics object that is closest to g_vecAttackDir
 		//
@@ -2181,6 +2185,7 @@ void CNPC_Manhack::Precache(void)
 	PrecacheModel("models/manhack.mdl");
 	PrecacheModel(MANHACK_GLOW_SPRITE);
 	PropBreakablePrecacheAll(MAKE_STRING("models/manhack.mdl"));
+	PrecacheModel("models/props/null.mdl");
 
 	PrecacheScriptSound("NPC_Manhack.Die");
 	PrecacheScriptSound("NPC_Manhack.Bat");
@@ -2198,7 +2203,8 @@ void CNPC_Manhack::Precache(void)
 	PrecacheScriptSound("NPC_Manhack.BladeSound");
 
 	// Precache the Flame Particle
-	PrecacheParticleSystem("skull_flame");
+	//PrecacheParticleSystem("skull_flame");
+	PrecacheParticleSystem("hlr_base_explosion2");
 
 	BaseClass::Precache();
 }
@@ -2379,6 +2385,7 @@ void CNPC_Manhack::Spawn(void)
 
 	SetModel("models/manhack.mdl");
 	SetHullType(HULL_TINY_CENTERED);
+	SetModelScale(1.25, 0);
 	SetHullSizeNormal();
 
 	SetSolid(SOLID_BBOX);

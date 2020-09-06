@@ -23,11 +23,11 @@
 // Ammo counts given by ammo items
 #define SIZE_AMMO_PISTOL			20
 #define SIZE_AMMO_PISTOL_LARGE		100
-#define SIZE_AMMO_SMG1				45
-#define SIZE_AMMO_SMG1_LARGE		225
-#define SIZE_AMMO_AR2				20
-#define SIZE_AMMO_AR2_LARGE			100
-#define SIZE_AMMO_RPG_ROUND			1
+#define SIZE_AMMO_SMG1				120
+#define SIZE_AMMO_SMG1_LARGE		180
+#define SIZE_AMMO_AR2				120
+#define SIZE_AMMO_AR2_LARGE			200
+#define SIZE_AMMO_RPG_ROUND			3
 #define SIZE_AMMO_SMG1_GRENADE		1
 #define SIZE_AMMO_BUCKSHOT			20
 #define SIZE_AMMO_357				6
@@ -61,6 +61,9 @@ public:
 
 	// Activate when at rest, but don't allow pickup until then
 	void ActivateWhenAtRest( float flTime = 0.5f );
+	void TraceThink(void);
+	void SeekThink(void);
+	float FindPlayer();
 
 	// IPlayerPickupVPhysics
 	virtual void OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason = PICKED_UP_BY_CANNON );
@@ -74,6 +77,8 @@ public:
 	void	SetOriginalSpawnAngles( const QAngle& angles ) { m_vOriginalSpawnAngles = angles; }
 	bool	CreateItemVPhysicsObject( void );
 	virtual bool	ItemCanBeTouchedByPlayer( CBasePlayer *pPlayer );
+	bool	m_bShouldSeek{ false };
+	virtual void CheckQuantity(void);
 
 #if defined( HL2MP ) || defined( TF_DLL )
 	void	FallThink( void );

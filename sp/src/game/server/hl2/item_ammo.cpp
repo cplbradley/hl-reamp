@@ -11,6 +11,8 @@
 #include "ammodef.h"
 #include "eventlist.h"
 #include "npcevent.h"
+#include "sprite.h"
+#include "spritetrail.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -111,16 +113,66 @@ class CItem_BoxMRounds : public CItem
 {
 public:
 	DECLARE_CLASS( CItem_BoxMRounds, CItem );
-
+	CHandle	<CSprite>	m_pAmmoSprite;
+	CHandle <CSpriteTrail>	m_pGlowTrail;
 	void Spawn( void )
 	{ 
 		Precache( );
-		SetModel( "models/items/boxmrounds.mdl");
+		SetModel("models/items/resdrop.mdl");
+		SetRenderColor(220, 200, 90);
+		DrawSprite();
 		BaseClass::Spawn( );
+		SetThink(&CItem_BoxMRounds::Delete);
+		SetNextThink(gpGlobals->curtime + 20.0f);
+	}
+	void Delete(void)
+	{
+		RemoveDeferred();
 	}
 	void Precache( void )
 	{
-		PrecacheModel ("models/items/boxmrounds.mdl");
+		PrecacheModel ("models/items/resdrop.mdl");
+		PrecacheMaterial("sprites/energy.vmt");
+		PrecacheMaterial("sprites/laserbeam.vmt");
+	}
+	
+	void DrawSprite(void)
+	{
+		m_pAmmoSprite = CSprite::SpriteCreate("sprites/energy.vmt", GetAbsOrigin(), false);
+		//		int	nAttachment = LookupAttachment("root");
+		if (m_pAmmoSprite != NULL)
+		{
+			//m_pAmmoSprite->SetAbsOrigin(this->GetAbsOrigin() + Vector(0, 0, 16));
+			m_pAmmoSprite->FollowEntity(this);
+			m_pAmmoSprite->SetLocalOrigin(vec3_origin + Vector(0, 0, 16));
+			m_pAmmoSprite->SetTransparency(kRenderGlow, 255, 255, 255, 255, kRenderFxNoDissipation);
+			m_pAmmoSprite->SetScale(0.3f);
+			m_pAmmoSprite->SetGlowProxySize(16.0f);
+		}
+		m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/laserbeam.vmt", GetLocalOrigin(), false);
+
+		if (m_pGlowTrail != NULL)
+		{
+			m_pGlowTrail->FollowEntity(this);
+			m_pGlowTrail->SetTransparency(kRenderTransAdd, 255, 255, 0, 255, kRenderFxNone);
+			m_pGlowTrail->SetStartWidth(8.0f);
+			m_pGlowTrail->SetEndWidth(1.0f);
+			m_pGlowTrail->SetLifeTime(0.3f);
+		}
+	}
+	void CheckQuantity(void)
+	{
+		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+		int AmmoCount = pPlayer->GetAmmoCount("SMG1");
+		int MaxAmmo = GetAmmoDef()->MaxCarry(GetAmmoDef()->Index("SMG1"));
+		if (AmmoCount < MaxAmmo)
+		{
+			m_bShouldSeek = true;
+		}
+		else
+		{
+			m_bShouldSeek = false;
+		}
 	}
 	bool MyTouch( CBasePlayer *pPlayer )
 	{
@@ -145,7 +197,6 @@ class CItem_LargeBoxMRounds : public CItem
 {
 public:
 	DECLARE_CLASS( CItem_LargeBoxMRounds, CItem );
-
 	void Spawn( void )
 	{ 
 		Precache( );
@@ -179,16 +230,66 @@ class CItem_BoxLRounds : public CItem
 {
 public:
 	DECLARE_CLASS( CItem_BoxLRounds, CItem );
-
+	CHandle <CSprite>	m_pAmmoSprite;
+	CHandle <CSpriteTrail>	m_pGlowTrail;
 	void Spawn( void )
 	{ 
 		Precache( );
-		SetModel( "models/items/combine_rifle_cartridge01.mdl");
+		SetModel( "models/items/resdrop.mdl");
+		SetRenderColor(220, 200, 90);
+		DrawSprite();
 		BaseClass::Spawn( );
+		SetThink(&CItem_BoxLRounds::Delete);
+		SetNextThink(gpGlobals->curtime + 20.0f);
+	}
+	void Delete(void)
+	{
+		RemoveDeferred();
 	}
 	void Precache( void )
 	{
-		PrecacheModel ("models/items/combine_rifle_cartridge01.mdl");
+		PrecacheModel("models/items/resdrop.mdl");
+		PrecacheMaterial("sprites/laserbeam.vmt");
+		PrecacheMaterial("sprites/heavyammo.vmt");
+	}
+	void DrawSprite(void)
+	{
+		m_pAmmoSprite = CSprite::SpriteCreate("sprites/heavyammo.vmt", GetAbsOrigin(), false);
+		//		int	nAttachment = LookupAttachment("root");
+		if (m_pAmmoSprite != NULL)
+		{
+			//m_pAmmoSprite->SetAbsOrigin(this->GetAbsOrigin() + Vector(0, 0, 16));
+			m_pAmmoSprite->FollowEntity(this);
+			m_pAmmoSprite->SetLocalOrigin(vec3_origin + Vector(0, 0, 16));
+			m_pAmmoSprite->SetTransparency(kRenderGlow, 255, 255, 255, 255, kRenderFxNoDissipation);
+			m_pAmmoSprite->SetScale(0.3f);
+			m_pAmmoSprite->SetGlowProxySize(16.0f);
+		}
+		m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/laserbeam.vmt", GetLocalOrigin(), false);
+
+		if (m_pGlowTrail != NULL)
+		{
+			m_pGlowTrail->FollowEntity(this);
+			m_pGlowTrail->SetTransparency(kRenderTransAdd, 255, 255, 0, 255, kRenderFxNone);
+			m_pGlowTrail->SetStartWidth(8.0f);
+			m_pGlowTrail->SetEndWidth(1.0f);
+			m_pGlowTrail->SetLifeTime(0.3f);
+		}
+	}
+	void CheckQuantity(void) //check if 
+	{
+		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+		int AmmoCount = pPlayer->GetAmmoCount("AR2");
+		int MaxAmmo = GetAmmoDef()->MaxCarry(GetAmmoDef()->Index("AR2"));
+		if (AmmoCount < MaxAmmo)
+		{
+			m_bShouldSeek = true;
+		}
+		else
+		{
+			m_bShouldSeek = false;
+		}
+
 	}
 	bool MyTouch( CBasePlayer *pPlayer )
 	{
@@ -213,7 +314,6 @@ class CItem_LargeBoxLRounds : public CItem
 {
 public:
 	DECLARE_CLASS( CItem_LargeBoxLRounds, CItem );
-
 	void Spawn( void )
 	{ 
 		Precache( );
@@ -323,7 +423,6 @@ public:
 	{
 		PrecacheModel ("models/items/crossbowrounds.mdl");
 	}
-
 	void Spawn( void )
 	{ 
 		Precache( );
@@ -423,6 +522,7 @@ class CItem_RPG_Round : public CItem
 public:
 	DECLARE_CLASS( CItem_RPG_Round, CItem );
 
+
 	void Spawn( void )
 	{ 
 		Precache( );
@@ -448,6 +548,88 @@ public:
 };
 LINK_ENTITY_TO_CLASS( item_ml_grenade, CItem_RPG_Round );
 LINK_ENTITY_TO_CLASS( item_rpg_round, CItem_RPG_Round );
+
+class CItem_RPG_Drop : public CItem
+{
+public:
+	DECLARE_CLASS(CItem_RPG_Drop, CItem);
+	CHandle <CSprite> m_pAmmoSprite;
+	CHandle <CSpriteTrail> m_pGlowTrail;
+
+
+	void Spawn(void)
+	{
+		Precache();
+		SetModel("models/items/resdrop.mdl");
+		SetRenderColor(220, 200, 90);
+		DrawSprite();
+		BaseClass::Spawn();
+		SetThink(&CItem_RPG_Drop::Delete);
+		SetNextThink(gpGlobals->curtime + 20.0f);
+	}
+	void Delete(void)
+	{
+		RemoveDeferred();
+	}
+	void Precache(void)
+	{
+		PrecacheModel("models/items/resdrop.mdl");
+		PrecacheMaterial("sprites/rocket.vmt");
+		PrecacheMaterial("sprites/laserbeam.vmt");
+	}
+	void DrawSprite(void)
+	{
+		m_pAmmoSprite = CSprite::SpriteCreate("sprites/rocket.vmt", GetAbsOrigin(), false);
+		//		int	nAttachment = LookupAttachment("root");
+		if (m_pAmmoSprite != NULL)
+		{
+			//m_pAmmoSprite->SetAbsOrigin(this->GetAbsOrigin() + Vector(0, 0, 16));
+			m_pAmmoSprite->FollowEntity(this);
+			m_pAmmoSprite->SetLocalOrigin(vec3_origin + Vector(0, 0, 16));
+			m_pAmmoSprite->SetTransparency(kRenderGlow, 255, 255, 255, 255, kRenderFxNoDissipation);
+			m_pAmmoSprite->SetScale(0.3f);
+			m_pAmmoSprite->SetGlowProxySize(16.0f);
+		}
+		m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/laserbeam.vmt", GetLocalOrigin(), false);
+
+		if (m_pGlowTrail != NULL)
+		{
+			m_pGlowTrail->FollowEntity(this);
+			m_pGlowTrail->SetTransparency(kRenderTransAdd, 255, 255, 0, 255, kRenderFxNone);
+			m_pGlowTrail->SetStartWidth(8.0f);
+			m_pGlowTrail->SetEndWidth(1.0f);
+			m_pGlowTrail->SetLifeTime(0.3f);
+		}
+	}
+	void CheckQuantity(void)
+	{
+		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+		int AmmoCount = pPlayer->GetAmmoCount("RPG_Round");
+		int MaxAmmo = GetAmmoDef()->MaxCarry(GetAmmoDef()->Index("RPG_Round"));
+		if (AmmoCount < MaxAmmo)
+		{
+			m_bShouldSeek = true;
+		}
+		else
+		{
+			m_bShouldSeek = false;
+		}
+
+	}
+	bool MyTouch(CBasePlayer *pPlayer)
+	{
+		if (ITEM_GiveAmmo(pPlayer, SIZE_AMMO_RPG_ROUND, "RPG_Round"))
+		{
+			if (g_pGameRules->ItemShouldRespawn(this) == GR_ITEM_RESPAWN_NO)
+			{
+				UTIL_Remove(this);
+			}
+			return true;
+		}
+		return false;
+	}
+};
+LINK_ENTITY_TO_CLASS(item_rpg_drop, CItem_RPG_Drop);
 
 // ========================================================================
 //	>> AR2_Grenade
@@ -522,20 +704,69 @@ LINK_ENTITY_TO_CLASS(item_box_sniper_rounds, CItem_BoxSniperRounds);
 // ========================================================================
 //	>> BoxBuckshot
 // ========================================================================
-class CItem_BoxBuckshot : public CItem
+class CItem_DropBuckshot : public CItem
 {
 public:
-	DECLARE_CLASS( CItem_BoxBuckshot, CItem );
-
+	DECLARE_CLASS( CItem_DropBuckshot, CItem );
+	CHandle <CSprite>	m_pAmmoSprite;
+	CHandle <CSpriteTrail>	m_pGlowTrail;
 	void Spawn( void )
 	{ 
 		Precache( );
-		SetModel( "models/items/boxbuckshot.mdl");
+		SetModel("models/items/resdrop.mdl");
+		SetRenderColor(220, 200, 90);
+		DrawSprite();
 		BaseClass::Spawn( );
+		SetThink(&CItem_RPG_Drop::Delete);
+		SetNextThink(gpGlobals->curtime + 20.0f);
+	}
+	void Delete(void)
+	{
+		RemoveDeferred();
 	}
 	void Precache( void )
 	{
-		PrecacheModel ("models/items/boxbuckshot.mdl");
+		PrecacheModel ("models/items/resdrop.mdl");
+		PrecacheMaterial("sprites/buckshot.vmt");
+		PrecacheMaterial("sprites/laserbeam.vmt");
+	}
+	void DrawSprite(void)
+	{
+		m_pAmmoSprite = CSprite::SpriteCreate("sprites/buckshot.vmt", GetAbsOrigin(), false);
+//		int	nAttachment = LookupAttachment("root");
+		if (m_pAmmoSprite != NULL)
+		{
+			//m_pAmmoSprite->SetAbsOrigin(this->GetAbsOrigin() + Vector(0, 0, 16));
+			m_pAmmoSprite->FollowEntity(this);
+			m_pAmmoSprite->SetLocalOrigin(vec3_origin + Vector(0, 0, 16));
+			m_pAmmoSprite->SetTransparency(kRenderGlow, 255, 255, 255, 255, kRenderFxNoDissipation);
+			m_pAmmoSprite->SetScale(0.3f);
+			m_pAmmoSprite->SetGlowProxySize(16.0f);
+		}
+		m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/laserbeam.vmt", GetLocalOrigin(), false);
+		if (m_pGlowTrail != NULL)
+		{
+			m_pGlowTrail->FollowEntity(this);
+			m_pGlowTrail->SetTransparency(kRenderTransAdd, 255, 255, 0, 255, kRenderFxNone);
+			m_pGlowTrail->SetStartWidth(8.0f);
+			m_pGlowTrail->SetEndWidth(1.0f);
+			m_pGlowTrail->SetLifeTime(0.3f);
+		}
+	}
+	void CheckQuantity(void)
+	{
+		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+		int AmmoCount = pPlayer->GetAmmoCount("Buckshot");
+		int MaxAmmo = GetAmmoDef()->MaxCarry(GetAmmoDef()->Index("Buckshot"));
+		if (AmmoCount < MaxAmmo)
+		{
+			m_bShouldSeek = true;
+		}
+		else
+		{
+			m_bShouldSeek = false;
+		}
+
 	}
 	bool MyTouch( CBasePlayer *pPlayer )
 	{
@@ -550,7 +781,36 @@ public:
 		return false;
 	}
 };
+LINK_ENTITY_TO_CLASS(item_drop_buckshot, CItem_DropBuckshot);
+class CItem_BoxBuckshot : public CItem
+{
+public:
+	DECLARE_CLASS(CItem_BoxBuckshot, CItem);
+	void Spawn(void)
+	{
+		Precache();
+		SetModel("models/items/boxbuckshot.mdl");
+		BaseClass::Spawn();
+	}
+	void Precache(void)
+	{
+		PrecacheModel("models/items/boxbuckshot.mdl");
+	}
+	bool MyTouch(CBasePlayer *pPlayer)
+	{
+		if (ITEM_GiveAmmo(pPlayer, SIZE_AMMO_BUCKSHOT, "Buckshot"))
+		{
+			if (g_pGameRules->ItemShouldRespawn(this) == GR_ITEM_RESPAWN_NO)
+			{
+				UTIL_Remove(this);
+			}
+			return true;
+		}
+		return false;
+	}
+};
 LINK_ENTITY_TO_CLASS(item_box_buckshot, CItem_BoxBuckshot);
+
 
 // ========================================================================
 //	>> CItem_AR2AltFireRound

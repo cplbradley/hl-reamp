@@ -29,7 +29,7 @@ CLIENTEFFECT_MATERIAL( "effects/fire_cloud1" )
 CLIENTEFFECT_MATERIAL( "effects/fire_cloud2" )
 CLIENTEFFECT_MATERIAL( "effects/fire_embers1" )
 CLIENTEFFECT_MATERIAL( "effects/fire_embers2" )
-CLIENTEFFECT_MATERIAL( "effects/fire_embers3" )
+CLIENTEFFECT_MATERIAL( "effects/fire_embers3" )\
 CLIENTEFFECT_MATERIAL( "particle/particle_smokegrenade" )
 CLIENTEFFECT_MATERIAL( "particle/particle_smokegrenade1" )
 CLIENTEFFECT_MATERIAL( "effects/splash3" )
@@ -180,18 +180,18 @@ void C_BaseExplosionEffect::Create( const Vector &position, float force, float s
 	debugoverlay->AddBoxOverlay( m_vecOrigin, -Vector(32,32,32), Vector(32,32,32), vec3_angle, 255, 0, 0, 64, 5.0f );
 	debugoverlay->AddLineOverlay( m_vecOrigin, m_vecOrigin+(m_vecDirection*force*m_flForce), 0, 0, 255, false, 3 );
 #endif
-
+	
+	
 	PlaySound();
-
-	if ( scale != 0 )
-	{
-		// UNDONE: Make core size parametric to scale or remove scale?
-		CreateCore();
-	}
+	if (m_fFlags & TE_EXPLFLAG_NOPARTICLES)
+		return;
+	// UNDONE: Make core size parametric to scale or remove scale?
+	PrecacheParticleSystem("hlr_base_explosion1");
+	DispatchParticleEffect("hlr_base_explosion1", position, QAngle(0, 0, 0));	
 
 	CreateDebris();
 	CreateDynamicLight();
-	CreateMisc();
+	//CreateMisc();
 }
 
 //-----------------------------------------------------------------------------

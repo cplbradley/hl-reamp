@@ -47,7 +47,7 @@ public:
 	virtual float			GetAutoAimScale( CBasePlayer *pPlayer );
 	virtual float			GetAmmoQuantityScale( int iAmmoIndex );
 	virtual void			LevelInitPreEntity();
-	virtual float			AdjustProjectileSpeed(float projspeed);
+
 #endif
 
 private:

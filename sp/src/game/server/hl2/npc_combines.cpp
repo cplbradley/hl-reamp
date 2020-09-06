@@ -62,7 +62,6 @@ void CNPC_CombineS::Spawn( void )
 {
 	Precache();
 	SetModel( STRING( GetModelName() ) );
-	DrawStuff();
 	AddSpawnFlags(SF_NPC_NO_WEAPON_DROP);
 	if( IsElite() )
 	{
@@ -119,6 +118,7 @@ void CNPC_CombineS::Precache()
 	PrecacheModel( STRING( GetModelName() ) );
 	PrecacheModel("sprites/glow03.vmt");
 	PrecacheModel("sprites/glow04.vmt");
+	PrecacheScriptSound("Gore.Splatter");
 	UTIL_PrecacheOther( "item_healthvial" );
 	UTIL_PrecacheOther( "weapon_frag" );
 	UTIL_PrecacheOther( "item_ammo_ar2_altfire" );
@@ -134,63 +134,7 @@ void CNPC_CombineS::Precache()
 	BaseClass::Precache();
 }
 
-bool CNPC_CombineS::DrawStuff(void)
-{
-	m_pLeftEyeG = CSprite::SpriteCreate("sprites/glow03.vmt", GetLocalOrigin(), false);
-	m_pRightEyeG = CSprite::SpriteCreate("sprites/glow04.vmt", GetLocalOrigin(), false);
-	m_pLeftEyeT = CSpriteTrail::SpriteTrailCreate("sprites/laser.vmt", GetLocalOrigin(), false);
-	m_pRightEyeT = CSpriteTrail::SpriteTrailCreate("sprites/laser.vmt", GetLocalOrigin(), false);
 
-	int	nLeftEye = LookupAttachment("lefteye");
-	int	nRightEye = LookupAttachment("righteye");
-	if (m_pLeftEyeG != NULL)
-	{
-		m_pLeftEyeG->FollowEntity(this);
-		m_pLeftEyeG->SetAttachment(this, nLeftEye);
-		m_pLeftEyeG->SetScale(0.2f);
-		m_pLeftEyeG->SetGlowProxySize(4.0f);
-	}
-	if (m_pRightEyeG != NULL)
-	{
-		m_pRightEyeG->FollowEntity(this);
-		m_pRightEyeG->SetAttachment(this, nRightEye);
-		
-		m_pRightEyeG->SetScale(0.2f);
-		m_pRightEyeG->SetGlowProxySize(4.0f);
-	}
-	if (m_pLeftEyeT != NULL)
-	{
-		m_pLeftEyeT->FollowEntity(this);
-		m_pLeftEyeT->SetAttachment(this, nLeftEye);
-		
-		m_pLeftEyeT->SetStartWidth(8.0f);
-		m_pLeftEyeT->SetEndWidth(1.0f);
-		m_pLeftEyeT->SetLifeTime(0.5f);
-	}
-	if (m_pRightEyeT != NULL)
-	{
-		m_pRightEyeT->FollowEntity(this);
-		m_pRightEyeT->SetAttachment(this, nRightEye);
-		m_pRightEyeT->SetStartWidth(8.0f);
-		m_pRightEyeT->SetEndWidth(1.0f);
-		m_pRightEyeT->SetLifeTime(0.5f);
-	}
-	if (!HasShotgun())
-	{
-		m_pLeftEyeG->SetTransparency(kRenderGlow, 255, 190, 0, 200, kRenderFxNoDissipation);
-		m_pRightEyeG->SetTransparency(kRenderGlow, 255, 190, 0, 200, kRenderFxNoDissipation);
-		m_pLeftEyeT->SetTransparency(kRenderGlow, 255, 190, 0, 255, kRenderFxNone);
-		m_pRightEyeT->SetTransparency(kRenderGlow, 255, 190, 0, 255, kRenderFxNone);
-	}
-	else
-	{
-		m_pLeftEyeG->SetTransparency(kRenderGlow, 255, 0, 0, 200, kRenderFxNoDissipation);
-		m_pRightEyeG->SetTransparency(kRenderGlow, 255, 0, 0, 200, kRenderFxNoDissipation);
-		m_pLeftEyeT->SetTransparency(kRenderGlow, 255, 0, 0, 255, kRenderFxNone);
-		m_pRightEyeT->SetTransparency(kRenderGlow, 255, 0, 0, 255, kRenderFxNone);
-	}
-	return true;
-}
 
 void CNPC_CombineS::DeathSound( const CTakeDamageInfo &info )
 {
@@ -352,16 +296,6 @@ void CNPC_CombineS::OnListened()
 //-----------------------------------------------------------------------------
 void CNPC_CombineS::Event_Killed( const CTakeDamageInfo &info )
 {
-	
-		UTIL_RemoveImmediate(m_pRightEyeT);
-		m_pRightEyeT = NULL;
-		UTIL_RemoveImmediate(m_pRightEyeG);
-		m_pRightEyeG = NULL;
-		UTIL_RemoveImmediate(m_pLeftEyeT);
-		m_pLeftEyeT = NULL;
-		UTIL_RemoveImmediate(m_pLeftEyeG);
-		m_pLeftEyeG = NULL;
-
 	// Don't bother if we've been told not to, or the player has a megaphyscannon
 	if ( combine_spawn_health.GetBool() == false || PlayerHasMegaPhysCannon() )
 	{
@@ -443,22 +377,26 @@ void CNPC_CombineS::Event_Killed( const CTakeDamageInfo &info )
 		}
 	}
 
-	if (info.GetDamage() >= (m_iMaxHealth * 1.5f) && (info.GetDamageType() != DMG_DISSOLVE))
+	if (info.GetDamage() >= (m_iMaxHealth * 1.5f) && (info.GetDamageType() != DMG_DISSOLVE || DMG_CLUB))
 	{
 		DispatchParticleEffect("hgib_sploosh", WorldSpaceCenter(), GetAbsAngles());
 		Gib();
 	}
+	if (info.GetAmmoType() == 
 	BaseClass::Event_Killed( info );
 }
 
 void CNPC_CombineS::Gib(void)
 {
 	SetSolid(SOLID_NONE);
-	AddEffects(EF_NODRAW);
+	SetModel(NULL_MODEL);
+	EmitSound("Gore.Splatter");
+	SetAbsOrigin(GetAbsOrigin() + Vector(0, 0, 48));
 	CGib::SpawnSpecificGibs(this, 2, 1200, 500, "models/gibs/human/hgib_1.mdl", 5);
 	CGib::SpawnSpecificGibs(this, 2, 1200, 500, "models/gibs/human/hgib_2.mdl", 5);
 	CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/human/hgib_3.mdl", 5);
 	CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/human/hgib_4.mdl", 5);
+	UTIL_Remove(this);
 	
 }
 //-----------------------------------------------------------------------------

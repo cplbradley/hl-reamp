@@ -212,4 +212,5 @@ private:
 	DECLARE_DATADESC();
 };
 
+
 #endif // NPC_SCANNER_H

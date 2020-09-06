@@ -27,14 +27,14 @@
 
 //=========================================================
 //=========================================================
-class CNPCSpawnDestination : public CPointEntity 
+class CNPCSpawnDestination : public CPointEntity
 {
-	DECLARE_CLASS( CNPCSpawnDestination, CPointEntity );
+	DECLARE_CLASS(CNPCSpawnDestination, CPointEntity);
 
 public:
 	CNPCSpawnDestination();
 	bool IsAvailable();						// Is this spawn destination available for selection?
-	void OnSpawnedNPC( CAI_BaseNPC *pNPC );	// Notify this spawn destination that an NPC has spawned here.
+	void OnSpawnedNPC(CAI_BaseNPC *pNPC);	// Notify this spawn destination that an NPC has spawned here.
 
 	float		m_ReuseDelay;		// How long to be unavailable after being selected
 	string_t	m_RenameNPC;		// If not NULL, rename the NPC that spawns here to this.
@@ -48,43 +48,43 @@ public:
 abstract_class CBaseNPCMaker : public CBaseAnimating
 {
 public:
-	DECLARE_CLASS( CBaseNPCMaker, CBaseAnimating );
+	DECLARE_CLASS(CBaseNPCMaker, CBaseAnimating);
 
-	void Spawn( void );
-	virtual int	ObjectCaps( void ) { return BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
-	void MakerThink( void );
-	bool HumanHullFits( const Vector &vecLocation );
-	bool CanMakeNPC( bool bIgnoreSolidEntities = false );
+	void Spawn(void);
+	virtual int	ObjectCaps(void) { return BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
+	void MakerThink(void);
+	bool HumanHullFits(const Vector &vecLocation);
+	bool CanMakeNPC(bool bIgnoreSolidEntities = false);
 	void TriggerMake(void);
 	void Precache(void);
 
-	virtual void DeathNotice( CBaseEntity *pChild );// NPC maker children use this to tell the NPC maker that they have died.
-	virtual void MakeNPC( void ) = 0;
+	virtual void DeathNotice(CBaseEntity *pChild);// NPC maker children use this to tell the NPC maker that they have died.
+	virtual void MakeNPC(void) = 0;
 
-	virtual	void ChildPreSpawn( CAI_BaseNPC *pChild ) {};
-	virtual	void ChildPostSpawn( CAI_BaseNPC *pChild );
+	virtual	void ChildPreSpawn(CAI_BaseNPC *pChild) {};
+	virtual	void ChildPostSpawn(CAI_BaseNPC *pChild);
 
 	CBaseNPCMaker(void) {}
 
 	// Input handlers
-	void InputSpawnNPC( inputdata_t &inputdata );
-	void InputEnable( inputdata_t &inputdata );
-	void InputDisable( inputdata_t &inputdata );
-	void InputToggle( inputdata_t &inputdata );
-	void InputSetMaxChildren( inputdata_t &inputdata );
-	void InputAddMaxChildren( inputdata_t &inputdata );
-	void InputSetMaxLiveChildren( inputdata_t &inputdata );
-	void InputSetSpawnFrequency( inputdata_t &inputdata );
+	void InputSpawnNPC(inputdata_t &inputdata);
+	void InputEnable(inputdata_t &inputdata);
+	void InputDisable(inputdata_t &inputdata);
+	void InputToggle(inputdata_t &inputdata);
+	void InputSetMaxChildren(inputdata_t &inputdata);
+	void InputAddMaxChildren(inputdata_t &inputdata);
+	void InputSetMaxLiveChildren(inputdata_t &inputdata);
+	void InputSetSpawnFrequency(inputdata_t &inputdata);
 
 	// State changers
-	void Toggle( void );
-	virtual void Enable( void );
-	virtual void Disable( void );
+	void Toggle(void);
+	virtual void Enable(void);
+	virtual void Disable(void);
 
-	virtual bool IsDepleted( void );
+	virtual bool IsDepleted(void);
 
 	DECLARE_DATADESC();
-	
+
 	int			m_nMaxNumNPCs;			// max number of NPCs this ent can create
 	float		m_flSpawnFrequency;		// delay (in secs) between spawns 
 
@@ -92,7 +92,7 @@ public:
 	COutputEvent m_OnAllSpawned;
 	COutputEvent m_OnAllSpawnedDead;
 	COutputEvent m_OnAllLiveChildrenDead;
-	
+
 	int		m_nLiveChildren;	// how many NPCs made by this NPC maker that are currently alive
 	int		m_nMaxLiveChildren;	// max number of NPCs that this maker may have out at one time.
 
@@ -106,16 +106,16 @@ public:
 class CNPCMaker : public CBaseNPCMaker
 {
 public:
-	DECLARE_CLASS( CNPCMaker, CBaseNPCMaker );
+	DECLARE_CLASS(CNPCMaker, CBaseNPCMaker);
 
-	CNPCMaker( void );
+	CNPCMaker(void);
 
-	void Precache( void );
+	void Precache(void);
 
-	virtual void MakeNPC( void );
+	virtual void MakeNPC(void);
 
 	DECLARE_DATADESC();
-	
+
 	string_t m_iszNPCClassname;			// classname of the NPC(s) that will be created.
 	string_t m_SquadName;
 	string_t m_strHintGroup;
@@ -127,9 +127,9 @@ public:
 class CTemplateNPCMaker : public CBaseNPCMaker
 {
 public:
-	DECLARE_CLASS( CTemplateNPCMaker, CBaseNPCMaker );
+	DECLARE_CLASS(CTemplateNPCMaker, CBaseNPCMaker);
 
-	CTemplateNPCMaker( void ) 
+	CTemplateNPCMaker(void)
 	{
 		m_iMinSpawnDistance = 0;
 	}
@@ -137,31 +137,31 @@ public:
 	virtual void Precache();
 
 	virtual CNPCSpawnDestination *FindSpawnDestination();
-	virtual void MakeNPC( void );
-	void MakeNPCInRadius( void );
-	void MakeNPCInLine( void );
-	virtual void MakeMultipleNPCS( int nNPCs );
+	virtual void MakeNPC(void);
+	void MakeNPCInRadius(void);
+	void MakeNPCInLine(void);
+	virtual void MakeMultipleNPCS(int nNPCs);
 
 protected:
-	virtual void PrecacheTemplateEntity( CBaseEntity *pEntity );
+	virtual void PrecacheTemplateEntity(CBaseEntity *pEntity);
 
-	bool PlaceNPCInRadius( CAI_BaseNPC *pNPC );
-	bool PlaceNPCInLine( CAI_BaseNPC *pNPC );
+	bool PlaceNPCInRadius(CAI_BaseNPC *pNPC);
+	bool PlaceNPCInLine(CAI_BaseNPC *pNPC);
 
 	// Inputs
-	void InputSpawnInRadius( inputdata_t &inputdata ) { MakeNPCInRadius(); }
-	void InputSpawnInLine( inputdata_t &inputdata ) { MakeNPCInLine(); }
-	void InputSpawnMultiple( inputdata_t &inputdata );
-	void InputChangeDestinationGroup( inputdata_t &inputdata );
-	void InputSetMinimumSpawnDistance( inputdata_t &inputdata );
-	
+	void InputSpawnInRadius(inputdata_t &inputdata) { MakeNPCInRadius(); }
+	void InputSpawnInLine(inputdata_t &inputdata) { MakeNPCInLine(); }
+	void InputSpawnMultiple(inputdata_t &inputdata);
+	void InputChangeDestinationGroup(inputdata_t &inputdata);
+	void InputSetMinimumSpawnDistance(inputdata_t &inputdata);
+
 	float	m_flRadius;
 
 	DECLARE_DATADESC();
 
 	string_t m_iszTemplateName;		// The name of the NPC that will be used as the template.
 	string_t m_iszTemplateData;		// The keyvalue data blob from the template NPC that will be used to spawn new ones.
-	string_t m_iszDestinationGroup;	
+	string_t m_iszDestinationGroup;
 
 	int		m_iMinSpawnDistance;
 

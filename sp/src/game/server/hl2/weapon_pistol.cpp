@@ -216,7 +216,8 @@ void CWeaponPistol::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCha
 		CHLRPistolProjectile *pPew = (CHLRPistolProjectile*)CreateEntityByName("hlr_pistolprojectile");
 		UTIL_SetOrigin(pPew, vecShootOrigin);
 		float basespd = 2000.0f;
-		Vector vecVelocity = vecShootDir * basespd;
+		float adjustedspeed = g_pGameRules->AdjustProjectileSpeed(basespd);
+		Vector vecVelocity = vecShootDir * adjustedspeed;
 
 		
 		pPew->Spawn();
@@ -315,18 +316,25 @@ void CWeaponPistol::FireProjectile(void)
 {
 	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
 	Vector	vForward, vRight, vUp;
+	trace_t tr;
+	Vector vecDir;
 
+	// Take the Player's EyeAngles and turn it into a direction
+	AngleVectors(pPlayer->EyeAngles(), &vecDir);
 	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
 	Vector vecAiming;
 	Vector vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 20.0f + vRight * 2.0f + vUp * -3.0f;
-		
+	
 	QAngle angAiming = pPlayer->EyeAngles();
 	AngleVectors(angAiming, &vecAiming);
-
+	Vector vecAbsStart = pPlayer->EyePosition();
+	Vector vecAbsEnd = vecAbsStart + (vecDir * MAX_TRACE_LENGTH);
+	UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_ALL, pPlayer, COLLISION_GROUP_NONE, &tr);
+	Vector vecShotDir = (tr.endpos - vecSrc).Normalized();
 	CHLRPistolProjectile *pPew = (CHLRPistolProjectile*)CreateEntityByName("hlr_pistolprojectile");
 	pPew->Spawn();
 	UTIL_SetOrigin(pPew, vecSrc);
-	pPew->SetAbsVelocity(vecAiming * 3000.0f);
+	pPew->SetAbsVelocity(vecShotDir * 3000.0f);
 	pPew->SetOwnerEntity(pPlayer);
 	pPew->SetLocalAngles(QAngle(random->RandomFloat(-250, -500),
 		random->RandomFloat(-250, -500),

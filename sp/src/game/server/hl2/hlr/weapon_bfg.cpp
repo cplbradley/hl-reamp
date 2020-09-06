@@ -14,7 +14,7 @@
 #include "tier0/memdbgon.h"
 
 #define BFG_PROJECTILE_MODEL "models/spitball_large.mdl"
-#define NULL_MODEL "models/props/null.mdl"
+//#define NULL_MODEL "models/props/null.mdl"
 
 class CProjectileBFG : public CBaseCombatCharacter
 {

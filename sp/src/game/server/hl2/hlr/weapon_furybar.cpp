@@ -18,9 +18,11 @@
 #include "soundent.h"
 #include "basebludgeonweapon.h"
 #include "vstdlib/random.h"
+#include "rumble_shared.h"
 #include "npcevent.h"
 #include "ai_basenpc.h"
 #include "weapon_crowbar.h"
+#include "gamestats.h"
 #define FURYBAR_RANGE
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -34,18 +36,21 @@ public:
 	DECLARE_ACTTABLE();
 
 	CWeaponFurybar();
-
+	
 	float		GetRange(void)		{ return	CROWBAR_RANGE; }
 	float		GetFireRate(void)		{ return	CROWBAR_REFIRE; }
 	void		Equip(CBaseCombatCharacter *pOwner);
 	bool		Holster(CBaseCombatWeapon *pSwitchingTo = NULL);
+	void		ItemPostFrame(void);
+	void		Precache(void);
 	void		End(void);
 	void		ActivateTimer(void);
-	float		m_fSwitchTime;
+	void		Hit(trace_t &traceHit, Activity nHitActivity, bool bIsSecondary);
+	float		m_fSwitchTime; 
 	void		AddViewKick(void);
 	float		GetDamageForActivity(Activity hitActivity);
-
 	
+
 
 	virtual int WeaponMeleeAttack1Condition(float flDot, float flDist);
 	void		SecondaryAttack(void)	{ return; }
@@ -80,7 +85,7 @@ IMPLEMENT_ACTTABLE(CWeaponFurybar);
 //-----------------------------------------------------------------------------
 CWeaponFurybar::CWeaponFurybar(void)
 {
-
+	
 }
 
 //-----------------------------------------------------------------------------
@@ -92,7 +97,12 @@ float CWeaponFurybar::GetDamageForActivity(Activity hitActivity)
 {
 	return 1000.0f;
 }
-
+void CWeaponFurybar::Precache(void)
+{
+	BaseClass::Precache();
+	PrecacheScriptSound("Furybar.Hit");
+	PrecacheScriptSound("Powerup.Pickup");
+}
 //-----------------------------------------------------------------------------
 // Purpose: Add in a view kick for this weapon
 //-----------------------------------------------------------------------------
@@ -163,7 +173,14 @@ int CWeaponFurybar::WeaponMeleeAttack1Condition(float flDot, float flDist)
 }
 
 
-
+void CWeaponFurybar::ItemPostFrame(void)
+{
+	BaseClass::ItemPostFrame();
+	if (gpGlobals->curtime >= m_fSwitchTime)
+	{
+		End();
+	}
+}
 //-----------------------------------------------------------------------------
 // Animation event handlers
 //-----------------------------------------------------------------------------
@@ -230,10 +247,13 @@ void CWeaponFurybar::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCh
 }
 void CWeaponFurybar::Equip(CBaseCombatCharacter *pOwner)
 {
+	if (!pOwner)
+		return;
 	if (pOwner->IsPlayer() == true)
 	{
 		ActivateTimer();
 	}
+	EmitSound("Powerup.Pickup");
 	BaseClass::Equip(pOwner);
 }
 bool CWeaponFurybar::Holster(CBaseCombatWeapon *pSwitchingTo)
@@ -245,18 +265,25 @@ bool CWeaponFurybar::Holster(CBaseCombatWeapon *pSwitchingTo)
 }
 void CWeaponFurybar::ActivateTimer(void)
 {
+	color32 red = { 200, 0, 0, 128 };
 	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-	pPlayer->SetMaxSpeed(750.0f);
+	pPlayer->SetMaxSpeed(650.0f);
+	UTIL_ScreenFade(pPlayer, red, 0.5, 0, FFADE_IN);
 	m_fSwitchTime = gpGlobals->curtime + 30.0f;
-	SetNextThink(gpGlobals->curtime + 30.0f);
-	SetThink(&CWeaponFurybar::End);
 }
 void CWeaponFurybar::End(void)
 {
+	color32 red = { 200, 0, 0, 128 };
 	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-	CBaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
-	pPlayer->ClearActiveWeapon();
-	pWeapon->Delete();
-	pPlayer->SetMaxSpeed(500.0f);
+	CBaseCombatWeapon *pLast = pPlayer->Weapon_GetLast();
+	if (pLast)
+	{
+		pPlayer->SetActiveWeapon(pLast);
+		pLast->m_flNextPrimaryAttack = (gpGlobals->curtime + 0.5f);
+	}
+		
+	pPlayer->RemovePlayerItem(this);
+	pPlayer->SetMaxSpeed(450.0f);
+	UTIL_ScreenFade(pPlayer, red, 0.5, 0, FFADE_IN);
 
 }

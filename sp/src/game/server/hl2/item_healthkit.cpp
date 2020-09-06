@@ -76,7 +76,6 @@ void CHealthKit::Precache( void )
 	PrecacheScriptSound( "HealthKit.Touch" );
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pPlayer - 
@@ -125,30 +124,31 @@ protected:
 	void Spawn( void )
 	{
 		Precache();
-		SetModel( "models/healthvial.mdl" );
+		SetModel( "models/items/resdrop.mdl" );
+		SetRenderColor(0, 255, 50);
 		CreateEffects();
 		SetThink(&CHealthVial::DelayedKill);
-		SetNextThink(gpGlobals->curtime + 10.0f);
+		SetNextThink(gpGlobals->curtime + 15.0f);
 		BaseClass::Spawn();
 	}
 
 	void Precache( void )
 	{
-		PrecacheModel("models/healthvial.mdl");
-		PrecacheModel("sprites/bluelaser1.vmt");
+		PrecacheModel("models/items/resdrop.mdl");
+		PrecacheModel("sprites/laser.vmt");
 		PrecacheModel("sprites/glow04.vmt");
 		PrecacheScriptSound( "HealthVial.Touch" );
 	}
 	void CreateEffects( void )
 	{
-		m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/bluelaser1.vmt", GetLocalOrigin(), false);
+		m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/laser.vmt", GetLocalOrigin(), false);
 
 		if (m_pGlowTrail != NULL)
 		{
 			m_pGlowTrail->FollowEntity(this);
 			m_pGlowTrail->SetTransparency(kRenderTransAdd, 0, 255, 0, 255, kRenderFxNone);
 			m_pGlowTrail->SetStartWidth(14.0f);
-			m_pGlowTrail->SetEndWidth(1.0f);
+			m_pGlowTrail->SetEndWidth(0.0f);
 			m_pGlowTrail->SetLifeTime(1.0f);
 		}
 		m_pMainGlow = CSprite::SpriteCreate("sprites/animglow01.vmt", GetLocalOrigin(), false);
@@ -160,6 +160,20 @@ protected:
 			m_pMainGlow->SetTransparency(kRenderGlow, 0, 255, 0, 200, kRenderFxNoDissipation);
 			m_pMainGlow->SetScale(0.45f);
 			m_pMainGlow->SetGlowProxySize(4.0f);
+		}
+
+	}
+	void CheckQuantity(void)
+	{
+		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+		int hp = pPlayer->GetHealth();
+		if (hp < pPlayer->GetMaxHealth())
+		{
+			m_bShouldSeek = true;
+		}
+		else
+		{
+			m_bShouldSeek = false;
 		}
 
 	}

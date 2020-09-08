@@ -382,7 +382,6 @@ void CNPC_CombineS::Event_Killed( const CTakeDamageInfo &info )
 		DispatchParticleEffect("hgib_sploosh", WorldSpaceCenter(), GetAbsAngles());
 		Gib();
 	}
-	if (info.GetAmmoType() == 
 	BaseClass::Event_Killed( info );
 }
 

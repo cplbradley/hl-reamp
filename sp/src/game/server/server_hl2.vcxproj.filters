@@ -3461,6 +3461,7 @@
     <ClCompile Include="hl2\hlr\hlr_megamelon.cpp" />
     <ClCompile Include="hl2\hlr\hlr_hud_healthbar.cpp" />
     <ClCompile Include="hl2\hlr\npc_bloat.cpp" />
+    <ClCompile Include="hl2\hlr\npc_chopperdrone.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\..\public\tier0\pointeroverride.asm">

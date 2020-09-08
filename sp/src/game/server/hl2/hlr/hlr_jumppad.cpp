@@ -196,11 +196,11 @@ void CLaunchpad::TouchThink(CBaseEntity *pOther) //something touched me
 	if (signalEntity)
 	{
 		signalPoint = signalEntity->GetAbsOrigin();
-		Msg("target found\n");
+		//Msg("target found\n");
 	}
 	else
 	{
-		Msg("target not found! uh oh!\n");
+		//Msg("target not found! uh oh!\n");
 	}
 	if (pOther->IsSolid())
 	{
@@ -220,7 +220,7 @@ void CLaunchpad::TouchThink(CBaseEntity *pOther) //something touched me
 				SetThink(&CLaunchpad::Reenable);//schedule re-enable
 				SetNextThink(gpGlobals->curtime + 0.1f);//after 0.1 seconds
 				EmitSound("Weapon_Mortar.Single");//emit sound
-				Msg("smarty launch\n");
+				//Msg("smarty launch\n");
 			}
 		}
 }

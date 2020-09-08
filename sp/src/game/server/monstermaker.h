@@ -60,6 +60,7 @@ public:
 
 	virtual void DeathNotice(CBaseEntity *pChild);// NPC maker children use this to tell the NPC maker that they have died.
 	virtual void MakeNPC(void) = 0;
+	void MakeParticle(Vector vecSrc);
 
 	virtual	void ChildPreSpawn(CAI_BaseNPC *pChild) {};
 	virtual	void ChildPostSpawn(CAI_BaseNPC *pChild);

@@ -105,7 +105,7 @@ DEFINE_OUTPUT(m_OnSpawnNPC, "OnSpawnNPC"),
 // Function Pointers
 DEFINE_THINKFUNC(MakerThink),
 DEFINE_THINKFUNC(TriggerMake),
-DEFINE_THINKFUNC(MakeNPC),
+//DEFINE_THINKFUNC(MakeNPC),
 
 DEFINE_FIELD(m_hIgnoreEntity, FIELD_EHANDLE),
 DEFINE_KEYFIELD(m_iszIngoreEnt, FIELD_STRING, "IgnoreEntity"),
@@ -146,7 +146,7 @@ void CBaseNPCMaker::Precache(void)
 {
 	BaseClass::Precache();
 	PrecacheModel("models/props/null.mdl");
-	PrecacheParticleSystem("npcspawn_core");
+	PrecacheParticleSystem("npcspawn_instant");
 
 }
 //-----------------------------------------------------------------------------
@@ -375,6 +375,10 @@ void CBaseNPCMaker::InputSetSpawnFrequency(inputdata_t &inputdata)
 {
 	m_flSpawnFrequency = inputdata.value.Float();
 }
+void CBaseNPCMaker::MakeParticle(Vector vecSrc)
+{
+	DispatchParticleEffect("npcspawn_instant", vecSrc, vec3_angle, this);
+}
 
 LINK_ENTITY_TO_CLASS(npc_maker, CNPCMaker);
 
@@ -405,7 +409,7 @@ CNPCMaker::CNPCMaker(void)
 void CNPCMaker::Precache(void)
 {
 	BaseClass::Precache();
-	PrecacheParticleSystem("npcspawn_core");
+	PrecacheParticleSystem("npcspawn_instant");
 
 	const char *pszNPCName = STRING(m_iszNPCClassname);
 	if (!pszNPCName || !pszNPCName[0])
@@ -434,7 +438,7 @@ void CNPCMaker::MakeNPC(void)
 		Warning("NULL Ent in NPCMaker!\n");
 		return;
 	}
-
+	
 	// ------------------------------------------------
 	//  Intialize spawned NPC's relationships
 	// ------------------------------------------------
@@ -466,7 +470,8 @@ void CNPCMaker::MakeNPC(void)
 	DispatchSpawn(pent);
 	pent->SetOwnerEntity(this);
 	DispatchActivate(pent);
-
+	Vector vecSrc = pent->WorldSpaceCenter();
+	BaseClass::MakeParticle(vecSrc);
 	if (m_ChildTargetName != NULL_STRING)
 	{
 		// if I have a netname (overloaded), give the child NPC that name as a targetname
@@ -531,14 +536,14 @@ void CBaseNPCMaker::MakerThink(void)
 {
 	SetNextThink(gpGlobals->curtime + m_flSpawnFrequency);
 
-	TriggerMake();
+	MakeNPC();
 }
 void CBaseNPCMaker::TriggerMake(void)
 {
 	Vector vecPartOrigin = GetAbsOrigin() + Vector(0, 0, 40);
-	SetThink(&CBaseNPCMaker::MakeNPC);
+	//SetThink(&CBaseNPCMaker::MakeNPC);
 	SetNextThink(gpGlobals->curtime + 2.0f);
-	DispatchParticleEffect("npcspawn_core", vecPartOrigin, GetAbsAngles(), this);
+	DispatchParticleEffect("npcspawn_instant", vecPartOrigin, GetAbsAngles(), this);
 }
 
 //-------------------	----------------------------------------------------------
@@ -605,7 +610,7 @@ void CTemplateNPCMaker::PrecacheTemplateEntity(CBaseEntity *pEntity)
 void CTemplateNPCMaker::Precache()
 {
 	BaseClass::Precache();
-	PrecacheParticleSystem("npcspawn_core");
+	PrecacheParticleSystem("npcspawn_instant");
 	if (!m_iszTemplateData)
 	{
 		//
@@ -792,6 +797,7 @@ CNPCSpawnDestination *CTemplateNPCMaker::FindSpawnDestination()
 void CTemplateNPCMaker::MakeNPC(void)
 {
 	// If we should be using the radius spawn method instead, do so
+	
 	if (m_flRadius && HasSpawnFlags(SF_NPCMAKER_ALWAYSUSERADIUS))
 	{
 		MakeNPCInRadius();
@@ -868,7 +874,8 @@ void CTemplateNPCMaker::MakeNPC(void)
 	DispatchSpawn(pent);
 	pent->SetOwnerEntity(this);
 	DispatchActivate(pent);
-
+	Vector vecSrc = pent->WorldSpaceCenter();
+	BaseClass::MakeParticle(vecSrc);
 	ChildPostSpawn(pent);
 
 	m_nLiveChildren++;// count this NPC
@@ -894,7 +901,7 @@ void CTemplateNPCMaker::MakeNPCInLine(void)
 {
 	if (!CanMakeNPC(true))
 		return;
-
+	
 	CAI_BaseNPC	*pent = NULL;
 	CBaseEntity *pEntity = NULL;
 	MapEntity_ParseEntity(pEntity, STRING(m_iszTemplateData), NULL);
@@ -921,7 +928,8 @@ void CTemplateNPCMaker::MakeNPCInLine(void)
 	DispatchSpawn(pent);
 	pent->SetOwnerEntity(this);
 	DispatchActivate(pent);
-
+	Vector vecSrc = pent->WorldSpaceCenter();
+	BaseClass::MakeParticle(vecSrc);
 	ChildPostSpawn(pent);
 
 	m_nLiveChildren++;// count this NPC
@@ -989,7 +997,7 @@ void CTemplateNPCMaker::MakeNPCInRadius(void)
 {
 	if (!CanMakeNPC(true))
 		return;
-
+	
 	CAI_BaseNPC	*pent = NULL;
 	CBaseEntity *pEntity = NULL;
 	MapEntity_ParseEntity(pEntity, STRING(m_iszTemplateData), NULL);
@@ -1022,7 +1030,8 @@ void CTemplateNPCMaker::MakeNPCInRadius(void)
 
 	pent->SetOwnerEntity(this);
 	DispatchActivate(pent);
-
+	Vector vecSrc = pent->WorldSpaceCenter();
+	BaseClass::MakeParticle(vecSrc);
 	ChildPostSpawn(pent);
 
 	m_nLiveChildren++;// count this NPC

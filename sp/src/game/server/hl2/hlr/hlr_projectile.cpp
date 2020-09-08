@@ -168,7 +168,7 @@ void CHLRPistolProjectile::Spawn(void)
 	SetMoveType(MOVETYPE_FLY, MOVECOLLIDE_FLY_CUSTOM);
 	UTIL_SetSize(this, -Vector(10.0f, 10.0f, 1.0f), Vector(10.0f, 10.0f, 10.0f));
 	SetSolid(SOLID_BBOX);
-	AddSolidFlags(FSOLID_NOT_STANDABLE);
+	AddSolidFlags(FSOLID_NOT_SOLID | FSOLID_TRIGGER);
 	SetModel("models/spitball_small.mdl");
 	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 	//SetSolidFlags(FSOLID_TRIGGER);
@@ -212,7 +212,15 @@ bool CHLRPistolProjectile::DrawSprite(void)
 }
 void CHLRPistolProjectile::Touch(CBaseEntity *pOther) //i touched something
 {
+	if (GetOwnerEntity() && GetOwnerEntity()->IsNPC() && pOther->IsNPC())
+	{
+		return;
+	}
 	if (GetOwnerEntity() && GetOwnerEntity()->IsPlayer() && pOther->IsPlayer())
+	{
+		return;
+	}
+	if (pOther->ClassMatches("npc_chopperdrone"))
 	{
 		return;
 	}

@@ -11,6 +11,7 @@
 #include "Sprite.h"
 #include "SpriteTrail.h"
 #include "soundent.h"
+#include "explode.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -51,6 +52,7 @@ public:
 	int		OnTakeDamage( const CTakeDamageInfo &inputInfo );
 	void	BlipSound() { EmitSound( "Grenade.Blip" ); }
 	void	DelayThink();
+	void	Detonate(void);
 	void	VPhysicsUpdate( IPhysicsObject *pPhysics );
 	void	OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason );
 	void	SetCombineSpawned( bool combineSpawned ) { m_combineSpawned = combineSpawned; }
@@ -89,6 +91,7 @@ BEGIN_DATADESC( CGrenadeFrag )
 	
 	// Function Pointers
 	DEFINE_THINKFUNC( DelayThink ),
+	DEFINE_ENTITYFUNC (NadeTouch),
 
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "SetTimer", InputSetTimer ),
@@ -300,6 +303,7 @@ void CGrenadeFrag::SetTimer( float detonateDelay, float warnDelay )
 }
 void CGrenadeFrag::NadeTouch(CBaseEntity *pOther)
 {
+	Assert(pOther);
 	if (pOther->IsNPC())
 	{
 		Detonate();
@@ -308,6 +312,18 @@ void CGrenadeFrag::NadeTouch(CBaseEntity *pOther)
 	{
 		return;
 	}
+}
+void CGrenadeFrag::Detonate(void)
+{
+
+	SetTouch(NULL);
+
+	SetModelName(NULL_STRING);//invisible
+	AddSolidFlags(FSOLID_NOT_SOLID);
+	ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), 0, 0,
+		SF_ENVEXPLOSION_NOFIREBALL, 0.0f, this);
+	RadiusDamage(CTakeDamageInfo(this, GetThrower(), 75, DMG_BLAST), GetAbsOrigin(), 128, CLASS_NONE, NULL);
+	SetThink(&CBaseGrenade::SUB_Remove);
 }
 
 void CGrenadeFrag::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason )

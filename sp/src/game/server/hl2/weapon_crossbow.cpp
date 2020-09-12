@@ -89,6 +89,7 @@ BEGIN_DATADESC(CCrossbowBolt)
 // Function Pointers
 DEFINE_FUNCTION(BubbleThink),
 DEFINE_FUNCTION(BoltTouch),
+DEFINE_THINKFUNC(ExplodeThink),
 
 	// These are recreated on reload, they don't need storage
 	DEFINE_FIELD( m_pGlowSprite, FIELD_EHANDLE ),
@@ -225,7 +226,7 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 		return;
 	}
 
-	if ( pOther->m_takedamage != DAMAGE_NO )
+	if ( pOther->IsSolid() )
 	{
 		trace_t	tr, tr2;
 		tr = BaseClass::GetTouchTrace();

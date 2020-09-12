@@ -308,10 +308,10 @@ CWeaponPlasmaRifle::CWeaponPlasmaRifle()
 //-----------------------------------------------------------------------------
 void CWeaponPlasmaRifle::Precache(void)
 {
-	UTIL_PrecacheOther("grenade_ar2");
+	//UTIL_PrecacheOther("grenade_ar2");
 	UTIL_PrecacheOther("plasma_ball");
 	PrecacheScriptSound("NPC_CombineBall.Explosion");
-	PrecacheParticleSystem("plasma_beam");
+	PrecacheParticleSystem("plasma_altfire_core");
 	PrecacheParticleSystem("smg_core");
 	BaseClass::Precache();
 }
@@ -510,14 +510,14 @@ void CWeaponPlasmaRifle::SecondaryAttack(void)
 	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
 	Vector vecSrc = pPlayer->Weapon_ShootPosition();
 	Vector vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT);
-	/*RadiusDamage(CTakeDamageInfo (this, pPlayer, 200, DMG_DISSOLVE),GetAbsOrigin(),256,CLASS_PLAYER,NULL);
+	RadiusDamage(CTakeDamageInfo (this, pPlayer, 100, DMG_DISSOLVE),GetAbsOrigin(),256,CLASS_PLAYER,NULL);
 	EmitSound("NPC_CombineBall.Explosion");
 	DispatchParticleEffect("plasma_altfire_core", vecSrc, GetAbsAngles(), this);
 	m_flNextSecondaryAttack = gpGlobals->curtime + 3.5f;
 	pPlayer->ViewPunch(QAngle(random->RandomFloat(-30, -15), random->RandomFloat(-20, 20), 0));
 	color32 white = { 255, 255, 255, 64 };
-	UTIL_ScreenFade(pPlayer , white, 0.1, 0, FFADE_IN);*/
-	pPlayer->FireBullets(1, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0, -1, -1, 1);
+	UTIL_ScreenFade(pPlayer , white, 0.1, 0, FFADE_IN);
+	/*pPlayer->FireBullets(1, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0, -1, -1, 1);
 	trace_t tr; // Create our trace_t class to hold the end result
 	// Do the TraceLine, and write our results to our trace_t class, tr.
 	Vector vecAbsStart = pPlayer->EyePosition();
@@ -527,7 +527,7 @@ void CWeaponPlasmaRifle::SecondaryAttack(void)
 	m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
 	Vector vecPartStart;
 	Vector vecEndPos = tr.endpos;
-	DispatchParticleEffect("plasma_beam", vecSrc, tr.endpos, GetAbsAngles(), this);
+	DispatchParticleEffect("plasma_beam", vecSrc, tr.endpos, GetAbsAngles(), this);/**/
 	/*
 	if ( pPlayer == NULL )
 	return;

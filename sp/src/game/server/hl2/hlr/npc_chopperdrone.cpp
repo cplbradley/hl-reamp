@@ -34,6 +34,8 @@
 #include "decals.h"
 #include "effect_dispatch_data.h"
 #include "te_effect_dispatch.h"
+#include "spritetrail.h"
+#include "sprite.h"
 #include "ai_spotlight.h"
 #include "vphysics/constraints.h"
 #include "physics_saverestore.h"
@@ -53,7 +55,7 @@
 #define CHOPPER_DRONE_NAME	"models/combine_helicopter/helicopter_bomb01.mdl"
 #define CHOPPER_MODEL_NAME	"models/combine_helicopter.mdl"
 #define CHOPPER_MODEL_CORPSE_NAME	"models/combine_helicopter_broken.mdl"
-#define CHOPPER_RED_LIGHT_SPRITE	"sprites/redglow1.vmt"
+#define CHOPPER_RED_LIGHT_SPRITE	"sprites/glow04.vmt"
 
 #define CHOPPER_MAX_SMALL_CHUNKS	1
 #define CHOPPER_MAX_CHUNKS	3
@@ -68,9 +70,9 @@ static const char *s_pChunkModelName[CHOPPER_MAX_CHUNKS] =
 #define BOMB_SKIN_LIGHT_OFF		0
 
 
-#define	HELICOPTER_CHUNK_COCKPIT	"models/gibs/helicopter_brokenpiece_04_cockpit.mdl"
-#define	HELICOPTER_CHUNK_TAIL		"models/gibs/helicopter_brokenpiece_05_tailfan.mdl"
-#define	HELICOPTER_CHUNK_BODY		"models/gibs/helicopter_brokenpiece_06_body.mdl"
+#define	HELICOPTER_CHUNK_COCKPIT	"models/props_c17/trappropeller_engine.mdl"
+#define	HELICOPTER_CHUNK_TAIL		"models/props_c17/trappropeller_blade.mdl"
+#define	HELICOPTER_CHUNK_BODY		"models/props_vehicles/car003a.mdl"
 
 
 #define CHOPPER_MAX_SPEED			(60 * 17.6f)
@@ -162,6 +164,9 @@ ConVar	g_chopperdrone_bomb_danger_radius( "g_chopperdrone_bomb_danger_radius", "
 Activity ACT_CHOPPER_DROP_BOMB;
 Activity ACT_CHOPPER_CRASHING;
 
+void BecomeChunks(CBaseEntity *pChopper);
+void PrecacheChunks(CBaseEntity *pChopper);
+
 static const char *s_pBlinkLightThinkContext = "BlinkLights";
 static const char *s_pSpotlightThinkContext = "SpotlightThink";
 static const char *s_pRampSoundContext = "RampSound";
@@ -176,7 +181,7 @@ static const char *s_pAnimateThinkContext = "Animate";
 
 enum
 {
-	MAX_HELICOPTER_LIGHTS = 3,
+	MAX_HELICOPTER_LIGHTS = 4,
 };
 
 enum
@@ -546,7 +551,7 @@ private:
 	int			m_nAttackMode;
 	float		m_flInputDropBombTime;
 	CHandle<CBombDropSensor>	m_hSensor;
-
+	CHandle<CSpriteTrail>	m_pGlowTrail[3];
 	CGrenadeFrag *SpawnBombEntity(const Vector &vecPos, const Vector &vecVelocity);
 	float		m_flAvoidMetric;
 	AngularImpulse m_vecLastAngVelocity;
@@ -765,7 +770,7 @@ void CNPC_ChopperDrone::StopLoopingSounds()
 //------------------------------------------------------------------------------
 // Purpose :
 //------------------------------------------------------------------------------
-void ChopperDrone_PrecacheChunks( CBaseEntity *pChopper )
+void PrecacheChunks( CBaseEntity *pChopper )
 {
 	for ( int i = 0; i < CHOPPER_MAX_CHUNKS; ++i )
 	{
@@ -801,12 +806,13 @@ void CNPC_ChopperDrone::Precache( void )
 	{
 		UTIL_PrecacheOther( "npc_grenade_frag" );
 		UTIL_PrecacheOther( "env_fire_trail" );
-		Chopper_PrecacheChunks( this );
+		PrecacheChunks( this );
 		PrecacheModel("models/combine_soldier.mdl");
-		PrecacheModel("models/props_vehicles/car003a.mdl");
+		
 	}
-
+	PrecacheModel("models/Chopper_Drone.mdl");
 	PrecacheScriptSound("NPC_AttackHelicopter.ChargeGun");
+	PrecacheMaterial("sprites/bluelaser1.vmt");
 	if ( HasSpawnFlags( SF_HELICOPTER_LOUD_ROTOR_SOUND ) )
 	{
 		PrecacheScriptSound("NPC_AttackHelicopter.RotorsLoud");
@@ -888,7 +894,7 @@ void CNPC_ChopperDrone::Spawn( void )
 
 	if ( !HasSpawnFlags(SF_HELICOPTER_ELECTRICAL_DRONE) )
 	{
-		SetModel("models/props_vehicles/car003a.mdl");
+		SetModel("models/Chopper_Drone.mdl");
 	}
 	else
 	{
@@ -977,35 +983,91 @@ void CNPC_ChopperDrone::Startup()
 {
 	BaseClass::Startup();
 
-	if ( HasSpawnFlags( SF_HELICOPTER_LIGHTS ) )
-	{
+	/*if ( HasSpawnFlags( SF_HELICOPTER_LIGHTS ) )
+	{*/
 		for ( int i = 0; i < MAX_HELICOPTER_LIGHTS; ++i )
 		{
-			// See if there's an attachment for this smoke trail
-			char buf[32];
-			Q_snprintf( buf, 32, "Light_Red%d", i );
-			int nAttachment = LookupAttachment( buf );
-			if ( nAttachment == 0 )
-			{
-				m_hLights[i] = NULL;
+			int nLightAttachment;
+			m_hLights[i] = CSprite::SpriteCreate(CHOPPER_RED_LIGHT_SPRITE, vec3_origin, false);
+
+			if (!m_hLights[i])
 				continue;
+			if (i == 0)
+			{
+				nLightAttachment = LookupAttachment("Taillight0");
+				m_hLights[i]->FollowEntity(this);
+				m_hLights[i]->SetAttachment(this, nLightAttachment);
+				m_hLights[i]->SetTransparency(kRenderGlow, 255, 0, 0, 255, kRenderFxNoDissipation);
+				m_hLights[i]->SetScale(0.5f);
+			}
+			if (i == 1)
+			{
+				nLightAttachment = LookupAttachment("Taillight1");
+				m_hLights[i]->FollowEntity(this);
+				m_hLights[i]->SetAttachment(this, nLightAttachment);
+				m_hLights[i]->SetTransparency(kRenderGlow, 255, 0, 0, 255, kRenderFxNoDissipation);
+				m_hLights[i]->SetScale(0.5f);
+			}
+			if (i == 2)
+			{
+				nLightAttachment = LookupAttachment("Headlight0");
+				m_hLights[i]->FollowEntity(this);
+				m_hLights[i]->SetAttachment(this, nLightAttachment);
+				m_hLights[i]->SetTransparency(kRenderGlow, 255, 255, 255, 255, kRenderFxNoDissipation);
+				m_hLights[i]->SetScale(0.5f);
+			}
+			if (i == 3)
+			{
+				nLightAttachment = LookupAttachment("Headlight1");
+				m_hLights[i]->FollowEntity(this);
+				m_hLights[i]->SetAttachment(this, nLightAttachment);
+				m_hLights[i]->SetTransparency(kRenderGlow, 255, 255, 255, 255, kRenderFxNoDissipation);
+				m_hLights[i]->SetScale(0.5f);
 			}
 
-			m_hLights[i] = CSprite::SpriteCreate( CHOPPER_RED_LIGHT_SPRITE, vec3_origin, false );
-			if ( !m_hLights[i] )
-				continue;
-
-			m_hLights[i]->SetParent( this, nAttachment );
-			m_hLights[i]->SetLocalOrigin( vec3_origin );
-			m_hLights[i]->SetLocalVelocity( vec3_origin );
-			m_hLights[i]->SetMoveType( MOVETYPE_NONE );
-			m_hLights[i]->SetTransparency( kRenderTransAdd, 255, 255, 255, 200, kRenderFxNone );
-			m_hLights[i]->SetScale( 1.0f );
-			m_hLights[i]->TurnOn();
 		}
+		
+		
+		for (int i = 0; i < 3; i++)
+		{
+			int	nAttachment;
+			m_pGlowTrail[i] = CSpriteTrail::SpriteTrailCreate("sprites/bluelaser1.vmt", GetLocalOrigin(), false);
+			if (!m_pGlowTrail[i])
+				continue;
+			if (i == 0)
+			{
+				nAttachment = LookupAttachment("Trailpoint");
+				m_pGlowTrail[i]->FollowEntity(this);
+				m_pGlowTrail[i]->SetAttachment(this, nAttachment);
+				m_pGlowTrail[i]->SetTransparency(kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone);
+				m_pGlowTrail[i]->SetStartWidth(16.0f);
+				m_pGlowTrail[i]->SetEndWidth(1.0f);
+				m_pGlowTrail[i]->SetLifeTime(0.5f);
+			}
+			if (i == 1)
+			{
+				nAttachment = LookupAttachment("Taillight0");
+				m_pGlowTrail[i]->FollowEntity(this);
+				m_pGlowTrail[i]->SetAttachment(this, nAttachment);
+				m_pGlowTrail[i]->SetTransparency(kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone);
+				m_pGlowTrail[i]->SetStartWidth(12.0f);
+				m_pGlowTrail[i]->SetEndWidth(1.0f);
+				m_pGlowTrail[i]->SetLifeTime(0.5f);
+			}
+			if (i == 2)
+			{
+				nAttachment = LookupAttachment("Taillight1");
+				m_pGlowTrail[i]->FollowEntity(this);
+				m_pGlowTrail[i]->SetAttachment(this, nAttachment);
+				m_pGlowTrail[i]->SetTransparency(kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone);
+				m_pGlowTrail[i]->SetStartWidth(12.0f);
+				m_pGlowTrail[i]->SetEndWidth(1.0f);
+				m_pGlowTrail[i]->SetLifeTime(0.5f);
+			}
 
-		SetContextThink( &CNPC_ChopperDrone::BlinkLightsThink, gpGlobals->curtime + CHOPPER_LIGHT_BLINK_TIME_SHORT, s_pBlinkLightThinkContext );
-	}
+		}
+		//SetContextThink( &CNPC_ChopperDrone::BlinkLightsThink, gpGlobals->curtime + CHOPPER_LIGHT_BLINK_TIME_SHORT, s_pBlinkLightThinkContext );
+	//}
 }
 
 
@@ -3294,7 +3356,12 @@ void CNPC_ChopperDrone::DestroySmokeTrails()
 		m_hSmokeTrail[i] = NULL;
 	}
 }
-	
+enum
+{
+	CHUNK_COCKPIT,
+	CHUNK_BODY,
+	CHUNK_TAIL
+};
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : &vecChunkPos - 
@@ -3596,7 +3663,7 @@ void CNPC_ChopperDrone::Event_Killed( const CTakeDamageInfo &info )
 		}
 	}
 
-	Chopper_BecomeChunks( this );
+	BecomeChunks( this );
 	StopLoopingSounds();
 
 	m_lifeState = LIFE_DEAD;
@@ -4720,3 +4787,89 @@ AI_END_CUSTOM_NPC()
 // A sensor used to drop bombs only in the correct points
 //
 //------------------------------------------------------------------------------
+void BecomeChunks(CBaseEntity *pChopper)
+{
+	QAngle vecChunkAngles = pChopper->GetAbsAngles();
+	Vector vecForward, vecUp;
+	pChopper->GetVectors(&vecForward, NULL, &vecUp);
+
+#ifdef HL2_EPISODIC
+	CNPC_AttackHelicopter *pAttackHelicopter;
+	pAttackHelicopter = dynamic_cast<CNPC_AttackHelicopter*>(pChopper);
+	if (pAttackHelicopter != NULL)
+	{
+		// New for EP2, we may be tailspinning, (crashing) and playing an animation that is spinning
+		// our root bone, which means our model is not facing the way our entity is facing. So we have
+		// to do some attachment point math to get the proper angles to use for computing the relative
+		// positions of the gibs. The attachment points called DAMAGE0 is properly oriented and attached
+		// to the chopper body so we can use its angles.
+		int iAttach = pAttackHelicopter->LookupAttachment("damage0");
+		Vector vecAttachPos;
+
+		if (iAttach > -1)
+		{
+			pAttackHelicopter->GetAttachment(iAttach, vecAttachPos, vecChunkAngles);
+			AngleVectors(vecChunkAngles, &vecForward, NULL, &vecUp);
+		}
+	}
+#endif//HL2_EPISODIC
+
+
+	Vector vecChunkPos = pChopper->GetAbsOrigin();
+
+	Vector vecRight(0, 0, 0);
+
+	if (hl2_episodic.GetBool())
+	{
+		// We need to get a right hand vector to toss the cockpit and tail pieces
+		// so their motion looks like a continuation of the tailspin animation
+		// that the chopper plays before crashing.
+		pChopper->GetVectors(NULL, &vecRight, NULL);
+	}
+
+	// Body
+	CHelicopterChunk *pBodyChunk = CHelicopterChunk::CreateHelicopterChunk(vecChunkPos, vecChunkAngles, pChopper->GetAbsVelocity(), HELICOPTER_CHUNK_BODY, CHUNK_BODY);
+	Chopper_CreateChunk(pChopper, vecChunkPos, RandomAngle(0, 360), s_pChunkModelName[random->RandomInt(0, CHOPPER_MAX_CHUNKS - 1)], false);
+
+	vecChunkPos = pChopper->GetAbsOrigin() + (vecForward * 100.0f) + (vecUp * -38.0f);
+
+	// Cockpit
+	CHelicopterChunk *pCockpitChunk = CHelicopterChunk::CreateHelicopterChunk(vecChunkPos, vecChunkAngles, pChopper->GetAbsVelocity() + vecRight * -800.0f, HELICOPTER_CHUNK_COCKPIT, CHUNK_COCKPIT);
+	Chopper_CreateChunk(pChopper, vecChunkPos, RandomAngle(0, 360), s_pChunkModelName[random->RandomInt(0, CHOPPER_MAX_CHUNKS - 1)], false);
+
+	pCockpitChunk->m_hMaster = pBodyChunk;
+
+	vecChunkPos = pChopper->GetAbsOrigin() + (vecForward * -175.0f);
+
+	// Tail
+	CHelicopterChunk *pTailChunk = CHelicopterChunk::CreateHelicopterChunk(vecChunkPos, vecChunkAngles, pChopper->GetAbsVelocity() + vecRight * 800.0f, HELICOPTER_CHUNK_TAIL, CHUNK_TAIL);
+	Chopper_CreateChunk(pChopper, vecChunkPos, RandomAngle(0, 360), s_pChunkModelName[random->RandomInt(0, CHOPPER_MAX_CHUNKS - 1)], false);
+
+	pTailChunk->m_hMaster = pBodyChunk;
+
+	// Constrain all the pieces together loosely
+	IPhysicsObject *pBodyObject = pBodyChunk->VPhysicsGetObject();
+	Assert(pBodyObject);
+
+	IPhysicsObject *pCockpitObject = pCockpitChunk->VPhysicsGetObject();
+	Assert(pCockpitObject);
+
+	IPhysicsObject *pTailObject = pTailChunk->VPhysicsGetObject();
+	Assert(pTailObject);
+
+	IPhysicsConstraintGroup *pGroup = NULL;
+
+	// Create the constraint
+	constraint_fixedparams_t fixed;
+	fixed.Defaults();
+	fixed.InitWithCurrentObjectState(pBodyObject, pTailObject);
+	fixed.constraint.Defaults();
+
+	pBodyChunk->m_pTailConstraint = physenv->CreateFixedConstraint(pBodyObject, pTailObject, pGroup, fixed);
+
+	fixed.Defaults();
+	fixed.InitWithCurrentObjectState(pBodyObject, pCockpitObject);
+	fixed.constraint.Defaults();
+
+	pBodyChunk->m_pCockpitConstraint = physenv->CreateFixedConstraint(pBodyObject, pCockpitObject, pGroup, fixed);
+}

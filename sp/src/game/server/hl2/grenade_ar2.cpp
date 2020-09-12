@@ -213,8 +213,7 @@ void CGrenadeAR2::Detonate(void)
 		m_hSmokeTrail = NULL;
 	}
 	ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), 0, 0,
-		SF_ENVEXPLOSION_NOPARTICLES, 0.0f, this);
-	DispatchParticleEffect("hlr_base_explosion2", GetAbsOrigin(), GetAbsAngles(), this);
+		SF_ENVEXPLOSION_NOFIREBALL, 0.0f, this);
 	Vector vecForward = GetAbsVelocity();
 	VectorNormalize(vecForward);
 	trace_t		tr;

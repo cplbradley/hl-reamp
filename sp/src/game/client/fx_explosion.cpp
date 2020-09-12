@@ -185,6 +185,12 @@ void C_BaseExplosionEffect::Create( const Vector &position, float force, float s
 	PlaySound();
 	if (m_fFlags & TE_EXPLFLAG_NOPARTICLES)
 		return;
+	if (m_fFlags & TE_EXPLFLAG_NOFIREBALL)
+	{
+		PrecacheParticleSystem("hlr_base_explosion1");
+		DispatchParticleEffect("hlr_base_explosion2", position, QAngle(0, 0, 0));
+		return;
+	}
 	// UNDONE: Make core size parametric to scale or remove scale?
 	PrecacheParticleSystem("hlr_base_explosion1");
 	DispatchParticleEffect("hlr_base_explosion1", position, QAngle(0, 0, 0));	

@@ -208,20 +208,18 @@ void CLaunchpad::TouchThink(CBaseEntity *pOther) //something touched me
 			Vector vecToTarget = (signalPoint - GetAbsOrigin());
 			VectorNormalize(vecToTarget);
 			float flVelocity = VectorNormalize(vecToss);
-			if (pOther->IsPlayer())
-			{
 				extern IGameMovement *g_pGameMovement;
 				CGameMovement *gm = dynamic_cast<CGameMovement *>(g_pGameMovement);
 				gm->m_iJumpCount = 1;
 				Vector vecStall = Vector(0, 0, 0);
-				pOther->SetAbsVelocity(vecStall);
-				pOther->VelocityPunch(vecToss * flVelocity);
+				Vector vecCurVelocity = pOther->GetAbsVelocity();
+				pOther->SetAbsVelocity(-vecCurVelocity);
+				pOther->ApplyAbsVelocityImpulse(vecToss * flVelocity);
 				SetTouch(NULL); //disable temporarily
 				SetThink(&CLaunchpad::Reenable);//schedule re-enable
-				SetNextThink(gpGlobals->curtime + 0.1f);//after 0.1 seconds
+				SetNextThink(gpGlobals->curtime + 0.5f);//after 0.1 seconds
 				EmitSound("Weapon_Mortar.Single");//emit sound
 				//Msg("smarty launch\n");
-			}
 		}
 }
 void CLaunchpad::Reenable(void)

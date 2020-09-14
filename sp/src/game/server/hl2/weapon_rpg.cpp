@@ -119,6 +119,7 @@ DEFINE_FUNCTION(AccelerateThink),
 DEFINE_FUNCTION(AugerThink),
 DEFINE_FUNCTION(IgniteThink),
 DEFINE_FUNCTION(SeekThink),
+DEFINE_FUNCTION(SteerThink),
 
 END_DATADESC()
 LINK_ENTITY_TO_CLASS(rpg_missile, CMissile);
@@ -397,7 +398,10 @@ void CMissile::MissileTouch(CBaseEntity *pOther)
 {
 	Assert(pOther);
 
-	// Don't touch triggers (but DO hit weapons)
+	if (pOther->ClassMatches("hlr_launchpad"))
+	{
+		ActiveSteerMode();
+	}
 	if (pOther->IsSolidFlagSet(FSOLID_TRIGGER | FSOLID_VOLUME_CONTENTS))
 	{
 		// Some NPCs are triggers that can take damage (like antlion grubs). We should hit them.
@@ -476,7 +480,20 @@ void CMissile::IgniteThink(void)
 	CreateSmokeTrail();
 }
 
-
+void CMissile::ActiveSteerMode(void)
+{
+	SetThink(&CMissile::SteerThink);
+	SetNextThink(gpGlobals->curtime);
+}
+void CMissile::SteerThink(void)
+{
+	Vector VecCurVel = GetAbsVelocity();
+	QAngle angVel;
+	VectorNormalize(VecCurVel);
+	VectorAngles(VecCurVel, angVel);
+	SetAbsAngles(angVel);
+	SetNextThink(gpGlobals->curtime + 0.1f);
+}
 //-----------------------------------------------------------------------------
 // Gets the shooting position 
 //-----------------------------------------------------------------------------

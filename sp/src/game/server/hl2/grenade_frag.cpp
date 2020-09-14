@@ -304,13 +304,21 @@ void CGrenadeFrag::SetTimer( float detonateDelay, float warnDelay )
 void CGrenadeFrag::NadeTouch(CBaseEntity *pOther)
 {
 	Assert(pOther);
-	if (pOther->IsNPC())
+	if (pOther->IsSolid())
 	{
-		Detonate();
-	}
-	else
-	{
-		return;
+		if (GetMoveType() && GetMoveType() == MOVETYPE_FLYGRAVITY)
+		{
+			SetMoveType(MOVETYPE_VPHYSICS);
+			CreateVPhysics();
+		}
+		if (pOther->IsNPC())
+		{
+			Detonate();
+		}
+		else
+		{
+			return;
+		}
 	}
 }
 void CGrenadeFrag::Detonate(void)

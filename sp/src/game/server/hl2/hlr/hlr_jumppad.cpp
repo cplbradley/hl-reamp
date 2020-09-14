@@ -5,6 +5,7 @@
 #include "gamerules.h"
 #include "in_buttons.h"
 #include "soundent.h"
+#include "weapon_rpg.h"
 #include "gamemovement.h"
 #include "game.h"
 #include "vstdlib/random.h"
@@ -121,6 +122,7 @@ DEFINE_INPUT(m_flpushforce, FIELD_FLOAT, "pushforce"),
 DEFINE_KEYFIELD(target, FIELD_STRING, "target"),
 // Function Pointers
 DEFINE_FUNCTION(TouchThink),
+DEFINE_FUNCTION(Reenable),
 DEFINE_INPUTFUNC(FIELD_FLOAT, "SetForce", SetForce),
 END_DATADESC()
 void CLaunchpad::Spawn(void)
@@ -192,6 +194,10 @@ Vector VecCheckThrow(CBaseEntity *pEdict, const Vector &vecSpot1, Vector vecSpot
 }
 void CLaunchpad::TouchThink(CBaseEntity *pOther) //something touched me
 {
+	SetTouch(NULL); //disable temporarily
+	SetThink(&CLaunchpad::Reenable);//schedule re-enable
+	SetNextThink(gpGlobals->curtime + 0.1f);//after 0.1 seconds
+	//emit sound
 	CBaseEntity *signalEntity = gEntList.FindEntityByName(NULL, target);
 	if (signalEntity)
 	{
@@ -200,7 +206,7 @@ void CLaunchpad::TouchThink(CBaseEntity *pOther) //something touched me
 	}
 	else
 	{
-		//Msg("target not found! uh oh!\n");
+		Msg("launchpad target not found! uh oh!\n");
 	}
 	if (pOther->IsSolid())
 	{
@@ -208,19 +214,35 @@ void CLaunchpad::TouchThink(CBaseEntity *pOther) //something touched me
 			Vector vecToTarget = (signalPoint - GetAbsOrigin());
 			VectorNormalize(vecToTarget);
 			float flVelocity = VectorNormalize(vecToss);
+			
+			Vector vecStall = Vector(0, 0, 0);
+			EmitSound("Weapon_Mortar.Single");
+			pOther->SetAbsVelocity(vecStall);
+			if (pOther->IsPlayer())
+			{
 				extern IGameMovement *g_pGameMovement;
 				CGameMovement *gm = dynamic_cast<CGameMovement *>(g_pGameMovement);
 				gm->m_iJumpCount = 1;
-				Vector vecStall = Vector(0, 0, 0);
-				Vector vecCurVelocity = pOther->GetAbsVelocity();
-				pOther->SetAbsVelocity(-vecCurVelocity);
-				pOther->ApplyAbsVelocityImpulse(vecToss * flVelocity);
-				SetTouch(NULL); //disable temporarily
-				SetThink(&CLaunchpad::Reenable);//schedule re-enable
-				SetNextThink(gpGlobals->curtime + 0.5f);//after 0.1 seconds
-				EmitSound("Weapon_Mortar.Single");//emit sound
+				pOther->VelocityPunch(vecToss * flVelocity);
+			}
+			else
+			{
+				QAngle angDir;
+				VectorAngles(vecToTarget, angDir);
+				if (pOther->GetMoveType() && pOther->GetMoveType() != MOVETYPE_FLYGRAVITY)
+				{
+					pOther->SetMoveType(MOVETYPE_FLYGRAVITY);
+				}
+				pOther->SetGravity(1.0f);
+				pOther->SetAbsVelocity(vecToss * flVelocity);
+				pOther->SetAbsAngles(angDir);
+			}
+				
+				
+				
+				
 				//Msg("smarty launch\n");
-		}
+	}
 }
 void CLaunchpad::Reenable(void)
 {

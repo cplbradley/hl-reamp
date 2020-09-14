@@ -47,7 +47,9 @@ public:
 	void	Explode( void );
 	void	ShotDown( void );
 	void	AccelerateThink( void );
+	void	ActiveSteerMode(void);
 	void	AugerThink( void );
+	void	SteerThink(void);
 	void	IgniteThink( void );
 	void	SeekThink( void );
 	void	DumbFire( void );

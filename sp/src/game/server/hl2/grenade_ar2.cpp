@@ -88,7 +88,7 @@ void CGrenadeAR2::Spawn( void )
 	m_bIsLive		= true;
 	m_iHealth		= 1;
 
-	SetGravity( UTIL_ScaleForGravity( 800 ) );	// use a lower gravity for grenades to make them easier to see
+	SetGravity( 0.8f );	// use a lower gravity for grenades to make them easier to see
 	SetFriction( 0.8 );
 	SetSequence( 0 );
 

@@ -129,10 +129,10 @@ static const char *s_pChunkModelName[CHOPPER_MAX_CHUNKS] =
 #define CHOPPER_BULLRUSH_SLOW_SHOOT_SPEED_2_SQ	(CHOPPER_BULLRUSH_SLOW_SHOOT_SPEED_2 * CHOPPER_BULLRUSH_SLOW_SHOOT_SPEED_2)
 
 // CVars
-ConVar	sk_chopperdrone_health( "sk_chopperdrone_health","750");
+ConVar	sk_chopperdrone_health( "sk_chopperdrone_health","1750");
 ConVar	sk_chopperdrone_firingcone( "sk_chopperdrone_firingcone","20.0", 0, "The angle in degrees of the cone in which the shots will be fired" );
-ConVar	sk_chopperdrone_burstcount( "sk_chopperdrone_burstcount","12", 0, "How many shot bursts to fire after charging up. The bigger the number, the longer the firing is" );
-ConVar	sk_chopperdrone_roundsperburst( "sk_chopperdrone_roundsperburst","5", 0, "How many shots to fire in a single burst" );
+ConVar	sk_chopperdrone_burstcount( "sk_chopperdrone_burstcount","15", 0, "How many shot bursts to fire after charging up. The bigger the number, the longer the firing is" );
+ConVar	sk_chopperdrone_roundsperburst( "sk_chopperdrone_roundsperburst","4", 0, "How many shots to fire in a single burst" );
 
 ConVar	sk_chopperdrone_grenadedamage( "sk_chopperdrone_grenadedamage","25.0", 0, "The amount of damage the helicopter grenade deals." );
 ConVar	sk_chopperdrone_grenaderadius( "sk_chopperdrone_grenaderadius","275.0", 0, "The damage radius of the helicopter grenade." );
@@ -153,7 +153,7 @@ ConVar	g_chopperdrone_chargetime( "g_chopperdrone_chargetime","2.0", 0, "How muc
 ConVar	g_chopperdrone_bullrush_distance("g_chopperdrone_bullrush_distance", "5000");
 ConVar	g_chopperdrone_bullrush_bomb_enemy_distance("g_chopperdrone_bullrush_bomb_enemy_distance", "0");
 ConVar	g_chopperdrone_bullrush_bomb_time("g_chopperdrone_bullrush_bomb_time", "10");
-ConVar	g_chopperdrone_idletime( "g_chopperdrone_idletime","3.0", 0, "How much time we have to wait (on average) after we fire before we can charge up again" );
+ConVar	g_chopperdrone_idletime( "g_chopperdrone_idletime","1.0", 0, "How much time we have to wait (on average) after we fire before we can charge up again" );
 ConVar	g_chopperdrone_maxfiringdist( "g_chopperdrone_maxfiringdist","2500.0", 0, "The maximum distance the player can be from the chopper before it stops firing" );
 ConVar	g_chopperdrone_bullrush_bomb_speed( "g_chopperdrone_bullrush_bomb_speed","850.0", 0, "The maximum distance the player can be from the chopper before it stops firing" );
 ConVar	g_chopperdrone_bullrush_shoot_height( "g_chopperdrone_bullrush_shoot_height","650.0", 0, "The maximum distance the player can be from the chopper before it stops firing" );
@@ -3196,7 +3196,7 @@ bool CNPC_ChopperDrone::FireGun( void )
 	if ( IsCarpetBombing() )
 	{
 		BullrushBombs();
-		return false;
+		return true;
 	}
 
 	if ( ShouldDropBombs() )

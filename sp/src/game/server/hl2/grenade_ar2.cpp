@@ -237,7 +237,7 @@ void CGrenadeAR2::Detonate(void)
 	UTIL_ScreenShake( GetAbsOrigin(), 25.0, 150.0, 0.5, 500, SHAKE_START );
 	
 
-	RadiusDamage(CTakeDamageInfo(this, GetThrower(), 150, DMG_BLAST), GetAbsOrigin(), 32, CLASS_PLAYER, NULL);
+	RadiusDamage(CTakeDamageInfo(this, GetThrower(), 150, DMG_BLAST), GetAbsOrigin(), 32, CLASS_NONE, NULL);
 	SetThink(&CGrenadeAR2::Kill);
 	SetNextThink(gpGlobals->curtime + 0.01f);
 }

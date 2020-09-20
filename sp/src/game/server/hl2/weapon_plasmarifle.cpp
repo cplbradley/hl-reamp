@@ -194,9 +194,12 @@ public:
 	void	AddViewKick(void);
 	void	SecondaryAttack(void);
 	void	PrimaryAttack(void);
+	void	ItemPostFrame(void);
 
 	int		GetMinBurst() { return 5; }
 	int		GetMaxBurst() { return 5; }
+
+	int		m_iEnergyLevel;
 
 	virtual void Equip(CBaseCombatCharacter *pOwner);
 	bool	Reload(void);
@@ -300,6 +303,8 @@ CWeaponPlasmaRifle::CWeaponPlasmaRifle()
 	m_fMaxRange1 = 9600;
 
 	m_bAltFiresUnderwater = false;
+
+	m_iEnergyLevel = 0;
 	//m_iClip1 = 50;
 }
 
@@ -501,22 +506,30 @@ void CWeaponPlasmaRifle::AddViewKick(void)
 void CWeaponPlasmaRifle::SecondaryAttack(void)
 {
 	// Only the player fires this way so we can cast
+
+
 	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
 	if ( pPlayer == NULL )
 	return;
 	if ((UsesClipsForAmmo1() && m_iClip1 == 0) || (!UsesClipsForAmmo1() && !pPlayer->GetAmmoCount(m_iPrimaryAmmoType)))
 		return;
+
+	if (m_iEnergyLevel < 30)
+		return;
+
 	Vector	vForward, vRight, vUp;
 	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
-	Vector vecSrc = pPlayer->Weapon_ShootPosition();
+	Vector vecSrc = pPlayer->WorldSpaceCenter();
 	Vector vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT);
 	RadiusDamage(CTakeDamageInfo (this, pPlayer, 100, DMG_DISSOLVE),GetAbsOrigin(),256,CLASS_PLAYER,NULL);
 	EmitSound("NPC_CombineBall.Explosion");
 	DispatchParticleEffect("plasma_altfire_core", vecSrc, GetAbsAngles(), this);
-	m_flNextSecondaryAttack = gpGlobals->curtime + 3.5f;
+	//m_flNextSecondaryAttack = gpGlobals->curtime + 3.5f;
 	pPlayer->ViewPunch(QAngle(random->RandomFloat(-30, -15), random->RandomFloat(-20, 20), 0));
 	color32 white = { 255, 255, 255, 64 };
 	UTIL_ScreenFade(pPlayer , white, 0.1, 0, FFADE_IN);
+	m_iEnergyLevel = 0;
+
 	/*pPlayer->FireBullets(1, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0, -1, -1, 1);
 	trace_t tr; // Create our trace_t class to hold the end result
 	// Do the TraceLine, and write our results to our trace_t class, tr.
@@ -631,7 +644,7 @@ void CWeaponPlasmaRifle::PrimaryAttack(void)
 		//debugoverlay->AddLineOverlay(tr.startpos, tr.endpos, 0, 255, 0, false, 3.0f);
 		WeaponSound(SINGLE, m_flNextPrimaryAttack); //emit sound
 		m_flNextPrimaryAttack = m_flNextPrimaryAttack + 0.1f;
-		m_flNextSecondaryAttack = gpGlobals->curtime + 1.0f;//can't shoot again til after 0.1 seconds
+		//m_flNextSecondaryAttack = gpGlobals->curtime + 1.0f;//can't shoot again til after 0.1 seconds
 		CPlasmaBall *pBall = CPlasmaBall::Create(vecSrc, angAiming, pOwner); //emit plasma ball object
 		pBall->SetModel(PLASMA_MODEL); //set model to player model
 		pBall->SetAbsVelocity(vecShotDir * PLASMA_SPEED); //set speed and vector
@@ -646,7 +659,7 @@ void CWeaponPlasmaRifle::PrimaryAttack(void)
 			QAngle(random->RandomFloat(-250, -500),
 			random->RandomFloat(-250, -500),
 			random->RandomFloat(-250, -500)));
-
+		m_iEnergyLevel++;
 		int iAttachment = LookupAttachment("barrel");
 		DispatchParticleEffect("smg_core", PATTACH_POINT_FOLLOW, pOwner->GetViewModel(), iAttachment, true);
 	}
@@ -769,6 +782,15 @@ int CWeaponPlasmaRifle::WeaponRangeAttack2Condition(float flDot, float flDist)
 		m_flNextGrenadeCheck = gpGlobals->curtime + 1; // one full second.
 		return COND_WEAPON_SIGHT_OCCLUDED;
 	}
+}
+void CWeaponPlasmaRifle::ItemPostFrame(void)
+{
+	BaseClass::ItemPostFrame();
+	if (m_iEnergyLevel >= 30)
+	{
+		m_iEnergyLevel = 30;
+	}
+
 }
 
 //-----------------------------------------------------------------------------

@@ -264,7 +264,7 @@ void CWeaponPistol::PrimaryAttack(void)
 	m_flSoonestPrimaryAttack = gpGlobals->curtime + PISTOL_FASTEST_REFIRE_TIME;
 	m_flNextPrimaryAttack = gpGlobals->curtime + 0.8f;
 	//CSoundEnt::InsertSound(SOUND_COMBAT, GetAbsOrigin(), SOUNDENT_VOLUME_PISTOL, 0.2, GetOwner());
-
+		
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 
 	if (pOwner)

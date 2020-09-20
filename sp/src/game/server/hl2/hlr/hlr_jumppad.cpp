@@ -130,7 +130,9 @@ void CLaunchpad::Spawn(void)
 	Precache();
 	UTIL_SetSize(this, -Vector(20.0f, 20.0f, 20.0f), Vector(20.0f, 20.0f, 20.0f));
 	SetSolid(SOLID_BBOX);
-	AddSolidFlags(FSOLID_NOT_SOLID | FSOLID_TRIGGER);
+	AddSolidFlags(FSOLID_NOT_SOLID | FSOLID_TRIGGER | FSOLID_USE_TRIGGER_BOUNDS);
+
+
 	//SetModel(JUMPPAD_MODEL);
 	SetTouch(&CLaunchpad::TouchThink);
 }

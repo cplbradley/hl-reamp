@@ -9,9 +9,12 @@
 #include "hud.h"
 #include "hudelement.h"
 #include "iclientmode.h"
+#include "hl2_shareddefs.h"
+#include "hl2_gamerules.h"
 #include "engine/IEngineSound.h"
 #include "vgui_controls/AnimationController.h"
 #include "vgui_controls/Controls.h"
+#include "ammodef.h"
 #include "vgui_controls/Panel.h"
 #include "vgui/ISurface.h"
 #include "../hud_crosshair.h"
@@ -285,17 +288,19 @@ void CHUDQuickInfo::Paint()
 	}
 
 	// Check our ammo for a warning
-	int	ammo = pWeapon->Clip1();
+	int	ammo = player->GetAmmoCount(pWeapon->m_iPrimaryAmmoType);
+	int maxammo = GetAmmoDef()->MaxCarry(pWeapon->GetPrimaryAmmoType());
 	if ( ammo != m_lastAmmo )
 	{
 		UpdateEventTime();
 		m_lastAmmo	= ammo;
+		//int ammotype = pWeapon->GetPrimaryAmmoType();
 
-		// Find how far through the current clip we are
-		float ammoPerc = (float) ammo / (float) pWeapon->GetMaxClip1();
+		// Find how far through the current z we are
+		float ammoPerc = (float)ammo / (float)maxammo;
 
 		// Warn if we're below a certain percentage of our clip's size
-		if (( pWeapon->GetMaxClip1() > 1 ) && ( ammoPerc <= ( 1.0f - CLIP_PERC_THRESHOLD )))
+		if (( maxammo > 1 ) && ( ammoPerc <= ( 1.0f - CLIP_PERC_THRESHOLD )))
 		{
 			if ( m_warnAmmo == false )
 			{
@@ -361,13 +366,13 @@ void CHUDQuickInfo::Paint()
 	{
 		float ammoPerc;
 
-		if ( pWeapon->GetMaxClip1() <= 0 )
+		if ( maxammo <= 0 )
 		{
 			ammoPerc = 0.0f;
 		}
 		else
 		{
-			ammoPerc = 1.0f - ( (float) ammo / (float) pWeapon->GetMaxClip1() );
+			ammoPerc = 1.0f - ((float)ammo / (float)maxammo);
 			ammoPerc = clamp( ammoPerc, 0.0f, 1.0f );
 		}
 

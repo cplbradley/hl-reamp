@@ -286,7 +286,7 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 			}
 		}
 
-		SetAbsVelocity( Vector( 0, 0, 0 ) );
+		SetMoveType(MOVETYPE_NONE);
 
 		// play body "thwack" sound
 		EmitSound( "Weapon_Crossbow.BoltHitBody" );
@@ -317,7 +317,10 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 		
 		SetTouch( NULL );
 		SetThink( NULL );
-		SetParent(pOther);
+		if (!pOther->IsWorld())
+		{
+			SetParent(pOther);
+		}
 		SetSolid(SOLID_NONE);
 		SetSolidFlags(FSOLID_NOT_SOLID);
 		//BaseClass::SetParent(pOther);

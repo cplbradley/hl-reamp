@@ -3430,7 +3430,7 @@ void ChopperDrone_CreateChunk( CBaseEntity *pChopper, const Vector &vecChunkPos,
 	pFireTrail->SetParent( pChunk, 0 );
 	pFireTrail->SetLocalOrigin( vec3_origin );
 	pFireTrail->SetMoveType( MOVETYPE_NONE );
-	pFireTrail->SetLifetime( pChunk->m_lifeTime );
+	pFireTrail->SetLifetime(pChunk->m_lifeTime);
 }
 
 //------------------------------------------------------------------------------

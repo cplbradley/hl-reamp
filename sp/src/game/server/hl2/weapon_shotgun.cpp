@@ -15,6 +15,7 @@
 #include "player.h"
 #include "gamerules.h"		// For g_pGameRules
 #include "in_buttons.h"
+#include "npc_hunter.h"
 #include "soundent.h"
 #include "vstdlib/random.h"
 #include "hl2_shareddefs.h"

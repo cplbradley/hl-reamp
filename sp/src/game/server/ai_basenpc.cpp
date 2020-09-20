@@ -757,14 +757,14 @@ bool CAI_BaseNPC::PassesDamageFilter( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 {
-	Forget( bits_MEMORY_INCOVER );
+	Forget( bits_MEMORY_INCOVER ); 
 
 	if ( !BaseClass::OnTakeDamage_Alive( info ) )
 		return 0;
 
 	if ( GetSleepState() == AISS_WAITING_FOR_THREAT )
 		Wake();
-
+	dmgtime = gpGlobals->curtime;
 	// NOTE: This must happen after the base class is called; we need to reduce
 	// health before the pain sound, since some NPCs use the final health
 	// level as a modifier to determine which pain sound to use.
@@ -774,6 +774,16 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	if ( !m_pSquad || !m_pSquad->SquadIsMember( info.GetAttacker() ) )
 	{
 		PainSound( info );// "Ouch!"
+	}
+	
+
+	if (nextdmg <= gpGlobals->curtime)
+	{
+		if (info.GetDamageType() & DMG_BURN)
+		{
+			nextdmg = dmgtime + 1.0f;
+			DropItem("item_healthvial", WorldSpaceCenter() + RandomVector(0, 4), RandomAngle(0, 360));
+		}
 	}
 
 	// See if we're running a dynamic interaction that should break when I am damaged.
@@ -6874,7 +6884,8 @@ void CAI_BaseNPC::NPCInit ( void )
 	SetIdealState( NPC_STATE_IDLE );// Assume npc will be idle, until proven otherwise
 	SetIdealActivity( ACT_IDLE );
 	SetActivity( ACT_IDLE );
-
+	dmgtime = gpGlobals->curtime;
+	nextdmg = dmgtime;
 #ifdef HL1_DLL
 	SetDeathPose( ACT_INVALID );
 #endif

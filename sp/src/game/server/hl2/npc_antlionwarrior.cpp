@@ -823,7 +823,7 @@ void CNPC_AntlionWarrior::Spawn(void)
 
 
 	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-	m_hLaserDotP = CreateLaserDot(GetAbsOrigin(), this, false);
+	m_hLaserDotP = CreateLaserDot(GetAbsOrigin(), this, true);
 	SetLaserDotTarget(m_hLaserDotP, pPlayer);
 	m_hSpitEffect = (CParticleSystem *)CreateEntityByName("info_particle_system");
 
@@ -3012,8 +3012,18 @@ bool CNPC_AntlionWarrior::HandleChargeImpact(Vector vecImpact, CBaseEntity *pEnt
 			m_iChargeMisses++;
 			return true;
 		}
-	}
 
+	}
+	if (pEntity->ClassMatches("rpg_missile"))
+	{
+		CBaseEntity *pOwner = pEntity->GetOwnerEntity();
+		Vector vecDir = pOwner->WorldSpaceCenter() - WorldSpaceCenter();
+		QAngle angDir;
+
+		VectorAngles(vecDir, angDir);
+		pEntity->SetAbsAngles(angDir);
+		return false;
+	}
 	// Hit anything we don't like
 	if ((IRelationType(pEntity) == D_NU || D_HT) && (GetNextAttack() < gpGlobals->curtime))
 	{

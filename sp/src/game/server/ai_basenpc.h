@@ -768,6 +768,8 @@ private:
 	float				m_flLastRealThinkTime;
 	int					m_iFrameBlocked;
 	bool				m_bInChoreo;
+	float				dmgtime;
+	float				nextdmg;
 
 	static int			gm_iNextThinkRebalanceTick;
 	static float		gm_flTimeLastSpawn;

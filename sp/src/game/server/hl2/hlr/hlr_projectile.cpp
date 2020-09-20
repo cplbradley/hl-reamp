@@ -15,6 +15,7 @@
 #include "IEffects.h"
 #include "te_effect_dispatch.h"
 #include "Sprite.h"
+#include "smoke_trail.h"
 #include "SpriteTrail.h"
 #include "beam_shared.h"
 #include "rumble_shared.h"
@@ -304,7 +305,16 @@ void CHLRFireball::Spawn(void)
 	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 	SetTouch(&CHLRFireball::Touch);
 	SetNextThink(gpGlobals->curtime + 0.1f);
-	DispatchParticleEffect("antlionwarrior_fireball_core", PATTACH_ABSORIGIN_FOLLOW, this, "root", false);
+	CFireTrail *pFireTrail = CFireTrail::CreateFireTrail();
+
+	if (pFireTrail == NULL)
+		return;
+
+	pFireTrail->FollowEntity(this, "");
+	pFireTrail->SetParent(this, 0);
+	pFireTrail->SetLocalOrigin(vec3_origin);
+	pFireTrail->SetMoveType(MOVETYPE_NONE);
+	pFireTrail->SetLifetime(1.0f);
 
 }
 void CHLRFireball::Precache(void)

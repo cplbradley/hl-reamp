@@ -51,8 +51,8 @@
 // If flying at an enemy, and this close or closer, start playing the maul animation!!
 #define FASTZOMBIE_MAUL_RANGE	300
 
-ConVar  sk_fastzombie_jump_speed("sk_fastzombie_jump_speed", "600", FCVAR_NONE, "Speed at which dog jumps.");
-ConVar	sk_baddog_health("sk_baddog_health", "1250", FCVAR_NONE, "BadDog Health");
+ConVar  sk_fastzombie_jump_speed("sk_fastzombie_jump_speed", "700", FCVAR_NONE, "Speed at which dog jumps.");
+ConVar	sk_baddog_health("sk_baddog_health", "1000", FCVAR_NONE, "BadDog Health");
 
 #ifdef HL2_EPISODIC
 
@@ -439,6 +439,8 @@ void CFastZombie::Precache( void )
 	PrecacheScriptSound( "NPC_dog.Growl_1" );
 	PrecacheScriptSound( "NPC_FastZombie.NoSound" );
 	PrecacheScriptSound( "NPC_dog.Angry_3" );
+
+	PrecacheScriptSound("BadDog.Smash");
 
 	PrecacheScriptSound( "NPC_dog.Combatmode_loop" );
 
@@ -1894,7 +1896,8 @@ void CFastZombie::OnChangeActivity( Activity NewActivity )
 		m_flNextAttack = gpGlobals->curtime + 1.0;
 		RadiusDamage(CTakeDamageInfo(this, this, 50, DMG_SONIC), GetAbsOrigin(), 180, CLASS_COMBINE_HUNTER, NULL);
 		DispatchParticleEffect("baddog_groundsmash", GetAbsOrigin(), GetAbsAngles(), this);
-		EmitSound("outland_ep01.Rock_Crash");
+		EmitSound("BadDog.Smash");
+		UTIL_ScreenShake(GetAbsOrigin(), 40.0, 60, 1.0, 500, SHAKE_START);
 	}
 
 	if ( NewActivity == ACT_GLIDE )

@@ -138,6 +138,8 @@ public:
 	void PrescheduleThink(void);
 	int SelectSchedule(void);
 
+	float m_iSoulCount;
+
 	void PainSound(const CTakeDamageInfo &info);
 	void DeathSound(const CTakeDamageInfo &info);
 	void AlertSound(void);
@@ -220,6 +222,7 @@ BEGIN_DATADESC(CNPCBloat)
 
 DEFINE_FIELD(m_hBlockingDoor, FIELD_EHANDLE),
 DEFINE_FIELD(m_flDoorBashYaw, FIELD_FLOAT),
+DEFINE_INPUT(m_iSoulCount, FIELD_FLOAT, "SoulCount"),
 DEFINE_EMBEDDED(m_DurationDoorBash),
 DEFINE_EMBEDDED(m_NextTimeToStartDoorBash),
 DEFINE_FIELD(m_vPositionCharged, FIELD_POSITION_VECTOR),
@@ -277,6 +280,10 @@ void CNPCBloat::Spawn(void)
 {
 	Precache();
 
+	if (m_iSoulCount == NULL)
+	{
+		m_iSoulCount = 2;
+	}
 	if (FClassnameIs(this, "npc_bloat"))
 	{
 		m_fIsTorso = false;
@@ -517,7 +524,7 @@ void CNPCBloat::SetZombieModel(void)
 }
 void CNPCBloat::Event_Killed(const CTakeDamageInfo &info)
 {
-	for (int i = 0; i < 2; i++)
+	for (int i = 0; i < m_iSoulCount; i++)
 	{
 		CBaseEntity *pSoul = (CBaseEntity *)CreateEntityByName("npc_manhack");
 		Vector vecRndSrc = (GetAbsOrigin() + RandomVector(-16, 16));

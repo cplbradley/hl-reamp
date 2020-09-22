@@ -15,6 +15,7 @@
 #include "ai_route.h"
 #include "soundent.h"
 #include "game.h"
+#include "particle_parse.h"
 #include "npcevent.h"
 #include "entitylist.h"
 #include "ai_task.h"
@@ -39,7 +40,7 @@
 #define FASTZOMBIE_MAX_PITCH			130
 #define FASTZOMBIE_SOUND_UPDATE_FREQ	0.5
 
-#define FASTZOMBIE_MAXLEAP_Z		1024.0
+#define FASTZOMBIE_MAXLEAP_Z		128.0
 
 #define FASTZOMBIE_EXCITE_DIST 960.0
 
@@ -47,6 +48,9 @@
 
 // If flying at an enemy, and this close or closer, start playing the maul animation!!
 #define FASTZOMBIE_MAUL_RANGE	300
+
+ConVar  sk_fastzombie_jump_speed("sk_fastzombie_jump_speed", "600", FCVAR_NONE, "Speed at which dog jumps.");
+
 
 #ifdef HL2_EPISODIC
 
@@ -248,10 +252,11 @@ public:
 	bool MovementCost( int moveType, const Vector &vecStart, const Vector &vecEnd, float *pCost );
 	bool ShouldFailNav( bool bMovementFailed );
 
+	bool GetJumpVector(const Vector &vecStartPos, const Vector &vecTarget, Vector *vecOut);
 	int	SelectFailSchedule( int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode );
 
 	const char *GetMoanSound( int nSound );
-
+	Vector	m_vecSaveSpitVelocity;
 	void OnChangeActivity( Activity NewActivity );
 	void OnStateChange( NPC_STATE OldState, NPC_STATE NewState );
 	void Event_Killed( const CTakeDamageInfo &info );
@@ -372,7 +377,7 @@ END_DATADESC()
 
 const char *CFastZombie::pMoanSounds[] =
 {
-	"NPC_FastZombie.Moan1",
+	"NPC_FastZombie.NoSound",
 };
 
 //-----------------------------------------------------------------------------
@@ -388,7 +393,7 @@ static const char *s_pLegsModel = "models/gibs/fast_zombie_legs.mdl";
 //-----------------------------------------------------------------------------
 void CFastZombie::Precache( void )
 {
-	PrecacheModel("models/zombie/fast.mdl");
+	PrecacheModel("models/dog.mdl");
 #ifdef HL2_EPISODIC
 	PrecacheModel("models/zombie/Fast_torso.mdl");
 	PrecacheScriptSound( "NPC_FastZombie.CarEnter1" );
@@ -400,27 +405,30 @@ void CFastZombie::Precache( void )
 	PrecacheModel( "models/gibs/fast_zombie_torso.mdl" );
 	PrecacheModel( "models/gibs/fast_zombie_legs.mdl" );
 	
-	PrecacheScriptSound( "NPC_FastZombie.LeapAttack" );
+	PrecacheParticleSystem("baddog_groundsmash");
+	PrecacheScriptSound("outland_ep01.Rock_Crash");
+
+	PrecacheScriptSound( "NPC_dog.Playful_4" );
 	PrecacheScriptSound( "NPC_FastZombie.FootstepRight" );
 	PrecacheScriptSound( "NPC_FastZombie.FootstepLeft" );
 	PrecacheScriptSound( "NPC_FastZombie.AttackHit" );
 	PrecacheScriptSound( "NPC_FastZombie.AttackMiss" );
 	PrecacheScriptSound( "NPC_FastZombie.LeapAttack" );
 	PrecacheScriptSound( "NPC_FastZombie.Attack" );
-	PrecacheScriptSound( "NPC_FastZombie.Idle" );
-	PrecacheScriptSound( "NPC_FastZombie.AlertFar" );
-	PrecacheScriptSound( "NPC_FastZombie.AlertNear" );
+	PrecacheScriptSound( "NPC_dog.Idlemode_loop" );
+	PrecacheScriptSound( "NPC_dog.Scared_1" );
+	PrecacheScriptSound( "NPC_dog.Angry_3" );
 	PrecacheScriptSound( "NPC_FastZombie.GallopLeft" );
 	PrecacheScriptSound( "NPC_FastZombie.GallopRight" );
-	PrecacheScriptSound( "NPC_FastZombie.Scream" );
-	PrecacheScriptSound( "NPC_FastZombie.RangeAttack" );
-	PrecacheScriptSound( "NPC_FastZombie.Frenzy" );
+	PrecacheScriptSound( "NPC_dog.Pain_2" );
+	PrecacheScriptSound( "NPC_dog.Playful_4" );
+	PrecacheScriptSound( "NPC_dog.Growl_1" );
 	PrecacheScriptSound( "NPC_FastZombie.NoSound" );
-	PrecacheScriptSound( "NPC_FastZombie.Die" );
+	PrecacheScriptSound( "NPC_dog.Angry_3" );
 
-	PrecacheScriptSound( "NPC_FastZombie.Gurgle" );
+	PrecacheScriptSound( "NPC_dog.Combatmode_loop" );
 
-	PrecacheScriptSound( "NPC_FastZombie.Moan1" );
+	PrecacheScriptSound( "NPC_dog.Playful_1" );
 
 	BaseClass::Precache();
 }
@@ -590,7 +598,7 @@ void CFastZombie::SoundInit( void )
 	if( !m_pLayer2 )
 	{
 		// Set up layer2
-		m_pLayer2 = ENVELOPE_CONTROLLER.SoundCreate( filter, entindex(), CHAN_VOICE, "NPC_FastZombie.Gurgle", ATTN_NORM );
+		m_pLayer2 = ENVELOPE_CONTROLLER.SoundCreate( filter, entindex(), CHAN_VOICE, "NPC_dog.Combatmode_loop", ATTN_NORM );
 
 		// Start silent.
 		ENVELOPE_CONTROLLER.Play( m_pLayer2, 0.0, 100 );
@@ -630,7 +638,7 @@ void CFastZombie::SetAngrySoundState( void )
 		return;
 	}
 
-	EmitSound( "NPC_FastZombie.LeapAttack" );
+	EmitSound( "NPC_dog.Playful_4" );
 
 	// Main looping sound
 	ENVELOPE_CONTROLLER.SoundChangePitch( m_pMoanSound, FASTZOMBIE_MIN_PITCH, 0.5 );
@@ -652,7 +660,8 @@ void CFastZombie::Spawn( void )
 
 	m_fJustJumped = false;
 
-	m_fIsTorso = m_fIsHeadless = false;
+	m_fIsTorso = false;
+	m_fIsHeadless = true;
 
 	if( FClassnameIs( this, "npc_fastzombie" ) )
 	{
@@ -670,8 +679,8 @@ void CFastZombie::Spawn( void )
 	SetBloodColor( BLOOD_COLOR_YELLOW );
 #endif // HL2_EPISODIC
 
-	m_iHealth			= 50;
-	m_flFieldOfView		= 0.2;
+	m_iHealth			= 900;
+	//m_flFieldOfView		= 0.2;
 
 	CapabilitiesClear();
 	CapabilitiesAdd( bits_CAP_MOVE_CLIMB | bits_CAP_MOVE_JUMP | bits_CAP_MOVE_GROUND | bits_CAP_INNATE_RANGE_ATTACK1 /* | bits_CAP_INNATE_MELEE_ATTACK1 */);
@@ -686,6 +695,7 @@ void CFastZombie::Spawn( void )
 	m_pLayer2 = NULL;
 	m_iClimbCount = 0;
 
+	SetGravity(2.0f);;
 	EndNavJump();
 
 	m_flDistFactor = 1.0;
@@ -698,7 +708,7 @@ void CFastZombie::Spawn( void )
 void CFastZombie::PostNPCInit( void )
 {
 	SoundInit();
-
+	SetGravity(2.0f);
 	m_flTimeUpdateSound = gpGlobals->curtime;
 }
 
@@ -759,8 +769,8 @@ void CFastZombie::SetZombieModel( void )
 	}
 	else
 	{
-		SetModel( "models/zombie/fast.mdl" );
-		SetHullType(HULL_HUMAN);
+		SetModel( "models/dog.mdl" );
+		SetHullType(HULL_LARGE);
 	}
 
 	SetBodygroup( ZOMBIE_BODYGROUP_HEADCRAB, !m_fIsHeadless );
@@ -875,7 +885,7 @@ void CFastZombie::AttackMissSound( void )
 //-----------------------------------------------------------------------------
 void CFastZombie::LeapAttackSound( void )
 {
-	EmitSound( "NPC_FastZombie.LeapAttack" );
+	EmitSound( "NPC_dog.Playful_4" );
 }
 
 //-----------------------------------------------------------------------------
@@ -891,7 +901,7 @@ void CFastZombie::AttackSound( void )
 //-----------------------------------------------------------------------------
 void CFastZombie::IdleSound( void )
 {
-	EmitSound( "NPC_FastZombie.Idle" );
+	EmitSound( "NPC_dog.Idlemode_loop" );
 	MakeAISpookySound( 360.0f );
 }
 
@@ -910,7 +920,7 @@ void CFastZombie::PainSound( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 void CFastZombie::DeathSound( const CTakeDamageInfo &info ) 
 {
-	EmitSound( "NPC_FastZombie.Die" );
+	EmitSound( "NPC_dog.Angry_3" );
 }
 
 //-----------------------------------------------------------------------------
@@ -931,11 +941,11 @@ void CFastZombie::AlertSound( void )
 
 		if( flDist > 512 )
 		{
-			EmitSound( "NPC_FastZombie.AlertFar" );
+			EmitSound( "NPC_dog.Scared_1" );
 		}
 		else
 		{
-			EmitSound( "NPC_FastZombie.AlertNear" );
+			EmitSound( "NPC_dog.Angry_3");
 		}
 	}
 
@@ -945,7 +955,7 @@ void CFastZombie::AlertSound( void )
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 #define FASTZOMBIE_MINLEAP			200
-#define FASTZOMBIE_MAXLEAP			1000
+#define FASTZOMBIE_MAXLEAP			600
 float CFastZombie::InnateRange1MaxRange( void ) 
 { 
 	return FASTZOMBIE_MAXLEAP; 
@@ -1084,7 +1094,7 @@ void CFastZombie::HandleAnimEvent( animevent_t *pEvent )
 		right = right * -50;
 
 		QAngle angle( -3, -5, -3  );
-		ClawAttack( GetClawAttackRange(), 3, angle, right, ZOMBIE_BLOOD_RIGHT_HAND );
+		//ClawAttack( GetClawAttackRange(), 3, angle, right, ZOMBIE_BLOOD_RIGHT_HAND );
 		return;
 	}
 
@@ -1094,7 +1104,7 @@ void CFastZombie::HandleAnimEvent( animevent_t *pEvent )
 		AngleVectors( GetLocalAngles(), NULL, &right, NULL );
 		right = right * 50;
 		QAngle angle( -3, 5, -3 );
-		ClawAttack( GetClawAttackRange(), 3, angle, right, ZOMBIE_BLOOD_LEFT_HAND );
+		//ClawAttack( GetClawAttackRange(), 3, angle, right, ZOMBIE_BLOOD_LEFT_HAND );
 		return;
 	}
 
@@ -1142,8 +1152,112 @@ void CFastZombie::HandleAnimEvent( animevent_t *pEvent )
 
 	BaseClass::HandleAnimEvent( pEvent );
 }
+Vector CheckJumpTolerance(CBaseEntity *pEdict, const Vector &vecSpot1, Vector vecSpot2, float flSpeed, float flTolerance)
+{
+	flSpeed = MAX(1.0f, flSpeed);
+
+	float flGravity = GetCurrentGravity() * 2;
+
+	Vector vecGrenadeVel = (vecSpot2 - vecSpot1);
+
+	// throw at a constant time
+	float time = vecGrenadeVel.Length() / flSpeed;
+	vecGrenadeVel = vecGrenadeVel * (1.0 / time);
+
+	// adjust upward toss to compensate for gravity loss
+	vecGrenadeVel.z += flGravity * time * 0.5;
+
+	Vector vecApex = vecSpot1 + (vecSpot2 - vecSpot1) * 0.5;
+	vecApex.z += 0.5 * flGravity * (time * 0.5) * (time * 0.5);
 
 
+	trace_t tr;
+	UTIL_TraceLine(vecSpot1, vecApex, MASK_SOLID, pEdict, COLLISION_GROUP_NONE, &tr);
+	if (tr.fraction != 1.0)
+	{
+		// fail!
+		/*if (g_debug_antlion_worker.GetBool())
+		{
+		NDebugOverlay::Line(vecSpot1, vecApex, 255, 0, 0, true, 5.0);
+		}*/
+
+		return vec3_origin;
+	}
+
+	/*if (g_debug_antlion_worker.GetBool())
+	{
+	NDebugOverlay::Line(vecSpot1, vecApex, 0, 255, 0, true, 5.0);
+	}*/
+
+	UTIL_TraceLine(vecApex, vecSpot2, MASK_SOLID_BRUSHONLY, pEdict, COLLISION_GROUP_NONE, &tr);
+	if (tr.fraction != 1.0)
+	{
+		bool bFail = true;
+
+		// Didn't make it all the way there, but check if we're within our tolerance range
+		if (flTolerance > 0.0f)
+		{
+			float flNearness = (tr.endpos - vecSpot2).LengthSqr();
+			if (flNearness < Square(flTolerance))
+			{
+				/*if (g_debug_antlion_worker.GetBool())
+				{
+				NDebugOverlay::Sphere(tr.endpos, vec3_angle, flTolerance, 0, 255, 0, 0, true, 5.0);
+				}
+				*/
+				bFail = false;
+			}
+		}
+
+		if (bFail)
+		{
+			/*	if (g_debug_antlion_worker.GetBool())
+			{
+			NDebugOverlay::Line(vecApex, vecSpot2, 255, 0, 0, true, 5.0);
+			NDebugOverlay::Sphere(tr.endpos, vec3_angle, flTolerance, 255, 0, 0, 0, true, 5.0);
+			}*/
+			return vec3_origin;
+		}
+	}
+
+	/*if (g_debug_antlion_worker.GetBool())
+	{
+	NDebugOverlay::Line(vecApex, vecSpot2, 0, 255, 0, true, 5.0);
+	}*/
+
+	return vecGrenadeVel;
+}
+bool CFastZombie::GetJumpVector(const Vector &vecStartPos, const Vector &vecTarget, Vector *vecOut)
+{
+	Vector vTarget;
+	//CBaseEntity *pEnemy = GetEnemy();
+	Vector vecEnemyPos = vecTarget;
+	Vector vecJumpDir = vecEnemyPos - vecStartPos;
+	//float distance = vecJumpDir.Length();
+	//float speedfactor = distance / sk_fastzombie_jump_speed.GetFloat();
+	//float jumpspeed = sk_fastzombie_jump_speed.GetFloat() * speedfactor;
+	// antlion workers exist only in episodic.
+	float adjustedspd = g_pGameRules->AdjustProjectileSpeed(sk_fastzombie_jump_speed.GetFloat());
+	//#if HL2_EPISODIC
+	// Try the most direct route
+	Vector vecToss = CheckJumpTolerance(this, vecStartPos, vecTarget, adjustedspd, (10.0f*12.0f));
+
+	// If this failed then try a little faster (flattens the arc)
+	if (vecToss == vec3_origin)
+	{
+		vecToss = CheckJumpTolerance(this, vecStartPos, vecTarget, adjustedspd * 1.5f, (10.0f*12.0f));
+		if (vecToss == vec3_origin)
+			return false;
+	}
+
+	// Save out the result
+	if (vecOut)
+	{
+		*vecOut = vecToss;
+	}
+
+	return true;
+}
 //-----------------------------------------------------------------------------
 // Purpose: Jump at the enemy!! (stole this from the headcrab)
 //
@@ -1152,6 +1266,7 @@ void CFastZombie::HandleAnimEvent( animevent_t *pEvent )
 void CFastZombie::LeapAttack( void )
 {
 	SetGroundEntity( NULL );
+	SetGravity(2.0f);
 
 	BeginAttackJump();
 
@@ -1167,7 +1282,47 @@ void CFastZombie::LeapAttack( void )
 
 	if ( pEnemy )
 	{
-		Vector vecEnemyPos = pEnemy->WorldSpaceCenter();
+		Vector vSpitPos = GetAbsOrigin();
+
+		Vector	vTarget;
+
+		// If our enemy is looking at us and far enough away, lead him
+		//if (HasCondition(COND_ENEMY_FACING_ME) && UTIL_DistApprox(GetAbsOrigin(), GetEnemy()->GetAbsOrigin()) > (40 * 12))
+		if (HasCondition(COND_ENEMY_FACING_ME))
+		{
+			UTIL_PredictedPosition(GetEnemy(), 0.5f, &vTarget);
+			vTarget.z = GetEnemy()->WorldSpaceCenter().z;
+		}
+		else
+		{
+			// Otherwise he can't see us and he won't be able to dodge
+			vTarget = GetEnemy()->BodyTarget(vSpitPos, true);
+		}
+
+		vTarget[2] += random->RandomFloat(0.0f, 32.0f);
+
+		// Try and spit at our target
+		Vector	vecToss;
+		if (GetJumpVector(vSpitPos, vTarget, &vecToss) == false)
+		{
+			// Now try where they were
+			if (GetJumpVector(vSpitPos, m_vSavePosition, &vecToss) == false)
+			{
+				// Failing that, just shoot with the old velocity we calculated initially!
+				vecToss = m_vecSaveSpitVelocity;
+			}
+		}
+
+		// Find what our vertical theta is to estimate the time we'll impact the ground
+		Vector vecToTarget = (vTarget - vSpitPos);
+		VectorNormalize(vecToTarget);
+		QAngle angToTarget;
+		VectorAngles(vecToTarget, angToTarget);
+		float flVelocity = VectorNormalize(vecToss);
+
+		ApplyAbsVelocityImpulse(vecToss * flVelocity);
+		SetAbsAngles(angToTarget);
+		/*Vector vecEnemyPos = pEnemy->GetAbsOrigin();
 
 		float gravity = GetCurrentGravity();
 		if ( gravity <= 1 )
@@ -1180,15 +1335,15 @@ void CFastZombie::LeapAttack( void )
 		//
 		float height = ( vecEnemyPos.z - GetAbsOrigin().z );
 
-		if ( height < 16 )
+		if ( height < 128 )
 		{
-			height = 16;
+			height = 128;
 		}
-		else if ( height > 120 )
+		else if ( height > 400 )
 		{
-			height = 120;
+			height = 400;
 		}
-		float speed = sqrt( 3 * gravity * height );
+		float speed = sqrt( 4 * gravity * height );
 		float time = speed / gravity;
 
 		//
@@ -1205,7 +1360,7 @@ void CFastZombie::LeapAttack( void )
 		//
 		// Don't jump too far/fast.
 		//
-#define CLAMP 10000.0
+#define CLAMP 1000.0
 		float distance = vecJumpDir.Length();
 		if ( distance > CLAMP )
 		{
@@ -1213,7 +1368,7 @@ void CFastZombie::LeapAttack( void )
 		}
 
 		// try speeding up a bit.
-		SetAbsVelocity( vecJumpDir );
+		SetAbsVelocity( vecJumpDir );*/
 		m_flNextAttack = gpGlobals->curtime + 2;
 	}
 }
@@ -1326,11 +1481,11 @@ void CFastZombie::StartTask( const Task_t *pTask )
 
 			if( flDeltaYaw < 0 )
 			{
-				SetIdealActivity( (Activity)ACT_FASTZOMBIE_LAND_RIGHT );
+				SetIdealActivity( (Activity)ACT_LAND );
 			}
 			else
 			{
-				SetIdealActivity( (Activity)ACT_FASTZOMBIE_LAND_LEFT );
+				SetIdealActivity((Activity)ACT_LAND);
 			}
 
 
@@ -1403,12 +1558,12 @@ int CFastZombie::TranslateSchedule( int scheduleType )
 			if( !m_fHasScreamed )
 			{
 				// Only play that over-the-top attack scream once per combat state.
-				EmitSound( "NPC_FastZombie.Scream" );
+				EmitSound( "NPC_dog.Pain_2" );
 				m_fHasScreamed = true;
 			}
 			else
 			{
-				EmitSound( "NPC_FastZombie.RangeAttack" );
+				EmitSound( "NPC_dog.Playful_4" );
 			}
 
 			return SCHED_FASTZOMBIE_RANGE_ATTACK1;
@@ -1470,7 +1625,14 @@ void CFastZombie::LeapAttackTouch( CBaseEntity *pOther )
 		// Touching a trigger or something.
 		return;
 	}
-
+	if (pOther->ClassMatches("npc_fastzombie"))
+	{
+		return;
+	}
+	if (pOther->IsWorld())
+	{
+		return;
+	}
 	// Stop the zombie and knock the player back
 	Vector vecNewVelocity( 0, 0, GetAbsVelocity().z );
 	SetAbsVelocity( vecNewVelocity );
@@ -1480,7 +1642,7 @@ void CFastZombie::LeapAttackTouch( CBaseEntity *pOther )
 	forward *= 500;
 	QAngle qaPunch( 15, random->RandomInt(-5,5), random->RandomInt(-5,5) );
 	
-	ClawAttack( GetClawAttackRange(), 5, qaPunch, forward, ZOMBIE_BLOOD_BOTH_HANDS );
+	ClawAttack( GetClawAttackRange(), 0, qaPunch, forward, ZOMBIE_BLOOD_BOTH_HANDS );
 
 	SetTouch( NULL );
 }
@@ -1555,7 +1717,7 @@ void CFastZombie::BecomeTorso( const Vector &vecTorsoForce, const Vector &vecLeg
 	CapabilitiesRemove( bits_CAP_MOVE_JUMP );
 	CapabilitiesRemove( bits_CAP_MOVE_CLIMB );
 
-	ReleaseHeadcrab( EyePosition(), vecLegsForce * 0.5, true, true, true );
+	//ReleaseHeadcrab( EyePosition(), vecLegsForce * 0.5, true, true, true );
 
 	BaseClass::BecomeTorso( vecTorsoForce, vecLegsForce );
 }
@@ -1642,7 +1804,7 @@ void CFastZombie::OnChangeActivity( Activity NewActivity )
 	if ( NewActivity == ACT_FASTZOMBIE_FRENZY )
 	{
 		// Scream!!!!
-		EmitSound( "NPC_FastZombie.Frenzy" );
+		EmitSound( "NPC_dog.Growl_1" );
 		SetPlaybackRate( random->RandomFloat( .9, 1.1 ) );	
 	}
 
@@ -1658,7 +1820,9 @@ void CFastZombie::OnChangeActivity( Activity NewActivity )
 	if ( NewActivity == ACT_LAND )
 	{
 		m_flNextAttack = gpGlobals->curtime + 1.0;
-		RadiusDamage(CTakeDamageInfo(this, this, 50, DMG_SONIC), GetAbsOrigin(), 800, CLASS_NONE, NULL);
+		RadiusDamage(CTakeDamageInfo(this, this, 50, DMG_SONIC), GetAbsOrigin(), 256, CLASS_ZOMBIE, NULL);
+		DispatchParticleEffect("baddog_groundsmash", GetAbsOrigin(), GetAbsAngles(), this);
+		EmitSound("outland_ep01.Rock_Crash");
 	}
 
 	if ( NewActivity == ACT_GLIDE )

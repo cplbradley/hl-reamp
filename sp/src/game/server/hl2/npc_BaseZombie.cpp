@@ -2378,7 +2378,8 @@ bool CNPC_BaseZombie::HeadcrabFits( CBaseAnimating *pCrab )
 //-----------------------------------------------------------------------------
 void CNPC_BaseZombie::ReleaseHeadcrab( const Vector &vecOrigin, const Vector &vecVelocity, bool fRemoveHead, bool fRagdollBody, bool fRagdollCrab )
 {
-	CAI_BaseNPC		*pCrab;
+	return;
+	/*CAI_BaseNPC		*pCrab;
 	Vector vecSpot = vecOrigin;
 
 	// Until the headcrab is a bodygroup, we have to approximate the
@@ -2512,7 +2513,7 @@ void CNPC_BaseZombie::ReleaseHeadcrab( const Vector &vecOrigin, const Vector &ve
 	if( fRagdollBody )
 	{
 		BecomeRagdollOnClient( vec3_origin );
-	}
+	}*/
 }
 
 

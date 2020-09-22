@@ -27,11 +27,11 @@
 
 extern ConVar ai_debug_avoidancebounds;
 
-class CNPC_Dog : public CAI_BaseActor
+class CNPC_Dog : public CAI_BlendedNPC
 {
 public:
 	DECLARE_DATADESC();
-	DECLARE_CLASS( CNPC_Dog, CAI_BaseActor );
+	DECLARE_CLASS(CNPC_Dog, CAI_BlendedNPC);
 	Class_T Classify ( void );
 	void Spawn( void );
 	void Precache( void );
@@ -126,7 +126,7 @@ protected:
 	CHandle<CSprite> m_hGlowSprites[EFFECT_COUNT];
 	CHandle<CBeam>  m_hBeams[EFFECT_COUNT]; //This is temp.
 
-	virtual bool CreateBehaviors( void );
+	//virtual bool CreateBehaviors( void );
 	CAI_FollowBehavior		m_FollowBehavior;
 
 	bool	m_bBoneFollowersActive;
@@ -238,12 +238,12 @@ Class_T	CNPC_Dog::Classify ( void )
 	return	CLASS_PLAYER_ALLY_VITAL;
 }
 
-bool CNPC_Dog::CreateBehaviors( void )
+/*bool CNPC_Dog::CreateBehaviors( void )
 {
-	AddBehavior( &m_FollowBehavior );
+	//AddBehavior( &m_FollowBehavior );
 
 	return BaseClass::CreateBehaviors();
-}
+}*/
 
 Disposition_t CNPC_Dog::IRelationType( CBaseEntity *pTarget )
 {
@@ -471,7 +471,7 @@ void CNPC_Dog::Spawn( void )
 
 	m_takedamage		= DAMAGE_NO;
 	
-	CapabilitiesAdd( bits_CAP_MOVE_GROUND | bits_CAP_OPEN_DOORS | bits_CAP_TURN_HEAD | bits_CAP_ANIMATEDFACE );
+	CapabilitiesAdd( bits_CAP_MOVE_GROUND | bits_CAP_OPEN_DOORS | bits_CAP_TURN_HEAD | bits_CAP_ANIMATEDFACE | bits_CAP_MOVE_JUMP);
 	CapabilitiesAdd( bits_CAP_FRIENDLY_DMG_IMMUNE );
 
 	NPCInit();
@@ -524,8 +524,8 @@ int CNPC_Dog::SelectSchedule ( void )
 	if ( GetState() == NPC_STATE_SCRIPT || IsInAScript() )
 		 return BaseClass::SelectSchedule();
 
-	if ( BehaviorSelectSchedule() )
-		return BaseClass::SelectSchedule();
+	/*if ( BehaviorSelectSchedule() )
+		return BaseClass::SelectSchedule();*/
 
 	if ( m_bDoWaitforObjectBehavior == true )
 	{
@@ -1705,7 +1705,7 @@ void CNPC_Dog::InputTurnBoneFollowersOn( inputdata_t &inputdata )
 
 AI_BEGIN_CUSTOM_NPC( npc_dog, CNPC_Dog )
 
-	DECLARE_USES_SCHEDULE_PROVIDER( CAI_FollowBehavior )
+	//DECLARE_USES_SCHEDULE_PROVIDER( CAI_FollowBehavior )
 
 	DECLARE_ACTIVITY( ACT_DOG_THROW )
 	DECLARE_ACTIVITY( ACT_DOG_PICKUP )

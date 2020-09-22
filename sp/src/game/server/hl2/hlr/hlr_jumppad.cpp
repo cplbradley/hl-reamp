@@ -231,9 +231,13 @@ void CLaunchpad::TouchThink(CBaseEntity *pOther) //something touched me
 			{
 				QAngle angDir;
 				VectorAngles(vecToTarget, angDir);
-				if (pOther->GetMoveType() && pOther->GetMoveType() != MOVETYPE_FLYGRAVITY)
+				if (pOther->GetMoveType() && pOther->GetMoveType() == MOVETYPE_FLY)
 				{
 					pOther->SetMoveType(MOVETYPE_FLYGRAVITY);
+				}
+				if (pOther->IsNPC())
+				{
+					pOther->SetGroundEntity(NULL);
 				}
 				pOther->SetGravity(1.0f);
 				pOther->SetAbsVelocity(vecToss * flVelocity);

@@ -125,6 +125,8 @@ int AE_VORTIGAUNT_HEAL_STARTSOUND;
 int AE_VORTIGAUNT_SWING_SOUND;
 int AE_VORTIGAUNT_SHOOT_SOUNDSTART;
 int AE_VORTIGAUNT_HEAL_PAUSE;
+int AE_VORT_PORTALOUT;
+int AE_VORT_PORTALIN;
 
 int AE_VORTIGAUNT_START_DISPEL;	// Start the warm-up
 int AE_VORTIGAUNT_ACCEL_DISPEL;	// Indicates we're ramping up
@@ -746,7 +748,20 @@ void CNPC_Vortigaunt::HandleAnimEvent( animevent_t *pEvent )
 		EndHandGlow();
 		return;
 	}
-
+	if (pEvent->event == AE_VORT_PORTALIN)
+	{
+		Msg("portaling in\n");
+		RemoveEFlags(EF_NODRAW);
+		SetRenderMode(kRenderNone);
+		return;
+	}
+	if (pEvent->event == AE_VORT_PORTALOUT)
+	{
+		Msg("portaling out\n");
+		AddEFlags(EF_NODRAW);
+		SetRenderMode(kRenderNone);
+		return;
+	}
 	// Start our dispel effect
 	if ( pEvent->event == AE_VORTIGAUNT_START_DISPEL )
 	{
@@ -2950,6 +2965,9 @@ AI_BEGIN_CUSTOM_NPC( npc_vortigaunt, CNPC_Vortigaunt )
 	DECLARE_ANIMEVENT( AE_VORTIGAUNT_SWING_SOUND )
 	DECLARE_ANIMEVENT( AE_VORTIGAUNT_SHOOT_SOUNDSTART )
 	DECLARE_ANIMEVENT( AE_VORTIGAUNT_HEAL_PAUSE )
+
+	DECLARE_ANIMEVENT( AE_VORT_PORTALOUT)
+	DECLARE_ANIMEVENT( AE_VORT_PORTALIN)
 
 	DECLARE_ANIMEVENT( AE_VORTIGAUNT_START_DISPEL )
 	DECLARE_ANIMEVENT( AE_VORTIGAUNT_ACCEL_DISPEL )

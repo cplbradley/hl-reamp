@@ -130,7 +130,7 @@ void CNPCBadDog::InitCustomSchedules(void)
 //-----------------------------------------------------------------------------
 void CNPCBadDog::Precache(void)
 {
-	PrecacheModel("models/mymodel.mdl");
+	PrecacheModel("models/dog.mdl");
 
 	BaseClass::Precache();
 }
@@ -145,7 +145,7 @@ void CNPCBadDog::Spawn(void)
 {
 	Precache();
 
-	SetModel("models/mymodel.mdl");
+	SetModel("models/dog.mdl");
 	SetHullType(HULL_HUMAN);
 	SetHullSizeNormal();
 
@@ -172,6 +172,6 @@ void CNPCBadDog::Spawn(void)
 //-----------------------------------------------------------------------------
 Class_T	CNPCBadDog::Classify(void)
 {
-	return	CLASS_NONE;
+	return	CLASS_COMBINE;
 }
 */

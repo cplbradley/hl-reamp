@@ -434,15 +434,15 @@ void CNPC_Combine::DrawStuff(void)
 	{
 		m_pLeftEyeG->SetTransparency(kRenderGlow, 255, 190, 0, 200, kRenderFxNoDissipation);
 		m_pRightEyeG->SetTransparency(kRenderGlow, 255, 190, 0, 200, kRenderFxNoDissipation);
-		m_pLeftEyeT->SetTransparency(kRenderGlow, 255, 190, 0, 255, kRenderFxNone);
-		m_pRightEyeT->SetTransparency(kRenderGlow, 255, 190, 0, 255, kRenderFxNone);
+		m_pLeftEyeT->SetTransparency(kRenderTransAdd, 255, 190, 0, 255, kRenderFxNone);
+		m_pRightEyeT->SetTransparency(kRenderTransAdd, 255, 190, 0, 255, kRenderFxNone);
 	}
 	else
 	{
 		m_pLeftEyeG->SetTransparency(kRenderGlow, 255, 0, 0, 200, kRenderFxNoDissipation);
 		m_pRightEyeG->SetTransparency(kRenderGlow, 255, 0, 0, 200, kRenderFxNoDissipation);
-		m_pLeftEyeT->SetTransparency(kRenderGlow, 255, 0, 0, 255, kRenderFxNone);
-		m_pRightEyeT->SetTransparency(kRenderGlow, 255, 0, 0, 255, kRenderFxNone);
+		m_pLeftEyeT->SetTransparency(kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone);
+		m_pRightEyeT->SetTransparency(kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone);
 	}
 }
 //-----------------------------------------------------------------------------

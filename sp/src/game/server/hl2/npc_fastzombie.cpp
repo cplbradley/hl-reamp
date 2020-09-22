@@ -19,6 +19,8 @@
 #include "npcevent.h"
 #include "entitylist.h"
 #include "ai_task.h"
+#include "sprite.h"
+#include "spritetrail.h"
 #include "activitylist.h"
 #include "engine/IEngineSound.h"
 #include "npc_BaseZombie.h"
@@ -50,7 +52,7 @@
 #define FASTZOMBIE_MAUL_RANGE	300
 
 ConVar  sk_fastzombie_jump_speed("sk_fastzombie_jump_speed", "600", FCVAR_NONE, "Speed at which dog jumps.");
-
+ConVar	sk_baddog_health("sk_baddog_health", "1250", FCVAR_NONE, "BadDog Health");
 
 #ifdef HL2_EPISODIC
 
@@ -217,6 +219,8 @@ public:
 	void SetZombieModel( void );
 	bool CanSwatPhysicsObjects( void ) { return false; }
 
+	void DrawSprites(void);
+
 	int	TranslateSchedule( int scheduleType );
 
 	Activity NPC_TranslateActivity( Activity baseAct );
@@ -231,6 +235,8 @@ public:
 
 	void PrescheduleThink( void );
 
+	bool Sprites(void);
+
 	float InnateRange1MaxRange( void );
 	int RangeAttack1Conditions( float flDot, float flDist );
 	int MeleeAttack1Conditions( float flDot, float flDist );
@@ -238,6 +244,7 @@ public:
 	virtual float GetClawAttackRange() const { return 50; }
 
 	bool ShouldPlayFootstepMoan( void ) { return false; }
+	Class_T	Classify(void) { return CLASS_COMBINE_HUNTER; }
 
 	void HandleAnimEvent( animevent_t *pEvent );
 
@@ -263,6 +270,10 @@ public:
 	bool ShouldBecomeTorso( const CTakeDamageInfo &info, float flDamageThreshold );
 
 	virtual Vector GetAutoAimCenter() { return WorldSpaceCenter() - Vector( 0, 0, 12.0f ); }
+
+	CHandle<CSprite> m_pEyesprite;
+	CHandle<CSpriteTrail> m_pEyetrail;
+	CHandle<CSpriteTrail> m_pGlowTrail[2];
 
 	void PainSound( const CTakeDamageInfo &info );
 	void DeathSound( const CTakeDamageInfo &info ); 
@@ -408,6 +419,9 @@ void CFastZombie::Precache( void )
 	PrecacheParticleSystem("baddog_groundsmash");
 	PrecacheScriptSound("outland_ep01.Rock_Crash");
 
+	PrecacheMaterial("sprites/blueflare1.vmt");
+	PrecacheMaterial("sprites/smoke.vmt");
+
 	PrecacheScriptSound( "NPC_dog.Playful_4" );
 	PrecacheScriptSound( "NPC_FastZombie.FootstepRight" );
 	PrecacheScriptSound( "NPC_FastZombie.FootstepLeft" );
@@ -433,6 +447,61 @@ void CFastZombie::Precache( void )
 	BaseClass::Precache();
 }
 
+void CFastZombie::DrawSprites(void)
+{
+	m_pEyesprite = CSprite::SpriteCreate("sprites/blueflare1.vmt", GetLocalOrigin(), false);
+	m_pEyetrail = CSpriteTrail::SpriteTrailCreate("sprites/smoke.vmt", GetLocalOrigin(), false);
+
+	int	nAttachment = LookupAttachment("eyes");
+
+	if (m_pEyesprite != NULL)
+	{
+		m_pEyesprite->FollowEntity(this);
+		m_pEyesprite->SetAttachment(this, nAttachment);
+		m_pEyesprite->SetTransparency(kRenderGlow, 255, 128, 0, 200, kRenderFxNoDissipation);
+		m_pEyesprite->SetScale(0.4f);
+		m_pEyesprite->SetGlowProxySize(4.0f);
+	}
+	if (m_pEyetrail != NULL)
+	{
+		m_pEyetrail->FollowEntity(this);
+		m_pEyetrail->SetAttachment(this, nAttachment);
+		m_pEyetrail->SetTransparency(kRenderTransAdd, 255, 128, 0, 200, kRenderFxNone);
+		m_pEyetrail->SetStartWidth(8.0f);
+		m_pEyetrail->SetEndWidth(1.0f);
+		m_pEyetrail->SetLifeTime(0.4f);
+	}
+
+
+	for (int i = 0; i < 2; i++)
+	{
+		int	nAttachments;
+		m_pGlowTrail[i] = CSpriteTrail::SpriteTrailCreate("sprites/smoke.vmt", GetLocalOrigin(), false);
+		if (!m_pGlowTrail[i])
+			continue;
+		if (i == 0)
+		{
+			nAttachments = LookupAttachment("bigPhys_attachment");
+			m_pGlowTrail[i]->FollowEntity(this);
+			m_pGlowTrail[i]->SetAttachment(this, nAttachments);
+			m_pGlowTrail[i]->SetTransparency(kRenderTransAdd, 255, 255, 255, 150, kRenderFxNone);
+			m_pGlowTrail[i]->SetStartWidth(16.0f);
+			m_pGlowTrail[i]->SetEndWidth(1.0f);
+			m_pGlowTrail[i]->SetLifeTime(0.1f);
+		}
+		if (i == 1)
+		{
+			nAttachments = LookupAttachment("pinky");
+			m_pGlowTrail[i]->FollowEntity(this);
+			m_pGlowTrail[i]->SetAttachment(this, nAttachments);
+			m_pGlowTrail[i]->SetTransparency(kRenderTransAdd, 255, 255, 255, 150, kRenderFxNone);
+			m_pGlowTrail[i]->SetStartWidth(16.0f);
+			m_pGlowTrail[i]->SetEndWidth(1.0f);
+			m_pGlowTrail[i]->SetLifeTime(0.1f);
+		}
+
+	}
+}
 //---------------------------------------------------------
 //---------------------------------------------------------
 void CFastZombie::OnScheduleChange( void )
@@ -679,7 +748,7 @@ void CFastZombie::Spawn( void )
 	SetBloodColor( BLOOD_COLOR_YELLOW );
 #endif // HL2_EPISODIC
 
-	m_iHealth			= 900;
+	m_iHealth = sk_baddog_health.GetFloat();
 	//m_flFieldOfView		= 0.2;
 
 	CapabilitiesClear();
@@ -710,6 +779,7 @@ void CFastZombie::PostNPCInit( void )
 	SoundInit();
 	SetGravity(2.0f);
 	m_flTimeUpdateSound = gpGlobals->curtime;
+	DrawSprites();
 }
 
 //-----------------------------------------------------------------------------
@@ -1320,6 +1390,8 @@ void CFastZombie::LeapAttack( void )
 		VectorAngles(vecToTarget, angToTarget);
 		float flVelocity = VectorNormalize(vecToss);
 
+		angToTarget[PITCH] = 0;
+		angToTarget[ROLL] = 0;
 		ApplyAbsVelocityImpulse(vecToss * flVelocity);
 		SetAbsAngles(angToTarget);
 		/*Vector vecEnemyPos = pEnemy->GetAbsOrigin();
@@ -1820,7 +1892,7 @@ void CFastZombie::OnChangeActivity( Activity NewActivity )
 	if ( NewActivity == ACT_LAND )
 	{
 		m_flNextAttack = gpGlobals->curtime + 1.0;
-		RadiusDamage(CTakeDamageInfo(this, this, 50, DMG_SONIC), GetAbsOrigin(), 256, CLASS_ZOMBIE, NULL);
+		RadiusDamage(CTakeDamageInfo(this, this, 50, DMG_SONIC), GetAbsOrigin(), 180, CLASS_COMBINE_HUNTER, NULL);
 		DispatchParticleEffect("baddog_groundsmash", GetAbsOrigin(), GetAbsAngles(), this);
 		EmitSound("outland_ep01.Rock_Crash");
 	}
@@ -2009,6 +2081,10 @@ void CFastZombie::Event_Killed( const CTakeDamageInfo &info )
 
 	}
 #endif
+	if (m_pEyesprite)
+	{
+		UTIL_Remove(m_pEyesprite);
+	}
 
 	BaseClass::Event_Killed( dInfo );
 }
@@ -2236,7 +2312,7 @@ AI_BEGIN_CUSTOM_NPC( npc_fastzombie, CFastZombie )
 		"		TASK_PLAY_SEQUENCE				ACTIVITY:ACT_RANGE_ATTACK1"
 		"		TASK_SET_ACTIVITY				ACTIVITY:ACT_FASTZOMBIE_LEAP_STRIKE"
 		"		TASK_RANGE_ATTACK1				0"
-		"		TASK_WAIT						0.1"
+		"		TASK_WAIT						0"
 		"		TASK_FASTZOMBIE_LAND_RECOVER	0" // essentially just figure out which way to turn.
 		"		TASK_FACE_ENEMY					0"
 		"	"

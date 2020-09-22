@@ -74,18 +74,18 @@ ConVar  physcannon_mega_enabled( "physcannon_mega_enabled", "0", FCVAR_CHEAT | F
 ConVar	sv_robust_explosions( "sv_robust_explosions","1", FCVAR_REPLICATED );
 
 // Damage scale for damage inflicted by the player on each skill level.
-ConVar	sk_dmg_inflict_scale1( "sk_dmg_inflict_scale1", "1.25", FCVAR_REPLICATED );
+ConVar	sk_dmg_inflict_scale1( "sk_dmg_inflict_scale1", "1.2", FCVAR_REPLICATED );
 ConVar	sk_dmg_inflict_scale2( "sk_dmg_inflict_scale2", "1.00", FCVAR_REPLICATED );
-ConVar	sk_dmg_inflict_scale3( "sk_dmg_inflict_scale3", "0.9", FCVAR_REPLICATED );
+ConVar	sk_dmg_inflict_scale3( "sk_dmg_inflict_scale3", "1.0", FCVAR_REPLICATED );
 //ConVar	sk_dmg_quaddamage_scale( "sk_dmg_quaddamage_scale", "4.0", FCVAR_REPLICATED );
 
 // Damage scale for damage taken by the player on each skill level.
-ConVar	sk_dmg_take_scale1( "sk_dmg_take_scale1", "0.50", FCVAR_REPLICATED );
+ConVar	sk_dmg_take_scale1( "sk_dmg_take_scale1", "0.70", FCVAR_REPLICATED );
 ConVar	sk_dmg_take_scale2( "sk_dmg_take_scale2", "1.00", FCVAR_REPLICATED );
 #ifdef HL2_EPISODIC
 	ConVar	sk_dmg_take_scale3( "sk_dmg_take_scale3", "2.0", FCVAR_REPLICATED );
 #else
-	ConVar	sk_dmg_take_scale3( "sk_dmg_take_scale3", "1.50", FCVAR_REPLICATED );
+	ConVar	sk_dmg_take_scale3( "sk_dmg_take_scale3", "1.2", FCVAR_REPLICATED );
 #endif//HL2_EPISODIC
 ConVar sk_quaddmg_scale("sk_quaddmg_scale", "1.0", FCVAR_REPLICATED);
 ConVar	sk_allow_autoaim( "sk_allow_autoaim", "1", FCVAR_REPLICATED | FCVAR_ARCHIVE_XBOX );

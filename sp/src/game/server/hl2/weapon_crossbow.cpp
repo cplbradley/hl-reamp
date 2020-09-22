@@ -449,7 +449,7 @@ void CCrossbowBolt::BubbleThink( void )
 
 void CCrossbowBolt::ExplodeThink(void)
 {
-	ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), 200, 200,
+	ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), 100, 200,
 		SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NOSMOKE, 0.0f, this);
 	UTIL_Remove(this);
 }

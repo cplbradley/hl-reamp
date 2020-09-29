@@ -295,6 +295,7 @@ public:
 	virtual bool		IsUnreachable(CBaseEntity* pEntity);			// Is entity is unreachable?
 
 	virtual bool GetSpitVector(const Vector &vecStartPos, const Vector &vecTarget, Vector *vecOut);
+	virtual bool GetMissileVector(const Vector &vecStartPos, const Vector &vecTarget, Vector *vecOut);
 
 	virtual float	MaxYawSpeed(void);
 	virtual bool	OverrideMove(float flInterval);
@@ -342,6 +343,9 @@ private:
 	bool	HandleChargeImpact(Vector vecImpact, CBaseEntity *pEntity);
 	bool	ShouldCharge(const Vector &startPos, const Vector &endPos, bool useTime, bool bCheckForCancel);
 	bool	ShouldWatchEnemy(void);
+
+	float	m_fNextBombard;
+	float	m_fNextFireball;
 
 	void	ImpactShock(const Vector &origin, float radius, float magnitude, CBaseEntity *pIgnored = NULL);
 	void	BuildScheduleTestBits(void);
@@ -396,7 +400,6 @@ private:
 
 	CUtlVectorFixed<EHANDLE, MAX_FAILED_PHYSOBJECTS>		m_FailedPhysicsTargets;
 
-	EHANDLE			m_hLaserDotP;
 
 	CHandle< CParticleSystem >	m_hSpitEffect;
 
@@ -739,6 +742,8 @@ void CNPC_AntlionWarrior::Precache(void)
 	PrecacheParticleSystem("blood_antlionguard_injured_heavy");
 	PrecacheParticleSystem("antlionwarrior_burn");
 
+	UTIL_PrecacheOther("rpg_missile");
+
 	BaseClass::Precache();
 }
 
@@ -822,9 +827,6 @@ void CNPC_AntlionWarrior::Spawn(void)
 	SetDefaultEyeOffset();
 
 
-	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-	m_hLaserDotP = CreateLaserDot(GetAbsOrigin(), this, true);
-	SetLaserDotTarget(m_hLaserDotP, pPlayer);
 	m_hSpitEffect = (CParticleSystem *)CreateEntityByName("info_particle_system");
 
 	SetSolid(SOLID_BBOX);
@@ -837,6 +839,9 @@ void CNPC_AntlionWarrior::Spawn(void)
 	m_iHealth = sk_antlionwarrior_health.GetFloat();
 	m_iMaxHealth = m_iHealth;
 	m_flFieldOfView = ANTLIONWARRIOR_FOV_NORMAL;
+
+	m_fNextBombard = gpGlobals->curtime + 20.0f;
+	m_fNextFireball = gpGlobals->curtime + 15.0f;
 
 	m_flPhysicsCheckTime = 0;
 	m_flChargeTime = 0;
@@ -861,9 +866,7 @@ void CNPC_AntlionWarrior::Spawn(void)
 	m_HackedGunPos.z = 30;
 
 	CapabilitiesClear();
-	CapabilitiesAdd(bits_CAP_INNATE_RANGE_ATTACK1);
-	CapabilitiesAdd(bits_CAP_INNATE_RANGE_ATTACK2);
-	CapabilitiesAdd(bits_CAP_MOVE_GROUND | bits_CAP_INNATE_MELEE_ATTACK1 | bits_CAP_SQUAD);
+	CapabilitiesAdd(bits_CAP_MOVE_GROUND | bits_CAP_INNATE_MELEE_ATTACK1 | bits_CAP_SQUAD | bits_CAP_INNATE_RANGE_ATTACK2 | bits_CAP_INNATE_RANGE_ATTACK1);
 	CapabilitiesAdd(bits_CAP_SKIP_NAV_GROUND_CHECK);
 	CapabilitiesAdd(bits_CAP_MOVE_JUMP);
 
@@ -1024,7 +1027,7 @@ int CNPC_AntlionWarrior::SelectUnreachableSchedule(void)
 		if (m_flNextRoarTime < gpGlobals->curtime)
 		{
 			m_flNextRoarTime = gpGlobals->curtime + RandomFloat(20, 40);
-			return SCHED_ANTLIONWARRIOR_ROAR;
+			return SCHED_RANGE_ATTACK2;
 		}
 
 		// If we're under attack, then let's leave for a bit
@@ -1106,7 +1109,25 @@ int CNPC_AntlionWarrior::SelectCombatSchedule(void)
 	{
 		// Don't let other squad members charge while we're doing it
 		OccupyStrategySlot(SQUAD_SLOT_ANTLIONWARRIOR_CHARGE);
-		return SCHED_ANTLIONWARRIOR_CHARGE;
+		if (gpGlobals->curtime > m_fNextBombard)
+		{
+			m_fNextBombard = gpGlobals->curtime + RandomFloat(20, 30);
+			return SCHED_ANTLIONWARRIOR_RANGE_ATTACK2;
+		}
+		if (gpGlobals->curtime > m_fNextFireball)
+		{
+			m_fNextFireball = gpGlobals->curtime + RandomFloat(10, 15);
+			return SCHED_ANTLIONWARRIOR_RANGE_ATTACK1;
+		}
+		/*float distance = UTIL_DistApprox2D(GetEnemy()->GetAbsOrigin(), GetAbsOrigin());
+
+		// Must be within our tolerance range
+		if (distance < 256)
+			return SCHED_ANTLIONWARRIOR_CHARGE_TARGET;
+		if (distance > 1024)
+			return SCHED_ANTLIONWARRIOR_RANGE_ATTACK1;*/
+
+		return SCHED_ANTLIONWARRIOR_CHARGE_TARGET;
 	}
 
 	return BaseClass::SelectSchedule();
@@ -1285,19 +1306,6 @@ int CNPC_AntlionWarrior::SelectSchedule(void)
 			if (ShouldCharge(GetAbsOrigin(), GetEnemy()->GetAbsOrigin(), false, false) == false)
 				return SCHED_ANTLIONWARRIOR_FIND_CHARGE_POSITION;
 
-			int i = RandomInt(1, 3);
-			switch (i)
-			{
-			case 1:
-				return SCHED_ANTLIONWARRIOR_RANGE_ATTACK1;
-			case 2:
-				return SCHED_ANTLIONWARRIOR_RANGE_ATTACK2;
-			case 3:
-				return SCHED_ANTLIONWARRIOR_CHARGE_TARGET;
-			}
-
-
-			
 		}
 	}
 
@@ -1653,6 +1661,81 @@ Vector CheckThrowTolerance(CBaseEntity *pEdict, const Vector &vecSpot1, Vector v
 
 	return vecGrenadeVel;
 }
+Vector CheckMissileTolerance(CBaseEntity *pEdict, const Vector &vecSpot1, Vector vecSpot2, float flSpeed, float flTolerance)
+{
+	flSpeed = MAX(1.0f, flSpeed);
+
+	float flGravity = GetCurrentGravity() * 1.5;
+
+	Vector vecGrenadeVel = (vecSpot2 - vecSpot1);
+
+	// throw at a constant time
+	float time = vecGrenadeVel.Length() / flSpeed;
+	vecGrenadeVel = vecGrenadeVel * (1.0 / time);
+
+	// adjust upward toss to compensate for gravity loss
+	vecGrenadeVel.z += flGravity * time * 0.5;
+
+	Vector vecApex = vecSpot1 + (vecSpot2 - vecSpot1) * 0.5;
+	vecApex.z += 0.5 * flGravity * (time * 0.5) * (time * 0.5);
+
+
+	trace_t tr;
+	UTIL_TraceLine(vecSpot1, vecApex, MASK_SOLID, pEdict, COLLISION_GROUP_NONE, &tr);
+	if (tr.fraction != 1.0)
+	{
+		// fail!
+		/*if (g_debug_antlion_worker.GetBool())
+		{
+		NDebugOverlay::Line(vecSpot1, vecApex, 255, 0, 0, true, 5.0);
+		}*/
+
+		return vec3_origin;
+	}
+
+	/*if (g_debug_antlion_worker.GetBool())
+	{
+	NDebugOverlay::Line(vecSpot1, vecApex, 0, 255, 0, true, 5.0);
+	}*/
+
+	UTIL_TraceLine(vecApex, vecSpot2, MASK_SOLID_BRUSHONLY, pEdict, COLLISION_GROUP_NONE, &tr);
+	if (tr.fraction != 1.0)
+	{
+		bool bFail = true;
+
+		// Didn't make it all the way there, but check if we're within our tolerance range
+		if (flTolerance > 0.0f)
+		{
+			float flNearness = (tr.endpos - vecSpot2).LengthSqr();
+			if (flNearness < Square(flTolerance))
+			{
+				/*if (g_debug_antlion_worker.GetBool())
+				{
+				NDebugOverlay::Sphere(tr.endpos, vec3_angle, flTolerance, 0, 255, 0, 0, true, 5.0);
+				}
+				*/
+				bFail = false;
+			}
+		}
+
+		if (bFail)
+		{
+			/*	if (g_debug_antlion_worker.GetBool())
+			{
+			NDebugOverlay::Line(vecApex, vecSpot2, 255, 0, 0, true, 5.0);
+			NDebugOverlay::Sphere(tr.endpos, vec3_angle, flTolerance, 255, 0, 0, 0, true, 5.0);
+			}*/
+			return vec3_origin;
+		}
+	}
+
+	/*if (g_debug_antlion_worker.GetBool())
+	{
+	NDebugOverlay::Line(vecApex, vecSpot2, 0, 255, 0, true, 5.0);
+	}*/
+
+	return vecGrenadeVel;
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -1852,6 +1935,33 @@ bool CNPC_AntlionWarrior::GetSpitVector(const Vector &vecStartPos, const Vector 
 	//return false;
 	//#endif
 }
+bool CNPC_AntlionWarrior::GetMissileVector(const Vector &vecStartPos, const Vector &vecTarget, Vector *vecOut)
+{
+	// antlion workers exist only in episodic.
+	float adjustedspd = g_pGameRules->AdjustProjectileSpeed(sk_antlion_warrior_spit_speed.GetFloat());
+	//#if HL2_EPISODIC
+	// Try the most direct route
+	Vector vecToss = CheckMissileTolerance(this, vecStartPos, vecTarget, adjustedspd, (10.0f*12.0f));
+
+	// If this failed then try a little faster (flattens the arc)
+	if (vecToss == vec3_origin)
+	{
+		vecToss = CheckMissileTolerance(this, vecStartPos, vecTarget, adjustedspd * 1.5f, (10.0f*12.0f));
+		if (vecToss == vec3_origin)
+			return false;
+	}
+
+	// Save out the result
+	if (vecOut)
+	{
+		*vecOut = vecToss;
+	}
+
+	return true;
+	//else
+	//return false;
+	//#endif
+}
 //
 //	FIXME: Create this in a better fashion!
 //
@@ -1887,8 +1997,8 @@ void CNPC_AntlionWarrior::HandleAnimEvent(animevent_t *pEvent)
 	{
 		if (GetEnemy())
 		{
+			
 			Vector vSpitPos = EyePosition();
-
 			Vector	vTarget;
 
 			// If our enemy is looking at us and far enough away, lead him
@@ -1908,6 +2018,7 @@ void CNPC_AntlionWarrior::HandleAnimEvent(animevent_t *pEvent)
 
 			// Try and spit at our target
 			Vector	vecToss;
+
 			if (GetSpitVector(vSpitPos, vTarget, &vecToss) == false)
 			{
 				// Now try where they were
@@ -1922,14 +2033,10 @@ void CNPC_AntlionWarrior::HandleAnimEvent(animevent_t *pEvent)
 			Vector vecToTarget = (vTarget - vSpitPos);
 			VectorNormalize(vecToTarget);
 			float flVelocity = VectorNormalize(vecToss);
-			float flCosTheta = DotProduct(vecToTarget, vecToss);
-			float flTime = (vSpitPos - vTarget).Length2D() / (flVelocity * flCosTheta);
 
 			// Emit a sound where this is going to hit so that targets get a chance to act correctly
-			CSoundEnt::InsertSound(SOUND_DANGER, vTarget, (15 * 12), flTime, this);
-
 			// Don't fire again until this volley would have hit the ground (with some lag behind it)
-			SetNextAttack(gpGlobals->curtime + flTime + random->RandomFloat(0.5f, 2.0f));
+			//SetNextAttack(gpGlobals->curtime + flTime + random->RandomFloat(0.5f, 2.0f));
 
 			// Tell any squadmates not to fire for some portion of the time this volley will be in the air (except on hard)
 			/*if (g_pGameRules->IsSkillLevel(SKILL_HARD) == false)
@@ -1966,16 +2073,6 @@ void CNPC_AntlionWarrior::HandleAnimEvent(animevent_t *pEvent)
 			{
 			DispatchParticleEffect( "blood_impact_yellow_01", vSpitPos + RandomVector( -12.0f, 12.0f ), RandomAngle( 0, 360 ) );
 			}*/
-
-			EmitSound("NPC_Antlion.PoisonShoot");
-			Vector vecVelocity;
-			Vector vecDir = Vector(0, 0, 1);
-			VectorMultiply(vecDir, 800, vecVelocity);
-
-			QAngle angles;
-			VectorAngles(vecDir, angles);
-			CAPCMissile *pRocket = (CAPCMissile *)CAPCMissile::Create(GetAbsOrigin(), angles, vecVelocity, this);
-			pRocket->IgniteDelay();
 		}
 		return;
 	}
@@ -1983,11 +2080,53 @@ void CNPC_AntlionWarrior::HandleAnimEvent(animevent_t *pEvent)
 	{
 		if (GetEnemy())
 		{
-			/*CAPCMissile *pRocket = (CAPCMissile *)CAPCMissile::Create(GetAbsVelocity(), GetAbsAngles(), , this);
-			pRocket->IgniteDelay();
-			CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-			pRocket->IgniteDelay();
-			pRocket->AimAtSpecificTarget(pPlayer);*/
+			Vector vSpitPos = EyePosition();
+			Vector	vTarget;
+
+			// If our enemy is looking at us and far enough away, lead him
+			//if (HasCondition(COND_ENEMY_FACING_ME) && UTIL_DistApprox(GetAbsOrigin(), GetEnemy()->GetAbsOrigin()) > (40 * 12))
+			if (HasCondition(COND_ENEMY_FACING_ME))
+			{
+				UTIL_PredictedPosition(GetEnemy(), 0.5f, &vTarget);
+				vTarget.z = GetEnemy()->GetAbsOrigin().z;
+			}
+			else
+			{
+				// Otherwise he can't see us and he won't be able to dodge
+				vTarget = GetEnemy()->BodyTarget(vSpitPos, true);
+			}
+
+			vTarget[2] += random->RandomFloat(0.0f, 32.0f);
+
+			// Try and spit at our target
+			Vector	vecToss;
+
+			if (GetMissileVector(vSpitPos, vTarget, &vecToss) == false)
+			{
+				// Now try where they were
+				if (GetMissileVector(vSpitPos, m_vSavePosition, &vecToss) == false)
+				{
+					// Failing that, just shoot with the old velocity we calculated initially!
+					vecToss = m_vecSaveSpitVelocity;
+				}
+			}
+
+			// Find what our vertical theta is to estimate the time we'll impact the ground
+			Vector vecToTarget = (vTarget - vSpitPos);
+			VectorNormalize(vecToTarget);
+			float flVelocity = VectorNormalize(vecToss);
+			QAngle angToss;
+			VectorAngles(vecToss, angToss);
+			CMissile *pRocket = (CMissile *)CreateEntityByName("rpg_missile");
+			pRocket->Spawn();
+			pRocket->IgniteThink();
+			pRocket->SetOwnerEntity(this);
+			UTIL_SetOrigin(pRocket, vSpitPos + Vector(0,0,64));
+			pRocket->SetMoveType(MOVETYPE_FLYGRAVITY);
+			pRocket->SetGravity(1.5);
+			pRocket->ActiveSteerMode();
+			pRocket->SetAbsVelocity(vecToss * flVelocity);
+			
 		}
 		return;
 	}
@@ -3219,19 +3358,6 @@ void CNPC_AntlionWarrior::RunTask(const Task_t *pTask)
 
 		break;
 
-		/*
-		case TASK_RUN_PATH:
-		{
-
-
-		}
-		break;
-		*/
-	/*case TASK_RANGE_ATTACK2:
-	{
-		BaseClass::RunTask(pTask);
-		break;
-	}*/
 	case TASK_ANTLIONWARRIOR_CHARGE:
 	{
 		Activity eActivity = GetActivity();
@@ -3869,8 +3995,8 @@ void CNPC_AntlionWarrior::PrescheduleThink(void)
 
 	UpdateHead();
 
-	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-	SetLaserDotTarget(m_hLaserDotP, pPlayer);
+	//CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+
 
 	if ((m_flGroundSpeed <= 0.0f))
 	{
@@ -4998,6 +5124,7 @@ DECLARE_ANIMEVENT(AE_ANTLIONWARRIOR_VOICE_GRUNT)
 DECLARE_ANIMEVENT(AE_ANTLIONWARRIOR_BURROW_OUT)
 DECLARE_ANIMEVENT(AE_ANTLIONWARRIOR_VOICE_ROAR)
 DECLARE_ANIMEVENT(AE_ANTLIONWARRIOR_SPIT)
+DECLARE_ANIMEVENT(AE_ANTLIONWARRIOR_FIRE_ROCKET);
 
 DECLARE_CONDITION(COND_ANTLIONWARRIOR_PHYSICS_TARGET)
 DECLARE_CONDITION(COND_ANTLIONWARRIOR_PHYSICS_TARGET_INVALID)
@@ -5092,10 +5219,7 @@ SCHED_ANTLIONWARRIOR_RANGE_ATTACK2,
 "	Tasks"
 "		TASK_STOP_MOVING					0"
 "		TASK_FACE_ENEMY						0"
-"		TASK_ENABLE_LAUNCHER				0"
-"		TASK_PLAY_SEQUENCE					ACTIVITY : ACT_RANGE_ATTACK2"
 "		TASK_RANGE_ATTACK2					0"
-"		TASK_DISABLE_LAUNCHER				0"
 ""
 "	Interrupts"
 "		COND_TASK_FAILED"

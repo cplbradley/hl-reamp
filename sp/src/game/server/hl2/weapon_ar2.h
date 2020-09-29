@@ -61,7 +61,7 @@ public:
 	{
 		static Vector cone;
 		
-		cone = VECTOR_CONE_5DEGREES;
+		cone = VECTOR_CONE_0DEGREES;
 
 		return cone;
 	}

@@ -63,6 +63,8 @@ public:
 
 	void	UpdatePenaltyTime(void);
 
+	const char *GetTracerType(void) { return "PistolTracer"; }
+
 	int		CapabilitiesGet(void) { return bits_CAP_WEAPON_RANGE_ATTACK1; }
 	Activity	GetPrimaryAttackActivity(void);
 
@@ -77,22 +79,8 @@ public:
 
 		static Vector cone;
 
-		if (pistol_use_new_accuracy.GetBool())
-		{
-			float ramp = RemapValClamped(m_flAccuracyPenalty,
-				0.0f,
-				PISTOL_ACCURACY_MAXIMUM_PENALTY_TIME,
-				0.0f,
-				1.0f);
-
-			// We lerp from very accurate to inaccurate over time
-			VectorLerp(VECTOR_CONE_1DEGREES, VECTOR_CONE_6DEGREES, ramp, cone);
-		}
-		else
-		{
-			// Old value
-			cone = VECTOR_CONE_4DEGREES;
-		}
+		
+		cone = VECTOR_CONE_1DEGREES;
 
 		return cone;
 	}
@@ -185,6 +173,7 @@ CWeaponPistol::CWeaponPistol(void)
 void CWeaponPistol::Precache(void)
 {
 	PrecacheParticleSystem("pistol_pew");
+	PrecacheParticleSystem("pistol_core");
 	UTIL_PrecacheOther("hlr_pistolprojectile");
 	BaseClass::Precache();
 }
@@ -331,10 +320,15 @@ void CWeaponPistol::FireProjectile(void)
 	Vector vecAbsEnd = vecAbsStart + (vecDir * MAX_TRACE_LENGTH);
 	UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_ALL, pPlayer, COLLISION_GROUP_NONE, &tr);
 	Vector vecShotDir = (tr.endpos - vecSrc).Normalized();
+	/*pPlayer->FireBullets(1, vecSrc, vecShotDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false);
+	int iAttachment = LookupAttachment("muzzle");
+	DispatchParticleEffect("pistol_core", tr.endpos, GetAbsAngles(), this);
+	DispatchParticleEffect("pistol_pew", PATTACH_POINT_FOLLOW, pPlayer->GetViewModel(), iAttachment, true);*/
 	CHLRPistolProjectile *pPew = (CHLRPistolProjectile*)CreateEntityByName("hlr_pistolprojectile");
 	pPew->Spawn();
 	UTIL_SetOrigin(pPew, vecSrc);
-	pPew->SetAbsVelocity(vecShotDir * 3000.0f);
+	//pPew->SetAbsVelocity(vecShotDir * 3000.0f);
+	pPew->SetTargetPos(tr.endpos, 8000.0f);
 	pPew->SetOwnerEntity(pPlayer);
 	pPew->SetLocalAngles(QAngle(random->RandomFloat(-250, -500),
 		random->RandomFloat(-250, -500),

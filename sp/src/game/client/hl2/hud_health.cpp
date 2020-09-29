@@ -51,10 +51,12 @@ public:
 	virtual void OnThink();
 			void MsgFunc_Damage( bf_read &msg );
 
+	virtual void Paint(void);
+
 private:
 	// old variables
 	int		m_iHealth;
-	
+	CHudTexture *m_iconHealth;
 	int		m_bitsDamage;
 };	
 
@@ -86,6 +88,8 @@ void CHudHealth::Reset()
 	m_iHealth		= INIT_HEALTH;
 	m_bitsDamage	= 0;
 
+	m_iconHealth = gHUD.GetIcon("hud_health_icon");
+
 	wchar_t *tempString = g_pVGuiLocalize->Find("#Valve_Hud_HEALTH");
 
 	if (tempString)
@@ -105,6 +109,8 @@ void CHudHealth::Reset()
 void CHudHealth::VidInit()
 {
 	Reset();
+	SetPaintEnabled(true);
+	m_iconHealth = gHUD.GetIcon("hud_health_icon");
 }
 
 //-----------------------------------------------------------------------------
@@ -125,7 +131,6 @@ void CHudHealth::OnThink()
 	{
 		return;
 	}
-
 	m_iHealth = newHealth;
 
 	if ( m_iHealth >= 20 )
@@ -167,4 +172,19 @@ void CHudHealth::MsgFunc_Damage( bf_read &msg )
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("HealthDamageTaken");
 		}
 	}
+}
+void CHudHealth::Paint(void)
+{
+	int nLabelHeight;
+	int nLabelWidth;
+
+	surface()->GetTextSize(m_hTextFont, m_LabelText, nLabelWidth, nLabelHeight);
+
+	// Figure out where we're going to put this
+	int x = text_xpos + (nLabelWidth - m_iconHealth->Width()) / 2;
+	int y = text_ypos - (nLabelHeight + (m_iconHealth->Height() / 2));
+
+	m_iconHealth->DrawSelf(x, y, GetFgColor());
+
+	BaseClass::Paint();
 }

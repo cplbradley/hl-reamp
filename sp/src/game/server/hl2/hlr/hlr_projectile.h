@@ -34,8 +34,13 @@ public:
 	void Precache(void);
 	void Touch(CBaseEntity *pOther);
 	void KillIt(void);
+	void TargetTrackThink(void);
+	void SetTargetPos(const Vector &vecTargetpos, const float &fVelocity);
 	bool CreateVPhysics(void);
 	unsigned int PhysicsSolidMaskForEntity() const;
+
+	Vector vecTarget;
+	float flVelocity;
 
 	static CHLRPistolProjectile *Create(const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner = NULL);
 	CHandle<CSpriteTrail>	m_pGlowTrail;

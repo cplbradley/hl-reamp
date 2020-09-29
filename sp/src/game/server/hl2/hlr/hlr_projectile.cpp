@@ -139,6 +139,7 @@ DEFINE_FUNCTION(Touch),
 DEFINE_FUNCTION(CreateTrail),
 DEFINE_FUNCTION(DrawSprite),
 DEFINE_THINKFUNC(KillIt),
+DEFINE_THINKFUNC(TargetTrackThink),
 END_DATADESC()
 CHLRPistolProjectile *CHLRPistolProjectile::Create(const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner)
 {
@@ -169,7 +170,7 @@ void CHLRPistolProjectile::Spawn(void)
 	SetMoveType(MOVETYPE_FLY, MOVECOLLIDE_FLY_CUSTOM);
 	UTIL_SetSize(this, -Vector(10.0f, 10.0f, 1.0f), Vector(10.0f, 10.0f, 10.0f));
 	SetSolid(SOLID_BBOX);
-	AddSolidFlags(FSOLID_NOT_SOLID | FSOLID_TRIGGER);
+	AddSolidFlags(FSOLID_NOT_SOLID || FSOLID_TRIGGER);
 	SetModel("models/spitball_small.mdl");
 	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 	//SetSolidFlags(FSOLID_TRIGGER);
@@ -211,6 +212,21 @@ bool CHLRPistolProjectile::DrawSprite(void)
 	}
 	return true;
 }
+void CHLRPistolProjectile::SetTargetPos(const Vector &vecTargetPos, const float &fVelocity)
+{
+	vecTarget = vecTargetPos;
+	flVelocity = fVelocity;
+	SetThink(&CHLRPistolProjectile::TargetTrackThink);
+	SetNextThink(gpGlobals->curtime);
+
+}
+void CHLRPistolProjectile::TargetTrackThink(void)
+{
+	Vector vecDir = (vecTarget - GetAbsOrigin());
+	VectorNormalize(vecDir);
+	SetAbsVelocity(vecDir * flVelocity);
+	//SetNextThink(gpGlobals->curtime + 0.01f);
+}
 void CHLRPistolProjectile::Touch(CBaseEntity *pOther) //i touched something
 {
 	if (GetOwnerEntity() && GetOwnerEntity()->IsNPC() && pOther->IsNPC())
@@ -236,9 +252,10 @@ void CHLRPistolProjectile::Touch(CBaseEntity *pOther) //i touched something
 			return;
 		}
 		//DispatchParticleEffect("smg_plasmaball_core", GetAbsOrigin(), GetAbsAngles(), this); //poof effect!
-		
+		SetAbsVelocity(Vector(0, 0, 0));
 		if (pOther->m_takedamage != DAMAGE_NO) //can what i hit take damage?
 		{
+			SetThink(NULL);
 			trace_t	tr; //initialize a trace
 			tr = BaseClass::GetTouchTrace(); //assing the trace information from the touch
 			Vector	vecNormalizedVel = GetAbsVelocity(); //save the current velocity for use later
@@ -268,12 +285,13 @@ void CHLRPistolProjectile::Touch(CBaseEntity *pOther) //i touched something
 		UTIL_DecalTrace(pNewTrace, "FadingScorch");
 		SetThink(&CHLRPistolProjectile::KillIt); //schedule remove command
 		SetTouch(NULL);
+		RemoveDeferred();
 		SetNextThink(gpGlobals->curtime + 0.01f); //execute remove command after 0.01 seconds
 	}
 }
 void CHLRPistolProjectile::KillIt(void)
 {
-	RemoveDeferred();
+	UTIL_RemoveImmediate(this);
 }
 
 LINK_ENTITY_TO_CLASS(hlr_fireball, CHLRFireball);

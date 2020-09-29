@@ -28,6 +28,8 @@ CLIENTEFFECT_REGISTER_BEGIN( PrecacheTracers )
 CLIENTEFFECT_MATERIAL( "effects/gunshiptracer" )
 CLIENTEFFECT_MATERIAL( "effects/combinemuzzle1" )
 CLIENTEFFECT_MATERIAL( "effects/combinemuzzle2_nocull" )
+CLIENTEFFECT_MATERIAL("sprites/chaintracer")
+CLIENTEFFECT_MATERIAL("sprites/pistoltracer")
 CLIENTEFFECT_REGISTER_END()
 
 //-----------------------------------------------------------------------------
@@ -323,6 +325,104 @@ void AR2TracerCallback( const CEffectData &data )
 }
 
 DECLARE_CLIENT_EFFECT( "AR2Tracer", AR2TracerCallback );
+
+void FX_PistolTracer(Vector& start, Vector& end, int velocity, bool makeWhiz)
+{
+	VPROF_BUDGET("FX_PistolTracer", VPROF_BUDGETGROUP_PARTICLE_RENDERING);
+
+	//Don't make small tracers
+	float dist;
+	Vector dir;
+
+	VectorSubtract(end, start, dir);
+	dist = VectorNormalize(dir);
+
+	// Don't make short tracers.
+	if (dist < 64)
+		return;
+
+	float length = random->RandomFloat(128.0f, 256.0f);
+	float life = (dist + length) / velocity;	//NOTENOTE: We `want the tail to finish its run as well
+
+	//Add it
+	FX_AddDiscreetLine(start, dir, velocity, length, dist, random->RandomFloat(0.5f, 1.5f), life, "sprites/pistoltracer");
+
+	if (makeWhiz)
+	{
+		FX_TracerSound(start, end, TRACER_TYPE_GUNSHIP);
+	}
+
+
+	/*// Grab the data
+	Vector vecStart = GetTracerOrigin(data);
+	float flVelocity = data.m_flScale;
+
+	// Use default velocity if none specified
+	if (!flVelocity)
+	{
+	flVelocity = 10000;
+	}
+
+	//Get out shot direction and length
+	Vector vecShotDir;
+	VectorSubtract(data.m_vOrigin, vecStart, vecShotDir);
+	float flTotalDist = VectorNormalize(vecShotDir);
+
+	// Don't make small tracers
+	if (flTotalDist <= 64)
+	return;
+
+	float flLength = random->RandomFloat(256.0f, 384.0f);
+	float flLife = (flTotalDist + flLength) / flVelocity;	//NOTENOTE: We want the tail to finish its run as well
+
+	// Add it
+	FX_AddDiscreetLine(vecStart, vecShotDir, flVelocity, flLength, flTotalDist, 2.0f, flLife, "effects/gunshiptracer");*/
+}
+
+void PistolTracerCallback(const CEffectData &data)
+{
+	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
+
+	if (player == NULL)
+		return;
+
+	// Grab the data
+	Vector vecStart = GetTracerOrigin(data);
+	float flVelocity = data.m_flScale;
+	bool bWhiz = (data.m_fFlags & TRACER_FLAG_WHIZ);
+	//	int iEntIndex = data.entindex();
+
+	/*if ( iEntIndex && iEntIndex == player->index )
+	{
+	Vector	foo = data.m_vStart;
+	QAngle	vangles;
+	Vector	vforward, vright, vup;
+
+	engine->GetViewAngles( vangles );
+	AngleVectors( vangles, &vforward, &vright, &vup );
+
+	VectorMA( data.m_vStart, 4, vright, foo );
+	foo[2] -= 0.5f;
+
+	FX_PlayerAR2Tracer( foo, (Vector&)data.m_vOrigin );
+	return;
+	}*/
+
+	// Use default velocity if none specified
+	if (!flVelocity)
+	{
+		flVelocity = 8000;
+	}
+
+	// Do tracer effect
+	FX_PistolTracer((Vector&)vecStart, (Vector&)data.m_vOrigin, flVelocity, bWhiz);
+}
+
+DECLARE_CLIENT_EFFECT("PistolTracer", PistolTracerCallback);
+
+
+
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 

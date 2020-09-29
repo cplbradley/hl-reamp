@@ -25,7 +25,7 @@
 #include "tier0/memdbgon.h"
 #define PLASMA_MODEL "models/spitball_small.mdl"
 #define PLASMA_MODEL_NPC "models/spitball_medium.mdl"
-#define PLASMA_SPEED 3400
+#define PLASMA_SPEED 6000
 extern ConVar    sk_plr_dmg_smg1_grenade;
 extern ConVar	sk_plr_dmg_smg1;
 extern ConVar	 sk_npc_dmg_smg1;
@@ -40,6 +40,11 @@ public:
 	void	PlasmaTouch(CBaseEntity *pOther);
 	void	KillIt(void);
 	bool	CreateVPhysics(void);
+	void  MoveTowardsTarget(void);
+	void  SetTargetPos(const Vector &vecTargetpos, const float &fVelocity);
+
+	float flVelocity;
+	Vector vecTarget;
 	unsigned int PhysicsSolidMaskForEntity() const;
 
 
@@ -164,6 +169,18 @@ void CPlasmaBall::PlasmaTouch(CBaseEntity *pOther) //i touched something
 		SetTouch(NULL);
 		SetNextThink(gpGlobals->curtime + 0.01f); //execute remove command after 0.01 seconds, this allows time to trigger the particle
 	}
+}
+void CPlasmaBall::SetTargetPos(const Vector &vecTargetpos, const float &fVelocity)
+{
+	vecTarget = vecTargetpos;
+	flVelocity = fVelocity;
+	MoveTowardsTarget();
+}
+void CPlasmaBall::MoveTowardsTarget(void)
+{
+	Vector vecDir = (vecTarget - GetAbsOrigin());
+	VectorNormalize(vecDir);
+	SetAbsVelocity(vecDir * flVelocity);
 }
 void CPlasmaBall::KillIt(void)
 {
@@ -647,7 +664,7 @@ void CWeaponPlasmaRifle::PrimaryAttack(void)
 		//m_flNextSecondaryAttack = gpGlobals->curtime + 1.0f;//can't shoot again til after 0.1 seconds
 		CPlasmaBall *pBall = CPlasmaBall::Create(vecSrc, angAiming, pOwner); //emit plasma ball object
 		pBall->SetModel(PLASMA_MODEL); //set model to player model
-		pBall->SetAbsVelocity(vecShotDir * PLASMA_SPEED); //set speed and vector
+		pBall->SetTargetPos(tr.endpos, PLASMA_SPEED);
 		pBall->m_pGlowTrail->SetTransparency(kRenderTransAdd, 0, 175, 255, 200, kRenderFxNone);//emit trail
 		pBall->DrawSprite();
 		pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);//remove 1 round from ammo count

@@ -17,6 +17,7 @@
 #include "ai_route.h"
 #include "hl2_player.h"
 #include "iservervehicle.h"
+#include "Sprite.h"
 #include "items.h"
 #include "hl2_gamerules.h"
 
@@ -585,6 +586,7 @@ void CNPC_MetroPolice::Precache( void )
 
 	UTIL_PrecacheOther( "npc_manhack" );
 
+	PrecacheMaterial("sprites/glow03.vmt");
 	PrecacheScriptSound( "NPC_Metropolice.Shove" );
 	PrecacheScriptSound( "NPC_MetroPolice.WaterSpeech" );
 	PrecacheScriptSound( "NPC_MetroPolice.HidingSpeech" );
@@ -720,6 +722,8 @@ void CNPC_MetroPolice::Spawn( void )
 	m_vecPreChaseOrigin = vec3_origin;
 	m_flPreChaseYaw = 0;
 
+	DrawEyes();
+
 	SetUse( &CNPC_MetroPolice::PrecriminalUse );
 
 	// Start us with a visible manhack if we have one
@@ -729,7 +733,31 @@ void CNPC_MetroPolice::Spawn( void )
 	}
 }
 
+void CNPC_MetroPolice::DrawEyes(void)
+{
+		m_pSprite1 = CSprite::SpriteCreate("sprites/glow03.vmt", GetLocalOrigin(), false);
+		m_pSprite2 = CSprite::SpriteCreate("sprites/glow03.vmt", GetLocalOrigin(), false);
 
+		int iAttachment1 = LookupAttachment("lefteye");
+		int iAttachment2 = LookupAttachment("righteye");
+
+		if (m_pSprite1 != NULL)
+		{
+			m_pSprite1->FollowEntity(this);
+			m_pSprite1->SetScale(0.2);
+			m_pSprite1->SetTransparency(kRenderGlow, 0, 100, 255, 255, kRenderFxNoDissipation);
+			m_pSprite1->SetGlowProxySize(4.0f);
+			m_pSprite1->SetAttachment(this, iAttachment1);
+		}
+		if (m_pSprite2 != NULL)
+		{
+			m_pSprite2->FollowEntity(this);
+			m_pSprite2->SetScale(0.2);
+			m_pSprite2->SetTransparency(kRenderGlow, 0, 100, 255, 255, kRenderFxNoDissipation);
+			m_pSprite2->SetGlowProxySize(4.0f);
+			m_pSprite2->SetAttachment(this, iAttachment2);
+		}
+}
 //-----------------------------------------------------------------------------
 // Update weapon ranges
 //-----------------------------------------------------------------------------
@@ -3099,6 +3127,19 @@ void CNPC_MetroPolice::Event_Killed( const CTakeDamageInfo &info )
 		ReleaseManhack();
 		m_hManhack = NULL;
 	}
+	m_pSprite1 = NULL;
+	m_pSprite2 = NULL;
+	if (m_pSprite1 != NULL)
+	{
+		UTIL_Remove(m_pSprite1);
+	}
+
+	if (m_pSprite2 != NULL)
+	{
+
+		UTIL_Remove(m_pSprite2);
+	}
+
 
 	CBasePlayer *pPlayer = ToBasePlayer( info.GetAttacker() );
 

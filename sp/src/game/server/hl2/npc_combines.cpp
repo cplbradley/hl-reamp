@@ -116,20 +116,21 @@ void CNPC_CombineS::Precache()
 	}
 
 	PrecacheModel( STRING( GetModelName() ) );
-	PrecacheModel("sprites/glow03.vmt");
-	PrecacheModel("sprites/glow04.vmt");
+	PrecacheMaterial("sprites/glow03.vmt");
+	PrecacheMaterial("sprites/glow04.vmt");
 	PrecacheScriptSound("Gore.Splatter");
 	UTIL_PrecacheOther( "item_healthvial" );
 	UTIL_PrecacheOther( "weapon_frag" );
 	UTIL_PrecacheOther( "item_ammo_ar2_altfire" );
 	UTIL_PrecacheOther("item_battery");
-	PrecacheModel("sprites/laser.vmt");
+	PrecacheMaterial("sprites/laser.vmt");
 	PrecacheModel("models/gibs/human/hgib_1.mdl");
 	PrecacheModel("models/gibs/human/hgib_2.mdl");
 	PrecacheModel("models/gibs/human/hgib_3.mdl");
 	PrecacheModel("models/gibs/human/hgib_4.mdl");
 	PrecacheModel("models/gibs/agibs.mdl");
 	PrecacheParticleSystem("hgib_sploosh");
+	PrecacheParticleSystem("jetpack_core");
 
 	BaseClass::Precache();
 }
@@ -266,6 +267,16 @@ void CNPC_CombineS::OnChangeActivity( Activity eNewActivity )
 		SetPoseParameter("casual", RandomFloat());
 	}
 #endif
+
+	if (eNewActivity == ACT_JUMP)
+	{
+		int iAttachment = LookupAttachment("jetpack");
+		DispatchParticleEffect("jetpack_core", PATTACH_POINT_FOLLOW, this, iAttachment, true);
+	}
+	if (eNewActivity == ACT_LAND)
+	{
+		StopParticleEffects(this);
+	}
 }
 
 void CNPC_CombineS::OnListened()
@@ -388,7 +399,7 @@ void CNPC_CombineS::Event_Killed( const CTakeDamageInfo &info )
 void CNPC_CombineS::Gib(void)
 {
 	SetSolid(SOLID_NONE);
-	SetModel(NULL_MODEL);
+	SetModelName(NULL_STRING);
 	EmitSound("Gore.Splatter");
 	SetAbsOrigin(GetAbsOrigin() + Vector(0, 0, 48));
 	CGib::SpawnSpecificGibs(this, 2, 1200, 500, "models/gibs/human/hgib_1.mdl", 5);

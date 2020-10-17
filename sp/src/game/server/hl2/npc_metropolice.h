@@ -24,6 +24,7 @@
 #include "ai_behavior_police.h"
 #include "ai_behavior_follow.h"
 #include "ai_sentence.h"
+#include "Sprite.h"
 #include "props.h"
 
 class CNPC_MetroPolice;
@@ -40,6 +41,7 @@ public:
 	bool CreateBehaviors();
 	void Spawn( void );
 	void Precache( void );
+	void DrawEyes(void);
 
 	Class_T		Classify( void );
 	Disposition_t IRelationType(CBaseEntity *pTarget);
@@ -147,6 +149,9 @@ private:
 	int			GetSoundInterests( void );
 
 	void		BuildScheduleTestBits( void );
+
+	CHandle<CSprite> m_pSprite1;
+	CHandle<CSprite> m_pSprite2;
 
 	bool		CanDeployManhack( void );
 

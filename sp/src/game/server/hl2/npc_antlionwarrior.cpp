@@ -1027,7 +1027,7 @@ int CNPC_AntlionWarrior::SelectUnreachableSchedule(void)
 		if (m_flNextRoarTime < gpGlobals->curtime)
 		{
 			m_flNextRoarTime = gpGlobals->curtime + RandomFloat(20, 40);
-			return SCHED_RANGE_ATTACK2;
+			//return SCHED_RANGE_ATTACK2;
 		}
 
 		// If we're under attack, then let's leave for a bit
@@ -1116,9 +1116,9 @@ int CNPC_AntlionWarrior::SelectCombatSchedule(void)
 		}
 		if (gpGlobals->curtime > m_fNextFireball)
 		{
-			m_fNextFireball = gpGlobals->curtime + RandomFloat(10, 15);
+			m_fNextFireball = gpGlobals->curtime + RandomFloat(20, 30);
 			return SCHED_ANTLIONWARRIOR_RANGE_ATTACK1;
-		}
+		} 
 		/*float distance = UTIL_DistApprox2D(GetEnemy()->GetAbsOrigin(), GetAbsOrigin());
 
 		// Must be within our tolerance range

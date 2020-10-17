@@ -172,7 +172,7 @@ CWeaponPistol::CWeaponPistol(void)
 //-----------------------------------------------------------------------------
 void CWeaponPistol::Precache(void)
 {
-	PrecacheParticleSystem("pistol_pew");
+	PrecacheParticleSystem("pistol_npc_core");
 	PrecacheParticleSystem("pistol_core");
 	UTIL_PrecacheOther("hlr_pistolprojectile");
 	BaseClass::Precache();
@@ -211,7 +211,7 @@ void CWeaponPistol::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCha
 		
 		pPew->Spawn();
 		pPew->SetAbsVelocity(vecVelocity);
-		DispatchParticleEffect("pistol_pew", vecShootOrigin, angAiming, pOperator);
+		DispatchParticleEffect("pistol_npc_core", vecShootOrigin, angAiming, pOperator);
 		//pOperator->FireBullets(0, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2);
 		pOperator->DoMuzzleFlash();
 		m_iClip1 = m_iClip1 - 1;
@@ -320,10 +320,10 @@ void CWeaponPistol::FireProjectile(void)
 	Vector vecAbsEnd = vecAbsStart + (vecDir * MAX_TRACE_LENGTH);
 	UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_ALL, pPlayer, COLLISION_GROUP_NONE, &tr);
 	Vector vecShotDir = (tr.endpos - vecSrc).Normalized();
-	/*pPlayer->FireBullets(1, vecSrc, vecShotDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false);
+	//pPlayer->FireBullets(1, vecSrc, vecShotDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false);
 	int iAttachment = LookupAttachment("muzzle");
-	DispatchParticleEffect("pistol_core", tr.endpos, GetAbsAngles(), this);
-	DispatchParticleEffect("pistol_pew", PATTACH_POINT_FOLLOW, pPlayer->GetViewModel(), iAttachment, true);*/
+	//DispatchParticleEffect("pistol_core", tr.endpos, GetAbsAngles(), this);
+	DispatchParticleEffect("pistol_core", PATTACH_POINT_FOLLOW, pPlayer->GetViewModel(), iAttachment, true);
 	CHLRPistolProjectile *pPew = (CHLRPistolProjectile*)CreateEntityByName("hlr_pistolprojectile");
 	pPew->Spawn();
 	UTIL_SetOrigin(pPew, vecSrc);

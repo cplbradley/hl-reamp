@@ -12,13 +12,24 @@
 //
 #include "cbase.h"
 #include "hud.h"
-#include "hudelement.h"
 #include "hud_macros.h"
-#include "hud_numericdisplay.h"
+#include "view.h"
+
 #include "iclientmode.h"
 
-#include "vgui_controls/AnimationController.h"
-#include "vgui/ILocalize.h"
+#include <KeyValues.h>
+#include <vgui/ISurface.h>
+#include <vgui/ISystem.h>
+#include <vgui_controls/AnimationController.h>
+
+#include <vgui/ILocalize.h>
+
+using namespace vgui;
+
+#include "hudelement.h"
+#include "hud_numericdisplay.h"
+
+#include "convar.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -40,8 +51,10 @@ public:
 	void OnThink( void );
 	void MsgFunc_Battery(bf_read &msg );
 	bool ShouldDraw();
-	
+	virtual void Paint(void);
+
 private:
+	CHudTexture *m_iconArmor;
 	int		m_iBat;	
 	int		m_iNewBat;
 };
@@ -83,6 +96,8 @@ void CHudBattery::Reset( void )
 void CHudBattery::VidInit( void )
 {
 	Reset();
+	SetPaintEnabled(true);
+	m_iconArmor = gHUD.GetIcon("hud_armor_icon");
 }
 
 //-----------------------------------------------------------------------------
@@ -144,4 +159,22 @@ void CHudBattery::OnThink( void )
 void CHudBattery::MsgFunc_Battery( bf_read &msg )
 {
 	m_iNewBat = msg.ReadShort();
+}
+void CHudBattery::Paint(void)
+{
+	BaseClass::Paint();
+
+	if (m_iconArmor)
+	{
+		int nLabelHeight;
+		int nLabelWidth;
+
+		surface()->GetTextSize(m_hTextFont, m_LabelText, nLabelWidth, nLabelHeight);
+
+		// Figure out where we're going to put this
+		int x = text_xpos + (nLabelWidth - m_iconArmor->Width() / 2);
+		int y = text_ypos - (nLabelHeight + (m_iconArmor->Height() / 2));
+
+		m_iconArmor->DrawSelf(x, y, GetFgColor());
+	}
 }

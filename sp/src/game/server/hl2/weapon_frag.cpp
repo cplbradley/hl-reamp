@@ -247,7 +247,7 @@ void CWeaponFrag::PrimaryAttack( void )
 	//CheckThrowPosition(pPlayer, vecEye, vecSrc);
 
 
-	Vector vecThrow = vecAng * 1500 + Vector(0, 0, 150);
+	Vector vecThrow = vecAng * 700 + Vector(0, 0, 150);
 	Fraggrenade_Create(vecSrc, vec3_angle, vecThrow, AngularImpulse(200, random->RandomInt(-600, 600), 0), pPlayer, 3.0f, false);
 	
 	m_flNextPrimaryAttack = gpGlobals->curtime + 0.4f;
@@ -396,7 +396,7 @@ void CWeaponFrag::ThrowGrenade( CBasePlayer *pPlayer )
 
 	Vector vecThrow;
 	pPlayer->GetVelocity( &vecThrow, NULL );
-	vecThrow += vForward * 1200;
+	vecThrow += vForward * 500;
 	Fraggrenade_Create( vecSrc, vec3_angle, vecThrow, AngularImpulse(600,random->RandomInt(-1200,1200),0), pPlayer, GRENADE_TIMER, false );
 
 	m_bRedraw = true;

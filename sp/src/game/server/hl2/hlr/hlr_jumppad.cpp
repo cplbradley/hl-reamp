@@ -101,11 +101,11 @@ void CJumppad::Reenable(void)
 ///
 ///
 ///
-class CLaunchpad : public CBaseEntity
+class CLaunchpad : public CBaseEntity //set up the class
 {
 	DECLARE_CLASS(CLaunchpad, CBaseEntity);
 public:
-	void Spawn(void);
+	void Spawn(void); //everything below is for setting up functions and variables
 	void Precache(void);
 	void Reenable(void);
 	void SetForce(inputdata_t &inputdata);
@@ -196,52 +196,59 @@ Vector VecCheckThrow(CBaseEntity *pEdict, const Vector &vecSpot1, Vector vecSpot
 }
 void CLaunchpad::TouchThink(CBaseEntity *pOther) //something touched me
 {
+	if (!pOther)
+		return;
 	SetTouch(NULL); //disable temporarily
 	SetThink(&CLaunchpad::Reenable);//schedule re-enable
 	SetNextThink(gpGlobals->curtime + 0.1f);//after 0.1 seconds
 	//emit sound
-	CBaseEntity *signalEntity = gEntList.FindEntityByName(NULL, target);
-	if (signalEntity)
+	CBaseEntity *signalEntity = gEntList.FindEntityByName(NULL, target); //point to the target entity assigned in hammer
+
+	if (signalEntity) //if it exists
 	{
-		signalPoint = signalEntity->GetAbsOrigin();
+		signalPoint = signalEntity->GetAbsOrigin(); //get the absolute origin of the target, save it as a vector
 		//Msg("target found\n");
 	}
-	else
+	else //if it doesn't exist 
 	{
-		Msg("launchpad target not found! uh oh!\n");
+		Msg("launchpad target not found! uh oh!\n"); //put an error in console
 	}
-	if (pOther->IsSolid())
+	if (pOther->IsSolid()) //if what i touched is solid
 	{
-			Vector vecToss = VecCheckThrow(this, GetAbsOrigin(), signalPoint, m_flpushforce, (10.0f*12.0f));
-			Vector vecToTarget = (signalPoint - GetAbsOrigin());
+			Vector vecToss = VecCheckThrow(this, GetAbsOrigin(), signalPoint, m_flpushforce, (10.0f*12.0f)); //calculate the trajectory
+			Vector vecToTarget = (signalPoint - GetAbsOrigin()); 
 			VectorNormalize(vecToTarget);
 			float flVelocity = VectorNormalize(vecToss);
 			
-			Vector vecStall = Vector(0, 0, 0);
+			Vector vecStall = Vector(0, 0, 0); //stall the entity 
 			EmitSound("Weapon_Mortar.Single");
 			pOther->SetAbsVelocity(vecStall);
-			if (pOther->IsPlayer())
+			if (pOther->IsPlayer()) //if it's the player 
 			{
-				extern IGameMovement *g_pGameMovement;
-				CGameMovement *gm = dynamic_cast<CGameMovement *>(g_pGameMovement);
-				gm->m_iJumpCount = 1;
-				pOther->VelocityPunch(vecToss * flVelocity);
+				extern IGameMovement *g_pGameMovement; //call the game movement code 
+				CGameMovement *gm = dynamic_cast<CGameMovement *>(g_pGameMovement); //create a pointer for the game movement code
+				gm->m_iJumpCount = 1; //set the jump count to 1 
+				Vector vecVel = gm->GetMoveData()->m_vecVelocity;
+				gm->GetMoveData()->m_vecVelocity += -vecVel;
+				pOther->VelocityPunch(vecToss * flVelocity); //launch the player
+				
 			}
 			else
 			{
 				QAngle angDir;
-				VectorAngles(vecToTarget, angDir);
-				if (pOther->GetMoveType() && pOther->GetMoveType() == MOVETYPE_FLY)
+				VectorAngles(vecToTarget, angDir); //get the angle from start to target
+				if (pOther->GetMoveType() && pOther->GetMoveType() == MOVETYPE_FLY) //if it isn't affected by gravity
 				{
-					pOther->SetMoveType(MOVETYPE_FLYGRAVITY);
+					pOther->SetMoveType(MOVETYPE_FLYGRAVITY); //make it affected by gravity 
 				}
-				if (pOther->IsNPC())
+				if (pOther->IsNPC()) //if it's an npc
 				{
-					pOther->SetGroundEntity(NULL);
+					pOther->SetGroundEntity(NULL); //register it as in the air
 				}
-				pOther->SetGravity(1.0f);
-				pOther->SetAbsVelocity(vecToss * flVelocity);
-				pOther->SetAbsAngles(angDir);
+				pOther->SetGravity(1.0f); //set the gravity to 100%
+				pOther->SetAbsOrigin(GetAbsOrigin()); //set the absolute origin to that of the launchpad
+				pOther->SetAbsVelocity(vecToss * flVelocity); //launch the object
+				pOther->SetAbsAngles(angDir); //point it towards the target
 			}
 				
 				

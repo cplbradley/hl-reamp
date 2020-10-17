@@ -71,7 +71,7 @@ public:
 	virtual int		OnTakeDamage_Alive( const CTakeDamageInfo &info );
 	virtual bool	FInViewCone( CBaseEntity *pEntity );
 	virtual bool	ShouldMoveAndShoot( void );
-
+	void		OnChangeActivity( Activity eNewActivity );
 	// vorts have a very long head/neck swing, so debounce heavily
 	virtual	float	GetHeadDebounce( void ) { return 0.7; } // how much of previous head turn to use
 

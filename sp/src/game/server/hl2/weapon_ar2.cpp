@@ -360,7 +360,8 @@ void CWeaponAR2::DelayedAttack( void )
 //-----------------------------------------------------------------------------
 void CWeaponAR2::SecondaryAttack( void )
 {
-	if ( m_bShotDelayed )
+	return;
+	/*if ( m_bShotDelayed )
 		return;
 
 	// Cannot fire underwater
@@ -385,7 +386,7 @@ void CWeaponAR2::SecondaryAttack( void )
 	WeaponSound( SPECIAL1 );
 
 	m_iSecondaryAttacks++;
-	gamestats->Event_WeaponFired( pPlayer, false, GetClassname() );
+	gamestats->Event_WeaponFired( pPlayer, false, GetClassname() );*/
 }
 
 //-----------------------------------------------------------------------------
@@ -531,7 +532,11 @@ void CWeaponAR2::Operator_ForceNPCFire( CBaseCombatCharacter *pOperator, bool bS
 		FireNPCPrimaryAttack( pOperator, true );
 	}
 }
-
+void CWeaponAR2::ItemHolsterFrame(void)
+{
+	BaseClass::ItemHolsterFrame();
+	m_flfirerate = MINFIRERATE;
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pEvent - 

@@ -175,16 +175,20 @@ void CHudHealth::MsgFunc_Damage( bf_read &msg )
 }
 void CHudHealth::Paint(void)
 {
-	int nLabelHeight;
-	int nLabelWidth;
-
-	surface()->GetTextSize(m_hTextFont, m_LabelText, nLabelWidth, nLabelHeight);
-
-	// Figure out where we're going to put this
-	int x = text_xpos + (nLabelWidth - m_iconHealth->Width()) / 2;
-	int y = text_ypos - (nLabelHeight + (m_iconHealth->Height() / 2));
-
-	m_iconHealth->DrawSelf(x, y, GetFgColor());
-
 	BaseClass::Paint();
+
+	if (m_iconHealth)
+	{
+		int nLabelHeight;
+		int nLabelWidth;
+
+		surface()->GetTextSize(m_hTextFont, m_LabelText, nLabelWidth, nLabelHeight);
+
+		// Figure out where we're going to put this
+		int x = text_xpos + (nLabelWidth - m_iconHealth->Width() / 2);
+		int y = text_ypos - (nLabelHeight + (m_iconHealth->Height() / 2));
+
+		m_iconHealth->DrawSelf(x, y, GetFgColor());
+	}
+	
 }

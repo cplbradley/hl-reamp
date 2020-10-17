@@ -48,6 +48,7 @@ public:
 	int		GetMaxBurst( void ) { return 2; }
 	float	GetFireRate(void) { return m_flfirerate;}
 	
+	void	ItemHolsterFrame(void);
 	bool	CanHolster( void );
 	bool	Reload( void );
 
@@ -61,7 +62,7 @@ public:
 	{
 		static Vector cone;
 		
-		cone = VECTOR_CONE_0DEGREES;
+		cone = VECTOR_CONE_3DEGREES;
 
 		return cone;
 	}

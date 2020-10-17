@@ -1174,6 +1174,8 @@ void CNPC_Vortigaunt::Precache()
 	UTIL_PrecacheOther( "vort_charge_token" );
 	UTIL_PrecacheOther("hlr_vortprojectile");
 
+	PrecacheParticleSystem("vortigaunt_teleout");
+	PrecacheParticleSystem("vortigaunt_telein");
 	PrecacheModel( STRING( GetModelName() ) );
 
 	m_nLightningSprite = PrecacheModel("sprites/lgtning.vmt");
@@ -1416,6 +1418,32 @@ int CNPC_Vortigaunt::TranslateSchedule( int scheduleType )
 	return BaseClass::TranslateSchedule( scheduleType );
 }
 
+void CNPC_Vortigaunt::OnChangeActivity(Activity eNewActivity)
+{
+	BaseClass::OnChangeActivity(eNewActivity);
+
+	if (eNewActivity == ACT_JUMP)
+	{
+		if (GetGroundEntity() == NULL)
+		{
+			SetModelName(NULL_STRING);
+			DispatchParticleEffect("vortigaunt_teleout", WorldSpaceCenter(), vec3_angle, this);
+		}
+	}
+	if (eNewActivity == ACT_LAND)
+	{
+		if (GetGroundEntity() != NULL)
+		{
+			char *szModel = (char *)STRING(GetModelName());
+			if (!szModel || !*szModel)
+			{
+				szModel = "models/vortigaunt.mdl";
+				SetModelName(AllocPooledString(szModel));
+				DispatchParticleEffect("vortigaunt_telein", WorldSpaceCenter(), vec3_angle, this);
+			}
+		}
+	}
+}
 //-----------------------------------------------------------------------------
 // Purpose: Sets the heal target for the vort and preps him for completing the action
 // Input  : *pTarget - Target we're after

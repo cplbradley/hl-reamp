@@ -4,6 +4,7 @@
 #include "basecombatcharacter.h"
 #include "ai_basenpc.h"
 #include "player.h"
+#include "convar.h"
 #include "gamerules.h"
 #include "in_buttons.h"
 #include "soundent.h"
@@ -284,4 +285,102 @@ void CHLRTripleDamage::TimerThink(void)
 void CHLRTripleDamage::Kill(void)
 {
 	UTIL_Remove(this);
+}
+
+class CHLRFreqShifter : public CBaseAnimating
+{
+	DECLARE_CLASS(CHLRFreqShifter, CBaseAnimating);
+public:
+	void Precache(void);
+	void Spawn(void);
+	void Touch(CBaseEntity *pOther);
+	void Kill(void);
+	float m_fTimerDelay;
+
+	void ActiveThink(void);
+
+	DECLARE_DATADESC();
+};
+
+LINK_ENTITY_TO_CLASS(hlr_freqshifter, CHLRFreqShifter);
+
+
+BEGIN_DATADESC(CHLRFreqShifter)
+DEFINE_FUNCTION(Touch),
+DEFINE_FUNCTION(Kill),
+DEFINE_THINKFUNC(ActiveThink),
+END_DATADESC()
+
+void CHLRFreqShifter::Precache(void)
+{
+	PrecacheModel(POWERUP_MODEL);
+	PrecacheScriptSound("FreqShifter.Voice");
+}
+void CHLRFreqShifter::Spawn(void)
+{
+	Precache();
+	SetModel(POWERUP_MODEL);
+	UTIL_SetSize(this, -Vector(64.0f, 64.0f, 64.0f), Vector(64.0f, 64.0f, 64.0f));
+	SetSolid(SOLID_BBOX);
+	AddSolidFlags(FSOLID_NOT_SOLID | FSOLID_TRIGGER);
+	SetRenderColor(0, 255, 150);
+	SetMoveType(MOVETYPE_CUSTOM);
+	//m_hSpitEffect = (CParticleSystem *)CreateEntityByName("info_particle_system");
+	/*if (m_hSpitEffect != NULL)
+	{
+		// Setup our basic parameters
+		m_hSpitEffect->KeyValue("start_active", "1");
+		m_hSpitEffect->KeyValue("effect_name", "powerup_td");
+		m_hSpitEffect->SetParent(this);
+		m_hSpitEffect->SetLocalOrigin(vec3_origin);
+		DispatchSpawn(m_hSpitEffect);
+		if (gpGlobals->curtime > 0.5f)
+			m_hSpitEffect->Activate();
+	}*/
+	SetLocalAngularVelocity(QAngle(0, 10, 0));
+	SetTouch(&CHLRFreqShifter::Touch);
+}
+
+void CHLRFreqShifter::Touch(CBaseEntity *pOther)
+{
+	if (pOther->IsPlayer())
+	{
+		SetSolid(SOLID_NONE);
+		RemoveSolidFlags(FSOLID_TRIGGER);
+		//m_hSpitEffect->StopParticleSystem();
+		color32 purple = { 150, 0, 255, 175 };
+		UTIL_ScreenFade(pOther, purple, 0.5, 0, FFADE_IN);
+		SetModelName(NULL_STRING);
+		m_fTimerDelay = gpGlobals->curtime + 9.0f;
+		SetThink(&CHLRFreqShifter::ActiveThink);
+		SetNextThink(gpGlobals->curtime);
+		EmitSound("FreqShifter.Voice");
+
+	}
+}
+void CHLRFreqShifter::ActiveThink(void)
+{
+	ConVar *host_timescale = cvar->FindVar("host_timescale");
+	ConVar *sv_cheats = cvar->FindVar("sv_cheats");
+	if (gpGlobals->curtime < m_fTimerDelay)
+	{
+		if (host_timescale->GetFloat() != 0.3f)
+		{
+			sv_cheats->SetValue(1);
+			host_timescale->SetValue(0.3f);
+		}
+		SetNextThink(gpGlobals->curtime + 0.01f);
+	}
+	else
+	{
+		sv_cheats->SetValue(0);
+		SetThink(NULL);
+		Kill();
+		return;
+	}
+}
+
+void CHLRFreqShifter::Kill(void)
+{
+	RemoveDeferred();
 }

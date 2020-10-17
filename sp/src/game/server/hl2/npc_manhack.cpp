@@ -412,7 +412,7 @@ void CNPC_Manhack::Event_Killed(const CTakeDamageInfo &info)
 	}
 	*/
 	BaseClass::Event_Killed(info);
-	SetModel("models/props/null.mdl");
+	SetModelName(NULL_STRING);
 	RemoveDeferred();
 }
 void CNPC_Manhack::Kill(void)

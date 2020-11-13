@@ -9,7 +9,9 @@
 #include "in_buttons.h"
 #include "soundent.h"
 #include "explode.h"
+#include "physics_shared.h"
 #include "game.h"
+#include "movevars_shared.h"
 #include "vstdlib/random.h"
 #include "hl2_shareddefs.h"
 #include "gamemovement.h"
@@ -27,7 +29,7 @@
 
 #include "tier0/memdbgon.h"
 
-
+extern IGameMovement *g_pGameMovement;
 #define POWERUP_MODEL "models/items/powerup.mdl"
 
 class CHLRFreemanFury : public CBaseAnimating
@@ -154,7 +156,7 @@ void CHLRQuadJump::Touch(CBaseEntity *pOther)
 {
 	if (pOther->IsPlayer())
 	{
-		extern IGameMovement *g_pGameMovement;
+		
 		CGameMovement *gm = dynamic_cast<CGameMovement *>(g_pGameMovement);
 		color32 gold = { 230, 190, 0, 175 };
 		SetTouch(NULL);
@@ -170,7 +172,6 @@ void CHLRQuadJump::Touch(CBaseEntity *pOther)
 }
 void CHLRQuadJump::TimerThink(void)
 {
-	extern IGameMovement *g_pGameMovement;
 	CGameMovement *gm = dynamic_cast<CGameMovement *>(g_pGameMovement);
 	if (gpGlobals->curtime >= m_fTimerDelay)
 	{
@@ -381,6 +382,100 @@ void CHLRFreqShifter::ActiveThink(void)
 }
 
 void CHLRFreqShifter::Kill(void)
+{
+	RemoveDeferred();
+}
+
+
+class CHLRGravShifter : public CBaseAnimating
+{
+	DECLARE_CLASS(CHLRGravShifter, CBaseAnimating);
+public:
+	void Precache(void);
+	void Spawn(void);
+	void Touch(CBaseEntity *pOther);
+	void Kill(void);
+	float m_fTimerDelay;
+
+	void ResetGrav(void);
+
+	DECLARE_DATADESC();
+};
+
+LINK_ENTITY_TO_CLASS(hlr_gravshifter, CHLRGravShifter);
+
+
+BEGIN_DATADESC(CHLRGravShifter)
+DEFINE_FUNCTION(Touch),
+DEFINE_FUNCTION(Kill),
+DEFINE_THINKFUNC(ResetGrav),
+END_DATADESC()
+
+void CHLRGravShifter::Precache(void)
+{
+	PrecacheModel(POWERUP_MODEL);
+	PrecacheScriptSound("FreqShifter.Voice");
+}
+void CHLRGravShifter::Spawn(void)
+{
+	Precache();
+	SetModel(POWERUP_MODEL);
+	UTIL_SetSize(this, -Vector(64.0f, 64.0f, 64.0f), Vector(64.0f, 64.0f, 64.0f));
+	SetSolid(SOLID_BBOX);
+	AddSolidFlags(FSOLID_NOT_SOLID | FSOLID_TRIGGER);
+	SetRenderColor(0, 255, 150);
+	SetMoveType(MOVETYPE_CUSTOM);
+	//m_hSpitEffect = (CParticleSystem *)CreateEntityByName("info_particle_system");
+	/*if (m_hSpitEffect != NULL)
+	{
+	// Setup our basic parameters
+	m_hSpitEffect->KeyValue("start_active", "1");
+	m_hSpitEffect->KeyValue("effect_name", "powerup_td");
+	m_hSpitEffect->SetParent(this);
+	m_hSpitEffect->SetLocalOrigin(vec3_origin);
+	DispatchSpawn(m_hSpitEffect);
+	if (gpGlobals->curtime > 0.5f)
+	m_hSpitEffect->Activate();
+	}*/
+	SetLocalAngularVelocity(QAngle(0, 10, 0));
+	SetTouch(&CHLRFreqShifter::Touch);
+}
+
+void CHLRGravShifter::Touch(CBaseEntity *pOther)
+{
+	if (pOther->IsPlayer())
+	{
+		SetSolid(SOLID_NONE);
+		RemoveSolidFlags(FSOLID_TRIGGER);
+		//m_hSpitEffect->StopParticleSystem();
+		SetModelName(NULL_STRING);
+		IPhysicsEnvironment	*physenv = physics->GetActiveEnvironmentByIndex(0);
+		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+		//IPhysicsObject *pVPhysics = pPlayer->VPhysicsGetObject();
+		QAngle angView = pPlayer->EyeAngles();
+		angView[ROLL] += 90.f;
+		pPlayer->SnapEyeAngles(angView);
+
+		assert(physenv);
+		physenv->SetGravity(Vector(0, 0, GetCurrentGravity()));
+		SetThink(&CHLRGravShifter::ResetGrav);
+		SetNextThink(gpGlobals->curtime + 30.0f);
+	}
+}
+void CHLRGravShifter::ResetGrav(void)
+{
+	IPhysicsEnvironment	*physenv = physics->GetActiveEnvironmentByIndex(0);
+	physenv->SetGravity(Vector(0, 0, -GetCurrentGravity()));
+	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+	pPlayer->SetAbsAngles(-GetAbsAngles());
+	QAngle angView = pPlayer->EyeAngles();
+	angView[ROLL] += 720.f;
+
+	pPlayer->SnapEyeAngles(angView);
+	Kill();
+}
+
+void CHLRGravShifter::Kill(void)
 {
 	RemoveDeferred();
 }

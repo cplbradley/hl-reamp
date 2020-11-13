@@ -143,10 +143,7 @@ void CWeaponNPCFrag::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bool 
 	vecSpin.z = random->RandomFloat(-1000.0, 1000.0);
 	if (vecToss != vec3_origin)
 	{
-		VectorNormalize(vecToss);
-		float dist = (vecShootOrigin.DistTo(vecTarget) / sk_npc_grenadelauncher_distmult.GetFloat());
-		Vector vecLaunch = (vecToss * (adjustedspd + dist));
-		Fraggrenade_Create(vecShootOrigin, vec3_angle, vecLaunch, vecSpin, npc, 3.0f, true);
+		Fraggrenade_Create(vecShootOrigin, vec3_angle, vecToss, vecSpin, npc, 3.0f, true);
 		/*CGrenadeFrag *pGrenade = (CGrenadeFrag *)CBaseEntity::Create("npc_frag_grenade",vecShootOrigin,vec3_angle,npc);
 		pGrenade->SetTimer(3.0f, 1.5f);
 		pGrenade->SetVelocity(vecToss, vecSpin);

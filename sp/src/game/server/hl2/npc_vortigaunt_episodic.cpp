@@ -127,6 +127,8 @@ int AE_VORTIGAUNT_SHOOT_SOUNDSTART;
 int AE_VORTIGAUNT_HEAL_PAUSE;
 int AE_VORT_PORTALOUT;
 int AE_VORT_PORTALIN;
+int AE_VORT_PORTALINPARTICLE;
+int AE_VORT_PORTALOUTPARTICLE;
 
 int AE_VORTIGAUNT_START_DISPEL;	// Start the warm-up
 int AE_VORTIGAUNT_ACCEL_DISPEL;	// Indicates we're ramping up
@@ -750,16 +752,35 @@ void CNPC_Vortigaunt::HandleAnimEvent( animevent_t *pEvent )
 	}
 	if (pEvent->event == AE_VORT_PORTALIN)
 	{
-		Msg("portaling in\n");
-		RemoveEFlags(EF_NODRAW);
-		SetRenderMode(kRenderNone);
+		
+		if (GetGroundEntity() != NULL)
+		{
+			Msg("portaling in\n");
+			char *szModel = (char *)STRING(GetModelName());
+			if (!szModel || !*szModel)
+			{
+				szModel = "models/vortigaunt.mdl";
+				SetModelName(AllocPooledString(szModel));
+				//DispatchParticleEffect("vortigaunt_telein", WorldSpaceCenter(), vec3_angle, this);
+			}
+		}
 		return;
 	}
 	if (pEvent->event == AE_VORT_PORTALOUT)
 	{
 		Msg("portaling out\n");
-		AddEFlags(EF_NODRAW);
-		SetRenderMode(kRenderNone);
+		SetModelName(NULL_STRING);
+		
+		return;
+	}
+	if (pEvent->event == AE_VORT_PORTALOUTPARTICLE)
+	{
+		DispatchParticleEffect("vortigaunt_teleout", WorldSpaceCenter(), vec3_angle, this);
+		return;
+	}
+	if (pEvent->event == AE_VORT_PORTALINPARTICLE)
+	{
+		DispatchParticleEffect("vortigaunt_telein", WorldSpaceCenter(), vec3_angle, this);
 		return;
 	}
 	// Start our dispel effect
@@ -1098,7 +1119,7 @@ void CNPC_Vortigaunt::Event_Killed( const CTakeDamageInfo &info )
 	if (info.GetDamage() >= (m_iMaxHealth * 1.5f) && (info.GetDamageType() != DMG_DISSOLVE))
 	{
 		SetSolid(SOLID_NONE);
-		AddEffects(EF_NODRAW);
+		SetModelName(NULL_STRING);
 		DispatchParticleEffect("agib_sploosh", WorldSpaceCenter(), GetAbsAngles());
 		CGib::SpawnSpecificGibs(this, 2, 1200, 500, "models/gibs/alien/agib_1.mdl", 5);
 		CGib::SpawnSpecificGibs(this, 2, 1200, 500, "models/gibs/alien/agib_2.mdl", 5);
@@ -1421,28 +1442,6 @@ int CNPC_Vortigaunt::TranslateSchedule( int scheduleType )
 void CNPC_Vortigaunt::OnChangeActivity(Activity eNewActivity)
 {
 	BaseClass::OnChangeActivity(eNewActivity);
-
-	if (eNewActivity == ACT_JUMP)
-	{
-		if (GetGroundEntity() == NULL)
-		{
-			SetModelName(NULL_STRING);
-			DispatchParticleEffect("vortigaunt_teleout", WorldSpaceCenter(), vec3_angle, this);
-		}
-	}
-	if (eNewActivity == ACT_LAND)
-	{
-		if (GetGroundEntity() != NULL)
-		{
-			char *szModel = (char *)STRING(GetModelName());
-			if (!szModel || !*szModel)
-			{
-				szModel = "models/vortigaunt.mdl";
-				SetModelName(AllocPooledString(szModel));
-				DispatchParticleEffect("vortigaunt_telein", WorldSpaceCenter(), vec3_angle, this);
-			}
-		}
-	}
 }
 //-----------------------------------------------------------------------------
 // Purpose: Sets the heal target for the vort and preps him for completing the action
@@ -2996,6 +2995,8 @@ AI_BEGIN_CUSTOM_NPC( npc_vortigaunt, CNPC_Vortigaunt )
 
 	DECLARE_ANIMEVENT( AE_VORT_PORTALOUT)
 	DECLARE_ANIMEVENT( AE_VORT_PORTALIN)
+	DECLARE_ANIMEVENT( AE_VORT_PORTALINPARTICLE)
+	DECLARE_ANIMEVENT(AE_VORT_PORTALOUTPARTICLE)
 
 	DECLARE_ANIMEVENT( AE_VORTIGAUNT_START_DISPEL )
 	DECLARE_ANIMEVENT( AE_VORTIGAUNT_ACCEL_DISPEL )

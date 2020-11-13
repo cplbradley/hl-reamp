@@ -94,6 +94,7 @@ void CGrenadeFrag::Spawn( void )
 	SetTouch(&CGrenadeFrag::NadeTouch);
 
 	AddSolidFlags( FSOLID_NOT_STANDABLE );
+	SetSolid(SOLID_BBOX);
 
 	m_combineSpawned	= false;
 	m_punted			= false;
@@ -242,6 +243,7 @@ void CGrenadeFrag::Precache( void )
 	PrecacheModel( GRENADE_MODEL );
 
 	PrecacheScriptSound( "Grenade.Blip" );
+	PrecacheScriptSound("Grenade.ImpactHard");
 
 	PrecacheModel( "sprites/redglow1.vmt" );
 	PrecacheModel( "sprites/bluelaser1.vmt" );
@@ -268,11 +270,25 @@ void CGrenadeFrag::NadeTouch(CBaseEntity *pOther)
 
 	if (pOther->IsSolid())
 	{
-		if (GetMoveType() && GetMoveType() == MOVETYPE_FLYGRAVITY)
+		trace_t	tr;
+		tr = BaseClass::GetTouchTrace();
+
+		if (pOther->GetMoveType() == MOVETYPE_NONE && (tr.surface.flags & SURF_SKY))
 		{
-			SetMoveType(MOVETYPE_VPHYSICS);
-			CreateVPhysics();
+			UTIL_Remove(this);
 		}
+		// See if we struck the world
+		if (pOther->GetMoveType() == MOVETYPE_NONE && !(tr.surface.flags & SURF_SKY))
+		{
+			Vector vecDir = GetAbsVelocity();
+			float speed = VectorNormalize(vecDir);
+			float hitDot = DotProduct(tr.plane.normal, -vecDir);
+			Vector vReflection = 2.0f * tr.plane.normal * hitDot + vecDir;
+			SetAbsVelocity(vReflection * speed * 0.75);
+			EmitSound("Grenade.ImpactHard");
+			//SetGravity(1.5f);
+		}
+
 		if (pOwner->IsPlayer() && pOther->IsNPC())
 		{
 			Detonate();
@@ -519,10 +535,12 @@ CBaseGrenade *Fraggrenade_Create( const Vector &position, const QAngle &angles, 
 {
 	// Don't set the owner here, or the player can't interact with grenades he's thrown-------------------------------------
 	CGrenadeFrag *pGrenade = (CGrenadeFrag *)CBaseEntity::Create( "npc_grenade_frag", position, angles, pOwner );
-	
+	pGrenade->SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
 	pGrenade->SetTimer( timer, timer - FRAG_GRENADE_WARN_TIME );
-	pGrenade->SetVelocity( velocity, angVelocity );
+	pGrenade->SetAbsVelocity(velocity);
+	pGrenade->ApplyLocalAngularVelocityImpulse(angVelocity);
 	pGrenade->SetThrower( ToBaseCombatCharacter( pOwner ) );
+	pGrenade->SetGravity(1.0f);
 	pGrenade->m_takedamage = DAMAGE_EVENTS_ONLY;
 	pGrenade->SetCombineSpawned( combineSpawned );
 

@@ -2375,6 +2375,11 @@ void CGameMovement::PlaySwimSound()
 //-----------------------------------------------------------------------------
 bool CGameMovement::CheckJumpButton( void )
 {
+	if (!player->IsSuitEquipped())
+		m_iMaxJumps = 1;
+	else
+		m_iMaxJumps = 2;
+
 	if (player->pl.deadflag)
 	{
 		mv->m_nOldButtons |= IN_JUMP;	// don't jump again until released
@@ -2383,6 +2388,7 @@ bool CGameMovement::CheckJumpButton( void )
 
 	if (m_iJumpCount >= m_iMaxJumps)
 		return false;
+	
 	// See if we are waterjumping.  If so, decrement count and return.
 	if (player->m_flWaterJumpTime)
 	{

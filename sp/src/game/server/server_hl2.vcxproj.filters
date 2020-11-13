@@ -1771,6 +1771,7 @@
     <ClInclude Include="hl2\npc_hunter.h" />
     <ClInclude Include="hl2\weapon_striderbuster.h" />
     <ClInclude Include="hl2\hlr\hlr_projectile.h" />
+    <ClInclude Include="hl2\hlr\npc_jetpack.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gamedll_replay.cpp">
@@ -3462,6 +3463,8 @@
     <ClCompile Include="hl2\hlr\hlr_hud_healthbar.cpp" />
     <ClCompile Include="hl2\hlr\npc_bloat.cpp" />
     <ClCompile Include="hl2\hlr\npc_chopperdrone.cpp" />
+    <ClCompile Include="hl2\hlr\npc_jetpack.cpp" />
+    <ClCompile Include="hl2\hlr\weapon_npcfrag.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\..\public\tier0\pointeroverride.asm">

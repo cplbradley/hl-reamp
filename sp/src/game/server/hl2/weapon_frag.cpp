@@ -28,6 +28,9 @@
 
 #define GRENADE_RADIUS	4.0f // inches
 
+ConVar sk_plr_grenade_launch_speed("sk_plr_grenade_launch_speed", "1200", FCVAR_REPLICATED);
+ConVar sk_plr_grenade_vert_factor("sk_plr_grenade_vert_factor", "250", FCVAR_REPLICATED);
+
 //-----------------------------------------------------------------------------
 // Fragmentation grenades
 //-----------------------------------------------------------------------------
@@ -246,8 +249,8 @@ void CWeaponFrag::PrimaryAttack( void )
 	Vector vecSrc = vecEye + vForward * 18.0f + vRight * 8.0f + Vector(0, 0, -8);
 	//CheckThrowPosition(pPlayer, vecEye, vecSrc);
 
-
-	Vector vecThrow = vecAng * 700 + Vector(0, 0, 150);
+	float vertfactor = sk_plr_grenade_vert_factor.GetFloat();
+	Vector vecThrow = vecAng * sk_plr_grenade_launch_speed.GetFloat() + Vector(0, 0, vertfactor);
 	Fraggrenade_Create(vecSrc, vec3_angle, vecThrow, AngularImpulse(200, random->RandomInt(-600, 600), 0), pPlayer, 3.0f, false);
 	
 	m_flNextPrimaryAttack = gpGlobals->curtime + 0.4f;

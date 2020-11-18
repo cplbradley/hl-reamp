@@ -332,7 +332,7 @@ void CHLRFireball::Spawn(void)
 	pFireTrail->SetParent(this, 0);
 	pFireTrail->SetLocalOrigin(vec3_origin);
 	pFireTrail->SetMoveType(MOVETYPE_NONE);
-	pFireTrail->SetLifetime(1.0f);
+	pFireTrail->SetLifetime(-1);
 
 }
 void CHLRFireball::Precache(void)
@@ -364,7 +364,9 @@ void CHLRFireball::Touch(CBaseEntity *pOther)
 		pPlayer->IgniteLifetime(2.5);
 	}*/
 	SetTouch(NULL);
+	SetMoveType(MOVETYPE_NONE);
 	Detonate();
+	return;
 }
 void CHLRFireball::Detonate(void)
 {
@@ -390,7 +392,7 @@ void CHLRFireball::Detonate(void)
 	SetMoveType(MOVETYPE_NONE);
 
 	SetThink(&CHLRFireball::Kill);
-	SetNextThink(gpGlobals->curtime + 0.05f);
+	SetNextThink(gpGlobals->curtime + 0.01f);
 }
 void CHLRFireball::Kill(void)
 {

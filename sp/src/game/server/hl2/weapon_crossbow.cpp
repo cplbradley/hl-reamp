@@ -286,7 +286,7 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 			}
 		}
 
-		SetMoveType(MOVETYPE_NONE);
+		SetMoveType(MOVETYPE_CUSTOM);
 
 		// play body "thwack" sound
 		EmitSound( "Weapon_Crossbow.BoltHitBody" );

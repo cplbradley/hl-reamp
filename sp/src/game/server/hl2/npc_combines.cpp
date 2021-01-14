@@ -388,7 +388,7 @@ void CNPC_CombineS::Event_Killed( const CTakeDamageInfo &info )
 		}
 	}
 
-	if (info.GetDamage() >= (m_iMaxHealth * 1.5f) && (info.GetDamageType() != DMG_DISSOLVE || DMG_CLUB))
+	if (info.GetDamage() >= (m_iMaxHealth * 1.5f))
 	{
 		DispatchParticleEffect("hgib_sploosh", WorldSpaceCenter(), GetAbsAngles());
 		Gib();
@@ -401,7 +401,7 @@ void CNPC_CombineS::Gib(void)
 	SetSolid(SOLID_NONE);
 	SetModelName(NULL_STRING);
 	EmitSound("Gore.Splatter");
-	SetAbsOrigin(GetAbsOrigin() + Vector(0, 0, 48));
+	//SetAbsOrigin(GetAbsOrigin() + Vector(0, 0, 48));
 	CGib::SpawnSpecificGibs(this, 2, 1200, 500, "models/gibs/human/hgib_1.mdl", 5);
 	CGib::SpawnSpecificGibs(this, 2, 1200, 500, "models/gibs/human/hgib_2.mdl", 5);
 	CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/human/hgib_3.mdl", 5);

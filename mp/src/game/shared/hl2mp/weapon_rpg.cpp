@@ -197,12 +197,12 @@ void CMissile::Precache(void)
 void CMissile::Spawn(void)
 {
 	Precache();
+	SetModel("models/weapons/w_missile_launch.mdl");
 #ifdef CLIENT_DLL
 	BaseClass::Spawn();
 	m_flSpawnTime = gpGlobals->curtime;
 #else
 	SetSolid(SOLID_BBOX);
-	SetModel("models/weapons/w_missile_launch.mdl");
 	Assert(GetModel());
 
 	UTIL_SetSize(this, -Vector(4, 4, 4), Vector(4, 4, 4));
@@ -280,7 +280,6 @@ void CMissile::DumbFire(void)
 	SetThink(NULL);
 	SetMoveType(MOVETYPE_FLY);
 
-	SetModel("models/weapons/w_missile.mdl");
 	UTIL_SetSize(this, vec3_origin, vec3_origin);
 
 	EmitSound("Missile.Ignite");
@@ -480,7 +479,7 @@ void CMissile::CreateSmokeTrail(void)
 void CMissile::IgniteThink(void)
 {
 	SetMoveType(MOVETYPE_FLY);
-	SetModel("models/weapons/w_missile.mdl");
+	//SetModel("models/weapons/w_missile.mdl");
 	UTIL_SetSize(this, vec3_origin, vec3_origin);
 	RemoveSolidFlags(FSOLID_NOT_SOLID);
 

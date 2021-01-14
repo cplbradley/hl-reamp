@@ -278,38 +278,29 @@ void CWeaponFrag::DecrementAmmo( CBaseCombatCharacter *pOwner )
 //-----------------------------------------------------------------------------
 void CWeaponFrag::SecondaryAttack(void)
 {
+	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+	Vector	vecEye = pPlayer->EyePosition();
+	Vector	vForward, vRight;
+	Vector vecAng;
+	pPlayer->EyeVectors(&vecAng);
+	Vector vecSrc = vecEye + vForward * 18.0f + vRight * 8.0f + Vector(0, 0, -8);
+	//CheckThrowPosition(pPlayer, vecEye, vecSrc);
 
-	
-	//if (!pBouncer) 
-	/*if ( m_bRedraw )
-	return;
+	float vertfactor = sk_plr_grenade_vert_factor.GetFloat();
+	Vector vecThrow = vecAng * sk_plr_grenade_launch_speed.GetFloat() + Vector(0, 0, vertfactor);
+	Gasgrenade_Create(vecSrc, vec3_angle, vecThrow, AngularImpulse(200, random->RandomInt(-600, 600), 0), pPlayer, 3.0f);
 
-	if ( !HasPrimaryAmmo() )
-	return;
+	m_flNextPrimaryAttack = gpGlobals->curtime + 0.4f;
+	m_flNextSecondaryAttack = gpGlobals->curtime + 0.4f;
 
-	CBaseCombatCharacter *pOwner  = GetOwner();
+	WeaponSound(WPN_DOUBLE);
 
-	if ( pOwner == NULL )
-	return;
+	//m_bRedraw = true;
 
-	CBasePlayer *pPlayer = ToBasePlayer( pOwner );
+	m_iPrimaryAttacks++;
+	gamestats->Event_WeaponFired(pPlayer, true, GetClassname());
 
-	if ( pPlayer == NULL )
-	return;
-
-	// Note that this is a secondary attack and prepare the grenade attack to pause.
-	m_AttackPaused = GRENADE_PAUSED_SECONDARY;
-	SendWeaponAnim( ACT_VM_PULLBACK_LOW );
-
-	// Don't let weapon idle interfere in the middle of a throw!
-	m_flTimeWeaponIdle = FLT_MAX;
-	m_flNextSecondaryAttack	= FLT_MAX;
-
-	// If I'm now out of ammo, switch away
-	if ( !HasPrimaryAmmo() )
-	{
-	pPlayer->SwitchToNextBestWeapon( this );
-	}*/
+	DecrementAmmo(GetOwner());
 }
 //-----------------------------------------------------------------------------
 // Purpose: 

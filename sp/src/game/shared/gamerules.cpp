@@ -576,6 +576,114 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 #endif
 	}
 }
+void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, bool bIgnoreWorld )
+{
+	CBaseEntity *pEntity = NULL;
+	trace_t		tr;
+	float		flAdjustedDamage, falloff;
+	Vector		vecSpot;
+	Vector		vecToTarget;
+	Vector		vecEndPos;
+
+	Vector vecSrc = vecSrcIn;
+
+	if ( flRadius )
+		falloff = info.GetDamage() / flRadius;
+	else
+		falloff = 1.0;
+
+	int bInWater = (UTIL_PointContents ( vecSrc ) & MASK_WATER) ? true : false;
+
+	vecSrc.z += 1;// in case grenade is lying on the ground
+
+	// iterate on all entities in the vicinity.
+	for ( CEntitySphereQuery sphere( vecSrc, flRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+	{
+		if ( pEntity->m_takedamage != DAMAGE_NO )
+		{
+			// UNDONE: this should check a damage mask, not an ignore
+			if ( iClassIgnore != CLASS_NONE && pEntity->Classify() == iClassIgnore )
+			{// houndeyes don't hurt other houndeyes with their attack
+				continue;
+			}
+
+			// blast's don't tavel into or out of water
+			if (bInWater && pEntity->GetWaterLevel() == 0)
+				continue;
+			if (!bInWater && pEntity->GetWaterLevel() == 3)
+				continue;
+
+			// radius damage can only be blocked by the world
+			vecSpot = pEntity->BodyTarget( vecSrc );
+
+
+
+			bool bHit = false;
+
+			if( bIgnoreWorld )
+			{
+				vecEndPos = vecSpot;
+				bHit = true;
+			}
+			else
+			{
+				UTIL_TraceLine( vecSrc, vecSpot, MASK_SOLID_BRUSHONLY, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
+
+				if (tr.startsolid)
+				{
+					// if we're stuck inside them, fixup the position and distance
+					tr.endpos = vecSrc;
+					tr.fraction = 0.0;
+				}
+
+				vecEndPos = tr.endpos;
+
+				if( tr.fraction == 1.0 || tr.m_pEnt == pEntity )
+				{
+					bHit = true;
+				}
+			}
+
+			if ( bHit )
+			{
+				// the explosion can 'see' this entity, so hurt them!
+				//vecToTarget = ( vecSrc - vecEndPos );
+				vecToTarget = ( vecEndPos - vecSrc );
+
+				// decrease damage for an ent that's farther from the bomb.
+				flAdjustedDamage = vecToTarget.Length() * falloff;
+				flAdjustedDamage = info.GetDamage() - flAdjustedDamage;
+
+				if ( flAdjustedDamage > 0 )
+				{
+					CTakeDamageInfo adjustedInfo = info;
+					adjustedInfo.SetDamage( flAdjustedDamage );
+
+					Vector dir = vecToTarget;
+					VectorNormalize( dir );
+
+					// If we don't have a damage force, manufacture one
+					if ( adjustedInfo.GetDamagePosition() == vec3_origin || adjustedInfo.GetDamageForce() == vec3_origin )
+					{
+						CalculateExplosiveDamageForce( &adjustedInfo, dir, vecSrc, 1.5	/* explosion scale! */ );
+						}
+					else
+					{
+						// Assume the force passed in is the maximum force. Decay it based on falloff.
+						float flForce = adjustedInfo.GetDamageForce().Length() * falloff;
+						adjustedInfo.SetDamageForce(dir * flForce);
+						adjustedInfo.SetDamagePosition(vecSrc);
+					}
+
+					pEntity->TakeDamage(adjustedInfo);
+
+					// Now hit all triggers along the way that respond to damage... 
+					pEntity->TraceAttackToTriggers(adjustedInfo, vecSrc, vecEndPos, dir);
+					}
+				}
+			}
+		}
+	}
 
 
 bool CGameRules::ClientCommand( CBaseEntity *pEdict, const CCommand &args )

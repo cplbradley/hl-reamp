@@ -750,7 +750,7 @@ void CNPC_Vortigaunt::HandleAnimEvent( animevent_t *pEvent )
 		EndHandGlow();
 		return;
 	}
-	if (pEvent->event == AE_VORT_PORTALIN)
+	/*if (pEvent->event == AE_VORT_PORTALIN)
 	{
 		
 		if (GetGroundEntity() != NULL)
@@ -772,7 +772,7 @@ void CNPC_Vortigaunt::HandleAnimEvent( animevent_t *pEvent )
 		SetModelName(NULL_STRING);
 		
 		return;
-	}
+	}*/
 	if (pEvent->event == AE_VORT_PORTALOUTPARTICLE)
 	{
 		DispatchParticleEffect("vortigaunt_teleout", WorldSpaceCenter(), vec3_angle, this);

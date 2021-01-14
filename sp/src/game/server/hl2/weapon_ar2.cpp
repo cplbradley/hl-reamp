@@ -174,8 +174,10 @@ void CWeaponAR2::ItemPostFrame( void )
 	{
 		
 		m_flfirerate -= 0.003f;
-
-
+	}
+	if (pOwner->m_nButtons & IN_ATTACK2)
+	{
+		m_flfirerate -= 0.003f;
 	}
 	BaseClass::ItemPostFrame();
 }
@@ -360,33 +362,28 @@ void CWeaponAR2::DelayedAttack( void )
 //-----------------------------------------------------------------------------
 void CWeaponAR2::SecondaryAttack( void )
 {
-	return;
-	/*if ( m_bShotDelayed )
+	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+	if (!pPlayer)
 		return;
 
-	// Cannot fire underwater
-	if ( GetOwner() && GetOwner()->GetWaterLevel() == 3 )
+	float fireRate = GetFireRate();
+
+	// MUST call sound before removing a round from the clip of a CHLMachineGun
+	while (m_flNextPrimaryAttack <= gpGlobals->curtime)
 	{
-		SendWeaponAnim( ACT_VM_DRYFIRE );
-		BaseClass::WeaponSound( EMPTY );
-		m_flNextSecondaryAttack = gpGlobals->curtime + 0.5f;
-		return;
+		//WeaponSound(SINGLE, m_flNextPrimaryAttack);
+		m_flNextPrimaryAttack = m_flNextPrimaryAttack + fireRate;
+		m_flNextSecondaryAttack = m_flNextPrimaryAttack + fireRate;
 	}
 
-	m_bShotDelayed = true;
-	m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_flDelayedFire = gpGlobals->curtime + 0.1f;
+	m_iPrimaryAttacks++;
+	gamestats->Event_WeaponFired(pPlayer, true, GetClassname());
 
-	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
-	if( pPlayer )
-	{
-		pPlayer->RumbleEffect(RUMBLE_AR2_ALT_FIRE, 0, RUMBLE_FLAG_RESTART );
-	}
+	// Fire the bullets
+	SendWeaponAnim(GetPrimaryAttackActivity());
+	pPlayer->SetAnimation(PLAYER_ATTACK1);
 
-	SendWeaponAnim( ACT_VM_FIDGET );
-	WeaponSound( SPECIAL1 );
-
-	m_iSecondaryAttacks++;
-	gamestats->Event_WeaponFired( pPlayer, false, GetClassname() );*/
+	// Register a muzzleflash for the AI
 }
 
 //-----------------------------------------------------------------------------

@@ -137,8 +137,8 @@ enum
 	TASK_ANTLIONWARRIOR_GET_PATH_TO_PHYSOBJECT,
 	TASK_ANTLIONWARRIOR_SHOVE_PHYSOBJECT,
 	TASK_ANTLIONWARRIOR_SUMMON,
-	TASK_DISABLE_LAUNCHER,
-	TASK_ENABLE_LAUNCHER,
+	//TASK_DISABLE_LAUNCHER,
+	//TASK_ENABLE_LAUNCHER,
 	TASK_ANTLIONWARRIOR_SET_FLINCH_ACTIVITY,
 	TASK_ANTLIONWARRIOR_GET_PATH_TO_CHARGE_POSITION,
 	TASK_ANTLIONWARRIOR_GET_PATH_TO_NEAREST_NODE,
@@ -866,7 +866,8 @@ void CNPC_AntlionWarrior::Spawn(void)
 	m_HackedGunPos.z = 30;
 
 	CapabilitiesClear();
-	CapabilitiesAdd(bits_CAP_MOVE_GROUND | bits_CAP_INNATE_MELEE_ATTACK1 | bits_CAP_SQUAD | bits_CAP_INNATE_RANGE_ATTACK2 | bits_CAP_INNATE_RANGE_ATTACK1);
+	CapabilitiesAdd(bits_CAP_MOVE_GROUND | bits_CAP_INNATE_MELEE_ATTACK1 | bits_CAP_SQUAD);
+	CapabilitiesAdd(bits_CAP_INNATE_RANGE_ATTACK2 | bits_CAP_INNATE_RANGE_ATTACK1);
 	CapabilitiesAdd(bits_CAP_SKIP_NAV_GROUND_CHECK);
 	CapabilitiesAdd(bits_CAP_MOVE_JUMP);
 
@@ -1109,17 +1110,33 @@ int CNPC_AntlionWarrior::SelectCombatSchedule(void)
 	{
 		// Don't let other squad members charge while we're doing it
 		OccupyStrategySlot(SQUAD_SLOT_ANTLIONWARRIOR_CHARGE);
+		//int strat = RandomInt(0, 2);
 		if (gpGlobals->curtime > m_fNextBombard)
 		{
 			m_fNextBombard = gpGlobals->curtime + RandomFloat(20, 30);
 			return SCHED_ANTLIONWARRIOR_RANGE_ATTACK2;
 		}
-		if (gpGlobals->curtime > m_fNextFireball)
+		int strat = RandomInt(0, 2);
+		switch (strat)
+		{
+		case 0:
+			return SCHED_ANTLIONWARRIOR_CHARGE_TARGET;
+		case 1:
+			return SCHED_ANTLIONWARRIOR_RANGE_ATTACK1;
+		case 2:
+			return SCHED_ANTLIONWARRIOR_CHARGE_TARGET;
+		}
+		/*if (gpGlobals->curtime < m_fNextFireball)
+		{
+			return SCHED_ANTLIONWARRIOR_CHARGE_TARGET;
+
+		}
+		else
 		{
 			m_fNextFireball = gpGlobals->curtime + RandomFloat(20, 30);
 			return SCHED_ANTLIONWARRIOR_RANGE_ATTACK1;
-		} 
-		/*float distance = UTIL_DistApprox2D(GetEnemy()->GetAbsOrigin(), GetAbsOrigin());
+		}
+		float distance = UTIL_DistApprox2D(GetEnemy()->GetAbsOrigin(), GetAbsOrigin());
 
 		// Must be within our tolerance range
 		if (distance < 256)
@@ -1127,7 +1144,7 @@ int CNPC_AntlionWarrior::SelectCombatSchedule(void)
 		if (distance > 1024)
 			return SCHED_ANTLIONWARRIOR_RANGE_ATTACK1;*/
 
-		return SCHED_ANTLIONWARRIOR_CHARGE_TARGET;
+		//return SCHED_ANTLIONWARRIOR_CHARGE_TARGET;
 	}
 
 	return BaseClass::SelectSchedule();
@@ -1143,6 +1160,10 @@ bool CNPC_AntlionWarrior::ShouldCharge(const Vector &startPos, const Vector &end
 	if (hl2_episodic.GetBool() && m_bInCavern && !(m_hChargeTarget.Get() && m_hChargeTarget->IsAlive()))
 		return false;
 
+	/*if (gpGlobals->curtime > m_fNextFireball)
+		return false;
+	if (gpGlobals->curtime > m_fNextBombard)
+		return false;*/
 	// Must have a target
 	if (!GetEnemy())
 		return false;
@@ -2068,6 +2089,7 @@ void CNPC_AntlionWarrior::HandleAnimEvent(animevent_t *pEvent)
 					random->RandomFloat(-250, -500),
 					random->RandomFloat(-250, -500)));
 			}
+			m_fNextFireball = gpGlobals->curtime + RandomFloat(20, 30);
 
 			/*for ( int i = 0; i < 8; i++ )
 			{
@@ -2733,7 +2755,7 @@ void CNPC_AntlionWarrior::StartTask(const Task_t *pTask)
 		m_OnSummon.FireOutput(this, this, 0);
 		TaskComplete();
 		break;
-	case TASK_DISABLE_LAUNCHER:
+	/*case TASK_DISABLE_LAUNCHER:
 		m_OnBarageEnd.FireOutput(this, this, 0);
 		Msg("finished barage \n");
 		TaskComplete();
@@ -2742,7 +2764,7 @@ void CNPC_AntlionWarrior::StartTask(const Task_t *pTask)
 		m_OnBarageStart.FireOutput(this, this, 0);
 		Msg("starting barage\n");
 		TaskComplete();
-		break;
+		break;*/
 
 	case TASK_ANTLIONWARRIOR_SHOVE_PHYSOBJECT:
 	{
@@ -5080,8 +5102,8 @@ DECLARE_TASK(TASK_ANTLIONWARRIOR_GET_PATH_TO_NEAREST_NODE)
 DECLARE_TASK(TASK_ANTLIONWARRIOR_GET_CHASE_PATH_ENEMY_TOLERANCE)
 DECLARE_TASK(TASK_ANTLIONWARRIOR_OPPORTUNITY_THROW)
 DECLARE_TASK(TASK_ANTLIONWARRIOR_FIND_PHYSOBJECT)
-DECLARE_TASK(TASK_DISABLE_LAUNCHER)
-DECLARE_TASK(TASK_ENABLE_LAUNCHER)
+//DECLARE_TASK(TASK_DISABLE_LAUNCHER)
+//DECLARE_TASK(TASK_ENABLE_LAUNCHER)
 
 //Activities
 DECLARE_ACTIVITY(ACT_ANTLIONWARRIOR_SEARCH)

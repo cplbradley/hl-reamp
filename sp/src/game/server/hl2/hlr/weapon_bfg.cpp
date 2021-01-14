@@ -1,11 +1,13 @@
 #include "cbase.h"
 #include "basecombatweapon.h"
 #include "basecombatcharacter.h"
+#include "basehlcombatweapon.h"
 #include "player.h"
 #include "gamerules.h"
 #include "in_buttons.h"
 #include "soundent.h"
 #include "game.h"
+#include "sdk/sdk_gamerules.h"
 #include "vstdlib/random.h"
 #include "particle_parse.h"
 #include "hl2_gamerules.h"
@@ -99,8 +101,7 @@ void CProjectileBFG::DoDamage(void)
 {
 	CBasePlayer *pPlayer = ToBasePlayer(GetOwnerEntity());
 	AddFlag(EF_NODRAW);
-
-	RadiusDamage(CTakeDamageInfo(this, pPlayer, 800, DMG_SONIC), GetAbsOrigin(), 800, CLASS_PLAYER, NULL);
+	g_pGameRules->RadiusDamage(CTakeDamageInfo(this, pPlayer, 800, DMG_SONIC), GetAbsOrigin(), 800, CLASS_PLAYER, true);
 	SetThink(&CProjectileBFG::Kill);
 	SetNextThink(gpGlobals->curtime + 0.5f);
 }
@@ -111,11 +112,11 @@ void CProjectileBFG::Kill(void)
 }
 
 
-class CWeaponBFG : public CBaseCombatWeapon
+class CWeaponBFG : public CBaseHLCombatWeapon
 {
 	
 public:
-	DECLARE_CLASS(CWeaponBFG, CBaseCombatWeapon);
+	DECLARE_CLASS(CWeaponBFG, CBaseHLCombatWeapon);
 	void Precache(void);
 	void PrimaryAttack(void);
 	void LaunchBall(void);
@@ -164,7 +165,7 @@ void CWeaponBFG::LaunchBall(void)
 	Vector vecAiming;
 	QAngle angAiming = pPlayer->EyeAngles();
 	AngleVectors(angAiming, &vecAiming);
-
+		
 	Vector vecSrc = pPlayer->Weapon_ShootPosition();
 
 	CProjectileBFG *pOrb = (CProjectileBFG *)CreateEntityByName("bfg_projectile");

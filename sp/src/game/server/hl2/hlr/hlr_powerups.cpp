@@ -361,21 +361,27 @@ void CHLRFreqShifter::Touch(CBaseEntity *pOther)
 }
 void CHLRFreqShifter::ActiveThink(void)
 {
+	//CGameMovement *gm = dynamic_cast<CGameMovement *>(g_pGameMovement);
 	ConVar *host_timescale = cvar->FindVar("host_timescale");
 	ConVar *sv_cheats = cvar->FindVar("sv_cheats");
+	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 	if (gpGlobals->curtime < m_fTimerDelay)
 	{
 		if (host_timescale->GetFloat() != 0.3f)
 		{
 			sv_cheats->SetValue(1);
 			host_timescale->SetValue(0.3f);
+			pPlayer->SetMaxSpeed(1500.0f);
 		}
 		SetNextThink(gpGlobals->curtime + 0.01f);
 	}
 	else
 	{
+		host_timescale->SetValue(1.0f);
+		pPlayer->SetMaxSpeed(450.0f);
 		sv_cheats->SetValue(0);
 		SetThink(NULL);
+		
 		Kill();
 		return;
 	}

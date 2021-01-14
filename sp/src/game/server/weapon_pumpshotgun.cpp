@@ -19,6 +19,7 @@
 #include "soundent.h"
 #include "vstdlib/random.h"
 #include "gamestats.h"
+#include "particle_parse.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -158,6 +159,7 @@ IMPLEMENT_ACTTABLE(CWeaponPumpShotgun);
 void CWeaponPumpShotgun::Precache(void)
 {
 	PrecacheScriptSound("Weapon_SMG1.Double");
+	PrecacheParticleSystem("muzzleflash_orange_core");
 	CBaseCombatWeapon::Precache();
 }
 
@@ -472,6 +474,7 @@ void CWeaponPumpShotgun::PrimaryAttack(void)
 	Vector vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * 3.1f + vUp * -3.0f;
 	Vector	vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT);
 
+
 	pPlayer->SetMuzzleFlashTime(gpGlobals->curtime + 1.0);
 
 	// Fire the bullets, and force the first shot to be perfectly accuracy
@@ -479,7 +482,10 @@ void CWeaponPumpShotgun::PrimaryAttack(void)
 	pPlayer->FireBullets(8, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, true, false);
 	pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);
 	pPlayer->ViewPunch(QAngle(random->RandomFloat(-2, -1), random->RandomFloat(-2, 2), 0));
-
+	QAngle angAiming;
+	VectorAngles(vecAiming, angAiming);
+	//int iAttachment = LookupAttachment("muzzle");
+	DispatchParticleEffect("muzzleflash_orange_core", vecSrc, angAiming, this);
 	/*
 	for (int i = 0; i < 8; i++)
 	{

@@ -239,7 +239,7 @@ static ImpactEffect_t s_pImpactEffect[26] =
 	{ "impact_concrete",	"impact_concrete_noflecks" },	// CHAR_TEX_TILE			
 	{ NULL,					NULL },							// CHAR_TEX_UNUSED		
 	{ "impact_metal",		NULL },							// CHAR_TEX_VENT			
-	{ "impact_wood",		"impact_wood_noflecks" },		// CHAR_TEX_WOOD			
+	{ "impact_wood",		"impact_wood_noflecks" },		// CHAR_TEX_WOOD	
 	{ NULL,					NULL },							// CHAR_TEX_UNUSED		
 	{ "impact_glass",		NULL },							// CHAR_TEX_GLASS			
 	{ "warp_shield_impact", NULL },							// CHAR_TEX_WARPSHIELD		

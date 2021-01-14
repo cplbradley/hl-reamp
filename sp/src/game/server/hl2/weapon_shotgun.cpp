@@ -24,6 +24,7 @@
 #include "SpriteTrail.h"
 #include "te_effect_dispatch.h"
 #include "weapon_grapple.h"
+#include "particle_parse.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -302,6 +303,7 @@ IMPLEMENT_ACTTABLE(CWeaponShotgun);
 
 void CWeaponShotgun::Precache( void )
 {
+	PrecacheParticleSystem("muzzleflash_orange_large_core");
 	CBaseCombatWeapon::Precache();
 }
 
@@ -677,16 +679,17 @@ void CWeaponShotgun::PrimaryAttack( void )
 	m_iClip1 -= 2;	// Shotgun uses same clip for primary and secondary attacks
 	Vector	vForward, vRight, vUp;
 	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
-	Vector vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * 3.0f;
+	Vector vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * 3.0f + vUp * -2.0f;
 	
 	Vector vecAiming = pPlayer->GetAutoaimVector( AUTOAIM_SCALE_DEFAULT );	
 
 	// Fire the bullets
 	pPlayer->FireBullets( 28, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false );
 	//pPlayer->ViewPunch( QAngle(random->RandomFloat( -15, 15 ),0,0) );
-
+	QAngle angAiming;
+	VectorAngles(vecAiming, angAiming);
 	pPlayer->SetMuzzleFlashTime( gpGlobals->curtime + 1.0 );
-
+	DispatchParticleEffect("muzzleflash_orange_large_core", vecSrc, angAiming, this);
 	CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), SOUNDENT_VOLUME_SHOTGUN, 0.2 );
 
 	/*if (!m_iClip1 && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)

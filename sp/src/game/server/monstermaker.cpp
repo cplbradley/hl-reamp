@@ -104,7 +104,9 @@ DEFINE_OUTPUT(m_OnSpawnNPC, "OnSpawnNPC"),
 
 // Function Pointers
 DEFINE_THINKFUNC(MakerThink),
-DEFINE_THINKFUNC(TriggerMake),
+//DEFINE_THINKFUNC(TriggerMake),
+DEFINE_FUNCTION(TriggerMake),
+DEFINE_FUNCTION(MakeParticle),
 //DEFINE_THINKFUNC(MakeNPC),
 
 DEFINE_FIELD(m_hIgnoreEntity, FIELD_EHANDLE),

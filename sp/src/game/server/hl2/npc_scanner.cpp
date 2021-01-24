@@ -67,6 +67,16 @@ extern IMaterialSystemHardwareConfig *g_pMaterialSystemHardwareConfig;
 
 #define	SCANNER_NUM_GIBS				6		// Number of gibs in gib file
 
+#define	MIN_STALKER_FIRE_RANGE		64
+#define	MAX_STALKER_FIRE_RANGE		3600 // 3600 feet.
+#define	STALKER_LASER_ATTACHMENT	1
+#define	STALKER_TRIGGER_DIST		200	// Enemy dist. that wakes up the stalker
+#define	STALKER_SENTENCE_VOLUME		(float)0.35
+#define STALKER_LASER_DURATION		99999
+#define STALKER_LASER_RECHARGE		1
+#define STALKER_PLAYER_AGGRESSION	1
+
+
 // Strider Scout Scanners
 #define SCANNER_SCOUT_MAX_SPEED			150
 
@@ -99,6 +109,14 @@ int	g_interactionScannerInspectDone			= 0;
 int g_interactionScannerSupportEntity		= 0;
 int g_interactionScannerSupportPosition		= 0;
 
+
+
+enum StalkerBeamPower_e
+{
+	STALKER_BEAM_LOW,
+	STALKER_BEAM_MED,
+	STALKER_BEAM_HIGH,
+};
 //-----------------------------------------------------------------------------
 // Animation events
 //------------------------------------------------------------------------
@@ -185,12 +203,32 @@ BEGIN_DATADESC( CNPC_CScanner )
 	DEFINE_OUTPUT( m_OnPhotographPlayer, "OnPhotographPlayer" ),
 	DEFINE_OUTPUT( m_OnPhotographNPC, "OnPhotographNPC" ),
 
+
+
+
+
+
+
+
+	DEFINE_KEYFIELD(m_eBeamPower, FIELD_INTEGER, "BeamPower"),
+	DEFINE_FIELD(m_vLaserDir, FIELD_VECTOR),
+	DEFINE_FIELD(m_vLaserTargetPos, FIELD_POSITION_VECTOR),
+	DEFINE_FIELD(m_fBeamEndTime, FIELD_FLOAT),
+	DEFINE_FIELD(m_fBeamRechargeTime, FIELD_FLOAT),
+	DEFINE_FIELD(m_fNextDamageTime, FIELD_FLOAT),
+	DEFINE_FIELD(m_bPlayingHitWall, FIELD_FLOAT),
+	DEFINE_FIELD(m_bPlayingHitFlesh, FIELD_FLOAT),
+	DEFINE_FIELD(m_pBeam, FIELD_CLASSPTR),
+	DEFINE_FIELD(m_pLightGlow, FIELD_CLASSPTR),
+	DEFINE_FIELD(m_flNextNPCThink, FIELD_FLOAT),
+	DEFINE_FIELD(m_vLaserCurPos, FIELD_POSITION_VECTOR),
+
 END_DATADESC()
 
 
 LINK_ENTITY_TO_CLASS(npc_cscanner, CNPC_CScanner);
 
-
+float g_StalkerBeamThinkTime = 0.0; //0.025;
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -274,7 +312,7 @@ void CNPC_CScanner::Spawn(void)
 
 	m_hSpotlight			= NULL;
 	m_hSpotlightTarget		= NULL;
-
+	m_flFieldOfView = 0.1;
 	AngleVectors( GetLocalAngles(), &m_vSpotlightDir );
 	m_vSpotlightAngVelocity = vec3_origin;
 
@@ -291,7 +329,7 @@ void CNPC_CScanner::Spawn(void)
 	m_nPoseFaceHoriz = LookupPoseParameter( "flex_horz" );
 
 	// --------------------------------------------
-
+	m_flDistTooFar = MAX_STALKER_FIRE_RANGE;
 	CapabilitiesAdd( bits_CAP_INNATE_MELEE_ATTACK1 );
 	CapabilitiesAdd(bits_CAP_INNATE_RANGE_ATTACK1);
 
@@ -406,6 +444,7 @@ void CNPC_CScanner::Event_Killed( const CTakeDamageInfo &info )
 			return;
 		}
 	}
+	KillAttackBeam();
 
 	Gib();
 }
@@ -580,6 +619,18 @@ void CNPC_CScanner::Precache(void)
 	UTIL_PrecacheOther("item_ammo_ar2_large");
 	UTIL_PrecacheOther("item_rpg_round");
 	UTIL_PrecacheOther("item_box_buckshot");
+
+	PrecacheModel("sprites/laser.vmt");
+
+	PrecacheModel("sprites/redglow1.vmt");
+	PrecacheModel("sprites/orangeglow1.vmt");
+	PrecacheModel("sprites/yellowglow1.vmt");
+
+	PrecacheScriptSound("NPC_Stalker.BurnFlesh");
+	PrecacheScriptSound("NPC_Stalker.BurnWall");
+	PrecacheScriptSound("NPC_Stalker.Hit");
+
+	
 
 	BaseClass::Precache();
 }
@@ -1359,6 +1410,13 @@ void CNPC_CScanner::RunTask( const Task_t *pTask )
 			}
 			break;
 		}
+		case TASK_RANGE_ATTACK1:
+			UpdateAttackBeam();
+			if (!TaskIsRunning() || HasCondition(COND_TASK_FAILED))
+			{
+				KillAttackBeam();
+			}
+			break;
 		default:
 		{
 			BaseClass::RunTask(pTask);
@@ -1388,12 +1446,16 @@ int CNPC_CScanner::SelectSchedule(void)
 		return SCHED_SCANNER_ATTACK_DIVEBOMB;
 	}
 
+	
 	// -------------------------------
 	// If I'm in a script sequence
 	// -------------------------------
 	if ( m_NPCState == NPC_STATE_SCRIPT )
 		return(BaseClass::SelectSchedule());
-
+	if (!HasCondition(COND_SEE_ENEMY))
+	{
+		return SCHED_SCANNER_PATROL;
+	}
 	// -------------------------------
 	// Flinch
 	// -------------------------------
@@ -1444,6 +1506,8 @@ int CNPC_CScanner::SelectSchedule(void)
 		if ( gpGlobals->curtime < m_flNextAttack )
 			return SCHED_CSCANNER_SPOTLIGHT_HOVER;
 
+		if (HasCondition(COND_CAN_RANGE_ATTACK1))
+			return SCHED_RANGE_ATTACK1;
 		// Melee attack if possible
 		if (HasCondition(COND_CAN_MELEE_ATTACK1) && HasCondition(COND_ENEMY_FACING_ME))
 		{ 
@@ -2261,12 +2325,482 @@ void CNPC_CScanner::StartTask( const Task_t *pTask )
 		}
 		break;
 	}
+
+	///beamtest
+	case TASK_RANGE_ATTACK1:
+	{
+		CBaseEntity *pEnemy = GetEnemy();
+		if (pEnemy)
+		{
+			m_vLaserTargetPos = GetEnemyLKP() + pEnemy->GetViewOffset();
+
+			// Never hit target on first try
+			Vector missPos = m_vLaserTargetPos;
+
+			if (pEnemy->Classify() == CLASS_BULLSEYE && hl2_episodic.GetBool())
+			{
+				missPos.x += 60 + 120 * random->RandomInt(-1, 1);
+				missPos.y += 60 + 120 * random->RandomInt(-1, 1);
+			}
+			else
+			{
+				missPos.x += 80 * random->RandomInt(-1, 1);
+				missPos.y += 80 * random->RandomInt(-1, 1);
+			}
+
+			// ----------------------------------------------------------------------
+			// If target is facing me and not running towards me shoot below his feet
+			// so he can see the laser coming
+			// ----------------------------------------------------------------------
+			CBaseCombatCharacter *pBCC = ToBaseCombatCharacter(pEnemy);
+			if (pBCC)
+			{
+				Vector targetToMe = (pBCC->GetAbsOrigin() - GetAbsOrigin());
+				Vector vBCCFacing = pBCC->BodyDirection2D();
+				if ((DotProduct(vBCCFacing, targetToMe) < 0) &&
+					(pBCC->GetSmoothedVelocity().Length() < 50))
+				{
+					missPos.z -= 150;
+				}
+				// --------------------------------------------------------
+				// If facing away or running towards laser,
+				// shoot above target's head 
+				// --------------------------------------------------------
+				else
+				{
+					missPos.z += 60;
+				}
+			}
+			m_vLaserDir = missPos - LaserStartPosition(GetAbsOrigin());
+			VectorNormalize(m_vLaserDir);
+		}
+		else
+		{
+			TaskFail(FAIL_NO_ENEMY);
+			return;
+		}
+
+		StartAttackBeam();
+		SetActivity(ACT_RANGE_ATTACK1);
+		break;
+	}
 	default:
 		BaseClass::StartTask(pTask);
 		break;
 	}
 }
 
+void CNPC_CScanner::StartAttackBeam(void)
+{
+	if (m_fBeamEndTime > gpGlobals->curtime || m_fBeamRechargeTime > gpGlobals->curtime)
+	{
+		// UNDONE: Debug this and fix!?!?!
+		m_fBeamRechargeTime = gpGlobals->curtime;
+	}
+	// ---------------------------------------------
+	//  If I don't have a beam yet, create one
+	// ---------------------------------------------
+	// UNDONE: Why would I ever have a beam already?!?!?!
+	if (!m_pBeam)
+	{
+		Vector vecSrc = LaserStartPosition(GetAbsOrigin());
+		trace_t tr;
+		AI_TraceLine(vecSrc, vecSrc + m_vLaserDir * MAX_STALKER_FIRE_RANGE, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr);
+		if (tr.fraction >= 1.0)
+		{
+			// too far
+			TaskComplete();
+			return;
+		}
+
+		m_pBeam = CBeam::BeamCreate("sprites/laser.vmt", 2.0);
+		m_pBeam->PointEntInit(tr.endpos, this);
+		m_pBeam->SetEndAttachment(STALKER_LASER_ATTACHMENT);
+		m_pBeam->SetBrightness(255);
+		m_pBeam->SetNoise(0);
+
+		switch (m_eBeamPower)
+		{
+		case STALKER_BEAM_LOW:
+			m_pBeam->SetColor(255, 0, 0);
+			m_pLightGlow = CSprite::SpriteCreate("sprites/redglow1.vmt", GetAbsOrigin(), FALSE);
+			break;
+		case STALKER_BEAM_MED:
+			m_pBeam->SetColor(255, 50, 0);
+			m_pLightGlow = CSprite::SpriteCreate("sprites/orangeglow1.vmt", GetAbsOrigin(), FALSE);
+			break;
+		case STALKER_BEAM_HIGH:
+			m_pBeam->SetColor(255, 150, 0);
+			m_pLightGlow = CSprite::SpriteCreate("sprites/yellowglow1.vmt", GetAbsOrigin(), FALSE);
+			break;
+		}
+
+		// ----------------------------
+		// Light myself in a red glow
+		// ----------------------------
+		m_pLightGlow->SetTransparency(kRenderGlow, 255, 200, 200, 0, kRenderFxNoDissipation);
+		m_pLightGlow->SetAttachment(this, 1);
+		m_pLightGlow->SetBrightness(255);
+		m_pLightGlow->SetScale(0.65);
+
+#if 0
+		CBaseEntity *pEnemy = GetEnemy();
+		// --------------------------------------------------------
+		// Play start up sound - client should always hear this!
+		// --------------------------------------------------------
+		if (pEnemy != NULL && (pEnemy->IsPlayer()))
+		{
+			EmitAmbientSound(0, pEnemy->GetAbsOrigin(), "NPC_Stalker.AmbientLaserStart");
+		}
+		else
+		{
+			EmitAmbientSound(0, GetAbsOrigin(), "NPC_Stalker.AmbientLaserStart");
+		}
+#endif
+	}
+
+	SetThink(&CNPC_CScanner::BeamThink);
+
+	m_flNextNPCThink = GetNextThink();
+	SetNextThink(gpGlobals->curtime + g_StalkerBeamThinkTime);
+	m_fBeamEndTime = gpGlobals->curtime + STALKER_LASER_DURATION;
+}
+void CNPC_CScanner::DrawAttackBeam(void)
+{
+	if (!m_pBeam)
+		return;
+
+	// ---------------------------------------------
+	//	Get beam end point
+	// ---------------------------------------------
+	Vector vecSrc = LaserStartPosition(GetAbsOrigin());
+	trace_t tr;
+	AI_TraceLine(vecSrc, vecSrc + m_vLaserDir * MAX_STALKER_FIRE_RANGE, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr);
+
+	CalcBeamPosition();
+
+	bool bInWater = (UTIL_PointContents(tr.endpos) & MASK_WATER) ? true : false;
+	// ---------------------------------------------
+	//	Update the beam position
+	// ---------------------------------------------
+	m_pBeam->SetStartPos(tr.endpos);
+	m_pBeam->RelinkBeam();
+
+	Vector vAttachPos;
+	GetAttachment(STALKER_LASER_ATTACHMENT, vAttachPos);
+
+	Vector vecAimDir = tr.endpos - vAttachPos;
+	VectorNormalize(vecAimDir);
+
+	SetAim(vecAimDir);
+
+	// --------------------------------------------
+	//  Play burn sounds
+	// --------------------------------------------
+	CBaseCombatCharacter *pBCC = ToBaseCombatCharacter(tr.m_pEnt);
+	if (pBCC)
+	{
+		if (gpGlobals->curtime > m_fNextDamageTime)
+		{
+			ClearMultiDamage();
+
+			float damage = 0.0;
+			switch (m_eBeamPower)
+			{
+			case STALKER_BEAM_LOW:
+				damage = 1;
+				break;
+			case STALKER_BEAM_MED:
+				damage = 3;
+				break;
+			case STALKER_BEAM_HIGH:
+				damage = 10;
+				break;
+			}
+
+			CTakeDamageInfo info(this, this, damage, DMG_SHOCK);
+			CalculateMeleeDamageForce(&info, m_vLaserDir, tr.endpos);
+			pBCC->DispatchTraceAttack(info, m_vLaserDir, &tr);
+			ApplyMultiDamage();
+			m_fNextDamageTime = gpGlobals->curtime + 0.1;
+		}
+		if (pBCC->Classify() != CLASS_BULLSEYE)
+		{
+			if (!m_bPlayingHitFlesh)
+			{
+				CPASAttenuationFilter filter(m_pBeam, "NPC_Stalker.BurnFlesh");
+				filter.MakeReliable();
+
+				EmitSound(filter, m_pBeam->entindex(), "NPC_Stalker.BurnFlesh");
+				m_bPlayingHitFlesh = true;
+			}
+			if (m_bPlayingHitWall)
+			{
+				StopSound(m_pBeam->entindex(), "NPC_Stalker.BurnWall");
+				m_bPlayingHitWall = false;
+			}
+
+			tr.endpos.z -= 24.0f;
+			if (!bInWater)
+			{
+				//DoSmokeEffect(tr.endpos + tr.plane.normal * 8);
+			}
+		}
+	}
+
+	if (!pBCC || pBCC->Classify() == CLASS_BULLSEYE)
+	{
+		if (!m_bPlayingHitWall)
+		{
+			CPASAttenuationFilter filter(m_pBeam, "NPC_Stalker.BurnWall");
+			filter.MakeReliable();
+
+			EmitSound(filter, m_pBeam->entindex(), "NPC_Stalker.BurnWall");
+			m_bPlayingHitWall = true;
+		}
+		if (m_bPlayingHitFlesh)
+		{
+			StopSound(m_pBeam->entindex(), "NPC_Stalker.BurnFlesh");
+			m_bPlayingHitFlesh = false;
+		}
+
+		//UTIL_DecalTrace(&tr, "RedGlowFade");
+		//UTIL_DecalTrace(&tr, "FadingScorch");
+
+		tr.endpos.z -= 24.0f;
+		if (!bInWater)
+		{
+			//DoSmokeEffect(tr.endpos + tr.plane.normal * 8);
+		}
+	}
+
+	if (bInWater)
+	{
+		UTIL_Bubbles(tr.endpos - Vector(3, 3, 3), tr.endpos + Vector(3, 3, 3), 10);
+	}
+
+	/*
+	CBroadcastRecipientFilter filter;
+	TE_DynamicLight( filter, 0.0, EyePosition(), 255, 0, 0, 5, 0.2, 0 );
+	*/
+}
+void CNPC_CScanner::UpdateAttackBeam(void)
+{
+	CBaseEntity *pEnemy = GetEnemy();
+	// If not burning at a target 
+	if (pEnemy)
+	{
+		if (gpGlobals->curtime > m_fBeamEndTime)
+		{
+			TaskComplete();
+		}
+		else
+		{
+			Vector enemyLKP = GetEnemyLKP();
+			m_vLaserTargetPos = enemyLKP + pEnemy->GetViewOffset();
+
+			// Face my enemy
+			GetMotor()->SetIdealYawToTargetAndUpdate(enemyLKP);
+
+			// ---------------------------------------------
+			//	Get beam end point
+			// ---------------------------------------------
+			Vector vecSrc = LaserStartPosition(GetAbsOrigin());
+			Vector targetDir = m_vLaserTargetPos - vecSrc;
+			VectorNormalize(targetDir);
+			// --------------------------------------------------------
+			//	If beam position and laser dir are way off, end attack
+			// --------------------------------------------------------
+			if (DotProduct(targetDir, m_vLaserDir) < 0.5)
+			{
+				TaskComplete();
+				return;
+			}
+
+			trace_t tr;
+			AI_TraceLine(vecSrc, vecSrc + m_vLaserDir * MAX_STALKER_FIRE_RANGE, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr);
+			// ---------------------------------------------
+			//  If beam not long enough, stop attacking
+			// ---------------------------------------------
+			if (tr.fraction == 1.0)
+			{
+				TaskComplete();
+				return;
+			}
+
+			CSoundEnt::InsertSound(SOUND_DANGER, tr.endpos, 60, 0.025, this);
+		}
+	}
+	else
+	{
+		TaskFail(FAIL_NO_ENEMY);
+	}
+}
+int CNPC_CScanner::RangeAttack1Conditions(float flDot, float flDist)
+{
+	if (gpGlobals->curtime < m_fBeamRechargeTime)
+	{
+		return COND_NONE;
+	}
+	if (flDist <= MIN_STALKER_FIRE_RANGE)
+	{
+		return COND_TOO_CLOSE_TO_ATTACK;
+	}
+	else if (flDist > (MAX_STALKER_FIRE_RANGE * 0.66f))
+	{
+		return COND_TOO_FAR_TO_ATTACK;
+	}
+	else if (flDot < 0.7)
+	{
+		return COND_NOT_FACING_ATTACK;
+	}
+	return COND_CAN_RANGE_ATTACK1;
+}
+bool CNPC_CScanner::InnateWeaponLOSCondition(const Vector &ownerPos, const Vector &targetPos, bool bSetConditions)
+{
+	// --------------------
+	// Check for occlusion
+	// --------------------
+	// Base class version assumes innate weapon position is at eye level
+	Vector barrelPos = LaserStartPosition(ownerPos);
+	trace_t tr;
+	AI_TraceLine(barrelPos, targetPos, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr);
+
+	if (tr.fraction == 1.0)
+	{
+		return true;
+	}
+
+	CBaseEntity *pBE = tr.m_pEnt;
+	CBaseCombatCharacter *pBCC = ToBaseCombatCharacter(pBE);
+	if (pBE == GetEnemy())
+	{
+		return true;
+	}
+	else if (pBCC)
+	{
+		if (IRelationType(pBCC) == D_HT)
+		{
+			return true;
+		}
+		else if (bSetConditions)
+		{
+			SetCondition(COND_WEAPON_BLOCKED_BY_FRIEND);
+		}
+	}
+	else if (bSetConditions)
+	{
+		SetCondition(COND_WEAPON_SIGHT_OCCLUDED);
+		SetEnemyOccluder(pBE);
+	}
+
+	return false;
+}
+Vector CNPC_CScanner::LaserStartPosition(Vector vStalkerPos)
+{
+	// Get attachment position
+	Vector vAttachPos;
+	GetAttachment(STALKER_LASER_ATTACHMENT, vAttachPos);
+
+	// Now convert to vStalkerPos
+	vAttachPos = vAttachPos - GetAbsOrigin() + vStalkerPos;
+	return vAttachPos;
+}
+void CNPC_CScanner::KillAttackBeam(void)
+{
+	if (!m_pBeam)
+		return;
+
+	// Kill sound
+	StopSound(m_pBeam->entindex(), "NPC_Stalker.BurnWall");
+	StopSound(m_pBeam->entindex(), "NPC_Stalker.BurnFlesh");
+
+	UTIL_Remove(m_pLightGlow);
+	UTIL_Remove(m_pBeam);
+	m_pBeam = NULL;
+	m_bPlayingHitWall = false;
+	m_bPlayingHitFlesh = false;
+
+	SetThink(&CNPC_CScanner::CallNPCThink);
+	if (m_flNextNPCThink > gpGlobals->curtime)
+	{
+		SetNextThink(m_flNextNPCThink);
+	}
+
+	// Beam has to recharge
+	m_fBeamRechargeTime = gpGlobals->curtime + STALKER_LASER_RECHARGE;
+
+	ClearCondition(COND_CAN_RANGE_ATTACK1);
+
+	RelaxAim();
+}
+void CNPC_CScanner::BeamThink(void)
+{
+	DrawAttackBeam();
+	if (gpGlobals->curtime >= m_flNextNPCThink)
+	{
+		NPCThink();
+		m_flNextNPCThink = GetNextThink();
+	}
+
+	if (m_pBeam)
+	{
+		SetNextThink(gpGlobals->curtime + g_StalkerBeamThinkTime);
+
+		// sanity check?!
+		const Task_t *pTask = GetTask();
+		if (!pTask || pTask->iTask != TASK_RANGE_ATTACK1 || !TaskIsRunning())
+		{
+			KillAttackBeam();
+		}
+	}
+	else
+	{
+		DevMsg(2, "In StalkerThink() but no stalker beam found?\n");
+		SetNextThink(m_flNextNPCThink);
+	}
+}
+void CNPC_CScanner::CalcBeamPosition(void)
+{
+	Vector targetDir = m_vLaserTargetPos - LaserStartPosition(GetAbsOrigin());
+	VectorNormalize(targetDir);
+
+	// ---------------------------------------
+	//  Otherwise if burning towards an enemy
+	// ---------------------------------------
+	if (GetEnemy())
+	{
+		// ---------------------------------------
+		//  Integrate towards target position
+		// ---------------------------------------
+		float	iRate = 0.95;
+
+		if (GetEnemy()->Classify() == CLASS_BULLSEYE)
+		{
+			// Seek bullseyes faster
+			iRate = 0.8;
+		}
+
+		m_vLaserDir.x = (iRate * m_vLaserDir.x + (1 - iRate) * targetDir.x);
+		m_vLaserDir.y = (iRate * m_vLaserDir.y + (1 - iRate) * targetDir.y);
+		m_vLaserDir.z = (iRate * m_vLaserDir.z + (1 - iRate) * targetDir.z);
+		VectorNormalize(m_vLaserDir);
+
+		// -----------------------------------------
+		// Add time-coherent noise to the position
+		// Must be scaled with distance 
+		// -----------------------------------------
+		float fTargetDist = (GetAbsOrigin() - m_vLaserTargetPos).Length();
+		float noiseScale = atan(0.2 / fTargetDist);
+		float m_fNoiseModX = 5;
+		float m_fNoiseModY = 5;
+		float m_fNoiseModZ = 5;
+
+		m_vLaserDir.x += 5 * noiseScale*sin(m_fNoiseModX * gpGlobals->curtime + m_fNoiseModX);
+		m_vLaserDir.y += 5 * noiseScale*sin(m_fNoiseModY * gpGlobals->curtime + m_fNoiseModY);
+		m_vLaserDir.z += 5 * noiseScale*sin(m_fNoiseModZ * gpGlobals->curtime + m_fNoiseModZ);
+	}
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------

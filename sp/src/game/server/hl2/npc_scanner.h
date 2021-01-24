@@ -57,6 +57,40 @@ public:
 	float			GetMaxSpeed();
 	virtual void	Gib( void );
 
+	// ------------------------------
+	//	Laser Beam
+	// ------------------------------
+
+	float			m_flNextNPCThink;
+	int					m_eBeamPower;
+	Vector				m_vLaserDir;
+	Vector				m_vLaserTargetPos;
+	float				m_fBeamEndTime;
+	float				m_fBeamRechargeTime;
+	float				m_fNextDamageTime;
+	float				m_nextSmokeTime;
+	float				m_bPlayingHitWall;
+	float				m_bPlayingHitFlesh;
+	CBeam*				m_pBeam;
+	CSprite*			m_pLightGlow;
+
+	void				KillAttackBeam(void);
+	void				DrawAttackBeam(void);
+	void				CalcBeamPosition(void);
+	Vector				LaserStartPosition(Vector vStalkerPos);
+
+	Vector				m_vLaserCurPos;			// Last position successfully burned
+	bool				InnateWeaponLOSCondition(const Vector &ownerPos, const Vector &targetPos, bool bSetConditions);
+	void				BeamThink(void);
+	void			StartAttackBeam();
+	void			UpdateAttackBeam();
+
+
+	int				RangeAttack1Conditions(float flDot, float flDist);
+
+
+
+	///////////////////////////////////////
 	void			HandleAnimEvent( animevent_t *pEvent );
 	Activity		NPC_TranslateActivity( Activity eNewActivity );
 

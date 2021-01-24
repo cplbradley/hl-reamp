@@ -241,7 +241,7 @@ public:
 	int RangeAttack1Conditions( float flDot, float flDist );
 	int MeleeAttack1Conditions( float flDot, float flDist );
 
-	virtual float GetClawAttackRange() const { return 50; }
+	virtual float GetClawAttackRange() const { return 120; }
 
 	bool ShouldPlayFootstepMoan( void ) { return false; }
 	Class_T	Classify(void) { return CLASS_COMBINE_HUNTER; }
@@ -754,7 +754,7 @@ void CFastZombie::Spawn( void )
 	//m_flFieldOfView		= 0.2;
 
 	CapabilitiesClear();
-	CapabilitiesAdd( bits_CAP_MOVE_CLIMB | bits_CAP_MOVE_JUMP | bits_CAP_MOVE_GROUND | bits_CAP_INNATE_RANGE_ATTACK1 /* | bits_CAP_INNATE_MELEE_ATTACK1 */);
+	CapabilitiesAdd( bits_CAP_MOVE_CLIMB | bits_CAP_MOVE_JUMP | bits_CAP_MOVE_GROUND | bits_CAP_INNATE_RANGE_ATTACK1 /*| bits_CAP_INNATE_MELEE_ATTACK1*/);
 
 	if ( m_fIsTorso == true )
 	{
@@ -1161,12 +1161,35 @@ void CFastZombie::HandleAnimEvent( animevent_t *pEvent )
 	
 	if ( pEvent->event == AE_ZOMBIE_ATTACK_RIGHT )
 	{
+		DevMsg("swinging\n");
 		Vector right;
 		AngleVectors( GetLocalAngles(), NULL, &right, NULL );
 		right = right * -50;
 
 		QAngle angle( -3, -5, -3  );
-		//ClawAttack( GetClawAttackRange(), 3, angle, right, ZOMBIE_BLOOD_RIGHT_HAND );
+		CBaseEntity *pOther = ClawAttack( GetClawAttackRange(), 3, angle, right, ZOMBIE_BLOOD_RIGHT_HAND );
+
+		if (pOther != NULL)
+		{
+			CBasePlayer *pPlayer = ToBasePlayer(pOther);
+
+			if (pPlayer != NULL)
+			{
+				//Kick the player angles
+				pPlayer->ViewPunch(QAngle(20, 20, -30));
+
+				Vector	dir = pPlayer->WorldSpaceCenter() - WorldSpaceCenter();
+				VectorNormalize(dir);
+				dir.z = 0.0f;
+
+				Vector vecNewVelocity = dir * 650.0f;
+				vecNewVelocity[2] += 650.0f;
+				pPlayer->SetAbsVelocity(vecNewVelocity);
+				DevMsg("throwing player\n");
+				//color32 red = { 128, 0, 0, 128 };
+				//UTIL_ScreenFade(pPlayer, red, 1.0f, 0.1f, FFADE_IN);
+			}
+		}
 		return;
 	}
 
@@ -1570,7 +1593,7 @@ void CFastZombie::StartTask( const Task_t *pTask )
 	case TASK_RANGE_ATTACK1:
 
 		// Make melee attacks impossible until we land!
-		m_flNextMeleeAttack = gpGlobals->curtime + 60;
+		m_flNextMeleeAttack = gpGlobals->curtime + 3;
 
 		SetTouch( &CFastZombie::LeapAttackTouch );
 		break;
@@ -1651,6 +1674,7 @@ int CFastZombie::TranslateSchedule( int scheduleType )
 		}
 		else
 		{
+			DevMsg("scheduling melee\n");
 			return SCHED_FASTZOMBIE_MELEE_ATTACK1;
 		}
 		break;
@@ -2360,11 +2384,11 @@ AI_BEGIN_CUSTOM_NPC( npc_fastzombie, CFastZombie )
 		"		TASK_STOP_MOVING				0"
 		"		TASK_FACE_ENEMY					0"
 		"		TASK_MELEE_ATTACK1				0"
-		"		TASK_MELEE_ATTACK1				0"
+/*		"		TASK_MELEE_ATTACK1				0"
 		"		TASK_PLAY_SEQUENCE				ACTIVITY:ACT_FASTZOMBIE_FRENZY"
 		"		TASK_SET_FAIL_SCHEDULE			SCHEDULE:SCHED_CHASE_ENEMY"
 		"		TASK_FASTZOMBIE_VERIFY_ATTACK	0"
-		"		TASK_PLAY_SEQUENCE_FACE_ENEMY	ACTIVITY:ACT_FASTZOMBIE_BIG_SLASH"
+		"		TASK_PLAY_SEQUENCE_FACE_ENEMY	ACTIVITY:ACT_FASTZOMBIE_BIG_SLASH"*/
 
 		""
 		"	Interrupts"

@@ -268,8 +268,8 @@ void CGib::InitGib( CBaseEntity *pVictim, float fMinVelocity, float fMaxVelocity
 //------------------------------------------------------------------------------
 void CGib::SpawnSpecificGibs(	CBaseEntity*	pVictim, 
 								int				nNumGibs, 
-								float			vMinVelocity, 
 								float			vMaxVelocity, 
+								float			vMinVelocity, 
 								const char*		cModelName,
 								float			flLifetime)
 {

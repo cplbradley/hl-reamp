@@ -127,7 +127,6 @@ void CNPC_CombineS::Precache()
 	PrecacheModel("models/gibs/human/hgib_1.mdl");
 	PrecacheModel("models/gibs/human/hgib_2.mdl");
 	PrecacheModel("models/gibs/human/hgib_3.mdl");
-	PrecacheModel("models/gibs/human/hgib_4.mdl");
 	PrecacheModel("models/gibs/agibs.mdl");
 	PrecacheParticleSystem("hgib_sploosh");
 	PrecacheParticleSystem("jetpack_core");
@@ -398,14 +397,15 @@ void CNPC_CombineS::Event_Killed( const CTakeDamageInfo &info )
 
 void CNPC_CombineS::Gib(void)
 {
-	SetSolid(SOLID_NONE);
 	SetModelName(NULL_STRING);
+	SetSolid(SOLID_NONE);
 	EmitSound("Gore.Splatter");
 	//SetAbsOrigin(GetAbsOrigin() + Vector(0, 0, 48));
 	CGib::SpawnSpecificGibs(this, 2, 1200, 500, "models/gibs/human/hgib_1.mdl", 5);
 	CGib::SpawnSpecificGibs(this, 2, 1200, 500, "models/gibs/human/hgib_2.mdl", 5);
-	CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/human/hgib_3.mdl", 5);
-	CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/human/hgib_4.mdl", 5);
+	CGib::SpawnSpecificGibs(this, 2, 1200, 500, "models/gibs/human/hgib_3.mdl", 5);
+	
+	
 	UTIL_Remove(this);
 	
 }

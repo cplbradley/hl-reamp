@@ -3127,6 +3127,8 @@ void CNPC_MetroPolice::Event_Killed( const CTakeDamageInfo &info )
 		ReleaseManhack();
 		m_hManhack = NULL;
 	}
+	m_pSprite1->SetTransparency(kRenderNone, 0, 0, 0, 0, kRenderFxNone);
+	m_pSprite2->SetTransparency(kRenderNone, 0, 0, 0, 0, kRenderFxNone);
 	m_pSprite1 = NULL;
 	m_pSprite2 = NULL;
 	if (m_pSprite1 != NULL)
@@ -4912,7 +4914,6 @@ int CNPC_MetroPolice::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 		m_nRecentDamage += info.GetDamage();
 		m_flRecentDamageTime = gpGlobals->curtime;
 	}
-
 	return BaseClass::OnTakeDamage_Alive( info ); 
 }
 

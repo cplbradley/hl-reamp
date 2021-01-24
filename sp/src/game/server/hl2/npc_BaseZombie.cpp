@@ -1270,7 +1270,7 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack( float flDist, int iDamage, QAngle &qaV
 	int iDriverInitialHealth = -1;
 	CBaseEntity *pDriver = NULL;
 	if ( GetEnemy() )
-	{
+	{ 
 		trace_t	tr;
 		AI_TraceHull( WorldSpaceCenter(), GetEnemy()->WorldSpaceCenter(), -Vector(8,8,8), Vector(8,8,8), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
 

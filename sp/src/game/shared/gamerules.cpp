@@ -576,7 +576,9 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 #endif
 	}
 }
-void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, bool bIgnoreWorld )
+
+
+void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, bool bIgnoreWorld ) ///radius damage that can ignore the world
 {
 	CBaseEntity *pEntity = NULL;
 	trace_t		tr;
@@ -614,7 +616,7 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 				continue;
 
 			// radius damage can only be blocked by the world
-			vecSpot = pEntity->BodyTarget( vecSrc );
+			vecSpot = pEntity->WorldSpaceCenter();
 
 
 

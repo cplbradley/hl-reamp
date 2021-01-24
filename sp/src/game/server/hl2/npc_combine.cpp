@@ -1298,8 +1298,10 @@ void CNPC_Combine::Event_Killed( const CTakeDamageInfo &info )
 		}
 	
 	if (m_pLeftEyeG != NULL)
+		m_pLeftEyeG->SetTransparency(kRenderNone, 0, 0, 0, 0, kRenderFxNone);
 		UTIL_Remove(m_pLeftEyeG);
 	if (m_pRightEyeG != NULL)
+		m_pRightEyeG->SetTransparency(kRenderNone, 0, 0, 0, 0, kRenderFxNone);
 		UTIL_Remove(m_pRightEyeG);
 	if (m_pLeftEyeT != NULL)
 		UTIL_Remove(m_pLeftEyeT);

@@ -157,7 +157,9 @@ enum
 	COND_ANTLIONWARRIOR_PHYSICS_TARGET_INVALID,
 	COND_ANTLIONWARRIOR_HAS_CHARGE_TARGET,
 	COND_ANTLIONWARRIOR_CAN_SUMMON,
-	COND_ANTLIONWARRIOR_CAN_CHARGE
+	COND_ANTLIONWARRIOR_CAN_CHARGE,
+	COND_ANTLIONWARRIOR_CAN_SPIT,
+	COND_ANTLIONWARRIOR_CAN_BOMBARD
 };
 
 enum
@@ -272,6 +274,9 @@ public:
 	virtual void	RunTask(const Task_t *pTask);
 	virtual void	StopLoopingSounds();
 	virtual bool	HandleInteraction(int interactionType, void *data, CBaseCombatCharacter *sender);
+
+	virtual int		RangeAttack1Conditions(float flDot, float flDist);
+	virtual int		RangeAttack2Conditions(float flDot, float flDist);
 
 	Vector	m_vecSaveSpitVelocity;
 
@@ -1104,28 +1109,24 @@ int CNPC_AntlionWarrior::SelectCombatSchedule(void)
 		m_iChargeMisses--;
 		return SCHED_ANTLIONWARRIOR_SUMMON;
 	}
+	if (HasCondition(COND_ANTLIONWARRIOR_CAN_SPIT))
+	{
+		m_fNextFireball = gpGlobals->curtime + RandomFloat(3, 7);
+		return SCHED_ANTLIONWARRIOR_RANGE_ATTACK1;
+	}
 
+	if (HasCondition(COND_ANTLIONWARRIOR_CAN_BOMBARD))
+	{
+		m_fNextBombard = gpGlobals->curtime + RandomFloat(25, 30);
+		return SCHED_ANTLIONWARRIOR_RANGE_ATTACK2;
+	}
 	// Charging
 	if (HasCondition(COND_ANTLIONWARRIOR_CAN_CHARGE))
 	{
 		// Don't let other squad members charge while we're doing it
 		OccupyStrategySlot(SQUAD_SLOT_ANTLIONWARRIOR_CHARGE);
-		//int strat = RandomInt(0, 2);
-		if (gpGlobals->curtime > m_fNextBombard)
-		{
-			m_fNextBombard = gpGlobals->curtime + RandomFloat(20, 30);
-			return SCHED_ANTLIONWARRIOR_RANGE_ATTACK2;
-		}
-		int strat = RandomInt(0, 2);
-		switch (strat)
-		{
-		case 0:
-			return SCHED_ANTLIONWARRIOR_CHARGE_TARGET;
-		case 1:
-			return SCHED_ANTLIONWARRIOR_RANGE_ATTACK1;
-		case 2:
-			return SCHED_ANTLIONWARRIOR_CHARGE_TARGET;
-		}
+		return SCHED_ANTLIONWARRIOR_CHARGE_TARGET;
+	}
 		/*if (gpGlobals->curtime < m_fNextFireball)
 		{
 			return SCHED_ANTLIONWARRIOR_CHARGE_TARGET;
@@ -1145,7 +1146,6 @@ int CNPC_AntlionWarrior::SelectCombatSchedule(void)
 			return SCHED_ANTLIONWARRIOR_RANGE_ATTACK1;*/
 
 		//return SCHED_ANTLIONWARRIOR_CHARGE_TARGET;
-	}
 
 	return BaseClass::SelectSchedule();
 }
@@ -1394,6 +1394,22 @@ int CNPC_AntlionWarrior::MeleeAttack1Conditions(float flDot, float flDist)
 
 	return 0;
 }
+
+int CNPC_AntlionWarrior::RangeAttack1Conditions(float flDot, float flDist)
+{
+	if (gpGlobals->curtime < m_fNextFireball)
+		return 0;
+
+
+	return BaseClass::RangeAttack1Conditions(flDot,flDist);
+}
+int CNPC_AntlionWarrior::RangeAttack2Conditions(float flDot, float flDist)
+{
+	if (gpGlobals->curtime < m_fNextBombard)
+		return 0;
+	return BaseClass::RangeAttack2Conditions(flDot, flDist);
+	
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -1435,14 +1451,15 @@ float CNPC_AntlionWarrior::MaxYawSpeed(void)
 
 		float dist = UTIL_DistApprox2D(GetEnemy()->WorldSpaceCenter(), WorldSpaceCenter());
 
-		if (dist > 50)
-			return 0.0f;
+		if (dist > 384)
+			return 20.0f;
 
 		//FIXME: Alter by skill level
-		float yawSpeed = RemapVal(dist, 0, 512, 1.0f, 2.0f);
-		yawSpeed = clamp(yawSpeed, 1.0f, 2.0f);
+		float yawSpeed = RemapVal(dist, 0, 512, 1.0f, 3.0f);
+		yawSpeed = clamp(yawSpeed, 1.0f, 3.0f);
+		float adjustedyaw = g_pGameRules->AdjustProjectileSpeed(yawSpeed);
 
-		return yawSpeed;
+		return adjustedyaw;
 	}
 
 	if (eActivity == ACT_ANTLIONWARRIOR_CHARGE_STOP)
@@ -4097,6 +4114,8 @@ void CNPC_AntlionWarrior::GatherConditions(void)
 	// Make sure our physics target is still valid
 	MaintainPhysicsTarget();
 
+	
+
 	if (IsCurSchedule(SCHED_ANTLIONWARRIOR_PHYSICS_ATTACK))
 	{
 		if (gpGlobals->curtime > m_flWaitFinished)
@@ -4110,6 +4129,10 @@ void CNPC_AntlionWarrior::GatherConditions(void)
 	// See if we can charge the target
 	if (GetEnemy())
 	{
+		if (gpGlobals->curtime > m_fNextFireball)
+			SetCondition(COND_ANTLIONWARRIOR_CAN_SPIT);
+		if (gpGlobals->curtime > m_fNextBombard)
+			SetCondition(COND_ANTLIONWARRIOR_CAN_BOMBARD);
 		if (ShouldCharge(GetAbsOrigin(), GetEnemy()->GetAbsOrigin(), true, false))
 		{
 			SetCondition(COND_ANTLIONWARRIOR_CAN_CHARGE);
@@ -5146,13 +5169,15 @@ DECLARE_ANIMEVENT(AE_ANTLIONWARRIOR_VOICE_GRUNT)
 DECLARE_ANIMEVENT(AE_ANTLIONWARRIOR_BURROW_OUT)
 DECLARE_ANIMEVENT(AE_ANTLIONWARRIOR_VOICE_ROAR)
 DECLARE_ANIMEVENT(AE_ANTLIONWARRIOR_SPIT)
-DECLARE_ANIMEVENT(AE_ANTLIONWARRIOR_FIRE_ROCKET);
+DECLARE_ANIMEVENT(AE_ANTLIONWARRIOR_FIRE_ROCKET)
 
 DECLARE_CONDITION(COND_ANTLIONWARRIOR_PHYSICS_TARGET)
 DECLARE_CONDITION(COND_ANTLIONWARRIOR_PHYSICS_TARGET_INVALID)
 DECLARE_CONDITION(COND_ANTLIONWARRIOR_HAS_CHARGE_TARGET)
 DECLARE_CONDITION(COND_ANTLIONWARRIOR_CAN_SUMMON)
 DECLARE_CONDITION(COND_ANTLIONWARRIOR_CAN_CHARGE)
+DECLARE_CONDITION(COND_ANTLIONWARRIOR_CAN_SPIT)
+DECLARE_CONDITION(COND_ANTLIONWARRIOR_CAN_BOMBARD)
 
 //==================================================
 // SCHED_ANTLIONWARRIOR_SUMMON
@@ -5228,9 +5253,11 @@ SCHED_ANTLIONWARRIOR_RANGE_ATTACK1,
 "		TASK_STOP_MOVING					0"
 "		TASK_FACE_ENEMY						0"
 "		TASK_RANGE_ATTACK1					0"
+"		TASK_RANGE_ATTACK1					0"
+"		TASK_RANGE_ATTACK1					0"
 ""
 "	Interrupts"
-"		COND_TASK_FAILED"
+//"		COND_TASK_FAILED"
 "		COND_ENEMY_DEAD"
 //"		COND_HEAVY_DAMAGE"
 )
@@ -5244,7 +5271,7 @@ SCHED_ANTLIONWARRIOR_RANGE_ATTACK2,
 "		TASK_RANGE_ATTACK2					0"
 ""
 "	Interrupts"
-"		COND_TASK_FAILED"
+//"		COND_TASK_FAILED"
 "		COND_ENEMY_DEAD"
 //"		COND_HEAVY_DAMAGE"
 )

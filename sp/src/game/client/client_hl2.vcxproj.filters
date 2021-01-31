@@ -3404,6 +3404,7 @@
     <ClCompile Include="episodic\episodic_screenspaceeffects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="c_npc_vortboss.cpp" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

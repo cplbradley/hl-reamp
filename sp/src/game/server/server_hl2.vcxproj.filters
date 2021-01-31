@@ -3465,6 +3465,7 @@
     <ClCompile Include="hl2\hlr\npc_chopperdrone.cpp" />
     <ClCompile Include="hl2\hlr\npc_jetpack.cpp" />
     <ClCompile Include="hl2\hlr\weapon_npcfrag.cpp" />
+    <ClCompile Include="npc_vortboss.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\..\public\tier0\pointeroverride.asm">

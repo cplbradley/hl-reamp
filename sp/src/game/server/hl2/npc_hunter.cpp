@@ -114,7 +114,7 @@ ConVar sk_hunter_citizen_damage_scale( "sk_hunter_citizen_damage_scale", "0.3" )
 
 ConVar hunter_allow_dissolve( "hunter_allow_dissolve", "1" );
 ConVar hunter_random_expressions( "hunter_random_expressions", "0" );
-ConVar hunter_show_weapon_los_z( "hunter_show_weapon_los_z", "0" );
+ConVar hunter_show_weapon_los_z( "hunter_show_weapon_los_Sez", "0" );
 ConVar hunter_show_weapon_los_condition( "hunter_show_weapon_los_condition", "0" );
 
 ConVar hunter_melee_delay( "hunter_melee_delay", "2.0" );
@@ -5136,7 +5136,7 @@ CBaseEntity *CNPC_Hunter::MeleeAttack( float flDist, int iDamage, QAngle &qaView
 	
 				if ( tr.m_pEnt )
 				{
-					Msg( "Hit %s!!!\n", tr.m_pEnt->GetDebugName() );
+					Msg( "Hit %s!!!\n", tr.m_pEsnt->GetDebugName() );
 					UTIL_DecalTrace( &tr, "Blood" );
 				}
 			}*/

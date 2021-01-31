@@ -238,6 +238,7 @@ void CZombie::Precache( void )
 	PrecacheModel("models/zombie/classic.mdl");
 	PrecacheModel( "models/zombie/classic_torso.mdl" );
 	PrecacheModel( "models/zombie/classic_legs.mdl" );
+	PrecacheModel("models/vortboss_test.mdl");
 
 	PrecacheScriptSound( "Zombie.FootstepRight" );
 	PrecacheScriptSound( "Zombie.FootstepLeft" );
@@ -488,8 +489,8 @@ void CZombie::SetZombieModel( void )
 	}
 	else
 	{
-		SetModel( "models/zombie/classic.mdl" );
-		SetHullType( HULL_HUMAN );
+		SetModel( "models/vortboss_test.mdl" );
+		SetHullType(HULL_LARGE);
 		
 	}
 	static int BodyGroup_Limbs = FindBodygroupByName("body");

@@ -36,6 +36,8 @@ $jointsurfaceprop "Cylinder002"	 "metal"
 $jointsurfaceprop "Cylinder001"	 "metal"
 
 $poseparameter "move_yaw" -180 180 loop 0
+$poseparameter "aim_pitch" -80 40 loop 0
+$poseparameter "body_pitch" -70 70 loop 0
 
 $sequence "ragdoll" {
 	"anims\vortboss_ragdoll.smd"
@@ -132,7 +134,39 @@ $animation "move_NE" "anims/vortboss_moveNE.smd" {
 	loop
 	walkframe 39 LX LY
 }
-
+$animation "aim_center" "anims/vortboss_aim_center.smd" {
+	fps 30
+	loop
+}
+$animation "aim_up" "anims/vortboss_aim_up.smd" {
+	fps 30
+	loop
+}
+$animation "aim_down" "anims/vortboss_aim_down.smd" {
+	fps 30
+	loop
+}
+$animation "body_center" "anims/vortboss_body_center.smd" {
+	fps 30
+	loop
+}
+$animation "body_up" "anims/vortboss_body_up.smd" {
+	fps 30
+	loop
+}
+$animation "body_down" "anims/vortboss_body_down.smd" {
+	fps 30
+	loop
+}
+$animation "fire_up" "anims/vortboss_firecannon_up.smd" {
+	fps 40
+}
+$animation "fire_center" "anims/vortboss_firecannon.smd" {
+	fps 40
+}
+$animation "fire_down" "anims/vortboss_firecannon_down.smd" {
+	fps 40
+}
 $sequence "move" {
 	"move_S"
 	"move_SE"
@@ -169,7 +203,9 @@ $sequence "move2" {
 }
 
 $sequence "firecannon" {
-	"anims/vortboss_firecannon.smd"
+	"fire_up"
+	"fire_center"
+	"fire_down"
 	activity "ACT_VORTBOSS_CANNON" 1
 	{ event AE_VORTBOSS_FIRECANNON 36 "" }
 	{ event AE_VORTBOSS_FIRECANNON 41 "" }
@@ -177,10 +213,35 @@ $sequence "firecannon" {
 	{ event AE_VORTBOSS_FIRECANNON 51 "" }
 	{ event AE_VORTBOSS_FIRECANNON 56 "" }
 	{ event AE_VORTBOSS_FIRECANNON 61 "" }
+	blend "aim_pitch" -80 40
+	blendwidth 3
+	node "aim"
+	fadein 0.2
+	fadeout 0.2
+	fps 40
+	
+}
+$sequence "jump" {
+	"anims/vortboss_jump.smd"
+	activity ACT_JUMP 1
 	fadein 0.2
 	fadeout 0.2
 	fps 35
-	
+}
+$sequence "glide" {
+	"anims/vortboss_glide.smd"
+	activity ACT_GLIDE 1
+	fadein 0.2
+	fadeout 0.2
+	fps 35
+	loop
+}
+$sequence "land" {
+	"anims/vortboss_land.smd"
+	activity ACT_LAND 1
+	fadein 0.2
+	fadeout 0.2
+	fps 35
 }
 $sequence "eyeblast" {
 	"anims/vortboss_eyeblast.smd"
@@ -190,7 +251,7 @@ $sequence "eyeblast" {
 	{ event AE_VORTBOSS_CLEAR_BEAM 90 ""}
 	fadein 0.2
 	fadeout 0.2
-	fps 30
+	fps 40
 	
 }
 $sequence "spinattack" {
@@ -200,7 +261,7 @@ $sequence "spinattack" {
 	{ event AE_VORTBOSS_END_SPINATTACK 155 "" }
 	fadein 0
 	fadeout 0
-	fps 30
+	fps 35
 	
 }
 $sequence "groundattack" {

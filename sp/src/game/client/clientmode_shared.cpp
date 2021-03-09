@@ -15,6 +15,11 @@
 #include "iviewrender.h"
 #include "hud_basechat.h"
 #include "weapon_selection.h"
+#include "hud_redkey.h"
+#include "hud_bluekey.h"
+#include "hud_purplekey.h"
+#include "hud_skullkey.h"
+#include "hud_healthbar.h"
 #include <vgui/IVGui.h>
 #include <vgui/Cursor.h>
 #include <vgui/IPanel.h>
@@ -280,6 +285,18 @@ ClientModeShared::ClientModeShared()
 	m_pViewport = NULL;
 	m_pChatElement = NULL;
 	m_pWeaponSelection = NULL;
+	m_pRedKey = NULL;
+	m_pBlueKey = NULL;
+	m_pPurpleKey = NULL;
+	m_pHBar1 = NULL;
+	m_pHBar2 = NULL;
+	m_pHBar3 = NULL;
+	m_pRedSkullKey = NULL;
+	m_pBlueSkullKey = NULL;
+	m_pPurpleSkullKey = NULL;
+
+
+	
 	m_nRootSize[ 0 ] = m_nRootSize[ 1 ] = -1;
 	pPanelBg = NULL;
 	pMatMapBg = NULL;
@@ -329,6 +346,28 @@ void ClientModeShared::Init()
 	m_pWeaponSelection = ( CBaseHudWeaponSelection * )GET_HUDELEMENT( CHudWeaponSelection );
 	Assert( m_pWeaponSelection );
 
+	m_pRedKey = (CHudRedKey *)GET_HUDELEMENT(CHudRedKey);
+	Assert(m_pRedKey);
+	m_pBlueKey = (CHudBlueKey *)GET_HUDELEMENT(CHudBlueKey);
+	Assert(m_pBlueKey);
+	m_pPurpleKey = (CHudPurpleKey *)GET_HUDELEMENT(CHudPurpleKey);
+	Assert(m_pPurpleKey);
+
+	m_pHBar1 = (CHudHealthBar1 *)GET_HUDELEMENT(CHudHealthBar1);
+	Assert(m_pHBar1);
+	m_pHBar2 = (CHudHealthBar2 *)GET_HUDELEMENT(CHudHealthBar2);
+	Assert(m_pHBar2);
+	m_pHBar3 = (CHudHealthBar3 *)GET_HUDELEMENT(CHudHealthBar3);
+	Assert(m_pHBar3);
+
+	m_pRedSkullKey = (CHudRedSkullKey *)GET_HUDELEMENT(CHudRedSkullKey);
+	Assert(m_pRedSkullKey);
+	m_pBlueSkullKey = (CHudBlueSkullKey *)GET_HUDELEMENT(CHudBlueSkullKey);
+	Assert(m_pBlueSkullKey);
+	m_pPurpleSkullKey = (CHudPurpleSkullKey *)GET_HUDELEMENT(CHudPurpleSkullKey);
+	Assert(m_pPurpleSkullKey);
+
+
 	KeyValuesAD pConditions( "conditions" );
 	ComputeVguiResConditions( pConditions );
 
@@ -367,7 +406,7 @@ void ClientModeShared::Init()
 	ReplayCamera()->Init();
 #endif
 #endif
-
+	
 	m_CursorNone = vgui::dc_none;
 
 	HOOK_MESSAGE( VGUIMenu );
@@ -858,6 +897,46 @@ void ClientModeShared::LevelInit( const char *newmap )
 #else	// !_WIN32
 	char szMapBgName[PATH_MAX];
 #endif	// _WIN32
+
+	
+	if (m_pRedKey)
+	{
+		m_pRedKey->bShowKey = false;
+	}
+	if (m_pBlueKey)
+	{
+		m_pBlueKey->bShowKey = false;
+	}
+	if (m_pPurpleKey)
+	{
+		m_pPurpleKey->bShowKey = false;
+	}
+	if (m_pHBar1)
+	{
+		m_pHBar1->bIsAlive1 = false;
+	}
+	if (m_pHBar2)
+	{
+		m_pHBar2->bIsAlive2 = false;
+	}
+	if (m_pHBar3)
+	{
+		m_pHBar3->bIsAlive3 = false;
+	}
+	if (m_pRedSkullKey)
+	{
+		m_pRedSkullKey->bShowKey = false;
+	}
+	if (m_pBlueSkullKey)
+	{
+		m_pBlueSkullKey->bShowKey = false;
+	}
+	if (m_pPurpleSkullKey)
+	{
+		m_pPurpleSkullKey->bShowKey = false;
+	}
+
+	//engine->ClientCmd_Unrestricted("show_red 0");
 
 	Q_snprintf(szMapBgName, sizeof(szMapBgName), "vgui/loading/maps/%s", newmap);
 

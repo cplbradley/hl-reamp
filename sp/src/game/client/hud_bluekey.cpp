@@ -12,6 +12,7 @@ static ConVar show_blue("show_blue", "0", 0, "toggles beta icon in upper right c
 using namespace vgui;
 
 DECLARE_HUDELEMENT(CHudBlueKey);
+DECLARE_HUD_MESSAGE(CHudBlueKey, BlueKey);
 
 CHudBlueKey::CHudBlueKey(const char *pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudBlueKey")
 {
@@ -27,15 +28,25 @@ CHudBlueKey::CHudBlueKey(const char *pElementName) : CHudElement(pElementName), 
 
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT);
 }
+void CHudBlueKey::Init(void)
+{
+	bShowKey = false;
+	HOOK_HUD_MESSAGE(CHudBlueKey, BlueKey);
+}
 void CHudBlueKey::Paint()
 {
 	SetPaintBorderEnabled(false);
+	SetPaintBackgroundEnabled(false);
 	surface()->DrawSetTexture(m_nBlueKey);
 	surface()->DrawTexturedRect(0, 0, 32, 64);
 }
+void CHudBlueKey::MsgFunc_BlueKey(bf_read &msg)
+{
+	bShowKey = msg.ReadByte();
+}
 void CHudBlueKey::togglePrint()
 {
-	if (!show_blue.GetBool())
+	if (!bShowKey)
 		this->SetVisible(false);
 	else
 		this->SetVisible(true);

@@ -3446,7 +3446,6 @@
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
     <ClCompile Include="hl2\weapon_plasmarifle.cpp" />
-    <ClCompile Include="Source.cpp" />
     <ClCompile Include="hl2\npc_hunter.cpp" />
     <ClCompile Include="hl2\weapon_striderbuster.cpp" />
     <ClCompile Include="hl2\hlr\hlr_jumppad.cpp">
@@ -3466,6 +3465,8 @@
     <ClCompile Include="hl2\hlr\npc_jetpack.cpp" />
     <ClCompile Include="hl2\hlr\weapon_npcfrag.cpp" />
     <ClCompile Include="npc_vortboss.cpp" />
+    <ClCompile Include="hlr_keycard.cpp" />
+    <ClCompile Include="hlr_skullkey.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\..\public\tier0\pointeroverride.asm">

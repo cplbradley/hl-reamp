@@ -11,11 +11,13 @@
 #include "soundent.h"
 #include "gib.h"
 #include "shake.h"
+#include "beam_flags.h"
 #include "decals.h"
 #include "gamerules.h"
 #include "game.h"
 #include "entityapi.h"
 #include "entitylist.h"
+#include "particle_parse.h"
 #include "eventqueue.h"
 #include "worldsize.h"
 #include "isaverestore.h"
@@ -81,7 +83,7 @@
 #include "combine_mine.h"
 #include "weapon_physcannon.h"
 #endif
-
+int s_nRingTexture = -1;
 ConVar autoaim_max_dist( "autoaim_max_dist", "2160" ); // 2160 = 180 feet
 ConVar autoaim_max_deflect( "autoaim_max_deflect", "0.99" );
 
@@ -100,11 +102,16 @@ static ConVar sv_maxusrcmdprocessticks( "sv_maxusrcmdprocessticks", "24", FCVAR_
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+
+
 static ConVar old_armor( "player_old_armor", "0" );
 
 static ConVar physicsshadowupdate_render( "physicsshadowupdate_render", "0" );
 bool IsInCommentaryMode( void );
 bool IsListeningToCommentary( void );
+
+
+
 
 #if !defined( CSTRIKE_DLL )
 ConVar cl_sidespeed( "cl_sidespeed", "900", FCVAR_REPLICATED | FCVAR_CHEAT );
@@ -5066,8 +5073,9 @@ void CBasePlayer::Precache( void )
 	PrecacheScriptSound( "Player.DrownContinue" );
 	PrecacheScriptSound( "Player.Wade" );
 	PrecacheScriptSound( "Player.AmbientUnderWater" );
+	PrecacheScriptSound("BadDog.Smash");
 	enginesound->PrecacheSentenceGroup( "HEV" );
-
+	s_nRingTexture = PrecacheModel("sprites/lgtning.vmt");
 	// These are always needed
 #ifndef TF_DLL
 	PrecacheParticleSystem( "slime_splash_01" );
@@ -5075,6 +5083,8 @@ void CBasePlayer::Precache( void )
 	PrecacheParticleSystem( "slime_splash_03" );
 #endif
 
+
+	PrecacheParticleSystem("baddog_groundsmash_radialsmoke");
 	// in the event that the player JUST spawned, and the level node graph
 	// was loaded, fix all of the node graph pointers before the game starts.
 	
@@ -5119,6 +5129,32 @@ void CBasePlayer::Precache( void )
 
 }
 
+void CBasePlayer::GroundPound(void)
+{
+	EmitSound("BadDog.Smash");
+	UTIL_ScreenShake(WorldSpaceCenter(), 40.0, 60, 1.0, 500, SHAKE_START);
+	DispatchParticleEffect("baddog_groundsmash_radialsmoke", GetAbsOrigin(), QAngle(0,0,0), this);
+	CBroadcastRecipientFilter filter2;
+	RadiusDamage(CTakeDamageInfo(this, this, 500, DMG_SONIC), GetAbsOrigin(), 256, CLASS_PLAYER , this);
+	te->BeamRingPoint(filter2, 0, GetAbsOrigin(),	//origin
+		128,	//start radius
+		512,		//end radius
+		s_nRingTexture, //texture
+		0,			//halo index
+		0,			//start frame
+		2,			//framerate
+		0.4f,		//life
+		48,			//width
+		0,			//spread
+		0,			//amplitude
+		255,	//r
+		255,	//g
+		225,	//b
+		150,		//a
+		0,		//speed
+		FBEAM_FADEOUT
+		);
+}
 //-----------------------------------------------------------------------------
 // Purpose: Force this player to immediately respawn
 //-----------------------------------------------------------------------------

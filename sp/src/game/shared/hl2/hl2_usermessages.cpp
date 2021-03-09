@@ -49,6 +49,12 @@ void RegisterUserMessages( void )
 	usermessages->Register("EnemyHealth2", -1);
 	usermessages->Register("EnemyHealth3", -1);
 	usermessages->Register("JumpCount", -1);
+	usermessages->Register("RedKey", -1);
+	usermessages->Register("BlueKey", -1);
+	usermessages->Register("PurpleKey", -1);
+	usermessages->Register("RedSkullKey", -1);
+	usermessages->Register("BlueSkullKey", -1);
+	usermessages->Register("PurpleSkullKey", -1);
 #ifndef _X360
 	// NVNT register haptic user messages
 	RegisterHapticMessages();

@@ -11,7 +11,11 @@ public:
 	CHudBlueKey(const char *pElementName);
 	void togglePrint();
 	virtual void OnThink();
+	virtual void Init(void);
 
+	void MsgFunc_BlueKey(bf_read &msg);
+
+	bool bShowKey;
 protected:
 	virtual void Paint();
 	int m_nBlueKey;

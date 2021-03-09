@@ -224,6 +224,8 @@ public:
 	virtual const QAngle GetLocalAngles( void );
 	virtual bool IsEFlagSet( int nEFlagMask );
 
+
+	
 	virtual void RunPlayerMove( CBotCmd *ucmd );
 	virtual void SetLastUserCommand( const CBotCmd &cmd );
 
@@ -271,6 +273,8 @@ public:
 
 	void					LockPlayerInPlace( void );
 	void					UnlockPlayer( void );
+
+	void					GroundPound(void);
 
 	virtual void			DrawDebugGeometryOverlays(void);
 	

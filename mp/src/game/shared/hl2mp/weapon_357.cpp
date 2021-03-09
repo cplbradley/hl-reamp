@@ -13,6 +13,7 @@
 	#include "c_hl2mp_player.h"
 #else
 	#include "hl2mp_player.h"
+#include "particle_parse.h"
 #endif
 
 #include "weapon_hl2mpbasehlmpcombatweapon.h"
@@ -119,6 +120,8 @@ void CWeapon357::PrimaryAttack( void )
 	SendWeaponAnim( ACT_VM_PRIMARYATTACK );
 	pPlayer->SetAnimation( PLAYER_ATTACK1 );
 
+
+
 	m_flNextPrimaryAttack = gpGlobals->curtime + 0.75;
 	m_flNextSecondaryAttack = gpGlobals->curtime + 0.75;
 
@@ -142,6 +145,21 @@ void CWeapon357::PrimaryAttack( void )
 
 #ifndef CLIENT_DLL
 	pPlayer->SnapEyeAngles( angles );
+	Vector vecEyes;
+	QAngle angEyes = pPlayer->EyeAngles();
+	AngleVectors(angEyes, &vecEyes);
+	VectorNormalize(vecEyes);
+
+	pPlayer->VelocityPunch(-vecEyes * 500);
+	Vector vecAbsStart = pPlayer->EyePosition();
+	Vector vecAbsEnd = vecAbsStart + (vecEyes * MAX_TRACE_LENGTH);
+	trace_t tr; // Create our trace_t class to hold the end result
+	// Do the TraceLine, and write our results to our trace_t class, tr.
+	UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_SHOT_HULL, pPlayer, COLLISION_GROUP_NONE, &tr);
+
+	Vector vecPartStart;
+	Vector vecEndPos = tr.endpos;
+	DispatchParticleEffect("railgun_beam", vecSrc, tr.endpos, GetAbsAngles(), this);
 #endif
 
 	pPlayer->ViewPunch( QAngle( -8, random->RandomFloat( -2, 2 ), 0 ) );

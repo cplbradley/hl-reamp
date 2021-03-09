@@ -114,6 +114,8 @@ public:
 	virtual void	AimGun( void );
 	virtual void	OnUpdateShotRegulator( void );
 
+	void	MeleeAttack(float distance, float damage, QAngle& viewPunch, Vector& shove);
+
 	void	InputEnableArmorRecharge( inputdata_t &data );
 	void	InputDisableArmorRecharge( inputdata_t &data );
 	void	InputExtractBugbait( inputdata_t &data );

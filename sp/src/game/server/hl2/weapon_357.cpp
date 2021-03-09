@@ -194,7 +194,7 @@ void CWeapon357::DrawBeam(void)
 
 	// Create Vector for direction
 	Vector vecDir;
-
+	
 	// Take the Player's EyeAngles and turn it into a direction
 	AngleVectors(pPlayer->EyeAngles(), &vecDir);
 

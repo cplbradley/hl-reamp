@@ -21,6 +21,7 @@
 #include "hl2_gamerules.h"
 #include "npc_antlion.h"
 #include "particle_parse.h"
+#include "npc_BaseZombie.h"
 #include "particle_system.h"
 #include "ai_senses.h"
 #include "npc_vortigaunt_episodic.h"
@@ -671,7 +672,7 @@ int CNPC_Vortigaunt::RangeAttack1Conditions( float flDot, float flDist )
 //-----------------------------------------------------------------------------
 int CNPC_Vortigaunt::MeleeAttack1Conditions( float flDot, float flDist )
 {
-	if ( m_flDispelTestTime > gpGlobals->curtime )
+	/*if ( m_flDispelTestTime > gpGlobals->curtime )
 		return COND_NONE;
 
 	m_flDispelTestTime = gpGlobals->curtime + 1.0f;
@@ -684,6 +685,10 @@ int CNPC_Vortigaunt::MeleeAttack1Conditions( float flDot, float flDist )
 			return COND_VORTIGAUNT_DISPEL_ANTLIONS;
 		}
 	}
+
+	return COND_NONE;*/
+	if (flDist <= 100)
+		return COND_CAN_MELEE_ATTACK1;
 
 	return COND_NONE;
 }
@@ -776,6 +781,10 @@ void CNPC_Vortigaunt::HandleAnimEvent( animevent_t *pEvent )
 	if (pEvent->event == AE_VORT_PORTALOUTPARTICLE)
 	{
 		DispatchParticleEffect("vortigaunt_teleout", WorldSpaceCenter(), vec3_angle, this);
+		CAI_Navigator *pNav = GetNavigator();
+		DispatchParticleEffect("vortigaunt_telein", (pNav->GetGoalPos() + Vector(0,0,32)), vec3_angle, this);
+		SetLocalOrigin(pNav->GetGoalPos());
+		SetAbsVelocity(Vector(0, 0, 0));
 		return;
 	}
 	if (pEvent->event == AE_VORT_PORTALINPARTICLE)
@@ -802,6 +811,19 @@ void CNPC_Vortigaunt::HandleAnimEvent( animevent_t *pEvent )
 		return;
 	}
 
+	if (pEvent->event == AE_VORTIGAUNT_CLAW_RIGHT)
+	{
+		QAngle qa(20.0f, 0.0f, 0.0f);
+		Vector vec(-350.0f, 1.0f, 1.0f);
+		MeleeAttack(100, 30.0f, qa, vec);
+	}
+	if (pEvent->event == AE_VORTIGAUNT_CLAW_LEFT)
+	{
+		QAngle qa(4.0f, 0.0f, 0.0f);
+		Vector vec(-250.0f, 1.0f, 1.0f);
+		MeleeAttack(100, 30.0f, qa, vec);
+		return;
+	}
 	if ( pEvent->event == AE_VORTIGAUNT_ACCEL_DISPEL )
 	{
 		// TODO: Increase the size?
@@ -1041,7 +1063,61 @@ void CNPC_Vortigaunt::HandleAnimEvent( animevent_t *pEvent )
 	BaseClass::HandleAnimEvent( pEvent );
 }
 
+void CNPC_Vortigaunt::MeleeAttack(float distance, float damage, QAngle &viewPunch, Vector &shove)
+{
+	Vector vecForceDir;
 
+	// Always hurt bullseyes for now
+	if ((GetEnemy() != NULL) && (GetEnemy()->Classify() == CLASS_BULLSEYE))
+	{
+		vecForceDir = (GetEnemy()->GetAbsOrigin() - GetAbsOrigin());
+		CTakeDamageInfo info(this, this, damage, DMG_SLASH);
+		CalculateMeleeDamageForce(&info, vecForceDir, GetEnemy()->GetAbsOrigin());
+		GetEnemy()->TakeDamage(info);
+		return;
+	}
+
+	CBaseEntity *pHurt = CheckTraceHullAttack(distance, -Vector(16, 16, 32), Vector(16, 16, 32), damage, DMG_SLASH, 5.0f);
+
+	if (pHurt)
+	{
+		vecForceDir = (pHurt->WorldSpaceCenter() - WorldSpaceCenter());
+
+		//FIXME: Until the interaction is setup, kill combine soldiers in one hit -- jdw
+		if (FClassnameIs(pHurt, "npc_combine_s"))
+		{
+			CTakeDamageInfo	dmgInfo(this, this, pHurt->m_iHealth + 25, DMG_SLASH);
+			CalculateMeleeDamageForce(&dmgInfo, vecForceDir, pHurt->GetAbsOrigin());
+			pHurt->TakeDamage(dmgInfo);
+			return;
+		}
+
+		CBasePlayer *pPlayer = ToBasePlayer(pHurt);
+
+		if (pPlayer != NULL)
+		{
+			//Kick the player angles
+			if (!(pPlayer->GetFlags() & FL_GODMODE) && pPlayer->GetMoveType() != MOVETYPE_NOCLIP)
+			{
+				pPlayer->ViewPunch(viewPunch);
+
+				Vector	dir = pHurt->GetAbsOrigin() - GetAbsOrigin();
+				VectorNormalize(dir);
+
+				QAngle angles;
+				VectorAngles(dir, angles);
+				Vector forward, right;
+				AngleVectors(angles, &forward, &right, NULL);
+
+				//Push the target back
+				pHurt->ApplyAbsVelocityImpulse(-right * shove[1] - forward * shove[0]);
+			}
+		}
+
+		// Play a random attack hit sound
+		EmitSound("NPC_Antlion.MeleeAttack");
+	}
+}
 //------------------------------------------------------------------------------
 // Purpose : Turn blue or green
 //------------------------------------------------------------------------------
@@ -1093,6 +1169,12 @@ Activity CNPC_Vortigaunt::NPC_TranslateActivity( Activity eNewActivity )
 	if ( eNewActivity == ACT_RANGE_ATTACK2 )
 		return (Activity) ACT_VORTIGAUNT_DISPEL;
 
+	if (eNewActivity == ACT_GLIDE)
+	{
+		CAI_Navigator *pNav = GetNavigator();
+		SetLocalOrigin(pNav->GetGoalPos());
+		SetAbsVelocity(Vector(0, 0, 0));
+	}
 	return BaseClass::NPC_TranslateActivity( eNewActivity );
 }
 
@@ -1164,6 +1246,7 @@ void CNPC_Vortigaunt::Spawn( void )
 	SetViewOffset( Vector ( 0, 0, 64 ) );// position of the eyes relative to monster's origin.
 
 	CapabilitiesAdd(bits_CAP_INNATE_MELEE_ATTACK1 | bits_CAP_INNATE_RANGE_ATTACK1 | bits_CAP_MOVE_JUMP);
+	//CapabilitiesRemove(bits_CAP_MOVE_GROUND);
 	CapabilitiesRemove( bits_CAP_USE_SHOT_REGULATOR );
 
 	m_flEyeIntegRate		= 0.6f;		// Got a big eyeball so turn it slower

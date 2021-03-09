@@ -23,9 +23,12 @@
 	#include "client_virtualreality.h"
 	#define CRecipientFilter C_RecipientFilter
 	#include "sourcevr/isourcevirtualreality.h"
+	#include "c_basehlplayer.h"
+	#define CHL2_Player C_BaseHLPlayer
 
 #else
-
+	#include "hl2_player.h"
+	#include "hl_gamemovement.h"
 	#include "iservervehicle.h"
 	#include "trains.h"
 	#include "world.h"
@@ -745,6 +748,10 @@ void CBasePlayer::PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, flo
 	ep.m_pOrigin = &vecOrigin;
 
 	EmitSound( filter, entindex(), ep );
+
+#ifdef CLIENT_DLL
+	C_BaseHLPlayer *pPlayer = GetHL2Player();
+#endif
 
 	// Kyle says: ugggh. This function may as well be called "PerformPileOfDesperateGameSpecificFootstepHacks".
 	OnEmitFootstepSound( params, vecOrigin, fvol );

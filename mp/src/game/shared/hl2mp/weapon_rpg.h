@@ -59,6 +59,7 @@ private:
 	
 #else
 public:
+	DECLARE_DATADESC();
 	static CMissile *Create(const Vector &vecOrigin, const QAngle &vecAngles, edict_t *pentOwner);
 	void	MissileTouch(CBaseEntity *pOther);
 	void	Explode(void);
@@ -102,7 +103,7 @@ protected:
 private:
 	float					m_flGracePeriodEndsAt;
 
-	DECLARE_DATADESC();
+	
 #endif
 };
 

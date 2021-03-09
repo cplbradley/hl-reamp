@@ -81,6 +81,7 @@ public:
 	virtual			~C_BasePlayer();
 
 	virtual void	Spawn( void );
+	void			GroundPound(void);
 	virtual void	SharedSpawn(); // Shared between client and server.
 	virtual bool	GetSteamID( CSteamID *pID );
 

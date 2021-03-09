@@ -21,6 +21,15 @@ class CBaseHudWeaponSelection;
 class CViewSetup;
 class C_BaseEntity;
 class C_BasePlayer;
+class CHudRedKey;
+class CHudBlueKey;
+class CHudPurpleKey;
+class CHudRedSkullKey;
+class CHudBlueSkullKey;
+class CHudPurpleSkullKey;
+class CHudHealthBar1;
+class CHudHealthBar2;
+class CHudHealthBar3;
 
 namespace vgui
 {
@@ -155,6 +164,16 @@ private:
 	CBaseHudChat			*m_pChatElement;
 	vgui::HCursor			m_CursorNone;
 	CBaseHudWeaponSelection *m_pWeaponSelection;
+	CHudRedKey *m_pRedKey;
+	CHudBlueKey *m_pBlueKey;
+	CHudPurpleKey *m_pPurpleKey;
+	CHudRedSkullKey *m_pRedSkullKey;
+	CHudBlueSkullKey *m_pBlueSkullKey;
+	CHudPurpleSkullKey *m_pPurpleSkullKey;
+	CHudHealthBar1 *m_pHBar1;
+	CHudHealthBar2 *m_pHBar2;
+	CHudHealthBar3 *m_pHBar3;
+
 	int						m_nRootSize[2];
 };
 

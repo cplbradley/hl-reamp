@@ -8,12 +8,15 @@
 #include "npcevent.h"
 #include "in_buttons.h"
 #include "weapon_rpg.h"
+#include "Multiplayer/hlrmp_rocket.h"
 
 #ifdef CLIENT_DLL
 #include "c_hl2mp_player.h"
 #include "model_types.h"
 #include "beamdraw.h"
 #include "fx_line.h"
+#include "c_basetempentity.h"
+#include "c_te_legacytempents.h"
 #include "view.h"
 #include "c_basecombatcharacter.h"
 #else
@@ -21,6 +24,7 @@
 #include "movie_explosion.h"
 #include "soundent.h"
 #include "player.h"
+
 #include "rope.h"
 #include "vstdlib/random.h"
 #include "engine/IEngineSound.h"
@@ -33,6 +37,10 @@
 #include "smoke_trail.h"
 #include "collisionutils.h"
 #include "hl2_shareddefs.h"
+
+
+extern void SendProxy_Origin(const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID);
+extern void SendProxy_Angles(const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID);
 #endif
 
 #include "debugoverlay_shared.h"
@@ -147,11 +155,17 @@ BEGIN_NETWORK_TABLE(CMissile, DT_Missile)
 // Client specific.
 #ifdef CLIENT_DLL
 RecvPropVector(RECVINFO(m_vInitialVelocity)),
+RecvPropVector(RECVINFO_NAME(m_vecNetworkOrigin, m_vecOrigin)),
+RecvPropQAngles(RECVINFO_NAME(m_angNetworkAngles, m_angRotation)),
 
 // Server specific.
 #else
 SendPropVector(SENDINFO(m_vInitialVelocity), 12 /*nbits*/, 0 /*flags*/, -3000 /*low value*/, 3000 /*high value*/),
+SendPropExclude( "DT_BaseEntity", "m_vecOrigin" ),
+SendPropExclude("DT_BaseEntity", "m_angRotation"),
 
+SendPropVector(SENDINFO(m_vecOrigin), -1, SPROP_COORD_MP_INTEGRAL | SPROP_CHANGES_OFTEN, 0.0f, HIGH_DEFAULT, SendProxy_Origin),
+SendPropQAngles(SENDINFO(m_angRotation), 6, SPROP_CHANGES_OFTEN, SendProxy_Angles),
 #endif
 END_NETWORK_TABLE()
 class CWeaponRPG;
@@ -185,6 +199,7 @@ void CMissile::Precache(void)
 	PrecacheModel("models/weapons/w_missile.mdl");
 	PrecacheModel("models/weapons/w_missile_launch.mdl");
 	PrecacheModel("models/weapons/w_missile_closed.mdl");
+	UTIL_PrecacheOther("hl2mp_rocket");
 	BaseClass::Precache();
 }
 
@@ -197,14 +212,15 @@ void CMissile::Precache(void)
 void CMissile::Spawn(void)
 {
 	Precache();
-	SetModel("models/weapons/w_missile_launch.mdl");
 #ifdef CLIENT_DLL
 	BaseClass::Spawn();
 	m_flSpawnTime = gpGlobals->curtime;
 #else
+	
 	SetSolid(SOLID_BBOX);
+	SetModel("models/weapons/w_missile_launch.mdl");
 	Assert(GetModel());
-
+	
 	UTIL_SetSize(this, -Vector(4, 4, 4), Vector(4, 4, 4));
 
 	SetTouch(&CMissile::MissileTouch);
@@ -220,6 +236,7 @@ void CMissile::Spawn(void)
 	m_flGracePeriodEndsAt = 0;
 
 	AddFlag(FL_OBJECT);
+
 #endif
 }
 
@@ -695,7 +712,7 @@ CMissile *CMissile::Create(const Vector &vecOrigin, const QAngle &vecAngles, edi
 
 	Vector vecVelocity = vecForward * 1100.0f;
 	pMissile->SetAbsVelocity(vecVelocity);
-	//pMissile->SetupInitialTransmittedGrenadeVelocity(vecVelocity);
+	pMissile->SetupInitialTransmittedGrenadeVelocity(vecVelocity);
 
 	return pMissile;
 }
@@ -731,8 +748,8 @@ void CMissile::PostDataUpdate(DataUpdateType_t type)
 
 int CMissile::DrawModel(int flags)
 {
-	if (gpGlobals->curtime - m_flSpawnTime < 0.2f)
-		return 0;
+	/*if (gpGlobals->curtime - m_flSpawnTime < 0.2f)
+		return 0;*/
 
 	return BaseClass::DrawModel(flags);
 }
@@ -1525,10 +1542,13 @@ void CWeaponRPG::PrimaryAttack(void)
 	QAngle vecAngles;
 	VectorAngles(vForward, vecAngles);
 
-	CMissile *pMissile = CMissile::Create(muzzlePoint, vecAngles, GetOwner()->edict());
+	/*CMissile *pMissile = CMissile::Create(muzzlePoint, vecAngles, GetOwner()->edict());
+	pMissile->SetModel("models/weapons/w_missile_launch.mdl");
 	pMissile->m_hOwner = this;
 	pMissile->IgniteThink();
-	pMissile->Spawn();
+	pMissile->Spawn();*/
+
+	CHLRMPRocket *pRocket = CHLRMPRocket::Create("hlrmp_rocket", muzzlePoint, vecAngles, GetOwner());
 	/*Vector vecVelocity = (vecForward * RPG_SPEED);
 	SetAbsVelocity(vecVelocity);*/
 	//pMissile->SetupInitialTransmittedGrenadeVelocity(vecVelocity);
@@ -1542,10 +1562,11 @@ void CWeaponRPG::PrimaryAttack(void)
 		pMissile->SetGracePeriod(0.3);
 	}*/
 
-	pMissile->SetDamage(GetHL2MPWpnData().m_iPlayerDamage);
+	pRocket->SetDamage(GetHL2MPWpnData().m_iPlayerDamage);
 
-	m_hMissile = pMissile;
+	m_hMissile = pRocket;
 #endif
+
 
 	DecrementAmmo(GetOwner());
 	SendWeaponAnim(ACT_VM_PRIMARYATTACK);

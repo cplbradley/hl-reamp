@@ -21,12 +21,9 @@ private:
 	virtual void ClientThink();
 	virtual void OnDataChanged(DataUpdateType_t type);
 
-	CHandle<CBasePlayer> pPlayer;
-	CNetworkVar(bool, bApplyDamage);
-	CNetworkVector(vDmgPos);
+	//CNetworkVector(vDmgPos);
 	CBeam *pSpinBeam;
 	bool bDrawSpinBeam;
-	int iAmmoType;
 
 	C_NPC_VortBoss(const C_NPC_VortBoss &);
 };
@@ -35,7 +32,6 @@ BEGIN_DATADESC(C_NPC_VortBoss)
 END_DATADESC()
 IMPLEMENT_CLIENTCLASS_DT(C_NPC_VortBoss, DT_VortBoss, CNPC_VortBoss)
 RecvPropBool(RECVINFO(bDrawSpinBeam)),
-RecvPropInt(RECVINFO(iAmmoType)),
 END_RECV_TABLE()
 
 
@@ -69,20 +65,20 @@ void C_NPC_VortBoss::ClientThink()
 		pSpinBeam->SetEndAttachment(VORTBOSS_HAND_ATTACHMENT);
 		pSpinBeam->SetBrightness(255);
 		pSpinBeam->SetNoise(0);
-		/*CBaseCombatCharacter *pBCC = ToBaseCombatCharacter(tr.m_pEnt);
+		CBaseCombatCharacter *pBCC = ToBaseCombatCharacter(tr.m_pEnt);
 		//DebugDrawLine(tr.startpos, tr.endpos, 0, 150, 255, false, 0.1);
 		if (pBCC)
 		{
-			ClearMultiDamage();
+			//ClearMultiDamage();
 			CTakeDamageInfo info(this, this, 20, DMG_SHOCK);
-			info.AdjustPlayerDamageTakenForSkillLevel();
-			info.SetDamagePosition(tr.endpos);
-			CalculateMeleeDamageForce(&info, m_vLaserDir, tr.endpos);
+			//info.AdjustPlayerDamageTakenForSkillLevel();
+			//info.SetDamagePosition(tr.endpos);
+			//CalculateMeleeDamageForce(&info, m_vLaserDir, tr.endpos);
 			pBCC->DispatchTraceAttack(info, m_vLaserDir, &tr);
-			ApplyMultiDamage();
-			
+			//ApplyMultiDamage();
+			engine->ClientCmd_Unrestricted("vorthurt");
 			DevMsg("client hit\n");
-		}*/
+		}
 	}
 	else
 	{

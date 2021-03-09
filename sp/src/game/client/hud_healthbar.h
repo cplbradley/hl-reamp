@@ -25,6 +25,7 @@ public:
 	virtual void OnThink(void);
 
 	void MsgFunc_EnemyHealth1(bf_read &msg);
+	bool bIsAlive1;
 
 
 protected:
@@ -49,7 +50,7 @@ private:
 	float m_flMaxHull;
 	float gHealth1;
 	float gMaxHealth1;
-	bool bIsAlive1;
+
 	int m_nHullLow;
 
 };
@@ -65,6 +66,7 @@ public:
 	virtual void Reset(void);
 	virtual void OnThink(void);
 
+	bool bIsAlive2;
 	void MsgFunc_EnemyHealth2(bf_read &msg);
 
 
@@ -90,7 +92,7 @@ private:
 	float m_flMaxHull;
 	float gHealth2;
 	float gMaxHealth2;
-	bool bIsAlive2;
+
 	int m_nHullLow;
 
 };
@@ -105,7 +107,7 @@ public:
 	virtual void Init(void);
 	virtual void Reset(void);
 	virtual void OnThink(void);
-
+	bool bIsAlive3;
 	void MsgFunc_EnemyHealth3(bf_read &msg);
 
 
@@ -131,7 +133,7 @@ private:
 	float m_flMaxHull;
 	float gHealth3;
 	float gMaxHealth3;
-	bool bIsAlive3;
+
 	int m_nHullLow;
 
 };

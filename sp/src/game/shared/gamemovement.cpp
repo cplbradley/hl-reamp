@@ -63,9 +63,9 @@ ConVar debug_latch_reset_onduck( "debug_latch_reset_onduck", "1", FCVAR_CHEAT );
 
 // [MD] I'll remove this eventually. For now, I want the ability to A/B the optimizations.
 bool g_bMovementOptimizations = true;
-//ConVar cl_viewbob_enabled("cl_viewbob_enabled", "1", 0, "Oscillation Toggle", true, 0, true, 1);
-//ConVar cl_viewbob_timer("cl_viewbob_timer", "10", 0, "Speed of Oscillation");
-//ConVar cl_viewbob_scale("cl_viewbob_scale", "0.009", 0, "Magnitude of Oscillation");
+/*ConVar cl_viewbob_enabled("cl_viewbob_enabled", "1", 0, "Oscillation Toggle", true, 0, true, 1);
+ConVar cl_viewbob_timer("cl_viewbob_timer", "10", 0, "Speed of Oscillation");
+ConVar cl_viewbob_scale("cl_viewbob_scale", "0.009", 0, "Magnitude of Oscillation");*/
 // Roughly how often we want to update the info about the ground surface we're on.
 // We don't need to do this very often.
 #define CATEGORIZE_GROUND_SURFACE_INTERVAL			0.3f
@@ -626,7 +626,8 @@ CGameMovement::CGameMovement( void )
 	m_nOnLadder			= 0;
 	m_iJumpCount = 0;
 	m_iMaxJumps = 2;
-
+	m_bShouldGroundPound = false;
+	m_bDidGroundPound = false;
 	mv					= NULL;
 
 	memset( m_flStuckCheckTime, 0, sizeof(m_flStuckCheckTime) );
@@ -1911,13 +1912,22 @@ void CGameMovement::WalkMove( void )
 {
 	/*if (cl_viewbob_enabled.GetInt() == 1 && !engine->IsPaused())
 	{
-		float xoffset = sin(gpGlobals->curtime * cl_viewbob_timer.GetFloat()) * player->GetAbsVelocity().Length() * cl_viewbob_scale.GetFloat() / 100;
-		float yoffset = sin(2 * gpGlobals->curtime * cl_viewbob_timer.GetFloat()) * player->GetAbsVelocity().Length() * cl_viewbob_scale.GetFloat() / 400;
+		float xoffset, yoffset;
+		if (mv->m_nButtons & IN_SPEED)
+		{
+			xoffset = sin(gpGlobals->curtime * cl_viewbob_timer.GetFloat() * 2) * player->GetAbsVelocity().Length() * (cl_viewbob_scale.GetFloat() * 2) / 100;
+			yoffset = sin(2 * gpGlobals->curtime * cl_viewbob_timer.GetFloat() * 2) * player->GetAbsVelocity().Length() * (cl_viewbob_scale.GetFloat() * 2) / 400;
+		}
+		else
+		{v
+			xoffset = sin(gpGlobals->curtime * cl_viewbob_timer.GetFloat()) * player->GetAbsVelocity().Length() * cl_viewbob_scale.GetFloat() / 100;
+			yoffset = sin(2 * gpGlobals->curtime * cl_viewbob_timer.GetFloat()) * player->GetAbsVelocity().Length() * cl_viewbob_scale.GetFloat() / 400;
+		}
 		player->ViewPunch(QAngle(xoffset, yoffset, 0));
-
 	}*/
 	int i;
 
+	
 	Vector wishvel;
 	float spd;
 	float fmove, smove;
@@ -2112,6 +2122,14 @@ void CGameMovement::FullWalkMove( )
 			mv->m_nOldButtons &= ~IN_JUMP;
 		}
 
+		if (mv->m_nButtons & IN_SPEED)
+		{
+			CheckGroundPound();
+		}
+		else
+		{
+			mv->m_nOldButtons &= ~IN_SPEED;
+		}
 		// Fricion is handled before we add in any base velocity. That way, if we are on a conveyor, 
 		//  we don't slow when standing still, relative to the conveyor.
 		if (player->GetGroundEntity() != NULL)
@@ -2432,16 +2450,17 @@ bool CGameMovement::CheckJumpButton( void )
 
 	// Cannot jump will in the unduck transition.
 	if (player->m_Local.m_bDucking && (player->GetFlags() & FL_DUCKING))
-		return false;
+		return false;	
 
 	// Still updating the eye position.
 	if (player->m_Local.m_flDuckJumpTime > 0.0f)
 		return false;
 
-
 	// In the air now.
 	SetGroundEntity(NULL);
 
+
+	//player->ViewPunch(QAngle(8, random->RandomFloat(-2, 2), 0));
 	player->PlayStepSound((Vector &)mv->GetAbsOrigin(), player->m_pSurfaceData, 1.0, true);
 
 	MoveHelper()->PlayerSetAnimation(PLAYER_JUMP);
@@ -2567,6 +2586,53 @@ bool CGameMovement::CheckJumpButton( void )
 	return true;
 }
 
+
+bool CGameMovement::CheckGroundPound(void)
+{
+	if (m_bShouldGroundPound == false)
+	{
+		mv->m_nOldButtons |= IN_SPEED;
+		DevMsg("can't ground pound\n");
+		return false;
+	}
+	if (m_bDidGroundPound == true)
+	{
+		mv->m_nOldButtons |= IN_SPEED;
+		DevMsg("already did a ground pound\n");
+		return false;
+	}
+	if (mv->m_nOldButtons & IN_SPEED)
+	{
+		mv->m_nOldButtons |= IN_SPEED;
+		DevMsg("quit holding the ground pound button ya dingus\n");
+		return false;
+	}
+	if (player->GetGroundEntity() != NULL)
+	{
+		mv->m_nOldButtons |= IN_SPEED;
+		DevMsg("on the ground, can't ground pound\n");
+		return false;
+	}
+	Vector vecPos = player->GetAbsOrigin();
+	trace_t tr;
+	Vector Endpos = vecPos + (Vector(0, 0, -1) * MAX_TRACE_LENGTH);
+	UTIL_TraceLine(vecPos, Endpos, MASK_SHOT, player, COLLISION_GROUP_NONE, &tr);
+	Vector vecDistToGround = tr.endpos - tr.startpos;
+	float dist = vecDistToGround.Length();
+
+	if (dist < 128.0f)
+	{
+		mv->m_nOldButtons |= IN_SPEED;
+		DevMsg("not high enough to ground pound\n");
+		return false;
+	}
+	player->SetGravity(5.0f);
+	m_bDidGroundPound = true;
+	DevMsg("Activating Ground Pound\n");
+	return true;
+
+
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -4010,6 +4076,13 @@ void CGameMovement::CheckFalling( void )
 	//
 	player->m_Local.m_flFallVelocity = 0;
 	m_iJumpCount = 0;
+
+	if (m_bDidGroundPound)
+	{
+		player->GroundPound();
+		player->SetGravity(1.0f);
+		m_bDidGroundPound = false;
+	}
 }
 
 void CGameMovement::PlayerRoughLandingEffects( float fvol )

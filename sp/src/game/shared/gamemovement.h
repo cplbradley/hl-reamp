@@ -62,6 +62,9 @@ public:
 	int m_iJumpCount;
 	int m_iMaxJumps;
 
+	bool	m_bShouldGroundPound;
+	bool	m_bDidGroundPound;
+
 #define BRUSH_ONLY true
 	virtual unsigned int PlayerSolidMask( bool brushOnly = false );	///< returns the solid mask for the given player, so bots can have a more-restrictive set
 	CBasePlayer		*player;
@@ -99,6 +102,8 @@ protected:
 	void			WaterJump( void );
 
 	//bool			DoubleJump(void);
+
+	void			GroundPound(void);
 
 	// Handles both ground friction and water friction
 	void			Friction( void );
@@ -157,6 +162,9 @@ protected:
 
 	// Returns true if he started a jump (ie: should he play the jump animation)?
 	virtual bool	CheckJumpButton( void );	// Overridden by each game.
+
+	virtual bool	CheckGroundPound(void);
+
 
 
 	// Dead player flying through air., e.g.

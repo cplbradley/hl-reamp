@@ -11,8 +11,14 @@ public:
 	CHudRedKey(const char *pElementName);
 	void togglePrint();
 	virtual void OnThink();
+	virtual void Init(void);
 
+	void MsgFunc_RedKey(bf_read &msg);
+
+	bool bShowKey;
 protected:
 	virtual void Paint();
 	int m_nRedKey;
 };
+
+DECLARE_HUDELEMENT(CHudRedKey);

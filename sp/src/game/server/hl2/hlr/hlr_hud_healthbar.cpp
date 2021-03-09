@@ -12,6 +12,13 @@
 #include "gameinterface.h"
 
 
+enum
+{
+	HEALTHBAR_SLOT1,
+	HEALTHBAR_SLOT2,
+	HEALTHBAR_SLOT3,
+};
+
 class CHLRHudHealthbar : public CLogicalEntity
 {
 	DECLARE_CLASS(CHLRHudHealthbar, CLogicalEntity);
@@ -24,6 +31,8 @@ public:
 	void ClearHud(void);
 	const char* targetent1;
 	CBaseEntity *Ent;
+
+	int m_iSlot;
 	float gHealth;
 	float gMaxHealth;
 	bool bActive;
@@ -39,13 +48,15 @@ DEFINE_INPUTFUNC(FIELD_VOID, "Enable", InputEnable),
 DEFINE_KEYFIELD(targetent1, FIELD_STRING, "targetent1"),
 DEFINE_FIELD(bActive,FIELD_BOOLEAN),
 DEFINE_FIELD(Ent, FIELD_CLASSPTR),
+DEFINE_KEYFIELD(m_iSlot, FIELD_INTEGER, "HealthBarSlot"),
 END_DATADESC()
 void CHLRHudHealthbar::Spawn(void)
 {
-	Ent = gEntList.FindEntityByName(NULL, targetent1);
+	//Ent = gEntList.FindEntityByName(NULL, targetent1);
 	ClearHud();
-	SetThink(&CHLRHudHealthbar::TransmitData);
-	SetNextThink(gpGlobals->curtime);
+	//SetThink(&CHLRHudHealthbar::TransmitData);
+	//SetNextThink(gpGlobals->curtime);
+	bActive = false;
 }
 void CHLRHudHealthbar::InputEnable(inputdata_t &inputdata)
 {
@@ -54,44 +65,263 @@ void CHLRHudHealthbar::InputEnable(inputdata_t &inputdata)
 
 void CHLRHudHealthbar::Enable(void)
 {
-	if (!Ent)
-		return;
-	bActive = true;
-	gHealth = Ent->GetHealth();
-	gMaxHealth = Ent->GetMaxHealth();
-
-	CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
-	user.MakeReliable();
-	UserMessageBegin(user, "EnemyHealth1");
-	WRITE_FLOAT(gHealth);
-	WRITE_FLOAT(gMaxHealth);
-	WRITE_BOOL(bActive);
-	MessageEnd();
-	Msg("enabled\n");
+	switch (m_iSlot)
+	{
+	case HEALTHBAR_SLOT1:
+	{
+		Ent = gEntList.FindEntityByName(NULL, targetent1);
+		if (!Ent)
+			return;
+		bActive = true;
+		gHealth = Ent->GetHealth();
+		gMaxHealth = Ent->GetMaxHealth();
+		CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+		user.MakeReliable();
+		UserMessageBegin(user, "EnemyHealth1");
+		WRITE_FLOAT(gHealth);
+		WRITE_FLOAT(gMaxHealth);
+		WRITE_BOOL(bActive);
+		MessageEnd();
+		Msg("enabled\n");
+		break;
+	}
+	case HEALTHBAR_SLOT2:
+	{
+		Ent = gEntList.FindEntityByName(NULL, targetent1);
+		if (!Ent)
+			return;
+		bActive = true;
+		gHealth = Ent->GetHealth();
+		gMaxHealth = Ent->GetMaxHealth();
+		CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+		user.MakeReliable();
+		UserMessageBegin(user, "EnemyHealth2");
+		WRITE_FLOAT(gHealth);
+		WRITE_FLOAT(gMaxHealth);
+		WRITE_BOOL(bActive);
+		MessageEnd();
+		Msg("enabled\n");
+		break;
+	}
+	case HEALTHBAR_SLOT3:
+	{
+		Ent = gEntList.FindEntityByName(NULL, targetent1);
+		if (!Ent)
+			return;
+		bActive = true;
+		gHealth = Ent->GetHealth();
+		gMaxHealth = Ent->GetMaxHealth();
+		CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+		user.MakeReliable();
+		UserMessageBegin(user, "EnemyHealth3");
+		WRITE_FLOAT(gHealth);
+		WRITE_FLOAT(gMaxHealth);
+		WRITE_BOOL(bActive);
+		MessageEnd();
+		Msg("enabled\n");
+		break;
+	}
+	}
+	
 	SetThink(&CHLRHudHealthbar::TransmitData);
 	SetNextThink(gpGlobals->curtime);
 	
 }
 void CHLRHudHealthbar::TransmitData(void)
 {
-	Ent = gEntList.FindEntityByName(NULL, targetent1);
-	if (!Ent)
+	switch (m_iSlot)
 	{
-		bActive = false;
-		CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
-		user.MakeReliable();
-		UserMessageBegin(user, "EnemyHealth1");
-		WRITE_FLOAT(1.0f);
-		WRITE_FLOAT(1.0f);
-		WRITE_BOOL(bActive);
-		MessageEnd();
-		SetThink(NULL);
-		return;
-	}
+	case HEALTHBAR_SLOT1:
+	{
+		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+		Ent = gEntList.FindEntityByName(NULL, targetent1);
+		if (!Ent)
+		{
+			bActive = false;
+			CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+			user.MakeReliable();
+			UserMessageBegin(user, "EnemyHealth1");
+			WRITE_FLOAT(1.0f);
+			WRITE_FLOAT(1.0f);
+			WRITE_BOOL(bActive);
+			MessageEnd();
+			SetThink(NULL);
+			return;
+		}
+		if (!pPlayer->IsAlive())
+		{
+			bActive = false;
+			CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+			user.MakeReliable();
+			UserMessageBegin(user, "EnemyHealth1");
+			WRITE_FLOAT(1.0f);
+			WRITE_FLOAT(1.0f);
+			WRITE_BOOL(bActive);
+			MessageEnd();
+			SetThink(NULL);
+			return;
+		}
+		gMaxHealth = Ent->GetMaxHealth();
+		gHealth = Ent->GetHealth();
+		if (gHealth != gMaxHealth)
+		{
+			if (gHealth > 0)
+			{
+				bActive = true;
+				CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+				user.MakeReliable();
+				UserMessageBegin(user, "EnemyHealth1");
+				WRITE_FLOAT(gHealth);
+				WRITE_FLOAT(gMaxHealth);
+				WRITE_BOOL(bActive);
+				MessageEnd();
+			}
+			else
+			{
+				bActive = false;
+				CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+				user.MakeReliable();
+				UserMessageBegin(user, "EnemyHealth1");
+				WRITE_FLOAT(gHealth);
+				WRITE_FLOAT(gMaxHealth);
+				WRITE_BOOL(bActive);
+				MessageEnd();
+				SetThink(NULL);
+				return;
+			}
 
-	gMaxHealth = Ent->GetMaxHealth();
-	gHealth = Ent->GetHealth();
-	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+		}
+		break;
+	}
+	case HEALTHBAR_SLOT2:
+	{
+		Ent = gEntList.FindEntityByName(NULL, targetent1);
+		if (!Ent)
+		{
+			bActive = false;
+			CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+			user.MakeReliable();
+			UserMessageBegin(user, "EnemyHealth2");
+			WRITE_FLOAT(1.0f);
+			WRITE_FLOAT(1.0f);
+			WRITE_BOOL(bActive);
+			MessageEnd();
+			SetThink(NULL);
+			return;
+		}
+
+		gMaxHealth = Ent->GetMaxHealth();
+		gHealth = Ent->GetHealth();
+		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+
+		if (!pPlayer->IsAlive())
+		{
+			bActive = false;
+			CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+			user.MakeReliable();
+			UserMessageBegin(user, "EnemyHealth2");
+			WRITE_FLOAT(1.0f);
+			WRITE_FLOAT(1.0f);
+			WRITE_BOOL(bActive);
+			MessageEnd();
+			SetThink(NULL);
+			return;
+		}
+		if (gHealth != gMaxHealth)
+		{
+			if (gHealth > 0)
+			{
+				bActive = true;
+				CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+				user.MakeReliable();
+				UserMessageBegin(user, "EnemyHealth2");
+				WRITE_FLOAT(gHealth);
+				WRITE_FLOAT(gMaxHealth);
+				WRITE_BOOL(bActive);
+				MessageEnd();
+			}
+			else
+			{
+				bActive = false;
+				CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+				user.MakeReliable();
+				UserMessageBegin(user, "EnemyHealth2");
+				WRITE_FLOAT(gHealth);
+				WRITE_FLOAT(gMaxHealth);
+				WRITE_BOOL(bActive);
+				MessageEnd();
+				SetThink(NULL);
+				return;
+			}
+		}
+		break;
+	}
+	case HEALTHBAR_SLOT3:
+	{
+		Ent = gEntList.FindEntityByName(NULL, targetent1);
+		if (!Ent)
+		{
+			bActive = false;
+			CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+			user.MakeReliable();
+			UserMessageBegin(user, "EnemyHealth3");
+			WRITE_FLOAT(1.0f);
+			WRITE_FLOAT(1.0f);
+			WRITE_BOOL(bActive);
+			MessageEnd();
+			SetThink(NULL);
+			return;
+		}
+		gMaxHealth = Ent->GetMaxHealth();
+		gHealth = Ent->GetHealth();
+		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+
+		if (!pPlayer->IsAlive())
+		{
+			bActive = false;
+			CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+			user.MakeReliable();
+			UserMessageBegin(user, "EnemyHealth3");
+			WRITE_FLOAT(1.0f);
+			WRITE_FLOAT(1.0f);
+			WRITE_BOOL(bActive);
+			MessageEnd();
+			SetThink(NULL);
+			return;
+		}
+		if (gHealth != gMaxHealth)
+		{
+			if (gHealth > 0)
+			{
+				bActive = true;
+				CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+				user.MakeReliable();
+				UserMessageBegin(user, "EnemyHealth3");
+				WRITE_FLOAT(gHealth);
+				WRITE_FLOAT(gMaxHealth);
+				WRITE_BOOL(bActive);
+				MessageEnd();
+			}
+			else
+			{
+				bActive = false;
+				CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+				user.MakeReliable();
+				UserMessageBegin(user, "EnemyHealth3");
+				WRITE_FLOAT(gHealth);
+				WRITE_FLOAT(gMaxHealth);
+				WRITE_BOOL(bActive);
+				MessageEnd();
+				SetThink(NULL);
+				return;
+			}
+		}
+		break;
+		}
+	}
+	/*
+
+	
 
 	if (!pPlayer->IsAlive())
 	{
@@ -132,7 +362,7 @@ void CHLRHudHealthbar::TransmitData(void)
 			SetThink(NULL);
 			return;
 		}
-	}
+	}*/
 	SetNextThink(gpGlobals->curtime + 0.1f);
 }
 void CHLRHudHealthbar::ClearHud(void)
@@ -142,7 +372,7 @@ void CHLRHudHealthbar::ClearHud(void)
 
 ////////////////////////
 ////////////////////////
-
+/*
 
 
 class CHLRHudHealthbar2 : public CLogicalEntity
@@ -352,7 +582,6 @@ void CHLRHudHealthbar3::TransmitData(void)
 		SetThink(NULL);
 		return;
 	}
-
 	gMaxHealth = Ent->GetMaxHealth();
 	gHealth = Ent->GetHealth();
 	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
@@ -402,4 +631,4 @@ void CHLRHudHealthbar3::TransmitData(void)
 void CHLRHudHealthbar3::ClearHud(void)
 {
 	return;
-}
+}*/

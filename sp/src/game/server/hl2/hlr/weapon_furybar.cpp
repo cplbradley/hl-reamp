@@ -10,6 +10,7 @@
 #include "basecombatweapon.h"
 #include "basehlcombatweapon.h"
 #include "hl2_player.h"
+#include "gamemovement.h"
 #include "player.h"
 #include "gamerules.h"
 #include "ammodef.h"
@@ -26,6 +27,8 @@
 #define FURYBAR_RANGE
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+extern IGameMovement *g_pGameMovement;
 
 class CWeaponFurybar : public CBaseHLBludgeonWeapon
 {
@@ -50,7 +53,7 @@ public:
 	void		AddViewKick(void);
 	float		GetDamageForActivity(Activity hitActivity);
 	
-
+	CGameMovement *gm = dynamic_cast<CGameMovement *>(g_pGameMovement);
 
 	virtual int WeaponMeleeAttack1Condition(float flDot, float flDist);
 	void		SecondaryAttack(void)	{ return; }
@@ -270,6 +273,7 @@ void CWeaponFurybar::ActivateTimer(void)
 	pPlayer->SetMaxSpeed(650.0f);
 	UTIL_ScreenFade(pPlayer, red, 0.5, 0, FFADE_IN);
 	m_fSwitchTime = gpGlobals->curtime + 30.0f;
+	gm->m_bShouldGroundPound = true;
 }
 void CWeaponFurybar::End(void)
 {
@@ -285,5 +289,6 @@ void CWeaponFurybar::End(void)
 	pPlayer->RemovePlayerItem(this);
 	pPlayer->SetMaxSpeed(450.0f);
 	UTIL_ScreenFade(pPlayer, red, 0.5, 0, FFADE_IN);
+	gm->m_bShouldGroundPound = false;
 
 }

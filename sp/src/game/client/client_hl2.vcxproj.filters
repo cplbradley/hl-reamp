@@ -1898,6 +1898,8 @@
     <ClInclude Include="episodic\episodic_screenspaceeffects.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="hud_purplekey.h" />
+    <ClInclude Include="hud_skullkey.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mp3player.cpp">
@@ -3405,6 +3407,8 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="c_npc_vortboss.cpp" />
+    <ClCompile Include="hud_purplekey.cpp" />
+    <ClCompile Include="hud_skullkey.cpp" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

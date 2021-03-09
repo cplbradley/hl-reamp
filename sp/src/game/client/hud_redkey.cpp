@@ -11,7 +11,7 @@ static ConVar show_red("show_Red", "0", 0, "toggles beta icon in upper right cor
 
 using namespace vgui;
 
-DECLARE_HUDELEMENT(CHudRedKey);
+DECLARE_HUD_MESSAGE(CHudRedKey, RedKey);
 
 CHudRedKey::CHudRedKey(const char *pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudRedKey")
 {
@@ -27,18 +27,28 @@ CHudRedKey::CHudRedKey(const char *pElementName) : CHudElement(pElementName), Ba
 
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT);
 }
+void CHudRedKey::Init(void)
+{
+	HOOK_HUD_MESSAGE(CHudRedKey, RedKey);
+	bShowKey = 0;
+}
 void CHudRedKey::Paint()
 {
 	SetPaintBorderEnabled(false);
+	SetPaintBackgroundEnabled(false);
 	surface()->DrawSetTexture(m_nRedKey);
 	surface()->DrawTexturedRect(0, 0, 32, 64);
 }
 void CHudRedKey::togglePrint()
 {
-	if (!show_red.GetBool())
+	if (!bShowKey)
 		this->SetVisible(false);
 	else
 		this->SetVisible(true);
+}
+void CHudRedKey::MsgFunc_RedKey(bf_read &msg)
+{
+	bShowKey = msg.ReadByte();
 }
 void CHudRedKey::OnThink()
 {

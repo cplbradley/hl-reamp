@@ -283,6 +283,7 @@ void CZombie::Spawn( void )
 	SetBloodColor( BLOOD_COLOR_GREEN );
 #endif // HL2_EPISODIC
 
+
 	m_iHealth			= sk_zombie_health.GetFloat();
 	m_flFieldOfView		= 0.2;
 
@@ -489,7 +490,7 @@ void CZombie::SetZombieModel( void )
 	}
 	else
 	{
-		SetModel( "models/vortboss_test.mdl" );
+		SetModel( "models/zombie/classic.mdl" );
 		SetHullType(HULL_LARGE);
 		
 	}

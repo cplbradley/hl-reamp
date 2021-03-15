@@ -63,9 +63,6 @@ ConVar debug_latch_reset_onduck( "debug_latch_reset_onduck", "1", FCVAR_CHEAT );
 
 // [MD] I'll remove this eventually. For now, I want the ability to A/B the optimizations.
 bool g_bMovementOptimizations = true;
-/*ConVar cl_viewbob_enabled("cl_viewbob_enabled", "1", 0, "Oscillation Toggle", true, 0, true, 1);
-ConVar cl_viewbob_timer("cl_viewbob_timer", "10", 0, "Speed of Oscillation");
-ConVar cl_viewbob_scale("cl_viewbob_scale", "0.009", 0, "Magnitude of Oscillation");*/
 // Roughly how often we want to update the info about the ground surface we're on.
 // We don't need to do this very often.
 #define CATEGORIZE_GROUND_SURFACE_INTERVAL			0.3f
@@ -1910,21 +1907,6 @@ void CGameMovement::StayOnGround( void )
 //-----------------------------------------------------------------------------
 void CGameMovement::WalkMove( void )
 {
-	/*if (cl_viewbob_enabled.GetInt() == 1 && !engine->IsPaused())
-	{
-		float xoffset, yoffset;
-		if (mv->m_nButtons & IN_SPEED)
-		{
-			xoffset = sin(gpGlobals->curtime * cl_viewbob_timer.GetFloat() * 2) * player->GetAbsVelocity().Length() * (cl_viewbob_scale.GetFloat() * 2) / 100;
-			yoffset = sin(2 * gpGlobals->curtime * cl_viewbob_timer.GetFloat() * 2) * player->GetAbsVelocity().Length() * (cl_viewbob_scale.GetFloat() * 2) / 400;
-		}
-		else
-		{v
-			xoffset = sin(gpGlobals->curtime * cl_viewbob_timer.GetFloat()) * player->GetAbsVelocity().Length() * cl_viewbob_scale.GetFloat() / 100;
-			yoffset = sin(2 * gpGlobals->curtime * cl_viewbob_timer.GetFloat()) * player->GetAbsVelocity().Length() * cl_viewbob_scale.GetFloat() / 400;
-		}
-		player->ViewPunch(QAngle(xoffset, yoffset, 0));
-	}*/
 	int i;
 
 	

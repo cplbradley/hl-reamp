@@ -105,7 +105,7 @@ DEFINE_OUTPUT(m_OnSpawnNPC, "OnSpawnNPC"),
 // Function Pointers
 DEFINE_THINKFUNC(MakerThink),
 //DEFINE_THINKFUNC(TriggerMake),
-DEFINE_FUNCTION(TriggerMake),
+//DEFINE_FUNCTION(TriggerMake),
 DEFINE_FUNCTION(MakeParticle),
 //DEFINE_THINKFUNC(MakeNPC),
 
@@ -318,7 +318,7 @@ void CBaseNPCMaker::InputSpawnNPC(inputdata_t &inputdata)
 {
 	if (!IsDepleted())
 	{
-		TriggerMake();
+		MakeNPC();
 	}
 }
 
@@ -473,7 +473,7 @@ void CNPCMaker::MakeNPC(void)
 	pent->SetOwnerEntity(this);
 	DispatchActivate(pent);
 	Vector vecSrc = pent->WorldSpaceCenter();
-	BaseClass::MakeParticle(vecSrc);
+	MakeParticle(vecSrc);
 	if (m_ChildTargetName != NULL_STRING)
 	{
 		// if I have a netname (overloaded), give the child NPC that name as a targetname
@@ -539,13 +539,6 @@ void CBaseNPCMaker::MakerThink(void)
 	SetNextThink(gpGlobals->curtime + m_flSpawnFrequency);
 
 	MakeNPC();
-}
-void CBaseNPCMaker::TriggerMake(void)
-{
-	Vector vecPartOrigin = GetAbsOrigin() + Vector(0, 0, 40);
-	//SetThink(&CBaseNPCMaker::MakeNPC);
-	SetNextThink(gpGlobals->curtime + 2.0f);
-	DispatchParticleEffect("npcspawn_instant", vecPartOrigin, GetAbsAngles(), this);
 }
 
 //-------------------	----------------------------------------------------------
@@ -877,7 +870,7 @@ void CTemplateNPCMaker::MakeNPC(void)
 	pent->SetOwnerEntity(this);
 	DispatchActivate(pent);
 	Vector vecSrc = pent->WorldSpaceCenter();
-	BaseClass::MakeParticle(vecSrc);
+	MakeParticle(vecSrc);
 	ChildPostSpawn(pent);
 
 	m_nLiveChildren++;// count this NPC
@@ -931,7 +924,7 @@ void CTemplateNPCMaker::MakeNPCInLine(void)
 	pent->SetOwnerEntity(this);
 	DispatchActivate(pent);
 	Vector vecSrc = pent->WorldSpaceCenter();
-	BaseClass::MakeParticle(vecSrc);
+	MakeParticle(vecSrc);
 	ChildPostSpawn(pent);
 
 	m_nLiveChildren++;// count this NPC
@@ -1033,7 +1026,7 @@ void CTemplateNPCMaker::MakeNPCInRadius(void)
 	pent->SetOwnerEntity(this);
 	DispatchActivate(pent);
 	Vector vecSrc = pent->WorldSpaceCenter();
-	BaseClass::MakeParticle(vecSrc);
+	MakeParticle(vecSrc);
 	ChildPostSpawn(pent);
 
 	m_nLiveChildren++;// count this NPC

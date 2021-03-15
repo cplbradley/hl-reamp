@@ -20,6 +20,7 @@
 #include "gamerules.h"		// For g_pGameRules
 #include "scripted.h"
 #include "worldsize.h"
+#include "gib.h"
 #include "game.h"
 #include "shot_manipulator.h"
 
@@ -622,7 +623,11 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 	if ( CanBecomeRagdoll() || IsRagdoll() )
 		 SetState( NPC_STATE_DEAD );
 
-
+	if (info.GetDamage() >= (m_iMaxHealth * 1.5f))
+	{
+		DevMsg("should gib now\n");
+		GoreGib();
+	}
 	
 	// Just Wax - Dynamic Health Spawn Call
 	/*int ArmorCount = pPlayer->ArmorValue(); //get the player's armor value and store it as an int
@@ -667,9 +672,8 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 		DropItem("item_drop_buckshot", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360));
 		DropItem("item_ammo_ar2", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360));
 		DropItem("item_rpg_drop", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360));
-		DropItem("item_ammo_crossbow", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360));
+		//DropItem("item_ammo_crossbow", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360));
 	}
-
 	m_OnDeath.FireOutput(info.GetAttacker(), this);
 	// If the remove-no-ragdoll flag is set in the damage type, we're being
 	// told to remove ourselves immediately on death. This is used when something
@@ -682,6 +686,142 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 			// Go away
 			RemoveDeferred();
 		}
+	}
+
+}
+
+
+void CAI_BaseNPC::GoreGib(void)
+{
+	DevMsg("gibbing\n");
+	int blood = BloodColor();
+	/*if (blood == NULL)
+		return;*/
+	switch (blood)
+	{
+	case BLOOD_COLOR_RED:
+	{
+		SetSolid(SOLID_NONE);
+		SetModelName(NULL_STRING);
+		DispatchParticleEffect("hgib_sploosh", WorldSpaceCenter(), GetAbsAngles());
+		EmitSound("Gore.Splatter");
+		for (int i = 0; i <= m_iGibCount; i++)
+		{
+			int rand = RandomInt(1, 3);
+			switch (rand)
+			{
+			case 1:
+			{
+				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/human/hgib_1.mdl", 5);
+				break;
+			}
+			case 2:
+			{
+				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/human/hgib_2.mdl", 5);
+				break;
+			}
+			case 3:
+			{
+				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/human/hgib_3.mdl", 5);
+				break;
+			}
+			default:
+			{
+				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/human/hgib_1.mdl", 5);
+				break;
+			}
+			}
+		}
+		break;
+	}
+	case BLOOD_COLOR_GREEN:
+	{
+		SetSolid(SOLID_NONE);
+		SetModelName(NULL_STRING);
+		DispatchParticleEffect("agib_sploosh", WorldSpaceCenter(), GetAbsAngles());
+		EmitSound("Gore.Splatter");
+		for (int i = 0; i <= m_iGibCount; i++)
+		{
+			int rand = RandomInt(1, 4);
+			switch (rand)
+			{
+			case 1:
+			{
+				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_1.mdl", 5);
+				break;
+			}
+			case 2:
+			{
+				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_2.mdl", 5);
+				break;
+			}
+			case 3:
+			{
+				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_3.mdl", 5);
+				break;
+			}
+			case 4:
+			{
+				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_4.mdl", 5);
+				break;
+			}
+			default:
+			{
+				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_1.mdl", 5);
+				break;
+			}
+			}
+		}
+		break;
+	}
+	case BLOOD_COLOR_YELLOW:
+	{
+			SetSolid(SOLID_NONE);
+			SetModelName(NULL_STRING);
+			DispatchParticleEffect("agib_sploosh", WorldSpaceCenter(), GetAbsAngles());
+			EmitSound("Gore.Splatter");
+			for (int i = 0; i <= m_iGibCount; i++)
+			{
+				int rand = RandomInt(1, 4);
+				switch (rand)
+				{
+				case 1:
+				{
+					CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_1.mdl", 5);
+					break;
+				}
+				case 2:
+				{
+					CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_2.mdl", 5);
+					break;
+				}
+				case 3:
+				{
+					CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_3.mdl", 5);
+					break;
+				}
+				case 4:
+				{
+					CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_4.mdl", 5);
+					break;
+				}
+				default:
+				{
+					CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_1.mdl", 5);
+					break;
+				}
+				}
+			}
+			break;
+	}
+	case BLOOD_COLOR_MECH:
+	{
+		break;
+	}
+	case DONT_BLEED:
+	{
+		break;
+	}
 	}
 }
 
@@ -10972,7 +11112,18 @@ void CAI_BaseNPC::Precache( void )
 	UTIL_PrecacheOther("item_drop_buckshot");
 	UTIL_PrecacheOther("item_rpg_drop");
 	UTIL_PrecacheOther("item_ammo_smg1");
-	UTIL_PrecacheOther("item_ammo_crossbow");
+	//UTIL_PrecacheOther("item_ammo_crossbow");
+	PrecacheScriptSound("Gore.Splatter");
+	PrecacheModel("models/gibs/human/hgib_1.mdl");
+	PrecacheModel("models/gibs/human/hgib_2.mdl");
+	PrecacheModel("models/gibs/human/hgib_3.mdl");
+	PrecacheParticleSystem("hgib_sploosh");
+	PrecacheModel("models/gibs/alien/agib_1.mdl");
+	PrecacheModel("models/gibs/alien/agib_2.mdl");
+	PrecacheModel("models/gibs/alien/agib_3.mdl");
+	PrecacheModel("models/gibs/alien/agib_4.mdl");
+	PrecacheParticleSystem("agib_sploosh");
+
 
 	BaseClass::Precache();
 }

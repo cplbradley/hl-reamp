@@ -623,6 +623,10 @@ public:
 		NEXT_CONDITION 	= LAST_SHARED_CONDITION,
 	};
 
+	virtual void GoreGib(void);
+
+	int m_iGibCount = 4;
+
 protected:
 	// Used by derived classes to chain a task to a task that might not be the 
 	// one they are currently handling:

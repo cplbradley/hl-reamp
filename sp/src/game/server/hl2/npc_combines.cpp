@@ -387,15 +387,15 @@ void CNPC_CombineS::Event_Killed( const CTakeDamageInfo &info )
 		}
 	}
 
-	if (info.GetDamage() >= (m_iMaxHealth * 1.5f))
+	/*if (info.GetDamage() >= (m_iMaxHealth * 1.5f))
 	{
 		DispatchParticleEffect("hgib_sploosh", WorldSpaceCenter(), GetAbsAngles());
 		Gib();
-	}
+	}*/
 	BaseClass::Event_Killed( info );
 }
 
-void CNPC_CombineS::Gib(void)
+/*void CNPC_CombineS::Gib(void)
 {
 	SetModelName(NULL_STRING);
 	SetSolid(SOLID_NONE);
@@ -408,7 +408,7 @@ void CNPC_CombineS::Gib(void)
 	
 	UTIL_Remove(this);
 	
-}
+}*/
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : &info - 

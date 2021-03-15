@@ -26,7 +26,7 @@ class CNPC_CombineS : public CNPC_Combine
 public: 
 	void		Spawn( void );
 	void		Precache( void );
-	void		Gib(void);
+	//void		Gib(void);
 	void		DeathSound( const CTakeDamageInfo &info );
 	void		PrescheduleThink( void );
 	void		BuildScheduleTestBits( void );

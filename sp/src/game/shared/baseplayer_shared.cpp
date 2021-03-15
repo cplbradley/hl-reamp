@@ -749,10 +749,6 @@ void CBasePlayer::PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, flo
 
 	EmitSound( filter, entindex(), ep );
 
-#ifdef CLIENT_DLL
-	C_BaseHLPlayer *pPlayer = GetHL2Player();
-#endif
-
 	// Kyle says: ugggh. This function may as well be called "PerformPileOfDesperateGameSpecificFootstepHacks".
 	OnEmitFootstepSound( params, vecOrigin, fvol );
 }

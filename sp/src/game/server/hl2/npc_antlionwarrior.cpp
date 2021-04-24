@@ -406,7 +406,10 @@ private:
 	CUtlVectorFixed<EHANDLE, MAX_FAILED_PHYSOBJECTS>		m_FailedPhysicsTargets;
 
 
-	CHandle< CParticleSystem >	m_hSpitEffect;
+	//CHandle< CParticleSystem >	m_hSpitEffect;
+
+	//bool	DispatchFlame(void);
+	//bool m_bIsFlaming;
 
 	COutputEvent	m_OnSummon;
 	COutputEvent	m_OnBarageEnd;
@@ -447,6 +450,8 @@ public:
 
 BEGIN_DATADESC(CNPC_AntlionWarrior)
 
+//DEFINE_FUNCTION(DispatchFlame),
+
 DEFINE_FIELD(m_nFlinchActivity, FIELD_INTEGER),
 DEFINE_FIELD(m_bStopped, FIELD_BOOLEAN),
 DEFINE_KEYFIELD(m_bIsBurrowed, FIELD_BOOLEAN, "startburrowed"),
@@ -475,6 +480,7 @@ DEFINE_FIELD(m_flNextRoarTime, FIELD_TIME),
 DEFINE_FIELD(m_iChargeMisses, FIELD_INTEGER),
 DEFINE_FIELD(m_bDecidedNotToStop, FIELD_BOOLEAN),
 DEFINE_FIELD(m_bPreferPhysicsAttack, FIELD_BOOLEAN),
+//DEFINE_FIELD(m_bIsFlaming,FIELD_BOOLEAN),
 
 #if ANTLIONWARRIOR_BLOOD_EFFECTS
 DEFINE_FIELD(m_iBleedingLevel, FIELD_CHARACTER),
@@ -506,6 +512,8 @@ DEFINE_INPUTFUNC(FIELD_VOID, "DisableBark", InputDisableBark),
 DEFINE_INPUTFUNC(FIELD_VOID, "SummonedAntlionDied", InputSummonedAntlionDied),
 DEFINE_INPUTFUNC(FIELD_VOID, "EnablePreferPhysicsAttack", InputEnablePreferPhysicsAttack),
 DEFINE_INPUTFUNC(FIELD_VOID, "DisablePreferPhysicsAttack", InputDisablePreferPhysicsAttack),
+
+
 
 END_DATADESC()
 
@@ -832,8 +840,8 @@ void CNPC_AntlionWarrior::Spawn(void)
 	SetDefaultEyeOffset();
 
 
-	m_hSpitEffect = (CParticleSystem *)CreateEntityByName("info_particle_system");
-
+	//m_hSpitEffect = (CParticleSystem *)CreateEntityByName("info_particle_system");
+	//DispatchFlame();
 	SetSolid(SOLID_BBOX);
 	AddSolidFlags(FSOLID_NOT_STANDABLE);
 	SetMoveType(MOVETYPE_STEP);
@@ -914,18 +922,20 @@ void CNPC_AntlionWarrior::Spawn(void)
 }
 void CNPC_AntlionWarrior::PostNPCInit(void)
 {
-	if (m_hSpitEffect != NULL)
+	/*if (m_hSpitEffect != NULL)
 	{
 		// Setup our basic parameters
-		m_hSpitEffect->KeyValue("start_active", "1");
+		/*m_hSpitEffect->KeyValue("start_active", "1");
 		m_hSpitEffect->KeyValue("effect_name", "antlionwarrior_burn");
 		m_hSpitEffect->SetParent(this);
 		m_hSpitEffect->SetLocalOrigin(vec3_origin);
 		DispatchSpawn(m_hSpitEffect);
 		if (gpGlobals->curtime > 0.5f)
 			m_hSpitEffect->Activate();
-	}
-	Msg("i particled\n");
+		m_hSpitEffect = DispatchParticleEffect("antlionwarrior_burn", PATTACH_ABSORIGIN_FOLLOW, this, "root", false);
+
+	}*/
+
 	BaseClass::PostNPCInit();
 }
 //-----------------------------------------------------------------------------

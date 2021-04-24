@@ -69,15 +69,18 @@ void C_NPC_VortBoss::ClientThink()
 		//DebugDrawLine(tr.startpos, tr.endpos, 0, 150, 255, false, 0.1);
 		if (pBCC)
 		{
-			//ClearMultiDamage();
-			CTakeDamageInfo info(this, this, 20, DMG_SHOCK);
-			//info.AdjustPlayerDamageTakenForSkillLevel();
-			//info.SetDamagePosition(tr.endpos);
-			//CalculateMeleeDamageForce(&info, m_vLaserDir, tr.endpos);
-			pBCC->DispatchTraceAttack(info, m_vLaserDir, &tr);
-			//ApplyMultiDamage();
-			engine->ClientCmd_Unrestricted("vorthurt");
-			DevMsg("client hit\n");
+			if (pBCC->IsPlayer())
+			{
+				//ClearMultiDamage();
+				CTakeDamageInfo info(this, this, 20, DMG_SHOCK);
+				//info.AdjustPlayerDamageTakenForSkillLevel();
+				//info.SetDamagePosition(tr.endpos);
+				//CalculateMeleeDamageForce(&info, m_vLaserDir, tr.endpos);
+				pBCC->DispatchTraceAttack(info, m_vLaserDir, &tr);
+				//ApplyMultiDamage();
+				engine->ClientCmd_Unrestricted("vorthurt");
+				DevMsg("client hit\n");
+			}
 		}
 	}
 	else

@@ -3015,6 +3015,7 @@ void CTriggerCamera::Enable( void )
 	m_nPlayerButtons = pPlayer->m_nButtons;
 
 	pPlayer->SetFOV(this, 75.0f, 0.2f);
+	engine->ClientCommand(m_hPlayer->edict(), "cl_drawhud 0");
 	
 	// Make the player invulnerable while under control of the camera.  This will prevent situations where the player dies while under camera control but cannot restart their game due to disabled player inputs.
 	m_nOldTakeDamage = m_hPlayer->m_takedamage;
@@ -3166,7 +3167,7 @@ void CTriggerCamera::Disable( void )
 		m_hPlayer->m_takedamage = m_nOldTakeDamage;
 	}
 
-
+	engine->ClientCommand(m_hPlayer->edict(), "cl_drawhud 1");
 	m_state = USE_OFF;
 	m_flReturnTime = gpGlobals->curtime;
 	SetThink( NULL );

@@ -3467,6 +3467,12 @@
     <ClCompile Include="npc_vortboss.cpp" />
     <ClCompile Include="hlr_keycard.cpp" />
     <ClCompile Include="hlr_skullkey.cpp" />
+    <ClCompile Include="npc_legs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="util_hudblocker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\..\public\tier0\pointeroverride.asm">

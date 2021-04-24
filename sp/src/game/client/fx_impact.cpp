@@ -254,6 +254,8 @@ static void SetImpactControlPoint( CNewParticleEffect *pEffect, int nPoint, cons
 	pEffect->SetControlPoint( nPoint, vecImpactPoint );
 	pEffect->SetControlPointOrientation( nPoint, vecForward, vecImpactY, vecImpactZ );
 	pEffect->SetControlPointEntity( nPoint, pEntity );
+	pEffect->SetControlPoint(5, vecImpactPoint);
+	pEffect->SetControlPointOrientation(5, -vecForward, vecImpactY,vecImpactZ);
 }
 
 static void PerformNewCustomEffects( const Vector &vecOrigin, trace_t &tr, const Vector &shotDir, int iMaterial, int iScale, int nFlags )
@@ -290,7 +292,7 @@ static void PerformNewCustomEffects( const Vector &vecOrigin, trace_t &tr, const
 
 	SetImpactControlPoint( pEffect.GetObject(), 0, vecImpactPoint, tr.plane.normal, tr.m_pEnt ); 
 	SetImpactControlPoint( pEffect.GetObject(), 1, vecImpactPoint, vecReflect,		tr.m_pEnt ); 
-	SetImpactControlPoint( pEffect.GetObject(), 2, vecImpactPoint, vecShotBackward,	tr.m_pEnt ); 
+	SetImpactControlPoint( pEffect.GetObject(), 2, vecImpactPoint, vecShotBackward,	tr.m_pEnt );
 	pEffect->SetControlPoint( 3, Vector( iScale, iScale, iScale ) );
 	if ( pEffect->m_pDef->ReadsControlPoint( 4 ) )
 	{
@@ -298,6 +300,13 @@ static void PerformNewCustomEffects( const Vector &vecOrigin, trace_t &tr, const
 		GetColorForSurface( &tr, &vecColor );
 		pEffect->SetControlPoint( 4, vecColor );
 	}
+	QAngle angForward;
+	VectorAngles(vecReflect, angForward);
+	angForward[0] += 90;
+	pEffect->SetControlPoint(5, vecImpactPoint);
+	pEffect->SetControlPointUpVector(5, tr.plane.normal);
+	//UTIL_TraceLine(vecOrigin, tr.plane.normal * 500, MASK_SHOT, NULL, &tr);
+	//DebugDrawLine(vecImpactPoint, vecReflect * 500, 255, 0, 0, false, 3.0f);
 }
 
 void PerformCustomEffects( const Vector &vecOrigin, trace_t &tr, const Vector &shotDir, int iMaterial, int iScale, int nFlags )

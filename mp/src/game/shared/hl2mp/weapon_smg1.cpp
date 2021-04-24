@@ -14,6 +14,7 @@
 	#include "grenade_ar2.h"
 	#include "hl2mp_player.h"
 	#include "basegrenade_shared.h"
+#include "Multiplayer/hlrmp_plasmaball.h"
 #endif
 
 #include "weapon_hl2mpbase.h"
@@ -42,6 +43,7 @@ public:
 	
 	void	Precache( void );
 	void	AddViewKick( void );
+	void	PrimaryAttack(void);
 	void	SecondaryAttack( void );
 
 	int		GetMinBurst() { return 2; }
@@ -186,7 +188,56 @@ void CWeaponSMG1::AddViewKick( void )
 
 	DoMachineGunKick( pPlayer, EASY_DAMPEN, MAX_VERTICAL_KICK, m_fFireDuration, SLIDE_LIMIT );
 }
+void CWeaponSMG1::PrimaryAttack(void)
+{
+	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
 
+	if (pPlayer == NULL)
+		return;
+	if ((pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0) || (pPlayer->GetWaterLevel() == 3))
+	{
+		SendWeaponAnim(ACT_VM_DRYFIRE);
+		BaseClass::WeaponSound(EMPTY);
+		m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
+		return;
+	}
+
+	
+	while (gpGlobals->curtime > m_flNextPrimaryAttack)
+	{
+		Vector	vForward, vRight, vUp;
+
+		pPlayer->EyeVectors(&vForward, &vRight, &vUp);
+		Vector	muzzlePoint = pPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * 6.0f + vUp * -3.0f;
+		QAngle angDir = pPlayer->EyeAngles();
+		Vector vecDir;
+		AngleVectors(angDir, &vecDir);
+		VectorNormalize(vecDir);
+		Vector vecAim, vecVelocity;
+		m_flNextPrimaryAttack = gpGlobals->curtime + 0.1f;
+		trace_t tr;
+		Vector vecStart = pPlayer->EyePosition();
+		Vector vecEnd = (vForward * MAX_TRACE_LENGTH);
+		UTIL_TraceLine(vecStart, vecEnd, MASK_SHOT_HULL, pPlayer, COLLISION_GROUP_NONE, &tr);
+
+		DebugDrawLine(tr.endpos, muzzlePoint, 255, 0, 0, false, 2.0f);
+
+		vecAim = tr.endpos - muzzlePoint;	
+		VectorNormalize(vecAim);
+		vecVelocity = (vecAim * 1200.0f);
+#ifndef CLIENT_DLL
+		
+		
+		CHLRMPPlasmaBall *pBall = CHLRMPPlasmaBall::Create("hlrmp_plasmaball", muzzlePoint, angDir, GetOwner());
+		pBall->SetAbsVelocity(vecVelocity);
+		pBall->SetupInitialTransmittedVelocity(vecVelocity);
+
+#endif
+
+		SendWeaponAnim(ACT_VM_PRIMARYATTACK);
+		BaseClass::WeaponSound(SINGLE);
+	}
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------

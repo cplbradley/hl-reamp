@@ -41,6 +41,8 @@ public:
 	void					OnDataChanged( DataUpdateType_t type );
 	bool					ImportantRagdoll( void ) { return m_bImportanRagdoll;	}
 
+	int						DrawModel(int flags);
+
 private:
 	C_AI_BaseNPC( const C_AI_BaseNPC & ); // not defined, not accessible
 	float m_flTimePingEffect;
@@ -50,6 +52,8 @@ private:
 	int m_iSpeedModRadius;
 	int m_iSpeedModSpeed;
 
+
+	bool m_bIsGibbed;
 	bool m_bPerformAvoidance;
 	bool m_bIsMoving;
 	bool m_bFadeCorpse;

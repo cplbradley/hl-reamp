@@ -88,7 +88,7 @@ void CJumppad::TouchThink(CBaseEntity *pOther) //something touched me
 		{
 			extern IGameMovement *g_pGameMovement;
 			CGameMovement *gm = dynamic_cast<CGameMovement *>(g_pGameMovement);
-			gm->m_iJumpCount = 0;
+			gm->m_iJumpCount = 1;
 		}
 	}
 
@@ -109,7 +109,12 @@ public:
 	void Precache(void);
 	void Reenable(void);
 	void SetForce(inputdata_t &inputdata);
+	void Enable(inputdata_t &inputdata);
+	void Disable(inputdata_t &inputdata);
 	void TouchThink(CBaseEntity *pOther);
+	float m_flgravitymod;
+	virtual bool IsEnabled(void);
+	bool m_bIsEnabled;
 	//nsigned int PhysicsSolidMaskForEntity() const;
 	float m_flpushforce;
 	const char* target;
@@ -120,9 +125,13 @@ LINK_ENTITY_TO_CLASS(hlr_launchpad, CLaunchpad);
 BEGIN_DATADESC(CLaunchpad)
 DEFINE_INPUT(m_flpushforce, FIELD_FLOAT, "pushforce"),
 DEFINE_KEYFIELD(target, FIELD_STRING, "target"),
+DEFINE_KEYFIELD(m_bIsEnabled, FIELD_BOOLEAN, "isenabled"),
+DEFINE_KEYFIELD(m_flgravitymod, FIELD_FLOAT, "gravitymod"),
 // Function Pointers
 DEFINE_FUNCTION(TouchThink),
 DEFINE_FUNCTION(Reenable),
+DEFINE_INPUTFUNC(FIELD_VOID,"Enable",Enable),
+DEFINE_INPUTFUNC(FIELD_VOID, "Disable",Disable),
 DEFINE_INPUTFUNC(FIELD_FLOAT, "SetForce", SetForce),
 END_DATADESC()
 void CLaunchpad::Spawn(void)
@@ -145,11 +154,26 @@ void CLaunchpad::SetForce(inputdata_t &inputdata)
 {
 	m_flpushforce = inputdata.value.Float();
 }
-Vector VecCheckThrow(CBaseEntity *pEdict, const Vector &vecSpot1, Vector vecSpot2, float flSpeed, float flTolerance)
+void CLaunchpad::Enable(inputdata_t &inputdata)
+{
+	m_bIsEnabled = true;
+}
+void CLaunchpad::Disable(inputdata_t &inputdata)
+{
+	m_bIsEnabled = false;
+}
+bool CLaunchpad::IsEnabled(void)
+{
+	return m_bIsEnabled;
+}
+Vector VecCheckThrow(CBaseEntity *pEdict, const Vector &vecSpot1, Vector vecSpot2, float flSpeed, float flTolerance, float flgravitymod)
 {
 	flSpeed = MAX(1.0f, flSpeed);
 
-	float flGravity = GetCurrentGravity();
+	float svgravity = GetCurrentGravity();
+
+	float flGravity = svgravity * flgravitymod;
+	//flGravity *= flgravitymod;
 
 	Vector vecGrenadeVel = (vecSpot2 - vecSpot1);
 
@@ -198,6 +222,8 @@ void CLaunchpad::TouchThink(CBaseEntity *pOther) //something touched me
 {
 	if (!pOther)
 		return;
+	if (!IsEnabled())
+		return;
 	SetTouch(NULL); //disable temporarily
 	SetThink(&CLaunchpad::Reenable);//schedule re-enable
 	SetNextThink(gpGlobals->curtime + 0.1f);//after 0.1 seconds
@@ -207,19 +233,51 @@ void CLaunchpad::TouchThink(CBaseEntity *pOther) //something touched me
 	if (signalEntity) //if it exists
 	{
 		signalPoint = signalEntity->GetAbsOrigin(); //get the absolute origin of the target, save it as a vector
-		//Msg("target found\n");
+		DevMsg("launchpad target found! using launchpad function\n");
 	}
 	else //if it doesn't exist 
 	{
-		Msg("launchpad target not found! uh oh!\n"); //put an error in console
+		DevMsg("launchpad target not found! using legacy jumppad function!\n"); //put an error in console
 	}
 	if (pOther->IsSolid()) //if what i touched is solid
 	{
-			Vector vecToss = VecCheckThrow(this, GetAbsOrigin(), signalPoint, m_flpushforce, (10.0f*12.0f)); //calculate the trajectory
-			Vector vecToTarget = (signalPoint - GetAbsOrigin()); 
+		if (!signalEntity)
+		{
+			QAngle angSrc = this->GetAbsAngles(); //get angles from hammer
+			Vector vecDir;
+			Vector vecdnspd;
+			Vector veccurvel;
+			float fldnspd;
+			float flpunchforce;
+			AngleVectors(angSrc, &vecDir); //transform angles into a vector
+			vecdnspd = pOther->GetAbsVelocity(); //get velocity vector
+			fldnspd = vecdnspd[2]; //isolate y value of said vector
+			flpunchforce = (m_flpushforce + abs(fldnspd)); //calculate punch force by adding abs of downward velocity to defined push force
+			if (pOther->IsSolid()) //was the thing that touched me solid?
+			{
+				veccurvel = pOther->GetAbsVelocity(); //whats its current velocity
+				veccurvel[2] += flpunchforce; //add the punch force to the y value of the current velocity
+				pOther->SetAbsVelocity(veccurvel); //apply the new velocity
+				//pOther->VelocityPunch(vecDir * flpunchforce); //do punch
+				SetTouch(NULL); //disable temporarily
+				SetThink(&CJumppad::Reenable);//schedule re-enable
+				SetNextThink(gpGlobals->curtime + 0.1f);//after 0.1 seconds
+				EmitSound("Weapon_Mortar.Single");//emit sound
+				if (pOther->IsPlayer())
+				{
+					extern IGameMovement *g_pGameMovement;
+					CGameMovement *gm = dynamic_cast<CGameMovement *>(g_pGameMovement);
+					gm->m_iJumpCount = 1;
+				}
+			}
+		}
+		else
+		{
+			Vector vecToss = VecCheckThrow(this, GetAbsOrigin(), signalPoint, m_flpushforce, (10.0f*12.0f), m_flgravitymod); //calculate the trajectory
+			Vector vecToTarget = (signalPoint - GetAbsOrigin());
 			VectorNormalize(vecToTarget);
 			float flVelocity = VectorNormalize(vecToss);
-			
+
 			Vector vecStall = Vector(0, 0, 0); //stall the entity 
 			EmitSound("Weapon_Mortar.Single");
 			pOther->SetAbsVelocity(vecStall);
@@ -230,8 +288,9 @@ void CLaunchpad::TouchThink(CBaseEntity *pOther) //something touched me
 				gm->m_iJumpCount = 1; //set the jump count to 1 
 				Vector vecVel = gm->GetMoveData()->m_vecVelocity;
 				gm->GetMoveData()->m_vecVelocity += -vecVel;
-				pOther->VelocityPunch(vecToss * flVelocity); //launch the player
-				
+				//pOther->VelocityPunch(vecToss * flVelocity); //launch the player
+				pOther->SetAbsVelocity(vecToss * flVelocity);
+
 			}
 			else
 			{
@@ -250,8 +309,8 @@ void CLaunchpad::TouchThink(CBaseEntity *pOther) //something touched me
 				pOther->SetAbsVelocity(vecToss * flVelocity); //launch the object
 				pOther->SetAbsAngles(angDir); //point it towards the target
 			}
-				
-				
+
+		}
 				
 				
 				//Msg("smarty launch\n");

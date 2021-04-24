@@ -2326,7 +2326,7 @@ DECLARE_ANIMEVENT(AE_FASTZOMBIE_VEHICLE_SS_DIE)
 // 
 //=========================================================
 DEFINE_SCHEDULE
-(
+(	
 SCHED_FASTZOMBIE_RANGE_ATTACK1,
 
 "	Tasks"

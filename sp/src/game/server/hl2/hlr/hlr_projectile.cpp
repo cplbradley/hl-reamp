@@ -378,17 +378,14 @@ void CHLRFireball::Detonate(void)
 	CBaseEntity *pOwner = GetOwnerEntity();
 	RadiusDamage(CTakeDamageInfo(this, pOwner, 40, DMG_BURN), GetAbsOrigin(), 128, CLASS_ANTLION, NULL);
 
-	if (GetOwnerEntity() && GetOwnerEntity()->ClassMatches("npc_antlionwarrior"))
-	{
-		trace_t tr;
-		Vector Startpos = GetAbsOrigin();
-		Vector Endpos = Startpos + (Vector(0, 0, -1) * MAX_TRACE_LENGTH);
-		UTIL_TraceLine(Startpos, Endpos, MASK_PLAYERSOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr);
-		CHLRFireballTemp *pTemp = (CHLRFireballTemp*)CreateEntityByName("hlr_fireballtemp");
-		pTemp->SetAbsOrigin(tr.endpos);
-		pTemp->SetAbsAngles(this->GetAbsAngles());
-		pTemp->Spawn();
-	}
+	trace_t tr;
+	Vector Startpos = GetAbsOrigin();
+	Vector Endpos = Startpos + (Vector(0, 0, -1) * MAX_TRACE_LENGTH);
+	UTIL_TraceLine(Startpos, Endpos, MASK_PLAYERSOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr);
+	CHLRFireballTemp *pTemp = (CHLRFireballTemp*)CreateEntityByName("hlr_fireballtemp");
+	pTemp->SetAbsOrigin(tr.endpos);
+	pTemp->SetAbsAngles(this->GetAbsAngles());
+	pTemp->Spawn();
 	SetMoveType(MOVETYPE_NONE);
 
 	SetThink(&CHLRFireball::Kill);
@@ -492,5 +489,70 @@ void CHLRScannerProjectile::Touch(CBaseEntity *pOther)
 }
 void CHLRScannerProjectile::Kill(void)
 {
+	RemoveDeferred();
+}
+
+
+LINK_ENTITY_TO_CLASS(hlr_mechubusmissile, CHLRMechubusMissile);
+BEGIN_DATADESC(CHLRMechubusMissile)
+DEFINE_FUNCTION(Touch),
+DEFINE_FUNCTION(Explode),
+DEFINE_FUNCTION(DispatchEffects),
+END_DATADESC()
+
+void CHLRMechubusMissile::Spawn(void)
+{
+	Precache();
+	SetModel("models/spitball_large.mdl");
+	//SetModelName(NULL_STRING);
+	AddEFlags(EF_NODRAW);
+	SetSolid(SOLID_BBOX);
+	SetSolidFlags(FSOLID_NOT_SOLID | FSOLID_TRIGGER);
+	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
+	DispatchEffects();
+	SetTouch(&CHLRMechubusMissile::Touch);
+
+}
+
+void CHLRMechubusMissile::Precache(void)
+{
+	PrecacheModel("models/spitball_large.mdl");
+	PrecacheParticleSystem("mechubus_missile_core");
+}
+bool CHLRMechubusMissile::DispatchEffects(void)
+{
+	DispatchParticleEffect("mechubus_missile_core", PATTACH_ABSORIGIN_FOLLOW, this, "root", false);
+	SetRenderColor(255, 128, 0);
+	return true;
+}
+
+void CHLRMechubusMissile::Touch(CBaseEntity *pOther)
+{
+	if (pOther == NULL)
+		return;
+	if (pOther->IsSolidFlagSet(FSOLID_VOLUME_CONTENTS | FSOLID_TRIGGER))
+	{
+		// Some NPCs are triggers that can take damage (like antlion grubs). We should hit them.
+		if ((pOther->m_takedamage == DAMAGE_NO) || (pOther->m_takedamage == DAMAGE_EVENTS_ONLY))
+			return;
+	}
+
+	// Don't hit other spit
+	if (pOther->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE)
+		return;
+	if (GetOwnerEntity() && GetOwnerEntity() == pOther)
+		return;
+	SetTouch(NULL);
+	SetSolid(SOLID_NONE);
+	SetMoveType(MOVETYPE_NONE);
+	SetSolidFlags(FSOLID_NOT_SOLID);
+	
+	Explode();
+}
+
+void CHLRMechubusMissile::Explode(void)
+{
+	ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), 20, 120,
+		SF_ENVEXPLOSION_NOFIREBALL, 0.0f, this);
 	RemoveDeferred();
 }

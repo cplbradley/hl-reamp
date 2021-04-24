@@ -212,6 +212,7 @@ public:
 	void	SecondaryAttack(void);
 	void	PrimaryAttack(void);
 	void	ItemPostFrame(void);
+	bool	Holster(CBaseCombatWeapon *pSwitchingTo);
 
 	int		GetMinBurst() { return 5; }
 	int		GetMaxBurst() { return 5; }
@@ -499,6 +500,11 @@ bool CWeaponPlasmaRifle::Reload(void)
 	return fRet;
 }
 
+bool CWeaponPlasmaRifle::Holster(CBaseCombatWeapon *pSwitchingTo)
+{
+	StopParticleEffects(this);
+	return BaseClass::Holster(pSwitchingTo);
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------

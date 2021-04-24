@@ -623,7 +623,7 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 	if ( CanBecomeRagdoll() || IsRagdoll() )
 		 SetState( NPC_STATE_DEAD );
 
-	if (info.GetDamage() >= (m_iMaxHealth * 1.5f))
+	if (info.GetDamage() >= (m_iMaxHealth * 2.0f))
 	{
 		DevMsg("should gib now\n");
 		GoreGib();
@@ -701,7 +701,9 @@ void CAI_BaseNPC::GoreGib(void)
 	{
 	case BLOOD_COLOR_RED:
 	{
+		m_bIsGibbed = true;
 		SetSolid(SOLID_NONE);
+		SetSolidFlags(FSOLID_NOT_SOLID);
 		SetModelName(NULL_STRING);
 		DispatchParticleEffect("hgib_sploosh", WorldSpaceCenter(), GetAbsAngles());
 		EmitSound("Gore.Splatter");
@@ -732,11 +734,15 @@ void CAI_BaseNPC::GoreGib(void)
 			}
 			}
 		}
+		
+		RemoveDeferred();
+		
 		break;
 	}
 	case BLOOD_COLOR_GREEN:
 	{
 		SetSolid(SOLID_NONE);
+		SetSolidFlags(FSOLID_NOT_SOLID);
 		SetModelName(NULL_STRING);
 		DispatchParticleEffect("agib_sploosh", WorldSpaceCenter(), GetAbsAngles());
 		EmitSound("Gore.Splatter");
@@ -772,11 +778,13 @@ void CAI_BaseNPC::GoreGib(void)
 			}
 			}
 		}
+		RemoveDeferred();
 		break;
 	}
 	case BLOOD_COLOR_YELLOW:
 	{
 			SetSolid(SOLID_NONE);
+			SetSolidFlags(FSOLID_NOT_SOLID);
 			SetModelName(NULL_STRING);
 			DispatchParticleEffect("agib_sploosh", WorldSpaceCenter(), GetAbsAngles());
 			EmitSound("Gore.Splatter");
@@ -812,6 +820,8 @@ void CAI_BaseNPC::GoreGib(void)
 				}
 				}
 			}
+			m_bIsGibbed = true;
+			RemoveDeferred();
 			break;
 	}
 	case BLOOD_COLOR_MECH:
@@ -10898,6 +10908,8 @@ BEGIN_DATADESC( CAI_BaseNPC )
 	DEFINE_FIELD( m_bFadeCorpse,				FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_iDeathPose,					FIELD_INTEGER ),
 	DEFINE_FIELD( m_iDeathFrame,				FIELD_INTEGER ),
+
+	DEFINE_FIELD( m_bIsGibbed,					FIELD_BOOLEAN),
 	DEFINE_FIELD( m_bCheckContacts,				FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bSpeedModActive,			FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_iSpeedModRadius,			FIELD_INTEGER ),
@@ -11007,6 +11019,7 @@ IMPLEMENT_SERVERCLASS_ST( CAI_BaseNPC, DT_AI_BaseNPC )
 	SendPropInt( SENDINFO( m_iSpeedModRadius ) ),
 	SendPropInt( SENDINFO( m_iSpeedModSpeed ) ),
 	SendPropBool( SENDINFO( m_bImportanRagdoll ) ),
+	SendPropBool(SENDINFO(m_bIsGibbed)),
 	SendPropFloat( SENDINFO( m_flTimePingEffect ) ),
 END_SEND_TABLE()
 
@@ -11570,6 +11583,10 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 	m_bIgnoreUnseenEnemies		= false;
 	m_flEyeIntegRate			= 0.95;
 	SetTarget( NULL );
+
+
+	m_bIsGibbed = false;
+
 
 	m_pSquad					= NULL;
 

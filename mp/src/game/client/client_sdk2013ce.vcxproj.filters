@@ -1949,6 +1949,12 @@
     <ClInclude Include="..\shared\Multiplayer\hlrmp_rocket.h">
       <Filter>Source Files\HL2MP\Weapons</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\Multiplayer\hlrmp_projectile_base.h">
+      <Filter>Source Files\HL2MP\Weapons</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Multiplayer\hlrmp_plasmaball.h">
+      <Filter>Source Files\HL2MP\Weapons</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mp3player.cpp">
@@ -3512,6 +3518,12 @@
       <Filter>Tool Framework</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\Multiplayer\hlrmp_rocket.cpp">
+      <Filter>Source Files\HL2MP\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\Multiplayer\hlrmp_projectile_base.cpp">
+      <Filter>Source Files\HL2MP\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\Multiplayer\hlrmp_plasmaball.cpp">
       <Filter>Source Files\HL2MP\Weapons</Filter>
     </ClCompile>
   </ItemGroup>

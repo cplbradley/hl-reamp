@@ -3409,6 +3409,7 @@
     <ClCompile Include="c_npc_vortboss.cpp" />
     <ClCompile Include="hud_purplekey.cpp" />
     <ClCompile Include="hud_skullkey.cpp" />
+    <ClCompile Include="c_util_hudblocker.cpp" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

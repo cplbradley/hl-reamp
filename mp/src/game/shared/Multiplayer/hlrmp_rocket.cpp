@@ -6,6 +6,7 @@
 #include "cbase.h"
 #include "hlrmp_rocket.h"
 #include "hl2mp_gamerules.h"
+#include "hlrmp_projectile_base.h"
 
 // Server specific.
 #ifdef GAME_DLL
@@ -33,14 +34,12 @@ IMPLEMENT_NETWORKCLASS_ALIASED(HLRMPRocket, DT_HLRMPRocket)
 BEGIN_NETWORK_TABLE(CHLRMPRocket, DT_HLRMPRocket)
 // Client specific.
 #ifdef CLIENT_DLL
-RecvPropVector(RECVINFO(m_vInitialVelocity)),
 
 RecvPropVector(RECVINFO_NAME(m_vecNetworkOrigin, m_vecOrigin)),
 RecvPropQAngles(RECVINFO_NAME(m_angNetworkAngles, m_angRotation)),
 
 // Server specific.
 #else
-SendPropVector(SENDINFO(m_vInitialVelocity), 12 /*nbits*/, 0 /*flags*/, -3000 /*low value*/, 3000 /*high value*/),
 
 SendPropExclude("DT_BaseEntity", "m_vecOrigin"),
 SendPropExclude("DT_BaseEntity", "m_angRotation"),
@@ -55,6 +54,9 @@ END_NETWORK_TABLE()
 #ifdef GAME_DLL
 BEGIN_DATADESC(CHLRMPRocket)
 DEFINE_FUNCTION(RocketTouch),
+//DEFINE_FIELD(m_hOwner, FIELD_EHANDLE),
+DEFINE_FIELD(m_hRocketTrail, FIELD_EHANDLE),
+DEFINE_FIELD(m_flDamage, FIELD_FLOAT),
 //DEFINE_THINKFUNC(FlyThink),
 END_DATADESC()
 #endif
@@ -71,7 +73,6 @@ END_DATADESC()
 //-----------------------------------------------------------------------------
 CHLRMPRocket::CHLRMPRocket()
 {
-	m_vInitialVelocity.Init();
 
 	// Client specific.
 #ifdef CLIENT_DLL
@@ -82,7 +83,7 @@ CHLRMPRocket::CHLRMPRocket()
 #else
 
 	m_flDamage = 0.0f;
-
+	m_hRocketTrail = NULL;
 #endif
 }
 
@@ -99,6 +100,7 @@ CHLRMPRocket::~CHLRMPRocket()
 void CHLRMPRocket::Precache(void)
 {
 	BaseClass::Precache();
+	PrecacheModel("models/weapons/w_missile.mdl");
 }
 
 //-----------------------------------------------------------------------------
@@ -120,7 +122,7 @@ void CHLRMPRocket::Spawn(void)
 #else
 
 	//Derived classes must have set model.
-	SetModel("models/weapons/w_missile_launch.mdl");
+	SetModel("models/weapons/w_missile.mdl");
 
 	SetSolid(SOLID_BBOX);
 	SetMoveType(MOVETYPE_FLY, MOVECOLLIDE_FLY_CUSTOM);
@@ -140,6 +142,8 @@ void CHLRMPRocket::Spawn(void)
 	//SetThink(&CHLRMPRocket::FlyThink);
 	SetNextThink(gpGlobals->curtime);
 
+	CreateSmokeTrail();
+
 	// Don't collide with players on the owner's team for the first bit of our life
 	m_flCollideWithTeammatesTime = gpGlobals->curtime + 0.25;
 	m_bCollideWithTeammates = false;
@@ -152,8 +156,7 @@ void CHLRMPRocket::Spawn(void)
 // Client specific functions.
 //
 #ifdef CLIENT_DLL
-static ConVar hlrmp_useinitialvelocity("hlrmp_useinitialvelocity", "1", FCVAR_CLIENTDLL, "");
-static ConVar hlrmp_interpsamples("hlrmp_interpsamples", "1", FCVAR_CLIENTDLL, "");
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -165,151 +168,18 @@ void CHLRMPRocket::OnDataChanged(DataUpdateType_t type)
 		SetNextClientThink(CLIENT_THINK_ALWAYS);
 	}
 }
-void CHLRMPRocket::PostDataUpdate(DataUpdateType_t type)
-{
-	// Pass through to the base class.
-	BaseClass::PostDataUpdate(type);
-
-
-	if (!hlrmp_interpsamples.GetBool())
-	{
-		DevMsg("firing without adding interp samples\n");
-		return;
-	}
-	if (type == DATA_UPDATE_CREATED)
-	{
-		/*// Now stick our initial velocity and angles into the interpolation history.
-		/*CInterpolatedVar<Vector> &interpolator = GetOriginInterpolator();
-		interpolator.ClearHistory();
-
-		CInterpolatedVar<QAngle> &rotInterpolator = GetRotationInterpolator();
-		rotInterpolator.ClearHistory();
-
-		float flChangeTime = GetLastChangeTime(LATCH_SIMULATION_VAR);
-
-		// Add a sample 1 second back.
-		Vector vCurOrigin = GetLocalOrigin() - m_vInitialVelocity;
-		interpolator.AddToHead(flChangeTime - 1.0f, &vCurOrigin, false);
-
-		QAngle vCurAngles = GetLocalAngles();
-		rotInterpolator.AddToHead(flChangeTime - 1.0f, &vCurAngles, false);
-
-		// Add the current sample.
-		vCurOrigin = GetLocalOrigin();
-		interpolator.AddToHead(flChangeTime, &vCurOrigin, false);
-
-		rotInterpolator.AddToHead(flChangeTime - 1.0, &vCurAngles, false);
-		// Now stick our initial velocity into the interpolation history 
-		CInterpolatedVar< Vector > &interpolator = GetOriginInterpolator();
-
-		interpolator.ClearHistory();
-		float changeTime = GetLastChangeTime(LATCH_SIMULATION_VAR);
-
-		// Add a sample 1 second back.
-		Vector vCurOrigin = GetLocalOrigin() - m_vInitialVelocity;
-		interpolator.AddToHead(changeTime - 1.1, &vCurOrigin, false);
-
-		// Add the current sample.
-		vCurOrigin = GetLocalOrigin();
-		interpolator.AddToHead(changeTime, &vCurOrigin, false);*/
-
-		if (hlrmp_useinitialvelocity.GetInt() == 1)
-		{
-			DevMsg("Firing with initial velocity\n");
-			CInterpolatedVar< Vector > &interpolator = GetOriginInterpolator();
-
-			interpolator.ClearHistory();
-			float changeTime = GetLastChangeTime(LATCH_SIMULATION_VAR);
-
-			/*			for (float i = -0.5f; i < 0.5f; i++)
-			{
-			Vector vecPosition = GetLocalOrigin() + GetAbsVelocity() * i;
-			interpolator.AddToHead(changeTime + i, &vecPosition, false);
-			}
-			return;*/
-
-			// Add a sample 2 seconds back.
-			Vector vecCurOrigin = GetLocalOrigin() - m_vInitialVelocity * 0.75f;
-			interpolator.AddToHead(changeTime - 2.0f, &vecCurOrigin, false);
-
-			// Add a sample 1 second back.
-			vecCurOrigin = GetLocalOrigin() - (m_vInitialVelocity * 0.5f);
-			interpolator.AddToHead(changeTime - 1.0f, &vecCurOrigin, false);
-
-			/*			Vector vecCurOrigin = GetLocalOrigin() - GetAbsVelocity() * 1.5f;
-			interpolator.AddToHead(changeTime - 1.5f, &vecCurOrigin, false);
-			vecCurOrigin = GetLocalOrigin() - GetAbsVelocity() * 1.0f;
-			interpolator.AddToHead(changeTime - 1.0f, &vecCurOrigin, false);
-			vecCurOrigin = GetLocalOrigin() - GetAbsVelocity() * 0.5f;
-			interpolator.AddToHead(changeTime - 0.5f, &vecCurOrigin, false);*/
-
-			// Add the current sample.
-			vecCurOrigin = GetLocalOrigin();
-			interpolator.AddToHead(changeTime, &vecCurOrigin, false);
-
-			vecCurOrigin = GetLocalOrigin() + m_vInitialVelocity * 0.5f;
-			interpolator.AddToHead(changeTime + 0.5f, &vecCurOrigin, false);
-
-			vecCurOrigin = GetLocalOrigin() + m_vInitialVelocity * 1.0f;
-			interpolator.AddToHead(changeTime + 1.0f, &vecCurOrigin, false);
-		}
-		else
-		{
-			DevMsg("Firing without initial velocity\n");
-			CInterpolatedVar< Vector > &interpolator = GetOriginInterpolator();
-
-			interpolator.ClearHistory();
-			float changeTime = GetLastChangeTime(LATCH_SIMULATION_VAR);
-
-			/*			for (float i = -0.5f; i < 0.5f; i++)
-			{
-			Vector vecPosition = GetLocalOrigin() + GetAbsVelocity() * i;
-			interpolator.AddToHead(changeTime + i, &vecPosition, false);
-			}
-			return;*/
-
-			// Add a sample 2 seconds back.
-			Vector vecCurOrigin = GetLocalOrigin() - GetAbsVelocity() * 0.75f;
-			interpolator.AddToHead(changeTime - 2.0f, &vecCurOrigin, false);
-
-			// Add a sample 1 second back.
-			vecCurOrigin = GetLocalOrigin() - (/*m_vecInitialVelocity*/ GetAbsVelocity() * 0.5f);
-			interpolator.AddToHead(changeTime - 1.0f, &vecCurOrigin, false);
-
-			/*			Vector vecCurOrigin = GetLocalOrigin() - GetAbsVelocity() * 1.5f;
-			interpolator.AddToHead(changeTime - 1.5f, &vecCurOrigin, false);
-			vecCurOrigin = GetLocalOrigin() - GetAbsVelocity() * 1.0f;
-			interpolator.AddToHead(changeTime - 1.0f, &vecCurOrigin, false);
-			vecCurOrigin = GetLocalOrigin() - GetAbsVelocity() * 0.5f;
-			interpolator.AddToHead(changeTime - 0.5f, &vecCurOrigin, false);*/
-
-			// Add the current sample.
-			vecCurOrigin = GetLocalOrigin();
-			interpolator.AddToHead(changeTime, &vecCurOrigin, false);
-
-			vecCurOrigin = GetLocalOrigin() + GetAbsVelocity() * 0.5f;
-			interpolator.AddToHead(changeTime + 0.5f, &vecCurOrigin, false);
-
-			vecCurOrigin = GetLocalOrigin() + GetAbsVelocity() * 1.0f;
-			interpolator.AddToHead(changeTime + 1.0f, &vecCurOrigin, false);
-
-		}
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 int CHLRMPRocket::DrawModel(int flags)
 {
 	// During the first 0.2 seconds of our life, don't draw ourselves.
-	/*if (gpGlobals->curtime - m_flSpawnTime < 0.2f)
-		return 0;*/
+	if (gpGlobals->curtime - m_flSpawnTime < 0.1f)
+		return 0;
 
 	return BaseClass::DrawModel(flags);
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 //=============================================================================
 //
 // Server specific functions.
@@ -338,7 +208,7 @@ CHLRMPRocket *CHLRMPRocket::Create(const char *pszClassname, const Vector &vecOr
 
 	Vector vecVelocity = vecForward * 1100.0f;
 	pRocket->SetAbsVelocity(vecVelocity);
-	pRocket->SetupInitialTransmittedGrenadeVelocity(vecVelocity);
+	pRocket->SetupInitialTransmittedVelocity(vecVelocity);
 
 	// Setup the initial angles.
 	QAngle angles;
@@ -445,10 +315,38 @@ void CHLRMPRocket::Explode(trace_t *pTrace, CBaseEntity *pOther)
 		UTIL_DecalTrace(pTrace, "Scorch");
 	}
 
+	if (m_hRocketTrail)
+	{
+		m_hRocketTrail->SetLifetime(0.1f);
+		m_hRocketTrail = NULL;
+	}
+
 	// Remove the rocket.
 	UTIL_Remove(this);
 }
+void CHLRMPRocket::CreateSmokeTrail(void)
+{
+	if (m_hRocketTrail)
+		return;
 
+	// Smoke trail.
+	if ((m_hRocketTrail = RocketTrail::CreateRocketTrail()) != NULL)
+	{
+		m_hRocketTrail->m_Opacity = 0.2f;
+		m_hRocketTrail->m_SpawnRate = 100;
+		m_hRocketTrail->m_ParticleLifetime = 0.5f;
+		m_hRocketTrail->m_StartColor.Init(0.65f, 0.65f, 0.65f);
+		m_hRocketTrail->m_EndColor.Init(0.0, 0.0, 0.0);
+		m_hRocketTrail->m_StartSize = 8;
+		m_hRocketTrail->m_EndSize = 32;
+		m_hRocketTrail->m_SpawnRadius = 4;
+		m_hRocketTrail->m_MinSpeed = 2;
+		m_hRocketTrail->m_MaxSpeed = 16;
+
+		m_hRocketTrail->SetLifetime(999);
+		m_hRocketTrail->FollowEntity(this, "0");
+	}
+}
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------

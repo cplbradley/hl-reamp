@@ -29,16 +29,19 @@ public:
 
 	virtual void OnDataChanged(DataUpdateType_t type);
 	virtual void ClientThink();
+	//virtual void DispatchFlame();
 
 private:
 
 	bool m_bCavernBreed;
 	bool m_bInCavern;
-	dlight_t *m_dlight;
+
 
 	unsigned char m_iBleedingLevel; //< the version coming from the server
 	unsigned char m_iPerformingBleedingLevel; //< the version we're currently performing (for comparison to one above)
 	CNewParticleEffect *m_pBleedingFX;
+
+	CNewParticleEffect *m_pFlame;
 
 	/// update the hemorrhage particle effect
 	virtual void UpdateBleedingPerformance(void);
@@ -70,7 +73,7 @@ void C_NPC_AntlionWarrior::OnDataChanged(DataUpdateType_t type)
 {
 	BaseClass::OnDataChanged(type);
 
-	if ((type == DATA_UPDATE_CREATED) && m_bCavernBreed && m_bInCavern)
+	if (type == DATA_UPDATE_CREATED)
 	{
 		SetNextClientThink(CLIENT_THINK_ALWAYS);
 	}
@@ -135,20 +138,11 @@ void C_NPC_AntlionWarrior::UpdateBleedingPerformance()
 //-----------------------------------------------------------------------------
 void C_NPC_AntlionWarrior::ClientThink()
 {
-	// update the dlight. (always done because clienthink only exists for cavernguard)
-	if (!m_dlight)
+	if (!m_pFlame)
 	{
-		m_dlight = effects->CL_AllocDlight(index);
-		m_dlight->color.r = 220;
-		m_dlight->color.g = 255;
-		m_dlight->color.b = 80;
-		m_dlight->radius = 180;
-		m_dlight->minlight = 128.0 / 256.0f;
-		m_dlight->flags = DLIGHT_NO_MODEL_ILLUMINATION;
+		m_pFlame = ParticleProp()->Create("antlionwarrior_burn", PATTACH_ABSORIGIN_FOLLOW);
 	}
-
-	m_dlight->origin = GetAbsOrigin();
-	// dl->die = gpGlobals->curtime + 0.1f;
-
+	
+	
 	BaseClass::ClientThink();
 }

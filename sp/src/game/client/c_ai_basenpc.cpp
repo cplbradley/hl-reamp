@@ -31,6 +31,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_AI_BaseNPC, DT_AI_BaseNPC, CAI_BaseNPC )
 	RecvPropInt( RECVINFO( m_bSpeedModActive ) ),
 	RecvPropBool( RECVINFO( m_bImportanRagdoll ) ),
 	RecvPropFloat( RECVINFO( m_flTimePingEffect ) ),
+	RecvPropBool(RECVINFO(m_bIsGibbed)),
 END_RECV_TABLE()
 
 extern ConVar cl_npc_speedmod_intime;
@@ -146,13 +147,24 @@ void C_AI_BaseNPC::ClientThink( void )
 void C_AI_BaseNPC::OnDataChanged( DataUpdateType_t type )
 {
 	BaseClass::OnDataChanged( type );
-
+	SetNextClientThink(CLIENT_THINK_ALWAYS);
 	if ( ( ShouldModifyPlayerSpeed() == true ) || ( m_flTimePingEffect > gpGlobals->curtime ) )
 	{
-		SetNextClientThink( CLIENT_THINK_ALWAYS );
+		
 	}
 }
 
+
+int C_AI_BaseNPC::DrawModel(int flags)
+{
+	if (m_bIsGibbed)
+	{
+		DevMsg("hiding ragdoll\n");
+		return 0;
+		
+	}
+	return BaseClass::DrawModel(flags);
+}
 void C_AI_BaseNPC::GetRagdollInitBoneArrays( matrix3x4_t *pDeltaBones0, matrix3x4_t *pDeltaBones1, matrix3x4_t *pCurrentBones, float boneDt )
 {
 	ForceSetupBonesAtTime( pDeltaBones0, gpGlobals->curtime - boneDt );

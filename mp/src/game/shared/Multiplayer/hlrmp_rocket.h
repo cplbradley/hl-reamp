@@ -1,8 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======//
-//
-// Purpose: TF Base Rockets.
-//
-//=============================================================================//
+
 #ifndef HLRMP_ROCKET_H
 #define HLRMP_ROCKET_H
 #ifdef _WIN32
@@ -11,6 +7,7 @@
 
 #include "cbase.h"
 #include "shareddefs.h"
+#include "hlrmp_projectile_base.h"
 // Client specific.
 #ifdef CLIENT_DLL
 #include "c_baseanimating.h"
@@ -28,20 +25,11 @@
 
 
 
-//=============================================================================
-//
-// TF Base Rocket.
-//
-class CHLRMPRocket : public CBaseAnimating
+class CHLRMPRocket : public CHLRMPProjectileBase
 {
-
-	//=============================================================================
-	//
-	// Shared (client/server).
-	//
 public:
 
-	DECLARE_CLASS(CHLRMPRocket, CBaseAnimating);
+	DECLARE_CLASS(CHLRMPRocket, CHLRMPProjectileBase);
 	DECLARE_NETWORKCLASS();
 
 	CHLRMPRocket();
@@ -50,22 +38,17 @@ public:
 	void	Precache(void);
 	void	Spawn(void);
 
+
+
+
 protected:
 
-	// Networked.
-	CNetworkVector(m_vInitialVelocity);
-
-	//=============================================================================
-	//
-	// Client specific.
-	//
 #ifdef CLIENT_DLL
 
 public:
 
-	virtual int		DrawModel(int flags);
 	virtual void	OnDataChanged(DataUpdateType_t type);
-	virtual void	PostDataUpdate(DataUpdateType_t type);
+	virtual int		DrawModel(int flags);
 
 private:
 
@@ -94,8 +77,6 @@ public:
 
 	unsigned int	PhysicsSolidMaskForEntity(void) const;
 
-	void			SetupInitialTransmittedGrenadeVelocity(const Vector &velocity)	{ m_vInitialVelocity = velocity; }
-
 	//virtual int		GetWeaponID(void) const			{ return TF_WEAPON_ROCKETLAUNCHER; }
 
 	virtual CBaseEntity		*GetEnemy(void)			{ return m_hEnemy; }
@@ -108,8 +89,12 @@ protected:
 
 protected:
 
+	void CreateSmokeTrail(void);
+
 	// Not networked.
 	float					m_flDamage;
+
+	CHandle<RocketTrail>	m_hRocketTrail;
 
 	float					m_flCollideWithTeammatesTime;
 	bool					m_bCollideWithTeammates;

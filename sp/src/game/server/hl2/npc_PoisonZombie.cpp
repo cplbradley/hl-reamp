@@ -678,11 +678,12 @@ void CNPC_PoisonZombie::HandleAnimEvent( animevent_t *pEvent )
 		float adjustspd = g_pGameRules->AdjustProjectileSpeed(2000.0f);
 		if (pEnemy)
 		{
-			Vector vecSrc = GetAbsOrigin() + GetViewOffset();
-			Vector vecEnemyEyePos = pEnemy->EyePosition();
+			Vector vecSrc;
+			GetAttachment(LookupAttachment("Blood_Left"), vecSrc);
+			//Vector vecEnemyEyePos = pEnemy->EyePosition();
 			Vector vecAim = GetShootEnemyDir(vecSrc, false);
 			Vector vecVelocity = vecAim * adjustspd;
-			CHLRFireball *pFire = (CHLRFireball*)CreateEntityByName("hlr_fireball");
+			CHLRMechubusMissile *pFire = (CHLRMechubusMissile*)CreateEntityByName("hlr_mechubusmissile");
 			pFire->SetOwnerEntity(this);
 			pFire->SetAbsOrigin(vecSrc);
 			pFire->Spawn();

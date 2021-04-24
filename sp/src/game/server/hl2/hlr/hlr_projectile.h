@@ -86,3 +86,15 @@ public:
 	void Touch(CBaseEntity *pOther);
 	DECLARE_DATADESC();
 };
+
+class CHLRMechubusMissile : public CBaseAnimating
+{
+	DECLARE_CLASS(CHLRMechubusMissile,CBaseAnimating)
+public:
+	void Spawn(void);
+	void Precache(void);
+	void Explode(void);
+	bool DispatchEffects(void);
+	void Touch(CBaseEntity *pOther);
+	DECLARE_DATADESC();
+};

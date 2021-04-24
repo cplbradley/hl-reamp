@@ -199,7 +199,7 @@ void CMissile::Precache(void)
 	PrecacheModel("models/weapons/w_missile.mdl");
 	PrecacheModel("models/weapons/w_missile_launch.mdl");
 	PrecacheModel("models/weapons/w_missile_closed.mdl");
-	UTIL_PrecacheOther("hl2mp_rocket");
+	//UTIL_PrecacheOther("hl2mp_rocket");
 	BaseClass::Precache();
 }
 
@@ -1452,6 +1452,7 @@ void CWeaponRPG::Precache(void)
 
 #ifndef CLIENT_DLL
 	UTIL_PrecacheOther("rpg_missile");
+	UTIL_PrecacheOther("hlrmp_rocket");
 #endif
 
 }
@@ -1519,9 +1520,9 @@ void CWeaponRPG::PrimaryAttack(void)
 		return;
 
 	// Can't be reloading
-	if (GetActivity() == ACT_VM_RELOAD)
+	/*if (GetActivity() == ACT_VM_RELOAD)
 		return;
-
+		*/
 	Vector vecOrigin;
 	Vector vecForward;
 
@@ -1909,7 +1910,7 @@ void CWeaponRPG::NotifyRocketDied(void)
 	if (GetActivity() == ACT_VM_RELOAD)
 		return;
 
-	Reload();
+	//Reload();
 }
 
 //-----------------------------------------------------------------------------

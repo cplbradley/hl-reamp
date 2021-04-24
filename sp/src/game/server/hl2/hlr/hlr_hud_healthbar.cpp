@@ -11,6 +11,7 @@
 #include "engine/IEngineSound.h"
 #include "gameinterface.h"
 
+#include "tier0/memdbgon.h"
 
 enum
 {

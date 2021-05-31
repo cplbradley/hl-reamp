@@ -118,8 +118,8 @@ void CBaseTempEntity::PrecacheTempEnts( void )
 void CBaseTempEntity::Create( IRecipientFilter& filter, float delay )
 {
 	// temp entities can't be reliable or part of the signon message, use real entities instead
-	Assert( !filter.IsReliable() && !filter.IsInitMessage() );
-	Assert( delay >= -1 && delay <= 1); // 1 second max delay
+	//Assert( !filter.IsReliable() && !filter.IsInitMessage() );
+	//Assert( delay >= -1 && delay <= 1); // 1 second max delay
 
 	engine->PlaybackTempEntity( filter, delay, 
 		(void *)this, GetServerClass()->m_pTable, GetServerClass()->m_ClassID );

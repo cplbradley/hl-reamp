@@ -18,6 +18,7 @@
 #include "hintsystem.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "util_shared.h"
+#include "hlr\hlr_floorsprite.h"
 
 #if defined USES_ECON_ITEMS
 #include "game_item_schema.h"
@@ -1120,6 +1121,8 @@ private:
 	bool					m_bPlayerUnderwater;
 
 	EHANDLE					m_hViewEntity;
+
+	EHANDLE					m_hFloorSprite;
 
 	// Movement constraints
 	CNetworkHandle( CBaseEntity, m_hConstraintEntity );

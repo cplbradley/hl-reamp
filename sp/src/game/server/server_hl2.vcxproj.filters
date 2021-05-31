@@ -1772,6 +1772,9 @@
     <ClInclude Include="hl2\weapon_striderbuster.h" />
     <ClInclude Include="hl2\hlr\hlr_projectile.h" />
     <ClInclude Include="hl2\hlr\npc_jetpack.h" />
+    <ClInclude Include="hl2\hlr\hlr_floorsprite.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gamedll_replay.cpp">
@@ -3471,6 +3474,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="util_hudblocker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\hlr\hlr_floorsprite.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

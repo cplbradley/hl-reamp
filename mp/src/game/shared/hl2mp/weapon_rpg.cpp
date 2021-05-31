@@ -9,6 +9,7 @@
 #include "in_buttons.h"
 #include "weapon_rpg.h"
 #include "Multiplayer/hlrmp_rocket.h"
+#include "Multiplayer/hlrmp_projectile_base.h"
 
 #ifdef CLIENT_DLL
 #include "c_hl2mp_player.h"
@@ -1538,10 +1539,25 @@ void CWeaponRPG::PrimaryAttack(void)
 	pOwner->EyeVectors(&vForward, &vRight, &vUp);
 
 	Vector	muzzlePoint = pOwner->Weapon_ShootPosition() + vForward * 12.0f + vRight * 6.0f + vUp * -3.0f;
-
-#ifndef CLIENT_DLL
 	QAngle vecAngles;
 	VectorAngles(vForward, vecAngles);
+	trace_t tr;
+	UTIL_TraceLine(muzzlePoint, muzzlePoint + (vForward * MAX_TRACE_LENGTH), MASK_SHOT_HULL, pPlayer, COLLISION_GROUP_NONE, &tr);
+	Vector vecDist = (tr.endpos - tr.startpos);
+	float flDist = vecDist.Length();
+	float flSpeed = 1100.0f;
+	float flTime = (flDist/flSpeed);
+	DevMsg("RocketDistance %f\n", flDist);
+	DevMsg("RocketTime %f\n", flTime);
+	CHLRMPRocket *pRocket = CHLRMPRocket::Create("hlrmp_rocket", muzzlePoint, vecAngles, GetOwner(), 1100.0f, flTime);
+	Vector vecVelocity = vForward * flSpeed;
+	
+	m_hMissile = pRocket;
+#ifndef CLIENT_DLL
+
+	pRocket->SetupInitialTransmittedVelocity(vecVelocity);
+	
+	
 
 	/*CMissile *pMissile = CMissile::Create(muzzlePoint, vecAngles, GetOwner()->edict());
 	pMissile->SetModel("models/weapons/w_missile_launch.mdl");
@@ -1549,10 +1565,11 @@ void CWeaponRPG::PrimaryAttack(void)
 	pMissile->IgniteThink();
 	pMissile->Spawn();*/
 
-	CHLRMPRocket *pRocket = CHLRMPRocket::Create("hlrmp_rocket", muzzlePoint, vecAngles, GetOwner());
+	
+
 	/*Vector vecVelocity = (vecForward * RPG_SPEED);
 	SetAbsVelocity(vecVelocity);*/
-	//pMissile->SetupInitialTransmittedGrenadeVelocity(vecVelocity);
+	;
 
 	// If the shot is clear to the player, give the missile a grace period
 	/*trace_t	tr;
@@ -1565,7 +1582,7 @@ void CWeaponRPG::PrimaryAttack(void)
 
 	pRocket->SetDamage(GetHL2MPWpnData().m_iPlayerDamage);
 
-	m_hMissile = pRocket;
+	
 #endif
 
 

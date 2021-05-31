@@ -1569,7 +1569,7 @@ AIMoveResult_t CAI_Navigator::MoveJump()
 		SetNavType(NAV_JUMP);
 
 		DbgNavMsg( GetOuter(), "Jump start\n" );
-		GetMotor()->MoveJumpStart( moveTrace.vJumpVelocity );
+		GetMotor()->MoveJumpStart( moveTrace.vJumpVelocity ); 
 	}	
 	// --------------------------------------------------
 	//  LANDING (from jump)

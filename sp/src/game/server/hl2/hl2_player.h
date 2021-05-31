@@ -14,6 +14,7 @@
 #include "hl2_playerlocaldata.h"
 #include "simtimer.h"
 #include "soundenvelope.h"
+#include "hlr/hlr_floorsprite.h"
 
 class CAI_Squad;
 class CPropCombineBall;
@@ -178,6 +179,9 @@ public:
 	void StopZooming( void );
 	bool IsZooming( void );
 	void CheckSuitZoom( void );
+
+
+
 
 	// Walking
 	void StartWalking( void );

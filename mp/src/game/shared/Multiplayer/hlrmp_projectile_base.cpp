@@ -3,13 +3,18 @@
 
 #include "cbase.h"
 #include "hlrmp_projectile_base.h"
+#include "effect_dispatch_data.h"
 
 #ifdef GAME_DLL
 #include "soundent.h"
 #include "util.h"
 #include "baseanimating.h"
+#include "te_effect_dispatch.h"
 #else
 #include "iinput.h"
+#include "c_te_legacytempents.h"
+#include "c_te_effect_dispatch.h"
+
 #endif 
 
 extern short	g_sModelIndexFireball;		// (in combatweapon.cpp) holds the index for the fireball 
@@ -116,6 +121,21 @@ void CHLRMPProjectileBase::OnDataChanged(DataUpdateType_t type)
 			interpolator.AddToHead(changeTime + 1.0f, &vecCurOrigin, false);
 
 		}
+
+		/*C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
+//		C_BaseEntity *pViewModel = pLocalPlayer->GetViewModel();
+		Vector vForward, vRight, vUp;
+		pLocalPlayer->EyeVectors(&vForward, &vRight, &vUp);
+
+		Vector	muzzlePoint = pLocalPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * 6.0f + vUp * -3.0f;
+		Vector vecSrc;
+
+		//trace_t trace;
+		//UTIL_TraceLine(vecSrc + vForward * -50, vecSrc, MASK_SOLID, this, COLLISION_GROUP_NONE, &trace);
+
+		Vector vecVelocity = (vForward * 1100.0f);
+
+		pTemp = tempents->ClientProjectile(muzzlePoint, vecVelocity, vForward, this->GetModelIndex(), 3.0f, GetOwnerEntity(), NULL, NULL);*/
 	}
 }
 int CHLRMPProjectileBase::DrawModel(int flags)
@@ -126,6 +146,38 @@ int CHLRMPProjectileBase::DrawModel(int flags)
 
 	return BaseClass::DrawModel(flags);
 }
+
+C_LocalTempEntity *ClientsideProjectileCallback( const CEffectData &data, float flGravityBase, const char *pszParticleName )
+{
+	DevMsg("Baseclass Client Projectile Callback\n");
+	// Create a nail temp ent, and give it an impact callback to use
+	C_BaseEntity *pEnt = C_BaseEntity::Instance( data.m_hEntity );
+
+	if ( !pEnt || pEnt->IsDormant() )
+	{
+		Assert( 0 );
+		return NULL;
+	}
+
+	C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
+	//		C_BaseEntity *pViewModel = pLocalPlayer->GetViewModel();
+	Vector vForward, vRight, vUp;
+	pLocalPlayer->EyeVectors(&vForward, &vRight, &vUp);
+
+	Vector	muzzlePoint = pLocalPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * 6.0f + vUp * -3.0f;
+	
+
+	trace_t trace;
+	UTIL_TraceLine(muzzlePoint + vForward * -50, data.m_vOrigin, MASK_SOLID, pEnt, COLLISION_GROUP_NONE, &trace);
+	Vector vecSrc = trace.endpos;
+
+	Vector vecVelocity = (vForward * 1100.0f);
+
+
+
+	return tempents->ClientProjectile(vecSrc, data.m_vStart, vForward, data.m_nMaterial, 6.0f, pEnt, NULL, NULL);
+}
+
 #else
 //----------------------------------------------------------------------------
 // Purpose: Specify what velocity we want to have on the client immediately.
@@ -153,6 +205,66 @@ void CHLRMPProjectileBase::Spawn()
 	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 }
 
+
+CHLRMPProjectileBase *CHLRMPProjectileBase::Create(const char *pszClassName, const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pOwner, float flVelocity, float flTime, short iProjectileModel, const char *pszDispatchEffect)
+{
+	CHLRMPProjectileBase *pProjectile = NULL;
+	Vector vecForward, vecRight, vecUp;
+	AngleVectors(angAngles, &vecForward, &vecRight, &vecUp);
+	CEffectData data;
+	Vector vecVelocity = vecForward * flVelocity;
+#ifdef GAME_DLL
+	pProjectile = static_cast<CHLRMPProjectileBase*>(CBaseEntity::Create(pszClassName, vecOrigin, angAngles, pOwner));
+	if (!pProjectile)
+		return NULL;
+
+	pProjectile->SetOwnerEntity(pOwner);
+	pProjectile->Spawn();
+	pProjectile->SetAbsVelocity(vecVelocity);
+	QAngle angles;
+	VectorAngles(vecVelocity, angles);
+	pProjectile->SetAbsAngles(angles);
+
+	pProjectile->AddEffects(EF_NODRAW);
+	
+#endif
+	if (pszDispatchEffect)
+	{
+		trace_t tr;
+		UTIL_TraceLine(vecOrigin, vecOrigin + vecForward * MAX_COORD_RANGE, (CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_WINDOW | CONTENTS_GRATE), pOwner, COLLISION_GROUP_NONE, &tr);
+		bool bBroadcast = (UTIL_PointContents(vecOrigin) != UTIL_PointContents(tr.endpos));
+		IRecipientFilter *pFilter;
+		if ( bBroadcast )
+		{
+			// The projectile is going to cross content types 
+			// (which will block PVS/PAS). Send to every client
+			pFilter = new CReliableBroadcastRecipientFilter();
+	}
+		else
+		{
+			// just the PVS of where the projectile will hit.
+			pFilter = new CPASFilter(tr.endpos);
+		}
+		
+		data.m_vOrigin = vecOrigin;
+		data.m_vStart = vecVelocity;
+		data.m_fFlags = 6;
+		data.m_flMagnitude = flTime;
+#ifdef GAME_DLL
+		data.m_nMaterial = pProjectile->GetModelIndex();
+		data.m_nEntIndex = pOwner->entindex();
+#else
+		data.m_nMaterial = iProjectileModel;
+		data.m_hEntity = ClientEntityList().EntIndexToHandle(pOwner->entindex());
+		DispatchEffect(pszDispatchEffect,data);
+#endif
+		
+		//DispatchEffect(pszDispatchEffect, data);
+		DevMsg("Dispatching Client Projectile %s\n",pszDispatchEffect);
+	}
+
+	return pProjectile;
+}
 //----------------------------------------------------------------------------
 // Purpose: Precache the bounce and flight sounds
 //----------------------------------------------------------------------------

@@ -275,7 +275,7 @@ $sequence "groundattack" {
 }
 $sequence "roar" {
 	"anims/vortboss_roar.smd"
-	{ event AE_CL_PLAYSOUND 40 "VortBoss.Roar" }
+	{ event AE_CL_PLAYSOUND 50 "VortBoss.Roar" }
 	fadein 0.2
 	fadeout 0.2
 	fps 30

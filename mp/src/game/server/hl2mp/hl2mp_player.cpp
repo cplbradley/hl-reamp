@@ -29,6 +29,9 @@
 int g_iLastCitizenModel = 0;
 int g_iLastCombineModel = 0;
 
+
+extern ConVar hl2_normspeed;
+
 CBaseEntity	 *g_pLastCombineSpawn = NULL;
 CBaseEntity	 *g_pLastRebelSpawn = NULL;
 extern CBaseEntity				*g_pLastSpawn;
@@ -331,6 +334,8 @@ void CHL2MP_Player::Spawn(void)
 	SetPlayerUnderwater(false);
 
 	m_bReady = false;
+
+	SetMaxSpeed(hl2_normspeed.GetFloat());
 }
 
 void CHL2MP_Player::PickupObject( CBaseEntity *pObject, bool bLimitMassAndSize )
@@ -669,7 +674,6 @@ Activity CHL2MP_Player::TranslateTeamActivity( Activity ActToTranslate )
 	return ActToTranslate;
 }
 
-extern ConVar hl2_normspeed;
 
 // Set the activity based on an event or current state
 void CHL2MP_Player::SetAnimation( PLAYER_ANIM playerAnim )

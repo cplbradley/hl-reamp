@@ -19,6 +19,7 @@
 #include "entitylist.h"
 #include "particle_parse.h"
 #include "eventqueue.h"
+#include "hlr\hlr_floorsprite.h"
 #include "worldsize.h"
 #include "isaverestore.h"
 #include "globalstate.h"
@@ -385,6 +386,8 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_FIELD( m_iPlayerLocked, FIELD_INTEGER ),
 
 	DEFINE_AUTO_ARRAY( m_hViewModel, FIELD_EHANDLE ),
+
+	DEFINE_FIELD(m_hFloorSprite,FIELD_EHANDLE),
 	
 	DEFINE_FIELD( m_flMaxspeed, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flWaterJumpTime, FIELD_TIME ),
@@ -4897,6 +4900,10 @@ void CBasePlayer::Spawn( void )
 
 	// Shared spawning code..
 	SharedSpawn();
+
+	CHLRFloorSprite *m_pFloorSprite = (CHLRFloorSprite *)CreateEntityByName("hlr_floorsprite");
+	m_pFloorSprite->Spawn();
+	m_hFloorSprite = m_pFloorSprite;
 	
 	SetSimulatedEveryTick( true );
 	SetAnimatedEveryTick( true );
@@ -5083,6 +5090,7 @@ void CBasePlayer::Precache( void )
 	PrecacheParticleSystem( "slime_splash_03" );
 #endif
 
+	UTIL_PrecacheOther("hlr_floorsprite");
 
 	PrecacheParticleSystem("baddog_groundsmash_radialsmoke");
 	// in the event that the player JUST spawned, and the level node graph
@@ -5219,7 +5227,7 @@ int CBasePlayer::Restore( IRestore &restore )
 	newViewAngles.z = 0;	// Clear out roll
 	SetLocalAngles( newViewAngles );
 	SnapEyeAngles( newViewAngles );
-
+	
 	// Copied from spawn() for now
 	SetBloodColor( BLOOD_COLOR_RED );
 	

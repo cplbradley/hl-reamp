@@ -148,10 +148,13 @@ ConVar	ai_efficiency_override( "ai_efficiency_override", "0" );
 ConVar	ai_debug_efficiency( "ai_debug_efficiency", "0" );
 ConVar	ai_debug_dyninteractions( "ai_debug_dyninteractions", "0", FCVAR_NONE, "Debug the NPC dynamic interaction system." );
 ConVar	ai_frametime_limit( "ai_frametime_limit", "50", FCVAR_NONE, "frametime limit for min efficiency AIE_NORMAL (in sec's)." );
+ConVar	ai_gib_threshold("ai_gib_threshold", "2.0", FCVAR_NONE, "the damage threshold for gibbing, calculated as threshold * maxhealth");
 
 ConVar	ai_use_think_optimizations( "ai_use_think_optimizations", "1" );
 
 ConVar	ai_test_moveprobe_ignoresmall( "ai_test_moveprobe_ignoresmall", "0" );
+
+ConVar	ai_draw_hitboxes("ai_draw_hitboxes", "0", FCVAR_CHEAT);
 
 #ifdef HL2_EPISODIC
 extern ConVar ai_vehicle_avoidance;
@@ -205,6 +208,7 @@ ConVar	ai_spread_pattern_focus_time( "ai_spread_pattern_focus_time","0.8" );
 
 ConVar	ai_reaction_delay_idle( "ai_reaction_delay_idle","0.3" );
 ConVar	ai_reaction_delay_alert( "ai_reaction_delay_alert", "0.1" );
+ConVar	g_ai_maxjumpspeed("g_ai_maxjumpspeed", "1024.0");
 
 ConVar ai_strong_optimizations( "ai_strong_optimizations", ( IsX360() ) ? "1" : "0" );
 bool AIStrongOpt( void )
@@ -623,7 +627,7 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 	if ( CanBecomeRagdoll() || IsRagdoll() )
 		 SetState( NPC_STATE_DEAD );
 
-	if (info.GetDamage() >= (m_iMaxHealth * 2.0f))
+	if (info.GetDamage() >= (m_iMaxHealth * ai_gib_threshold.GetFloat()))
 	{
 		DevMsg("should gib now\n");
 		GoreGib();
@@ -3967,6 +3971,11 @@ void CAI_BaseNPC::PostNPCThink( void )
 	if ( g_StartTimeCurThink != 0.0 && VCRGetMode() == VCR_Disabled )
 	{
 		g_NpcTimeThisFrame += engine->Time() - g_StartTimeCurThink;
+	}
+
+	if (ai_draw_hitboxes.GetInt() == 1)
+	{
+		DrawServerHitboxes();
 	}
 }
 

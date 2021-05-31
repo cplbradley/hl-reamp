@@ -755,7 +755,7 @@ void CNPC_AntlionWarrior::Precache(void)
 	PrecacheParticleSystem("blood_antlionguard_injured_heavy");
 	PrecacheParticleSystem("antlionwarrior_burn");
 
-	UTIL_PrecacheOther("rpg_missile");
+	UTIL_PrecacheOther("hlr_mechubusmissile");
 
 	BaseClass::Precache();
 }
@@ -2166,14 +2166,14 @@ void CNPC_AntlionWarrior::HandleAnimEvent(animevent_t *pEvent)
 			float flVelocity = VectorNormalize(vecToss);
 			QAngle angToss;
 			VectorAngles(vecToss, angToss);
-			CMissile *pRocket = (CMissile *)CreateEntityByName("rpg_missile");
+			CHLRMechubusMissile *pRocket = (CHLRMechubusMissile *)CreateEntityByName("hlr_mechubusmissile");
 			pRocket->Spawn();
-			pRocket->IgniteThink();
+			//pRocket->IgniteThink();
 			pRocket->SetOwnerEntity(this);
 			UTIL_SetOrigin(pRocket, vSpitPos + Vector(0,0,64));
 			pRocket->SetMoveType(MOVETYPE_FLYGRAVITY);
 			pRocket->SetGravity(1.5);
-			pRocket->ActiveSteerMode();
+			//pRocket->ActiveSteerMode();
 			pRocket->SetAbsVelocity(vecToss * flVelocity);
 			
 		}

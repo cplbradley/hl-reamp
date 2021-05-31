@@ -12,6 +12,7 @@
 // Client specific.
 #ifdef CLIENT_DLL
 #include "c_baseanimating.h"
+#include "c_te_legacytempents.h"
 // Server specific.
 #else
 #include "baseanimating.h"
@@ -37,7 +38,9 @@ public:
 	void	Precache(void);
 	void	Spawn(void);
 
+	static CHLRMPPlasmaBall *Create(const char *szClassname, const Vector &vecOrigin, const QAngle &vecAngles, float flVelocity, float flTime, CBaseEntity *pOwner = NULL);
 
+	CHandle<CSprite> pSprite;
 
 
 
@@ -50,6 +53,7 @@ public:
 	virtual void	OnDataChanged(DataUpdateType_t type);
 	virtual int		DrawModel(int flags);
 	//CHandle<CSprite> m_pSprite;
+
 
 private:
 
@@ -65,7 +69,7 @@ public:
 
 	DECLARE_DATADESC();
 
-	static CHLRMPPlasmaBall *Create(const char *szClassname, const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pOwner = NULL);
+	
 
 	virtual void	Touch(CBaseEntity *pOther);
 	void			Explode(CBaseEntity *pOther);

@@ -71,6 +71,7 @@ typedef CBitVec<MAX_CONDITIONS> CAI_ScheduleBits;
 
 // Used to control optimizations mostly dealing with pathfinding for NPCs
 extern ConVar ai_strong_optimizations;
+extern ConVar g_ai_maxjumpspeed;
 
 extern bool AIStrongOpt( void );
 
@@ -429,6 +430,7 @@ struct ScriptedNPCInteraction_t
 Vector VecCheckToss ( CBaseEntity *pEdict, Vector vecSpot1, Vector vecSpot2, float flHeightMaxRatio, float flGravityAdj, bool bRandomize, Vector *vecMins = NULL, Vector *vecMaxs = NULL );
 Vector VecCheckToss ( CBaseEntity *pEntity, ITraceFilter *pFilter, Vector vecSpot1, Vector vecSpot2, float flHeightMaxRatio, float flGravityAdj, bool bRandomize, Vector *vecMins = NULL, Vector *vecMaxs = NULL );
 Vector VecCheckThrow( CBaseEntity *pEdict, const Vector &vecSpot1, Vector vecSpot2, float flSpeed, float flGravityAdj = 1.0f, Vector *vecMins = NULL, Vector *vecMaxs = NULL );
+
 
 extern Vector g_vecAttackDir;
 
@@ -1306,7 +1308,7 @@ public:
 	bool 				ShouldMoveWait();
 	virtual float		StepHeight() const			{ return 18.0f; }
 	float				GetStepDownMultiplier() const;
-	virtual float		GetMaxJumpSpeed() const		{ return 350.0f; }
+	virtual float		GetMaxJumpSpeed() const		{ return g_ai_maxjumpspeed.GetFloat(); }
 	virtual float		GetJumpGravity() const		{ return 1.0f; }
 	
 	//---------------------------------

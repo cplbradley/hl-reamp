@@ -11,6 +11,7 @@
 // Client specific.
 #ifdef CLIENT_DLL
 #include "c_baseanimating.h"
+#include "c_te_legacytempents.h"
 // Server specific.
 #else
 #include "baseanimating.h"
@@ -37,9 +38,12 @@ public:
 
 	void	Precache(void);
 	void	Spawn(void);
+	CNetworkVector(m_vecSentAngleVector);
+	CNetworkVector(m_vecSentVelocity);
+	
+	
 
-
-
+	static CHLRMPRocket *Create(const char *szClassname, const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pOwner = NULL, float flVelocity = 0, float flTime = 3.0f);
 
 protected:
 
@@ -49,7 +53,7 @@ public:
 
 	virtual void	OnDataChanged(DataUpdateType_t type);
 	virtual int		DrawModel(int flags);
-
+	C_LocalTempEntity	*pTemp;
 private:
 
 	float	 m_flSpawnTime;
@@ -64,16 +68,18 @@ public:
 
 	DECLARE_DATADESC();
 
-	static CHLRMPRocket *Create(const char *szClassname, const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pOwner = NULL);
+	
 
 	virtual void	RocketTouch(CBaseEntity *pOther);
-	void			Explode(trace_t *pTrace, CBaseEntity *pOther);
+	
 
 	virtual float	GetDamage() { return m_flDamage; }
 	//virtual int		GetDamageType() { return g_aWeaponDamageTypes[GetWeaponID()]; }
 	virtual void	SetDamage(float flDamage) { m_flDamage = flDamage; }
 	virtual float	GetRadius() { return TF_ROCKET_RADIUS; }
 	//void			DrawRadius(float flRadius);
+	void			Explode(trace_t *pTrace, CBaseEntity *pOther);
+	
 
 	unsigned int	PhysicsSolidMaskForEntity(void) const;
 

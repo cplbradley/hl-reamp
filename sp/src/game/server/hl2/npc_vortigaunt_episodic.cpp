@@ -10,6 +10,10 @@
 #include "npcevent.h"
 #include "basecombatcharacter.h"
 #include "Sprite.h"
+#include "ai_navigator.h"
+#include "ai_route.h"
+#include "ai_moveprobe.h"
+#include "ai_waypoint.h"
 #include "SpriteTrail.h"
 #include "IEffects.h"
 #include "te_effect_dispatch.h"
@@ -780,11 +784,6 @@ void CNPC_Vortigaunt::HandleAnimEvent( animevent_t *pEvent )
 	}*/
 	if (pEvent->event == AE_VORT_PORTALOUTPARTICLE)
 	{
-		DispatchParticleEffect("vortigaunt_teleout", WorldSpaceCenter(), vec3_angle, this);
-		CAI_Navigator *pNav = GetNavigator();
-		DispatchParticleEffect("vortigaunt_telein", (pNav->GetGoalPos() + Vector(0,0,32)), vec3_angle, this);
-		SetLocalOrigin(pNav->GetGoalPos());
-		SetAbsVelocity(Vector(0, 0, 0));
 		return;
 	}
 	if (pEvent->event == AE_VORT_PORTALINPARTICLE)
@@ -1169,15 +1168,57 @@ Activity CNPC_Vortigaunt::NPC_TranslateActivity( Activity eNewActivity )
 	if ( eNewActivity == ACT_RANGE_ATTACK2 )
 		return (Activity) ACT_VORTIGAUNT_DISPEL;
 
-	if (eNewActivity == ACT_GLIDE)
+	if (eNewActivity == ACT_JUMP)
 	{
 		CAI_Navigator *pNav = GetNavigator();
-		SetLocalOrigin(pNav->GetGoalPos());
-		SetAbsVelocity(Vector(0, 0, 0));
+		CAI_Path *pPath = pNav->GetPath();
+		//AI_Waypoint_t *pWaypoint = pPath->GetCurWaypoint();
+	
+		//Teleport(pPath->GetCurWaypoint()->GetPos());
+		if (pPath->GoalType() == GOALTYPE_ENEMY)
+		{
+			CBaseEntity *pEntity = (pNav->GetOuter()->GetNavTargetEntity());
+			
+			if (pEntity)
+			{
+				string_t pString = pEntity->m_iClassname;
+				DevMsg("NavTarget Classname = %s \n", pString);
+				if (pEntity->GetGroundEntity() == NULL)
+				{
+					DevMsg("WARNING: TARGET ENTITY NOT ON GROUND");
+					return (Activity) ACT_IDLE;
+				}
+			}
+		}
+		
+		AIMoveTrace_t moveTrace;
+		//CBaseEntity *pTarget = pNav->GetOuter()->GetNavTargetEntity();
+		GetMoveProbe()->MoveLimit(NAV_JUMP, GetLocalOrigin(), pPath->CurWaypointPos(), MASK_NPCSOLID, GetNavTargetEntity(), &moveTrace);
+		if (!IsMoveBlocked(moveTrace))
+		{
+			Teleport(pPath->GetCurWaypoint()->GetPos());
+			return (Activity)ACT_LAND;
+		}
+
 	}
 	return BaseClass::NPC_TranslateActivity( eNewActivity );
 }
 
+
+void CNPC_Vortigaunt::Teleport(Vector vecPos)
+{
+	DispatchParticleEffect("vortigaunt_teleout", WorldSpaceCenter(), vec3_angle, this);
+	CAI_Navigator *pNav = GetNavigator();
+	CAI_Path *pPath = pNav->GetPath();
+	//AI_Waypoint_t *pNode = pNav->GetPath()->GetCurWaypoint();
+
+	DispatchParticleEffect("vortigaunt_telein", (pPath->CurWaypointPos() + Vector(0, 0, 32)), vec3_angle, this);
+	SetAbsOrigin(vecPos);
+	//Vector printPos = pPath->NextWaypointPos();
+	//DevMsg("Vort Waypoint Goal Pos %v\n", printPos);
+	SetAbsVelocity(Vector(0, 0, 0));
+	GetMotor()->MoveJumpStop();
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------

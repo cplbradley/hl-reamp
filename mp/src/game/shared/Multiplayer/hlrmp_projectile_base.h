@@ -11,12 +11,15 @@
 #endif
 #ifdef CLIENT_DLL
 #include "c_baseanimating.h"
+#include "c_te_legacytempents.h"
+#include "tempent.h"
 #else
 #include "baseanimating.h"
 #endif
 
 #ifdef CLIENT_DLL
 #define CHLRMPProjectileBase C_HLRMPProjectileBase
+C_LocalTempEntity *ClientsideProjectileCallback(const CEffectData &data, float flGravityBase, const char *pszParticleName = NULL);
 #endif
 
 //=============================================================================
@@ -40,6 +43,9 @@ public:
 
 	CNetworkVarForDerived(float, m_flSpawnTime);
 
+	
+	
+
 #ifdef CLIENT_DLL
 
 	// Add initial velocity into the interpolation history so that interp works okay
@@ -49,7 +55,8 @@ public:
 
 	// No shadows for projectiles
 	virtual ShadowType_t ShadowCastType() { return SHADOWS_NONE; }
-
+	
+	
 private:
 	// Flag to keep track of whether projectile needs a cleanup
 
@@ -64,7 +71,7 @@ private:
 #endif
 
 protected:
-
+	static CHLRMPProjectileBase *Create(const char *pszClassName, const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pOwner, float flVelocity, float flTime, short iProjectileModel, const char *pszDispatchEffect);
 private:
 
 };

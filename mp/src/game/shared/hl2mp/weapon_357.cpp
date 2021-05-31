@@ -32,6 +32,7 @@ class CWeapon357 : public CBaseHL2MPCombatWeapon
 public:
 
 	CWeapon357( void );
+	void Precache(void);
 
 	void	PrimaryAttack( void );
 	DECLARE_NETWORKCLASS(); 
@@ -89,6 +90,11 @@ CWeapon357::CWeapon357( void )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
+void CWeapon357::Precache(void)
+{
+	BaseClass::Precache();
+	PrecacheParticleSystem("railgun_beam");
+}
 void CWeapon357::PrimaryAttack( void )
 {
 	// Only the player fires this way so we can cast
@@ -99,7 +105,7 @@ void CWeapon357::PrimaryAttack( void )
 		return;
 	}
 
-	if ( m_iClip1 <= 0 )
+	/*if ( m_iClip1 <= 0 )
 	{
 		if ( !m_bFireOnEmpty )
 		{
@@ -113,6 +119,13 @@ void CWeapon357::PrimaryAttack( void )
 
 		return;
 	}
+	*/
+	if (pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 14)
+	{
+		WeaponSound(EMPTY);
+		m_flNextPrimaryAttack = 0.75;
+		return;
+	}
 
 	WeaponSound( SINGLE );
 	pPlayer->DoMuzzleFlash();
@@ -122,19 +135,20 @@ void CWeapon357::PrimaryAttack( void )
 
 
 
-	m_flNextPrimaryAttack = gpGlobals->curtime + 0.75;
+	m_flNextPrimaryAttack = gpGlobals->curtime + 1.5;
 	m_flNextSecondaryAttack = gpGlobals->curtime + 0.75;
 
-	m_iClip1--;
+	//m_iClip1--;
 
 	Vector vecSrc		= pPlayer->Weapon_ShootPosition();
 	Vector vecAiming	= pPlayer->GetAutoaimVector( AUTOAIM_5DEGREES );	
 
-	FireBulletsInfo_t info( 1, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType );
+	FireBulletsInfo_t info( 10, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType );
 	info.m_pAttacker = pPlayer;
 
 	// Fire the bullets, and force the first shot to be perfectly accuracy
 	pPlayer->FireBullets( info );
+	pPlayer->RemoveAmmo(15, m_iPrimaryAmmoType);
 
 	//Disorient the player
 	QAngle angles = pPlayer->GetLocalAngles();
@@ -142,15 +156,17 @@ void CWeapon357::PrimaryAttack( void )
 	angles.x += random->RandomInt( -1, 1 );
 	angles.y += random->RandomInt( -1, 1 );
 	angles.z = 0;
-
-#ifndef CLIENT_DLL
-	pPlayer->SnapEyeAngles( angles );
 	Vector vecEyes;
 	QAngle angEyes = pPlayer->EyeAngles();
 	AngleVectors(angEyes, &vecEyes);
 	VectorNormalize(vecEyes);
+#ifndef CLIENT_DLL
+	//pPlayer->SnapEyeAngles( angles );
+	
 
 	pPlayer->VelocityPunch(-vecEyes * 500);
+
+#endif
 	Vector vecAbsStart = pPlayer->EyePosition();
 	Vector vecAbsEnd = vecAbsStart + (vecEyes * MAX_TRACE_LENGTH);
 	trace_t tr; // Create our trace_t class to hold the end result
@@ -160,9 +176,7 @@ void CWeapon357::PrimaryAttack( void )
 	Vector vecPartStart;
 	Vector vecEndPos = tr.endpos;
 	DispatchParticleEffect("railgun_beam", vecSrc, tr.endpos, GetAbsAngles(), this);
-#endif
-
-	pPlayer->ViewPunch( QAngle( -8, random->RandomFloat( -2, 2 ), 0 ) );
+	//pPlayer->ViewPunch( QAngle( -8, random->RandomFloat( -2, 2 ), 0 ) );
 
 	if ( !m_iClip1 && pPlayer->GetAmmoCount( m_iPrimaryAmmoType ) <= 0 )
 	{

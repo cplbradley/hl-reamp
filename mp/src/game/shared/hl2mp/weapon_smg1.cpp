@@ -7,6 +7,7 @@
 #include "cbase.h"
 #include "npcevent.h"
 #include "in_buttons.h"
+#include "Multiplayer/hlrmp_plasmaball.h"
 
 #ifdef CLIENT_DLL
 	#include "c_hl2mp_player.h"
@@ -14,7 +15,7 @@
 	#include "grenade_ar2.h"
 	#include "hl2mp_player.h"
 	#include "basegrenade_shared.h"
-#include "Multiplayer/hlrmp_plasmaball.h"
+
 #endif
 
 #include "weapon_hl2mpbase.h"
@@ -218,21 +219,30 @@ void CWeaponSMG1::PrimaryAttack(void)
 		trace_t tr;
 		Vector vecStart = pPlayer->EyePosition();
 		Vector vecEnd = (vForward * MAX_TRACE_LENGTH);
-		UTIL_TraceLine(vecStart, vecEnd, MASK_SHOT_HULL, pPlayer, COLLISION_GROUP_NONE, &tr);
 
-		DebugDrawLine(tr.endpos, muzzlePoint, 255, 0, 0, false, 2.0f);
+
+
+		UTIL_TraceLine(muzzlePoint, muzzlePoint + (vForward * MAX_TRACE_LENGTH), MASK_SHOT_HULL, pPlayer, COLLISION_GROUP_NONE, &tr);
+		Vector vecDist = (tr.endpos - tr.startpos);
+		float flDist = vecDist.Length();
+		float flSpeed = 2800.0f;
+		float flTime = (flDist / flSpeed);
+
+		DevMsg("PlasmaDistance %f\n", flDist);
+		DevMsg("PlasmaTime %f\n", flTime);
+
+		//DebugDrawLine(tr.endpos, muzzlePoint, 255, 0, 0, false, 2.0f);
 
 		vecAim = tr.endpos - muzzlePoint;	
 		VectorNormalize(vecAim);
 		vecVelocity = (vecAim * 1200.0f);
-#ifndef CLIENT_DLL
-		
-		
-		CHLRMPPlasmaBall *pBall = CHLRMPPlasmaBall::Create("hlrmp_plasmaball", muzzlePoint, angDir, GetOwner());
-		pBall->SetAbsVelocity(vecVelocity);
-		pBall->SetupInitialTransmittedVelocity(vecVelocity);
 
-#endif
+		
+		
+		CHLRMPPlasmaBall::Create("hlrmp_plasmaball", muzzlePoint, angDir, flSpeed, flTime, GetOwner());
+		
+		//pBall->SetAbsVelocity(vecVelocity);
+		//pBall->SetupInitialTransmittedVelocity(vecVelocity);
 
 		SendWeaponAnim(ACT_VM_PRIMARYATTACK);
 		BaseClass::WeaponSound(SINGLE);

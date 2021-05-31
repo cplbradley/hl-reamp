@@ -526,7 +526,7 @@ bool C_LocalTempEntity::Frame( float frametime, int framenumber )
 			}
 
 			if (flags & FTENT_COLLIDEKILL)
-			{
+			{	
 				// die on impact
 				flags &= ~FTENT_FADEOUT;	
 				die = gpGlobals->curtime;			
@@ -1164,7 +1164,7 @@ C_LocalTempEntity *CTempEnts::ClientProjectile( const Vector& vecOrigin, const V
 	model = modelinfo->GetModel( modelIndex );
 	if ( !model )
 	{
-		Warning("ClientProjectile: No model %d!\n", modelIndex);
+		DevMsg("ClientProjectile: No model %d!\n", modelIndex);	
 		return NULL;
 	}
 
@@ -1179,7 +1179,7 @@ C_LocalTempEntity *CTempEnts::ClientProjectile( const Vector& vecOrigin, const V
 	pTemp->SetAbsAngles( angles );
 	pTemp->SetAbsOrigin( vecOrigin );
 	pTemp->die = gpGlobals->curtime + lifetime;
-	pTemp->flags = FTENT_COLLIDEALL | FTENT_ATTACHTOTARGET | FTENT_ALIGNTOMOTION;
+	pTemp->flags = FTENT_COLLIDEKILL | FTENT_ATTACHTOTARGET | FTENT_ALIGNTOMOTION;
 	pTemp->clientIndex = ( pOwner != NULL ) ? pOwner->entindex() : 0; 
 	pTemp->SetOwnerEntity( pOwner );
 	pTemp->SetImpactEffect( pszImpactEffect );

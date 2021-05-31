@@ -7,28 +7,41 @@
 #include "hlrmp_plasmaball.h"
 #include "hl2mp_gamerules.h"
 #include "hlrmp_projectile_base.h"
-
+#include "effect_dispatch_data.h"
+#include "sprite.h"
 // Server specific.
 #ifdef GAME_DLL
 #include "explode.h"
 #include "soundent.h"
 #include "te_effect_dispatch.h"
 #include "iscorer.h"
+
 extern void SendProxy_Origin(const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID);
 extern void SendProxy_Angles(const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID);
 #else
-
+#include "c_basetempentity.h"
+#include "c_te_legacytempents.h"
+#include "c_te_effect_dispatch.h"
+#include "cliententitylist.h"
 #endif
 
+#define PLASMA_MODEL "models/props_junk/popcan01a.mdl"
+#define PLASMA_CLIENT_EFFECT "ClientEffect_Plasma"
 //=============================================================================
 //
 // TF Base Rocket tables.
 //
 
-#ifdef GAME_DLL
+
 LINK_ENTITY_TO_CLASS(hlrmp_plasmaball, CHLRMPPlasmaBall);
 PRECACHE_REGISTER(hlrmp_plasmaball);
-#endif
+
+short g_sModelIndexPlasma;
+void PrecachePlasma(void *pUser)
+{
+	g_sModelIndexPlasma = modelinfo->GetModelIndex(PLASMA_MODEL);
+}
+PRECACHE_REGISTER_FN(PrecachePlasma);
 IMPLEMENT_NETWORKCLASS_ALIASED(HLRMPPlasmaBall, DT_HLRMPPlasmaBall)
 
 BEGIN_NETWORK_TABLE(CHLRMPPlasmaBall, DT_HLRMPPlasmaBall)
@@ -126,6 +139,7 @@ void CHLRMPPlasmaBall::Spawn(void)
 	SetMoveType(MOVETYPE_FLY, MOVECOLLIDE_FLY_CUSTOM);
 	AddEFlags(EFL_NO_WATER_VELOCITY_CHANGE);
 	AddEffects(EF_NOSHADOW);
+	AddEffects(EF_NODRAW);
 
 	//SetCollisionGroup(TFCOLLISION_GROUP_ROCKETS);
 
@@ -145,7 +159,11 @@ void CHLRMPPlasmaBall::Spawn(void)
 	m_flCollideWithTeammatesTime = gpGlobals->curtime + 0.25;
 	m_bCollideWithTeammates = false;
 
+	
+
 #endif
+
+	
 }
 
 //=============================================================================
@@ -168,12 +186,28 @@ void CHLRMPPlasmaBall::OnDataChanged(DataUpdateType_t type)
 int CHLRMPPlasmaBall::DrawModel(int flags)
 {
 	// During the first 0.2 seconds of our life, don't draw ourselves.
-	if (gpGlobals->curtime - m_flSpawnTime < 0.1f)
+	if (gpGlobals->curtime - m_flSpawnTime < 0.2f)
 		return 0;
 
 	return BaseClass::DrawModel(flags);
 }
 
+void PlasmaProjectileCallback(const CEffectData &data)
+{
+	C_BasePlayer *pPlayer = dynamic_cast<C_BasePlayer*>(ClientEntityList().GetBaseEntityFromHandle(data.m_hEntity));
+	if (pPlayer)
+	{
+		C_LocalTempEntity *pProj = ClientsideProjectileCallback(data, 0.5f);
+		if (pProj)
+		{
+			pProj->AddEffects(EF_NOSHADOW);
+			pProj->DrawSprite()
+
+		}
+	}
+}
+
+DECLARE_CLIENT_EFFECT(PLASMA_CLIENT_EFFECT, PlasmaProjectileCallback);
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -181,43 +215,18 @@ int CHLRMPPlasmaBall::DrawModel(int flags)
 //
 // Server specific functions.
 //
-#else
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 CHLRMPPlasmaBall *CHLRMPPlasmaBall::Create(const char *pszClassname, const Vector &vecOrigin,
-	const QAngle &vecAngles, CBaseEntity *pOwner)
+	const QAngle &vecAngles, float flVelocity, float flTime, CBaseEntity *pOwner)
 {
-	CHLRMPPlasmaBall *pRocket = static_cast<CHLRMPPlasmaBall*>(CBaseEntity::Create(pszClassname, vecOrigin, vecAngles, pOwner));
-	if (!pRocket)
-		return NULL;
-
-	// Initialize the owner.
-	pRocket->SetOwnerEntity(pOwner);
-
-	// Spawn.
-	pRocket->Spawn();
-
-	// Setup the initial velocity.
-	Vector vecForward, vecRight, vecUp;
-	AngleVectors(vecAngles, &vecForward, &vecRight, &vecUp);
-
-	Vector vecVelocity = vecForward * 1100.0f;
-	pRocket->SetAbsVelocity(vecVelocity);
-	pRocket->SetupInitialTransmittedVelocity(vecVelocity);
-
-	// Setup the initial angles.
-	QAngle angles;
-	VectorAngles(vecVelocity, angles);
-	pRocket->SetAbsAngles(angles);
-
-	// Set team.
-	pRocket->ChangeTeam(pOwner->GetTeamNumber());
-
-	return pRocket;
+	return static_cast<CHLRMPPlasmaBall*>((CHLRMPProjectileBase::Create("hlrmp_plasmaball", vecOrigin, vecAngles, pOwner, flVelocity, flTime, g_sModelIndexPlasma, PLASMA_CLIENT_EFFECT)));
+	
 }
-
+#ifdef GAME_DLL
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------

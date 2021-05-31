@@ -81,6 +81,8 @@ public:
 	virtual void		HandleAnimEvent( animevent_t *pEvent );
 	virtual Activity	NPC_TranslateActivity( Activity eNewActivity );
 
+	void	Teleport(Vector vecPos);
+
 	virtual void	UpdateOnRemove( void );
 	virtual void	Event_Killed( const CTakeDamageInfo &info );
 	virtual	void	GatherConditions( void );

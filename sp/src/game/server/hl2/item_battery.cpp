@@ -96,9 +96,7 @@ class CItemBatteryDrop : public CItem
 {
 public:
 	DECLARE_CLASS(CItemBatteryDrop, CItem);
-protected:
-	CHandle<CSpriteTrail>	m_pGlowTrail;
-	CHandle<CSprite>		m_pMainGlow;
+	DECLARE_DATADESC();
 	void Spawn(void)
 	{
 		Precache();
@@ -168,9 +166,15 @@ protected:
 		CHL2_Player *pHL2Player = dynamic_cast<CHL2_Player *>(pPlayer);
 		return (pHL2Player && pHL2Player->ApplyBattery());
 	}
+protected:
+	CHandle<CSpriteTrail>	m_pGlowTrail;
+	CHandle<CSprite>		m_pMainGlow;
 };
 
 LINK_ENTITY_TO_CLASS(item_batterydrop, CItemBatteryDrop);
+BEGIN_DATADESC(CItemBatteryDrop)
+DEFINE_THINKFUNC(DelayedKill),
+END_DATADESC()
 PRECACHE_REGISTER(item_batterydrop);
 
 class CItemArmor : public CItem

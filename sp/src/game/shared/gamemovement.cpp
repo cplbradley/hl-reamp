@@ -55,6 +55,8 @@ ConVar player_limit_jump_speed( "player_limit_jump_speed", "0", FCVAR_REPLICATED
 // duck controls. Its value is meaningless anytime we don't have the options window open.
 ConVar option_duck_method("option_duck_method", "1", FCVAR_REPLICATED|FCVAR_ARCHIVE );// 0 = HOLD to duck, 1 = Duck is a toggle
 
+ConVar crash_game("crash_game", "0", FCVAR_CHEAT);
+
 #ifdef STAGING_ONLY
 #ifdef CLIENT_DLL
 ConVar debug_latch_reset_onduck( "debug_latch_reset_onduck", "1", FCVAR_CHEAT );
@@ -2107,6 +2109,7 @@ void CGameMovement::FullWalkMove( )
 		if (mv->m_nButtons & IN_SPEED)
 		{
 			CheckGroundPound();
+			//CheckDash();
 		}
 		else
 		{
@@ -2438,12 +2441,18 @@ bool CGameMovement::CheckJumpButton( void )
 	if (player->m_Local.m_flDuckJumpTime > 0.0f)
 		return false;
 
+
+	if (player->GetGroundEntity() == NULL)
+		player->EmitSound("Player.DoubleJump");
+	else
+		player->PlayStepSound((Vector &)mv->GetAbsOrigin(), player->m_pSurfaceData, 1.0, true);
+
 	// In the air now.
 	SetGroundEntity(NULL);
 
 
 	//player->ViewPunch(QAngle(8, random->RandomFloat(-2, 2), 0));
-	player->PlayStepSound((Vector &)mv->GetAbsOrigin(), player->m_pSurfaceData, 1.0, true);
+	
 
 	MoveHelper()->PlayerSetAnimation(PLAYER_JUMP);
 
@@ -2568,7 +2577,20 @@ bool CGameMovement::CheckJumpButton( void )
 	return true;
 }
 
+bool CGameMovement::CheckDash(void)
+{
+	if (!crash_game.GetBool())
+		return false;
+	if (m_bShouldGroundPound)
+		return false;
+	if (gpGlobals->curtime < m_fNextDash)
+		return false;
 
+	player->Dash();
+	m_fNextDash = gpGlobals->curtime + 1.0f;
+	DevMsg("dashing\n");
+	return true;
+}
 bool CGameMovement::CheckGroundPound(void)
 {
 	if (m_bShouldGroundPound == false)

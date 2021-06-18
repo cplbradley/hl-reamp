@@ -4901,9 +4901,12 @@ void CBasePlayer::Spawn( void )
 	// Shared spawning code..
 	SharedSpawn();
 
-	CHLRFloorSprite *m_pFloorSprite = (CHLRFloorSprite *)CreateEntityByName("hlr_floorsprite");
+	//check the existence of the floorsprite
+	CheckFloorSprite();
+
+	/*CHLRFloorSprite *m_pFloorSprite = (CHLRFloorSprite *)CreateEntityByName("hlr_floorsprite");
 	m_pFloorSprite->Spawn();
-	m_hFloorSprite = m_pFloorSprite;
+	m_hFloorSprite = m_pFloorSprite;*/
 	
 	SetSimulatedEveryTick( true );
 	SetAnimatedEveryTick( true );
@@ -4943,6 +4946,8 @@ void CBasePlayer::Spawn( void )
 	m_bitsHUDDamage		= -1;
 	m_bitsDamageType	= 0;
 	m_afPhysicsFlags	= 0;
+
+	RegisterThinkContext("DashContext");
 
 	m_idrownrestored = m_idrowndmg;
 
@@ -5080,6 +5085,7 @@ void CBasePlayer::Precache( void )
 	PrecacheScriptSound( "Player.DrownContinue" );
 	PrecacheScriptSound( "Player.Wade" );
 	PrecacheScriptSound( "Player.AmbientUnderWater" );
+	PrecacheScriptSound("Player.DoubleJump");
 	PrecacheScriptSound("BadDog.Smash");
 	enginesound->PrecacheSentenceGroup( "HEV" );
 	s_nRingTexture = PrecacheModel("sprites/lgtning.vmt");
@@ -5137,6 +5143,42 @@ void CBasePlayer::Precache( void )
 
 }
 
+void CBasePlayer::Dash(void)
+{
+	m_vecSavedVelocity = GetAbsVelocity();
+	Vector vecDashVelocity = m_vecSavedVelocity;
+	Vector vecDash = vecDashVelocity.Normalized();
+	vecDash[2] = 0;
+	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+	pPlayer->VelocityPunch(vecDash * 2500.0f);
+	SetContextThink(&CBasePlayer::StopDash, gpGlobals->curtime + 0.5f, "DashContext");
+}
+
+void CBasePlayer::StopDash(void)
+{
+	SetAbsVelocity(m_vecSavedVelocity);
+}
+
+void CBasePlayer::CheckFloorSprite(void)
+{
+	//access the EHANDLE
+	CHLRFloorSprite *m_pFloorSprite = dynamic_cast<CHLRFloorSprite*>(m_hFloorSprite.Get());
+
+	//if it's null (doesn't exist)
+	if (m_pFloorSprite == nullptr)
+	{
+		Warning("no floorsprite found, creating one\n");
+		m_pFloorSprite = (CHLRFloorSprite*)CreateEntityByName("hlr_floorSprite"); //create one
+		m_pFloorSprite->Spawn(); //spawn
+		m_hFloorSprite = m_pFloorSprite; //save to EHANDLE
+	}
+	else //if it does exist
+	{
+		Warning("floorsprite found, continuing"); //continue
+		if (m_pFloorSprite->m_pSprite == NULL) //if it's not drawing
+			m_pFloorSprite->Spawn(); //draw it
+	}
+}
 void CBasePlayer::GroundPound(void)
 {
 	EmitSound("BadDog.Smash");
@@ -5231,6 +5273,7 @@ int CBasePlayer::Restore( IRestore &restore )
 	// Copied from spawn() for now
 	SetBloodColor( BLOOD_COLOR_RED );
 	
+
 	// clear this - it will get reset by touching the trigger again
 	m_afPhysicsFlags &= ~PFLAG_VPHYSICS_MOTIONCONTROLLER;
 
@@ -5264,7 +5307,7 @@ void CBasePlayer::OnRestore( void )
 {
 	BaseClass::OnRestore();
 
-
+	CheckFloorSprite();
 	SetViewEntity( m_hViewEntity );
 	SetDefaultFOV(m_iDefaultFOV);		// force this to reset if zero
 
@@ -5918,14 +5961,14 @@ void CBasePlayer::ImpulseCommands( )
 	{
 	case 100:
         // temporary flashlight for level designers
-        if ( FlashlightIsOn() )
+       /* if ( FlashlightIsOn() )
 		{
 			FlashlightTurnOff();
 		}
         else 
 		{
 			FlashlightTurnOn();
-		}
+		}*/
 		break;
 
 	case 200:
@@ -6185,27 +6228,27 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 		GiveAmmo( 255,	"Pistol");
 		GiveAmmo( 255,	"AR2");
 		GiveAmmo( 5,	"AR2AltFire");
-		GiveAmmo( 350,	"SMG1");
+		GiveAmmo( 450,	"SMG1");
 		GiveAmmo( 255,	"Buckshot");
 		GiveAmmo( 3,	"smg1_grenade");
-		GiveAmmo( 10,	"rpg_round");
+		GiveAmmo( 30,	"rpg_round");
 		GiveAmmo( 25,	"grenade");
 		GiveAmmo( 32,	"357" );
 		GiveAmmo( 16,	"XBowBolt" );
 #ifdef HL2_EPISODIC
 		GiveAmmo( 5,	"Hopwire" );
 #endif		
-		GiveNamedItem( "weapon_smg1" );
+		GiveNamedItem( "weapon_plasmarifle" );
 		GiveNamedItem( "weapon_frag" );
-		GiveNamedItem( "weapon_crowbar" );
+		//GiveNamedItem( "weapon_crowbar" );
 		GiveNamedItem( "weapon_pistol" );
 		GiveNamedItem( "weapon_ar2" );
 		GiveNamedItem( "weapon_shotgun" );
-		GiveNamedItem( "weapon_physcannon" );
-		GiveNamedItem( "weapon_bugbait" );
+		//GiveNamedItem( "weapon_physcannon" );
+		//GiveNamedItem( "weapon_bugbait" );
 		GiveNamedItem( "weapon_rpg" );
 		GiveNamedItem( "weapon_357" );
-		GiveNamedItem( "weapon_crossbow" );
+		//GiveNamedItem( "weapon_crossbow" );
 		//HLR
 		GiveNamedItem( "weapon_pumpshotgun");
 		GiveNamedItem( "weapon_bfg" );

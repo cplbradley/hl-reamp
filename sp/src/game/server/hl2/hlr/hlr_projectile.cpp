@@ -140,6 +140,7 @@ DEFINE_FUNCTION(CreateTrail),
 DEFINE_FUNCTION(DrawSprite),
 DEFINE_THINKFUNC(KillIt),
 DEFINE_THINKFUNC(TargetTrackThink),
+DEFINE_THINKFUNC(EnableTouch),
 END_DATADESC()
 CHLRPistolProjectile *CHLRPistolProjectile::Create(const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner)
 {
@@ -169,15 +170,14 @@ void CHLRPistolProjectile::Spawn(void)
 	Precache();
 	SetMoveType(MOVETYPE_FLY, MOVECOLLIDE_FLY_CUSTOM);
 	UTIL_SetSize(this, -Vector(10.0f, 10.0f, 1.0f), Vector(10.0f, 10.0f, 10.0f));
-	SetSolid(SOLID_BBOX);
-	AddSolidFlags(FSOLID_NOT_SOLID || FSOLID_TRIGGER);
+	SetSolid(SOLID_NONE);
 	SetModel("models/spitball_small.mdl");
-	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 	//SetSolidFlags(FSOLID_TRIGGER);
 	SetRenderColor(255, 135, 115);
-	SetTouch(&CHLRPistolProjectile::Touch);
 	CreateTrail();
 	DrawSprite();
+	SetThink(&CHLRPistolProjectile::EnableTouch);
+	SetNextThink(gpGlobals->curtime + 0.01f);
 }
 void CHLRPistolProjectile::Precache(void)
 {
@@ -186,6 +186,14 @@ void CHLRPistolProjectile::Precache(void)
 	PrecacheModel("models/spitball_small.mdl");
 	PrecacheParticleSystem("pistol_core");
 	BaseClass::Precache();
+}
+
+void CHLRPistolProjectile::EnableTouch(void)
+{
+	SetTouch(&CHLRPistolProjectile::Touch);
+	SetSolid(SOLID_BBOX);
+	AddSolidFlags(FSOLID_NOT_SOLID || FSOLID_TRIGGER);
+	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 }
 bool CHLRPistolProjectile::CreateTrail(void)
 {
@@ -229,15 +237,7 @@ void CHLRPistolProjectile::TargetTrackThink(void)
 }
 void CHLRPistolProjectile::Touch(CBaseEntity *pOther) //i touched something
 {
-	if (GetOwnerEntity() && GetOwnerEntity()->IsNPC() && pOther->IsNPC())
-	{
-		return;
-	}
-	if (GetOwnerEntity() && GetOwnerEntity()->IsPlayer() && pOther->IsPlayer())
-	{
-		return;
-	}
-	if (pOther->ClassMatches("npc_chopperdrone"))
+	if (GetOwnerEntity() && GetOwnerEntity() == pOther)
 	{
 		return;
 	}
@@ -251,8 +251,6 @@ void CHLRPistolProjectile::Touch(CBaseEntity *pOther) //i touched something
 		{
 			return;
 		}
-		//DispatchParticleEffect("smg_plasmaball_core", GetAbsOrigin(), GetAbsAngles(), this); //poof effect!
-		SetAbsVelocity(Vector(0, 0, 0));
 		if (pOther->m_takedamage != DAMAGE_NO) //can what i hit take damage?
 		{
 			SetThink(NULL);
@@ -365,12 +363,13 @@ void CHLRFireball::Touch(CBaseEntity *pOther)
 	}*/
 	SetTouch(NULL);
 	SetMoveType(MOVETYPE_NONE);
+	SetSolidFlags(FSOLID_NOT_SOLID);
+	SetSolid(SOLID_NONE);
 	Detonate();
 	return;
 }
 void CHLRFireball::Detonate(void)
 {
-
 	DispatchParticleEffect("hlr_base_explosion2", GetAbsOrigin(), GetAbsAngles(), this);
 	const trace_t *pTrace = &CBaseEntity::GetTouchTrace();
 	trace_t *pNewTrace = const_cast<trace_t*>( pTrace );
@@ -426,7 +425,7 @@ void CHLRFireballTemp::Touch(CBaseEntity *pOther)
 	if (pOther && pOther->m_takedamage && (m_flNextDamage < gpGlobals->curtime))
 	{
 		pOther->TakeDamage(CTakeDamageInfo(this, this, 1, (DMG_BULLET | DMG_BURN)));
-		m_flNextDamage = gpGlobals->curtime + 1.0f;
+		m_flNextDamage = gpGlobals->curtime + 0.5f;
 	}
 }
 void CHLRFireballTemp::Kill(void)
@@ -498,6 +497,7 @@ BEGIN_DATADESC(CHLRMechubusMissile)
 DEFINE_FUNCTION(Touch),
 DEFINE_FUNCTION(Explode),
 DEFINE_FUNCTION(DispatchEffects),
+DEFINE_THINKFUNC(EnableTouch),
 END_DATADESC()
 
 void CHLRMechubusMissile::Spawn(void)
@@ -506,12 +506,11 @@ void CHLRMechubusMissile::Spawn(void)
 	SetModel("models/spitball_large.mdl");
 	//SetModelName(NULL_STRING);
 	AddEFlags(EF_NODRAW);
-	SetSolid(SOLID_BBOX);
-	SetSolidFlags(FSOLID_NOT_SOLID | FSOLID_TRIGGER);
+	SetSolid(SOLID_NONE);
 	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 	DispatchEffects();
-	SetTouch(&CHLRMechubusMissile::Touch);
-
+	SetThink(&CHLRMechubusMissile::EnableTouch);
+	SetNextThink(gpGlobals->curtime + 0.01f); //to avoid accidental self-collisions, we delay the ability to contact by 0.1 seconds
 }
 
 void CHLRMechubusMissile::Precache(void)
@@ -526,6 +525,13 @@ bool CHLRMechubusMissile::DispatchEffects(void)
 	return true;
 }
 
+void CHLRMechubusMissile::EnableTouch(void)
+{
+	SetSolid(SOLID_BBOX);
+	SetSolidFlags(FSOLID_NOT_SOLID | FSOLID_TRIGGER);
+	
+	SetTouch(&CHLRMechubusMissile::Touch);
+}
 void CHLRMechubusMissile::Touch(CBaseEntity *pOther)
 {
 	if (pOther == NULL)

@@ -46,6 +46,9 @@
     <Filter Include="VPC Scripts">
       <UniqueIdentifier>{A40EE377-781A-C6B9-0C7C-B3BE118D248E}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\HLR">
+      <UniqueIdentifier>{1751502a-0bf3-43b2-baf6-5e9df0014e7b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\lib\public\bitmap.lib">
@@ -1880,26 +1883,27 @@
     <ClInclude Include="toolframework_client.h">
       <Filter>Tool Framework</Filter>
     </ClInclude>
-    <ClInclude Include="hl2\c_weapon_grapple.h">
-      <Filter>Source Files\HL2 DLL</Filter>
+    <ClInclude Include="hud_healthbar.h">
+      <Filter>Source Files\HLR</Filter>
     </ClInclude>
     <ClInclude Include="hud_bluekey.h">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files\HLR</Filter>
+    </ClInclude>
+    <ClInclude Include="hud_purplekey.h">
+      <Filter>Source Files\HLR</Filter>
     </ClInclude>
     <ClInclude Include="hud_redkey.h">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files\HLR</Filter>
     </ClInclude>
-    <ClInclude Include="hud_healthbar.h">
-      <Filter>Source Files\HL2 DLL</Filter>
+    <ClInclude Include="hud_skullkey.h">
+      <Filter>Source Files\HLR</Filter>
     </ClInclude>
     <ClInclude Include="mapload_background.h">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\HLR</Filter>
     </ClInclude>
     <ClInclude Include="episodic\episodic_screenspaceeffects.h">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
-    <ClInclude Include="hud_purplekey.h" />
-    <ClInclude Include="hud_skullkey.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mp3player.cpp">
@@ -3387,29 +3391,45 @@
     <ClCompile Include="toolframework_client.cpp">
       <Filter>Tool Framework</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\c_weapon_grapple.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
+    <ClCompile Include="hud_healthbar.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="c_npc_vortboss.cpp">
+      <Filter>Source Files\HLR</Filter>
     </ClCompile>
     <ClCompile Include="hud_bluekey.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hud_purplekey.cpp">
+      <Filter>Source Files\HLR</Filter>
     </ClCompile>
     <ClCompile Include="hud_redkey.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
+      <Filter>Source Files\HLR</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\c_npc_antlionwarrior.cpp" />
-    <ClCompile Include="hud_healthbar.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
+    <ClCompile Include="hud_skullkey.cpp">
+      <Filter>Source Files\HLR</Filter>
     </ClCompile>
     <ClCompile Include="mapload_background.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="episodic\c_npc_puppet.cpp">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="episodic\c_prop_scalable.cpp">
+      <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
     <ClCompile Include="episodic\episodic_screenspaceeffects.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
-    <ClCompile Include="c_npc_vortboss.cpp" />
-    <ClCompile Include="hud_purplekey.cpp" />
-    <ClCompile Include="hud_skullkey.cpp" />
-    <ClCompile Include="c_util_hudblocker.cpp" />
+    <ClCompile Include="episodic\flesh_internal_material_proxy.cpp">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\c_npc_antlionwarrior.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="c_hlr_floorsprite.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

@@ -165,7 +165,8 @@ protected:
 
 	virtual bool	CheckGroundPound(void);
 
-
+	virtual bool	CheckDash(void);
+	float	m_fNextDash;
 
 	// Dead player flying through air., e.g.
 	virtual void    FullTossMove( void );

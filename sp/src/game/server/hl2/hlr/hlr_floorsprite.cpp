@@ -18,13 +18,16 @@ DEFINE_THINKFUNC(UpdateThink),
 DEFINE_FUNCTION(UpdatePos),
 END_DATADESC()
 
+IMPLEMENT_SERVERCLASS_ST(CHLRFloorSprite,DT_FloorSprite)
+END_SEND_TABLE()
+
 
 void CHLRFloorSprite::Spawn(void)
 {
 	Precache();
 	InitSprite();
-	SetThink(&CHLRFloorSprite::UpdateThink);
-	SetNextThink(gpGlobals->curtime);
+	//SetThink(&CHLRFloorSprite::UpdateThink);
+	//SetNextThink(gpGlobals->curtime);
 	DevMsg("floorsprite spawned\n");
 }
 void CHLRFloorSprite::Precache(void)
@@ -35,7 +38,7 @@ bool CHLRFloorSprite::InitSprite(void)
 {
 	m_pSprite = CSprite::SpriteCreate(SPRITE_MATERIAL, GetAbsOrigin(), false);
 	m_pSprite->FollowEntity(this);
-	m_pSprite->SetSpriteScale(1.0f);
+	m_pSprite->SetSpriteScale(0.5f);
 	m_pSprite->SetTransparency(kRenderGlow, 255, 255, 255, 64, kRenderFxNoDissipation);
 	m_pSprite->SetGlowProxySize(16.0f);
 	return true;

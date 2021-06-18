@@ -24,7 +24,7 @@ public:
 
 	void Spawn(void);
 	void Precache(void);
-	void UpdateStatus()
+	void UpdateStatus();
 
 	
 };

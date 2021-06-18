@@ -327,8 +327,8 @@ void CWeaponPistol::FireProjectile(void)
 	CHLRPistolProjectile *pPew = (CHLRPistolProjectile*)CreateEntityByName("hlr_pistolprojectile");
 	pPew->Spawn();
 	UTIL_SetOrigin(pPew, vecSrc);
-	//pPew->SetAbsVelocity(vecShotDir * 3000.0f);
-	pPew->SetTargetPos(tr.endpos, 8000.0f);
+	pPew->SetAbsVelocity(vecShotDir * 8000.0f);
+//	pPew->SetTargetPos(tr.endpos, 8000.0f);
 	pPew->SetOwnerEntity(pPlayer);
 	pPew->SetLocalAngles(QAngle(random->RandomFloat(-250, -500),
 		random->RandomFloat(-250, -500),
@@ -396,11 +396,14 @@ void CWeaponPistol::ItemPostFrame(void)
 	if (((pOwner->m_nButtons & IN_ATTACK) == false) && (m_flSoonestPrimaryAttack < gpGlobals->curtime))
 	{
 		m_flNextPrimaryAttack = gpGlobals->curtime - 0.1f;
-	}
+	}	
 	else if ((pOwner->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack < gpGlobals->curtime) && (m_iClip1 <= 0))
 	{
 		DryFire();
 	}
+	
+	/*else if (pOwner->m_nButtons & IN_ATTACK)
+		m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;*/
 }
 
 //-----------------------------------------------------------------------------

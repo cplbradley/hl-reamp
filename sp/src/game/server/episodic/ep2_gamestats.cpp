@@ -3,7 +3,7 @@
 // Purpose: 
 //
 //=============================================================================
-#if defined( GAME_DLL )
+#ifdef GAME_DLL
 #include "cbase.h"
 #endif
 #include "ep2_gamestats.h"

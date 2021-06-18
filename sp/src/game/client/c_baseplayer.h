@@ -82,6 +82,8 @@ public:
 
 	virtual void	Spawn( void );
 	void			GroundPound(void);
+
+	void			Dash(void);
 	virtual void	SharedSpawn(); // Shared between client and server.
 	virtual bool	GetSteamID( CSteamID *pID );
 

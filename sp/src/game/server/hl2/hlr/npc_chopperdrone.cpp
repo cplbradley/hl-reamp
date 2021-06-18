@@ -1381,6 +1381,7 @@ void CNPC_ChopperDrone::InputStartBullrushBehavior( inputdata_t &inputdata )
 		m_nAttackMode = ATTACK_MODE_BULLRUSH_VEHICLE;
 		SetSecondaryMode( BULLRUSH_MODE_WAIT_FOR_ENEMY );
 		SetLeadingDistance( 0.0f );
+		StopSound("NPC_AttackHelicopter.FireGun");
 	}
 }
 

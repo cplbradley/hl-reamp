@@ -28,7 +28,7 @@
 
 #define GRENADE_RADIUS	4.0f // inches
 
-ConVar sk_plr_grenade_launch_speed("sk_plr_grenade_launch_speed", "1200", FCVAR_REPLICATED);
+ConVar sk_plr_grenade_launch_speed("sk_plr_grenade_launch_speed", "900", FCVAR_REPLICATED);
 ConVar sk_plr_grenade_vert_factor("sk_plr_grenade_vert_factor", "250", FCVAR_REPLICATED);
 
 //-----------------------------------------------------------------------------
@@ -50,6 +50,12 @@ public:
 	void	DecrementAmmo( CBaseCombatCharacter *pOwner );
 	void	ItemPostFrame( void );
 
+
+	void	WeaponIdle(void);
+
+	Activity		GetPrimaryAttackActivity(void);
+	Activity		GetIdleActivity(void);
+
 	bool	Deploy( void );
 	bool	Holster( CBaseCombatWeapon *pSwitchingTo = NULL );
 
@@ -58,6 +64,8 @@ public:
 	bool	Reload( void );
 
 	bool	ShouldDisplayHUDHint() { return true; }
+
+	int m_iLastFireAct;
 
 private:
 	void	ThrowGrenade( CBasePlayer *pPlayer );
@@ -140,9 +148,65 @@ bool CWeaponFrag::Holster( CBaseCombatWeapon *pSwitchingTo )
 	m_bRedraw = false;
 	m_fDrawbackFinished = false;
 
+	m_iLastFireAct = 0;
+
 	return BaseClass::Holster( pSwitchingTo );
 }
 
+void CWeaponFrag::WeaponIdle(void)
+{
+	//Idle again if we've finished
+	if (HasWeaponIdleTimeElapsed())
+	{
+		SendWeaponAnim(GetIdleActivity());
+	}
+}
+
+
+Activity CWeaponFrag::GetPrimaryAttackActivity(void)
+{
+	switch (m_iLastFireAct)
+	{
+	case 0:
+	{
+		m_iLastFireAct = 1;
+		return ACT_VM_GRENADELAUNCHER_FIRE1;
+	}
+	case 1:
+	{
+		m_iLastFireAct = 2;
+		return ACT_VM_GRENADELAUNCHER_FIRE2;
+	}
+	case 2:
+	{
+		m_iLastFireAct = 3;
+		return ACT_VM_GRENADELAUNCHER_FIRE3;
+	}
+	case 3:
+	{
+		m_iLastFireAct = 0;
+		return ACT_VM_GRENADELAUNCHER_FIRE4;
+	}
+	default:
+		return ACT_VM_GRENADELAUNCHER_FIRE1;
+	}
+}
+Activity CWeaponFrag::GetIdleActivity(void)
+{
+	switch (m_iLastFireAct)
+	{
+	case 0:
+		return ACT_VM_GRENADELAUNCHER_IDLE0;
+	case 1:
+		return ACT_VM_GRENADELAUNCHER_IDLE1;
+	case 2:
+		return ACT_VM_GRENADELAUNCHER_IDLE2;
+	case 3:
+		return ACT_VM_GRENADELAUNCHER_IDLE3;
+	default:
+		return ACT_VM_GRENADELAUNCHER_IDLE0;
+	}
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pEvent - 
@@ -243,19 +307,23 @@ void CWeaponFrag::PrimaryAttack( void )
 {
 	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
 	Vector	vecEye = pPlayer->EyePosition();
-	Vector	vForward, vRight;
+	Vector	vForward, vRight, vUp;
 	Vector vecAng;
 	pPlayer->EyeVectors(&vecAng);
+	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
+	Vector	muzzlePoint = pPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * 6.0f + vUp * -3.0f;
 	Vector vecSrc = vecEye + vForward * 18.0f + vRight * 8.0f + Vector(0, 0, -8);
 	//CheckThrowPosition(pPlayer, vecEye, vecSrc);
 
 	float vertfactor = sk_plr_grenade_vert_factor.GetFloat();
 	Vector vecThrow = vecAng * sk_plr_grenade_launch_speed.GetFloat() + Vector(0, 0, vertfactor);
-	Fraggrenade_Create(vecSrc, vec3_angle, vecThrow, AngularImpulse(200, random->RandomInt(-600, 600), 0), pPlayer, 3.0f, false);
+	Fraggrenade_Create(muzzlePoint, vec3_angle, vecThrow, AngularImpulse(200, random->RandomInt(-600, 600), 0), pPlayer, 3.0f, false);
 	
 	m_flNextPrimaryAttack = gpGlobals->curtime + 0.4f;
 
 	WeaponSound(WPN_DOUBLE);
+
+	SendWeaponAnim(GetPrimaryAttackActivity());
 
 	//m_bRedraw = true;
 

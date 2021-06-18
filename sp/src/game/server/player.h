@@ -1124,6 +1124,13 @@ private:
 
 	EHANDLE					m_hFloorSprite;
 
+	void		CheckFloorSprite(void);
+
+	Vector m_vecSavedVelocity;
+
+	void		Dash(void);
+	void		StopDash(void);
+
 	// Movement constraints
 	CNetworkHandle( CBaseEntity, m_hConstraintEntity );
 	CNetworkVector( m_vecConstraintCenter );

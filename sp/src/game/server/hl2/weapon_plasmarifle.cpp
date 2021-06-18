@@ -683,6 +683,7 @@ void CWeaponPlasmaRifle::PrimaryAttack(void)
 			random->RandomFloat(-250, -500),
 			random->RandomFloat(-250, -500)));
 		m_iEnergyLevel++;
+		m_nShotsFired++;
 		int iAttachment = LookupAttachment("barrel");
 		DispatchParticleEffect("smg_core", PATTACH_POINT_FOLLOW, pOwner->GetViewModel(), iAttachment, true);
 	}

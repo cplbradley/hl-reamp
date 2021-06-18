@@ -1826,7 +1826,7 @@ void CWeaponRPG::StartGuiding(void)
 
 	m_bGuiding = true;
 
-	WeaponSound(SPECIAL1);
+	//WeaponSound(SPECIAL1);
 
 	CreateLaserPointer();
 	StartLaserEffects();
@@ -1839,7 +1839,7 @@ void CWeaponRPG::StopGuiding(void)
 {
 	m_bGuiding = false;
 
-	WeaponSound(SPECIAL2);
+	//WeaponSound(SPECIAL2);
 
 	StopLaserEffects();
 

@@ -38,6 +38,7 @@ public:
 	void SetTargetPos(const Vector &vecTargetpos, const float &fVelocity);
 	bool CreateVPhysics(void);
 	unsigned int PhysicsSolidMaskForEntity() const;
+	void EnableTouch(void);
 
 	Vector vecTarget;
 	float flVelocity;
@@ -96,5 +97,6 @@ public:
 	void Explode(void);
 	bool DispatchEffects(void);
 	void Touch(CBaseEntity *pOther);
+	void EnableTouch(void);
 	DECLARE_DATADESC();
 };

@@ -8,7 +8,7 @@ class CHLRFloorSprite : public CBaseEntity
 {
 
 	DECLARE_CLASS(CHLRFloorSprite, CBaseEntity);
-
+	DECLARE_SERVERCLASS();
 	DECLARE_DATADESC();
 
 public:

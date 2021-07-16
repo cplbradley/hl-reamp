@@ -23,6 +23,7 @@
 #include "npcevent.h"
 #include "ai_basenpc.h"
 #include "weapon_crowbar.h"
+#include "particle_parse.h"
 #include "gamestats.h"
 #define FURYBAR_RANGE
 // memdbgon must be the last include file in a .cpp file!!!
@@ -40,6 +41,7 @@ public:
 
 	CWeaponFurybar();
 	
+	CNetworkVar(bool, m_bShouldDrawFlames);
 	float		GetRange(void)		{ return	CROWBAR_RANGE; }
 	float		GetFireRate(void)		{ return	CROWBAR_REFIRE; }
 	void		Equip(CBaseCombatCharacter *pOwner);
@@ -67,6 +69,7 @@ private:
 };
 
 IMPLEMENT_SERVERCLASS_ST(CWeaponFurybar, DT_WeaponFurybar)
+	SendPropBool(SENDINFO(m_bShouldDrawFlames)),
 END_SEND_TABLE()
 
 #ifndef HL2MP
@@ -256,6 +259,7 @@ void CWeaponFurybar::Equip(CBaseCombatCharacter *pOwner)
 	{
 		ActivateTimer();
 	}
+	m_bShouldDrawFlames = true;
 	EmitSound("Powerup.Pickup");
 	BaseClass::Equip(pOwner);
 }
@@ -274,9 +278,18 @@ void CWeaponFurybar::ActivateTimer(void)
 	UTIL_ScreenFade(pPlayer, red, 0.5, 0, FFADE_IN);
 	m_fSwitchTime = gpGlobals->curtime + 30.0f;
 	gm->m_bShouldGroundPound = true;
+	int iAttachment1 = LookupAttachment("0");
+	int iAttachment2 = LookupAttachment("1");
+	Vector vecStart, vecEnd;
+	pPlayer->GetViewModel()->GetAttachment(iAttachment1, vecStart);
+	pPlayer->GetViewModel()->GetAttachment(iAttachment2, vecEnd);
+	//DispatchParticleEffect("crowbar_burn", PATTACH_ABSORIGIN_FOLLOW, pPlayer->GetViewModel());
+	//DispatchParticleEffect("crowbar_burn", vecStart, vecEnd, GetAbsAngles(), this);
+	//DispatchParticleEffect("crowbar_burn", )
 }
 void CWeaponFurybar::End(void)
 {
+	m_bShouldDrawFlames = false;
 	color32 red = { 200, 0, 0, 128 };
 	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 	CBaseCombatWeapon *pLast = pPlayer->Weapon_GetLast();
@@ -290,5 +303,6 @@ void CWeaponFurybar::End(void)
 	pPlayer->SetMaxSpeed(450.0f);
 	UTIL_ScreenFade(pPlayer, red, 0.5, 0, FFADE_IN);
 	gm->m_bShouldGroundPound = false;
+	StopParticleEffects(pPlayer->GetViewModel());
 
 }

@@ -181,6 +181,7 @@ void CMissile::Spawn(void)
 	m_flGracePeriodEndsAt = 0;
 
 	AddFlag(FL_OBJECT);
+	
 }
 
 

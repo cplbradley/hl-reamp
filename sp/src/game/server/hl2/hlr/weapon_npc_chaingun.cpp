@@ -35,6 +35,7 @@
 //=========================================================
 //=========================================================
 
+ConVar sk_chaingun_maxburst("sk_chaingun_maxburst", "100", FCVAR_NONE);
 
 BEGIN_DATADESC(CWeaponChaingun)
 
@@ -280,14 +281,11 @@ void CWeaponChaingun::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatC
 		float basespd = 2000.0f;
 		float adjustedspeed = g_pGameRules->AdjustProjectileSpeed(basespd);
 		Vector vecVelocity = vecShootDir * adjustedspeed;
-
-
 		pPew->Spawn();
 		pPew->SetAbsVelocity(vecVelocity);
 		//DispatchParticleEffect("pistol_npc_core", vecShootOrigin, angAiming, pOperator);
 		//pOperator->FireBullets(0, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2);
 		pOperator->DoMuzzleFlash();
-		m_iClip1 = m_iClip1 - 1;
 	}
 	break;
 
@@ -296,7 +294,10 @@ void CWeaponChaingun::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatC
 		break;
 	}
 }
-
+int CWeaponChaingun::GetMinBurst()
+{
+	return sk_chaingun_maxburst.GetInt();
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------

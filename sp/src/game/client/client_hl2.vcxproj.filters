@@ -3430,6 +3430,9 @@
     <ClCompile Include="c_hlr_floorsprite.cpp">
       <Filter>Source Files\HLR</Filter>
     </ClCompile>
+    <ClCompile Include="c_weapon_furybar.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

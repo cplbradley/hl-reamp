@@ -1762,7 +1762,7 @@ void CNPC_Hunter::Spawn()
 
 	SetupGlobalModelData();
 	
-	CapabilitiesAdd( bits_CAP_MOVE_GROUND | bits_CAP_SQUAD | bits_CAP_ANIMATEDFACE );
+	CapabilitiesAdd( bits_CAP_MOVE_GROUND |bits_CAP_MOVE_JUMP | bits_CAP_SQUAD | bits_CAP_ANIMATEDFACE );
 	CapabilitiesAdd( bits_CAP_INNATE_RANGE_ATTACK1 | bits_CAP_INNATE_RANGE_ATTACK2 | bits_CAP_INNATE_MELEE_ATTACK1 );
 	CapabilitiesAdd( bits_CAP_SKIP_NAV_GROUND_CHECK );
 

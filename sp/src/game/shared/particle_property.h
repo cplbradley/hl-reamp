@@ -109,9 +109,10 @@ public:
 
 	int					FindEffect( const char *pEffectName, int nStart = 0 );
 	inline CNewParticleEffect *GetParticleEffectFromIdx( int idx );
+	int					GetParticleAttachment(C_BaseEntity *pEntity, const char *pszAttachmentName, const char *pszParticleName);
 
 private:
-	int					GetParticleAttachment( C_BaseEntity *pEntity, const char *pszAttachmentName, const char *pszParticleName );
+	
 	int					FindEffect( CNewParticleEffect *pEffect );
 	void				UpdateParticleEffect( ParticleEffectList_t *pEffect, bool bInitializing = false, int iOnlyThisControlPoint = -1 );
 	void				UpdateControlPoint( ParticleEffectList_t *pEffect, int iPoint, bool bInitializing );

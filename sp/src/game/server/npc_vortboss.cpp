@@ -70,7 +70,9 @@ enum
 	SCHED_VORTBOSS_CHASEENEMY,
 	SCHED_VORTBOSS_GROUND_ATTACK,
 	SCHED_VORTBOSS_SPINATTACK,
-	SCHED_VORTBOSS_BACKOFF
+	SCHED_VORTBOSS_BACKOFF,
+	SCHED_VORTBOSS_CHARGE,
+	SCHED_VORTBOSS_DODGE_ROCKET
 };
 
 //=========================================================
@@ -81,7 +83,9 @@ enum
 	TASK_VORTBOSS_CANNON = LAST_SHARED_TASK,
 	TASK_VORTBOSS_EYEBLAST,
 	TASK_VORTBOSS_GROUNDATTACK,
-	TASK_VORTBOSS_SPINATTACK
+	TASK_VORTBOSS_SPINATTACK,
+	TASK_VORTBOSS_CHARGE,
+	TASK_VORTBOSS_DODGEROCKET
 };
 
 
@@ -93,16 +97,28 @@ enum
 	COND_CAN_FIRE_CANNON = LAST_SHARED_CONDITION,
 	COND_CAN_DO_EYEBLAST,
 	COND_CAN_DO_GROUND_ATTACK,
-	COND_CAN_SPIN_ATTACK
+	COND_CAN_SPIN_ATTACK,
+	COND_SHOULD_CHARGE,
+	COND_SHOULD_DODGE_ROCKET
 };
 
 ConVar sk_vortboss_health("sk_vortboss_health", "2500");
-ConVar sk_vortboss_projectile_speed("sk_vortboss_projectile_speed", "2300");
+ConVar sk_vortboss_projectile_speed("sk_vortboss_projectile_speed", "1800");
 ConVar g_debug_vortboss_spinattack("g_debug_vortboss_spinattack", "0");
+ConVar sk_vortboss_dmg_projectile("sk_vortboss_dmg_projectile", "9");
+ConVar	sk_vortboss_dmg_charge("sk_vortboss_dmg_charge", "40");
+
 Activity ACT_VORTBOSS_EYEBLAST;
 Activity ACT_VORTBOSS_CANNON;
 Activity ACT_VORTBOSS_GROUND_ATTACK;
 Activity ACT_VORTBOSS_SPINATTACK;
+Activity ACT_VORTBOSS_CHARGE_START;
+Activity ACT_VORTBOSS_CHARGE_LOOP;
+Activity ACT_VORTBOSS_CHARGE_STOP;
+Activity ACT_VORTBOSS_CRASH;
+Activity ACT_VORTBOSS_DODGE_LEFT;
+Activity ACT_VORTBOSS_DODGE_RIGHT;
+
 
 int AE_VORTBOSS_CHARGECANNON;
 int AE_VORTBOSS_FIRECANNON;
@@ -112,6 +128,7 @@ int AE_VORTBOSS_GROUNDATTACK;
 int AE_VORTBOSS_CLEAR_BEAM;
 int AE_VORTBOSS_START_SPINATTACK;
 int AE_VORTBOSS_END_SPINATTACK;
+
 
 #define VORTBOSS_EYE_ATTACHMENT 1
 #define VORTBOSS_HAND_ATTACHMENT 2
@@ -153,6 +170,8 @@ public:
 	void	AttackBeamThink(void);
 	void	ClearBeam(void);
 
+	virtual float	MaxYawSpeed(void);
+
 	void	NPCThink(void);
 	void	RelaxAim(float flInterval);
 	void	UpdateAim();
@@ -163,6 +182,9 @@ public:
 	void	HandleAnimEvent(animevent_t *pEvent);
 	void	StartTask(const Task_t *pTask);
 	void	RunTask(const Task_t *pTask);
+
+	bool	EnemyIsRightInFrontOfMe(CBaseEntity **pEntity);
+	void  ChargeDamage(CBaseEntity *pTarget);
 	
 	virtual int		OnTakeDamage_Alive(const CTakeDamageInfo &info);
 	CNetworkVar(bool,bDrawSpinBeam);
@@ -173,6 +195,14 @@ public:
 	float m_fNextEyeBlast;
 	float m_fNextCannonAttack;
 	float m_fNextSpinAttack;
+	float m_fNextDodge;
+	float m_fNextBarrage;
+	float	ChargeSteer(void);
+
+	bool	ShouldCharge(const Vector &startPos, const Vector &endPos, bool useTime, bool bCheckForCancel);
+
+	bool	CheckForRockets(void);
+	bool	HandleChargeImpact(Vector vecImpact, CBaseEntity *pEntity);
 	
 	static int gm_nBodyPitchPoseParam;
 
@@ -181,6 +211,9 @@ public:
 	int iAttackBeamWidth;
 
 	void SpinAttackThink(void);
+
+	virtual Activity	NPC_TranslateActivity(Activity baseAct);
+	virtual bool	OverrideMove(float flInterval);
 
 protected:
 	void SetupGlobalModelData();
@@ -253,7 +286,7 @@ void CNPC_VortBoss::Spawn(void)
 
 	CapabilitiesAdd(bits_CAP_MOVE_GROUND);
 	CapabilitiesAdd(bits_CAP_MOVE_JUMP);
-//	CapabilitiesAdd(bits_CAP_SKIP_NAV_GROUND_CHECK);
+	CapabilitiesAdd(bits_CAP_SKIP_NAV_GROUND_CHECK);
 	CapabilitiesAdd(bits_CAP_MOVE_SHOOT);
 	//CapabilitiesAdd(bits_CAP_INNATE_RANGE_ATTACK1 | bits_CAP_INNATE_RANGE_ATTACK2 | bits_CAP_INNATE_MELEE_ATTACK1);
 	m_iHealth = sk_vortboss_health.GetFloat();
@@ -275,6 +308,7 @@ void CNPC_VortBoss::NPCThink(void) //constant thinking
 	BaseClass::NPCThink();
 	//UpdateAim();
 	CheckSpinBeam();
+	CheckForRockets();
 }
 void CNPC_VortBoss::SetupGlobalModelData()
 {
@@ -292,7 +326,7 @@ void CNPC_VortBoss::UpdateAim()
 
 	if (GetEnemy() &&
 		GetState() != NPC_STATE_SCRIPT &&
-		(eActivity != ACT_VORTBOSS_SPINATTACK))
+		(eActivity != ACT_VORTBOSS_SPINATTACK || ACT_VORTBOSS_CHARGE_LOOP || ACT_VORTBOSS_CHARGE_STOP || ACT_VORTBOSS_CHARGE_START))
 	{
 		Vector vecShootOrigin;
 
@@ -303,8 +337,35 @@ void CNPC_VortBoss::UpdateAim()
 	}
 	/*else
 	{
+
+	}
+	{
 		RelaxAim(flInterval);
 	}*/
+}
+
+bool CNPC_VortBoss::CheckForRockets(void)
+{
+	CBaseEntity *pEntity = NULL;
+	pEntity = gEntList.FindEntityByClassname(pEntity, "rpg_missile");
+
+	if (!pEntity)
+		return false;
+	if (m_fNextDodge > gpGlobals->curtime)
+		return false;
+	if (pEntity != this)
+	{
+		string_t strname = pEntity->m_iClassname;
+		DevMsg("entity classname within radius: %s\n", strname);
+		if (pEntity->ClassMatches("rpg_missile"))
+		{
+			DevMsg("ROCKET DETECTED\n");
+			float dist = (pEntity->GetAbsOrigin() - this->GetAbsOrigin()).Length();
+			if (dist < 512.0f)
+				return true;
+		}
+	}
+	return false;
 }
 
 void CNPC_VortBoss::CheckSpinBeam(void)
@@ -389,6 +450,47 @@ void CNPC_VortBoss::CheckSpinBeam(void)
 			}
 		}*/
 	//}
+}
+
+float CNPC_VortBoss::MaxYawSpeed(void)
+{
+	Activity eActivity = GetActivity();
+
+	CBaseEntity *pEnemy = GetEnemy();
+
+	if (pEnemy != NULL && pEnemy->IsPlayer() == false)
+		return 16.0f;
+
+	if (eActivity == ACT_VORTBOSS_CHARGE_LOOP)
+	{
+		if (pEnemy == NULL)
+			return 2.0f;
+
+		float dist = UTIL_DistApprox2D(GetEnemy()->WorldSpaceCenter(), WorldSpaceCenter());
+
+		if (dist > 512)
+			return 16.0f;
+
+		//FIXME: Alter by skill level
+		float yawSpeed = RemapVal(dist, 0, 512, 1.0f, 2.0f);
+		yawSpeed = clamp(yawSpeed, 1.0f, 2.0f);
+
+		return yawSpeed;
+	}
+	if (eActivity == ACT_VORTBOSS_CHARGE_STOP)
+		return 120.0f;
+	switch (eActivity)
+	{
+	case ACT_TURN_LEFT:
+	case ACT_TURN_RIGHT:
+		return 40.0f;
+		break;
+
+	case ACT_RUN:
+	default:
+		return 20.0f;
+		break;
+	}
 }
 void CNPC_VortBoss::SetAim(const Vector &aimDir, float flInterval)
 {
@@ -549,6 +651,104 @@ void CNPC_VortBoss::ClearBeam(void)
 	}
 
 }
+
+Activity CNPC_VortBoss::NPC_TranslateActivity(Activity baseAct)
+{
+	if ((baseAct == ACT_RUN) && IsCurSchedule(SCHED_VORTBOSS_CHARGE))
+		return (Activity)ACT_VORTBOSS_CHARGE_LOOP;
+	return baseAct;
+}
+
+bool CNPC_VortBoss::OverrideMove(float flInterval)
+{
+	// If the guard's charging, we're handling the movement
+	if (IsCurSchedule(SCHED_VORTBOSS_CHARGE))
+		return true;
+
+	// TODO: This code increases the guard's ability to successfully hit a target, but adds a new dimension of navigation
+	//		 trouble to do with him not being able to "close the distance" between himself and the object he wants to hit.
+	//		 Fixing this will require some thought on how he picks the correct distances to his targets and when he's "close enough". -- jdw
+
+	/*
+	if ( m_hPhysicsTarget != NULL )
+	{
+	float flWidth = m_hPhysicsTarget->CollisionProp()->BoundingRadius2D();
+	GetLocalNavigator()->AddObstacle( m_hPhysicsTarget->WorldSpaceCenter(), flWidth * 0.75f, AIMST_AVOID_OBJECT );
+	//NDebugOverlay::Sphere( m_hPhysicsTarget->WorldSpaceCenter(), vec3_angle, flWidth, 255, 255, 255, 0, true, 0.5f );
+	}
+	*/
+
+	return BaseClass::OverrideMove(flInterval);
+}
+
+bool CNPC_VortBoss::ShouldCharge(const Vector &startPos, const Vector &endPos, bool useTime, bool bCheckForCancel)
+{
+	// Don't charge in tight spaces unless forced to
+
+	/*if (gpGlobals->curtime > m_fNextFireball)
+	return false;
+	if (gpGlobals->curtime > m_fNextBombard)
+	return false;*/
+	// Must have a target
+	if (!GetEnemy())
+		return false;
+
+	// No one else in the squad can be charging already
+	/*if (IsStrategySlotRangeOccupied(SQUAD_SLOT_ANTLIONWARRIOR_CHARGE, SQUAD_SLOT_ANTLIONWARRIOR_CHARGE))
+		return false;*/
+
+	// Don't check the distance once we start charging
+
+	//FIXME: We'd like to exclude small physics objects from this check!
+
+	// We only need to hit the endpos with the edge of our bounding box
+	Vector vecDir = endPos - startPos;
+	VectorNormalize(vecDir);
+	float flWidth = WorldAlignSize().x * 0.5;
+	Vector vecTargetPos = endPos - (vecDir * flWidth);
+
+	// See if we can directly move there
+	AIMoveTrace_t moveTrace;
+	GetMoveProbe()->MoveLimit(NAV_GROUND, startPos, vecTargetPos, MASK_NPCSOLID_BRUSHONLY, GetEnemy(), &moveTrace);
+
+	// Draw the probe
+
+	// If we're not blocked, charge
+	if (IsMoveBlocked(moveTrace))
+	{
+		// Don't allow it if it's too close to us
+
+		// Allow some special cases to not block us
+		if (moveTrace.pObstruction != NULL)
+		{
+			// If we've hit the world, see if it's a cliff
+			if (moveTrace.pObstruction == GetContainingEntity(INDEXENT(0)))
+			{
+				// Can't be too far above/below the target
+				if (fabs(moveTrace.vEndPosition.z - vecTargetPos.z) > StepHeight())
+					return false;
+
+				// Allow it if we got pretty close
+				if (UTIL_DistApprox(moveTrace.vEndPosition, vecTargetPos) < 64)
+					return true;
+			}
+
+			// Hit things that will take damage
+			if (moveTrace.pObstruction->m_takedamage != DAMAGE_NO)
+				return true;
+
+			// Hit things that will move
+			if (moveTrace.pObstruction->GetMoveType() == MOVETYPE_VPHYSICS)
+				return true;
+		}
+
+		return false;
+	}
+
+	// Only update this if we've requested it
+
+	return true;
+}
 void CNPC_VortBoss::HandleAnimEvent(animevent_t *pEvent)
 {
 	if (pEvent->event == AE_VORTBOSS_FIRECANNON)
@@ -593,11 +793,13 @@ void CNPC_VortBoss::HandleAnimEvent(animevent_t *pEvent)
 		SetLocalAngles(angNewAngle);
 		StartSpinBeam();
 		bDrawSpinBeam = true;
+		return;
 	}
 	if (pEvent->event == AE_VORTBOSS_END_SPINATTACK)
 	{
 		bDrawSpinBeam = false;
 		ClearSpinBeam();
+		return;
 	}
 	if (pEvent->event == AE_VORTBOSS_GROUNDATTACK)
 	{
@@ -606,19 +808,23 @@ void CNPC_VortBoss::HandleAnimEvent(animevent_t *pEvent)
 		DispatchParticleEffect("vortboss_ground_attack", GetAbsOrigin(), GetAbsAngles(), this);
 		EmitSound("BadDog.Smash");
 		UTIL_ScreenShake(GetAbsOrigin(), 40.0, 60, 1.0, 500, SHAKE_START);
+		return;
 	}
 	if (pEvent->event == AE_VORTBOSS_START_TARGETBEAM)
 	{
 		CreateTargetBeam();
+		return;
 	}
 	if (pEvent->event == AE_VORTBOSS_FIRE_ATTACKBEAM)
 	{
 		EmitSound("VortBoss.EyeBlast");
 		CreateAttackBeam();
+		return;
 	}
 	if (pEvent->event == AE_VORTBOSS_CLEAR_BEAM)
 	{
 		ClearBeam();
+		return;
 	}
 	BaseClass::HandleAnimEvent(pEvent);
 }
@@ -670,6 +876,173 @@ void CNPC_VortBoss::SpinAttackThink(void)
 	//pSpinBeam->RelinkBeam();
 	SetNextThink(gpGlobals->curtime + 0.001f, "SpinAttackContext");*/
 }
+bool CNPC_VortBoss::EnemyIsRightInFrontOfMe(CBaseEntity **pEntity)
+{
+	if (!GetEnemy())
+		return false;
+
+	if ((GetEnemy()->WorldSpaceCenter() - WorldSpaceCenter()).LengthSqr() < (156 * 156))
+	{
+		Vector vecLOS = (GetEnemy()->GetAbsOrigin() - GetAbsOrigin());
+		vecLOS.z = 0;
+		VectorNormalize(vecLOS);
+		Vector vBodyDir = BodyDirection2D();
+		if (DotProduct(vecLOS, vBodyDir) > 0.8)
+		{
+			// He's in front of me, and close. Make sure he's not behind a wall.
+			trace_t tr;
+			UTIL_TraceLine(WorldSpaceCenter(), GetEnemy()->EyePosition(), MASK_SOLID, this, COLLISION_GROUP_NONE, &tr);
+			if (tr.m_pEnt == GetEnemy())
+			{
+				*pEntity = tr.m_pEnt;
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+bool CNPC_VortBoss::HandleChargeImpact(Vector vecImpact, CBaseEntity *pEntity)
+{
+
+	if (!pEntity || pEntity->IsWorld())
+	{
+		// Robin: Due to some of the finicky details in the motor, the guard will hit
+		//		  the world when it is blocked by our enemy when trying to step up 
+		//		  during a moveprobe. To get around this, we see if the enemy's within
+		//		  a volume in front of the guard when we hit the world, and if he is,
+		//		  we hit him anyway.
+		EnemyIsRightInFrontOfMe(&pEntity);
+
+		// Did we manage to find him? If not, increment our charge miss count and abort.
+		if (pEntity->IsWorld())
+		{
+			return true;
+		}
+
+	}
+	// Cause a shock wave from this point which will disrupt nearby physics objects
+	// Hit anything we don't like
+	if ((IRelationType(pEntity) == D_NU || D_HT) && (GetNextAttack() < gpGlobals->curtime))
+	{
+		EmitSound("NPC_AntlionGuard.Shove");
+
+		ChargeDamage(pEntity);
+
+		pEntity->ApplyAbsVelocityImpulse((BodyDirection2D() * 800) + Vector(0, 0, 400));
+
+		if (!pEntity->IsAlive() && GetEnemy() == pEntity)
+		{
+			SetEnemy(NULL);
+		}
+
+		SetNextAttack(gpGlobals->curtime + 2.0f);
+		SetActivity(ACT_VORTBOSS_CHARGE_STOP);
+
+		// We've hit something, so clear our miss count
+
+		return false;
+	}
+
+	// Hit something we don't hate. If it's not moveable, crash into it.
+	if (pEntity->GetMoveType() == MOVETYPE_NONE || pEntity->GetMoveType() == MOVETYPE_PUSH)
+		return true;
+
+	// If it's a vphysics object that's too heavy, crash into it too.
+	if (pEntity->GetMoveType() == MOVETYPE_VPHYSICS)
+	{
+		IPhysicsObject *pPhysics = pEntity->VPhysicsGetObject();
+		if (pPhysics)
+		{
+			// If the object is being held by the player, knock it out of his hands
+			if (pPhysics->GetGameFlags() & FVPHYSICS_PLAYER_HELD)
+			{
+				Pickup_ForcePlayerToDropThisObject(pEntity);
+				return false;
+			}
+
+			if ((!pPhysics->IsMoveable() || pPhysics->GetMass() > VPhysicsGetObject()->GetMass() * 0.5f))
+				return true;
+		}
+	}
+
+	return false;
+
+	/*
+
+	ROBIN: Wrote & then removed this. If we want to have large rocks that the guard
+	should smack around, then we should enable it.
+
+	else
+	{
+	// If we hit a physics prop, smack the crap out of it. (large rocks)
+	// Factor the object mass into it, because we want to move it no matter how heavy it is.
+	if ( pEntity->GetMoveType() == MOVETYPE_VPHYSICS )
+	{
+	CTakeDamageInfo info( this, this, 250, DMG_BLAST );
+	info.SetDamagePosition( vecImpact );
+	float flForce = ImpulseScale( pEntity->VPhysicsGetObject()->GetMass(), 250 );
+	flForce *= random->RandomFloat( 0.85, 1.15 );
+
+	// Calculate the vector and stuff it into the takedamageinfo
+	Vector vecForce = BodyDirection3D();
+	VectorNormalize( vecForce );
+	vecForce *= flForce;
+	vecForce *= phys_pushscale.GetFloat();
+	info.SetDamageForce( vecForce );
+
+	pEntity->VPhysicsTakeDamage( info );
+	}
+	}
+	*/
+}
+float CNPC_VortBoss::ChargeSteer(void)
+{
+	trace_t	tr;
+	Vector	testPos, steer, forward, right;
+	QAngle	angles;
+	const float	testLength = m_flGroundSpeed * 0.15f;
+
+	//Get our facing
+	GetVectors(&forward, &right, NULL);
+
+	steer = forward;
+
+	const float faceYaw = UTIL_VecToYaw(forward);
+
+	//Offset right
+	VectorAngles(forward, angles);
+	angles[YAW] += 45.0f;
+	AngleVectors(angles, &forward);
+
+	//Probe out
+	testPos = GetAbsOrigin() + (forward * testLength);
+
+	//Offset by step height
+	Vector testHullMins = GetHullMins();
+	testHullMins.z += (StepHeight() * 2);
+
+	//Probe
+
+	//Add in this component
+	steer += (right * 0.5f) * (1.0f - tr.fraction);
+
+	//Offset left
+	angles[YAW] -= 90.0f;
+	AngleVectors(angles, &forward);
+
+	//Probe out
+	testPos = GetAbsOrigin() + (forward * testLength);
+
+	// Probe
+
+	//Add in this component
+	steer -= (right * 0.5f) * (1.0f - tr.fraction);
+
+	//Debug
+	return UTIL_AngleDiff(UTIL_VecToYaw(steer), faceYaw);
+}
 
 void CNPC_VortBoss::StartSpinBeam(void)
 {
@@ -697,6 +1070,10 @@ void CNPC_VortBoss::ClearSpinBeam(void)
 void CNPC_VortBoss::GatherConditions(void)
 {
 	BaseClass::GatherConditions();
+	if (CheckForRockets())
+	{
+		SetCondition(COND_SHOULD_DODGE_ROCKET);
+	}
 	if (GetEnemy())
 	{
 		Vector enemyDelta = GetEnemy()->WorldSpaceCenter() - WorldSpaceCenter(); //get the distance from me to my enemy
@@ -707,7 +1084,10 @@ void CNPC_VortBoss::GatherConditions(void)
 		}
 		if (flDist < 400.0f && flDist > 256.0f) //if the enemy is too close to shoot and too far to ground pound
 		{
-			SetCondition((COND_TOO_CLOSE_TO_ATTACK)); //tell me that so i can move away
+			if (ShouldCharge(GetAbsOrigin(), GetEnemy()->GetAbsOrigin(), false, false))
+				SetCondition(COND_SHOULD_CHARGE);
+			else
+				ClearCondition(COND_SHOULD_CHARGE);//tell me that so i can move away
 			//ClearCondition((COND_CAN_DO_GROUND_ATTACK));
 		}
 		if (flDist > 400.0f && flDist < 1024 && HasCondition(COND_HAVE_ENEMY_LOS)) //if my enemy is within the acceptable attack range and i can see them
@@ -730,9 +1110,15 @@ void CNPC_VortBoss::GatherConditions(void)
 				SetCondition(COND_CAN_DO_EYEBLAST); //tell me that so i can eyeblast. eyeblast takes precidence over cannon.
 			if (gpGlobals->curtime > m_fNextCannonAttack) //if my cannon cooldown has passed
 				SetCondition(COND_CAN_FIRE_CANNON); //tell me that so i can shoot the cannon
+			SetCondition(COND_SHOULD_CHARGE); //otherwise, just charge them
 		}
-		if (flDist > 1024.0f) //if they're too far away
-			SetCondition(COND_TOO_FAR_TO_ATTACK); //tell me that so i can get closer
+		if (flDist > 1024.0f)
+		{
+			if (ShouldCharge(GetAbsOrigin(), GetEnemy()->GetAbsOrigin(), true, false))//if they're too far away
+				SetCondition(COND_SHOULD_CHARGE);
+			else
+				ClearCondition(COND_SHOULD_CHARGE);//tell me that so i can charge them
+		}
 	}
 }
 void CNPC_VortBoss::RelaxAim(float flInterval)
@@ -748,6 +1134,54 @@ void CNPC_VortBoss::RelaxAim(float flInterval)
 	QAngle NewAngle = QAngle(newPitch, newYaw, 0);
 	SetAbsAngles(NewAngle);
 }
+void ApplyChargeImpactDamage(CBaseEntity *pCharger, CBaseEntity *pTarget, float flDamage)
+{
+	Vector attackDir = (pTarget->WorldSpaceCenter() - pCharger->WorldSpaceCenter());
+	VectorNormalize(attackDir);
+	Vector offset = RandomVector(-32, 32) + pTarget->WorldSpaceCenter();
+
+	// Generate enough force to make a 75kg guy move away at 700 in/sec
+	Vector vecForce = attackDir * ImpulseScale(75, 1200);
+
+	// Deal the damage
+	CTakeDamageInfo	info(pCharger, pCharger, vecForce, offset, flDamage, DMG_CLUB);
+	pTarget->TakeDamage(info);
+}
+void CNPC_VortBoss::ChargeDamage(CBaseEntity *pTarget)
+{
+	if (pTarget == NULL)
+		return;
+
+	CBasePlayer *pPlayer = ToBasePlayer(pTarget);
+
+	if (pPlayer != NULL)
+	{
+		//Kick the player angles
+		pPlayer->ViewPunch(QAngle(20, 20, -30));
+
+		Vector	dir = pPlayer->WorldSpaceCenter() - WorldSpaceCenter();
+		VectorNormalize(dir);
+		dir.z = 0.0f;
+
+		Vector vecNewVelocity = dir * 250.0f;
+		vecNewVelocity[2] += 128.0f;
+		pPlayer->SetAbsVelocity(vecNewVelocity);
+
+		color32 red = { 128, 0, 0, 128 };
+		UTIL_ScreenFade(pPlayer, red, 1.0f, 0.1f, FFADE_IN);
+	}
+
+	// Player takes less damage
+	float flDamage = (pPlayer == NULL) ? 250 : sk_vortboss_dmg_charge.GetFloat();
+
+	// If it's being held by the player, break that bond
+	Pickup_ForcePlayerToDropThisObject(pTarget);
+
+	// Calculate the physics force
+	ApplyChargeImpactDamage(this, pTarget, flDamage);
+}
+
+
 int CNPC_VortBoss::SelectSchedule(void)
 {
 	if (m_NPCState == NPC_STATE_COMBAT && GetEnemy())
@@ -763,12 +1197,15 @@ int CNPC_VortBoss::SelectCombatSchedule(void)
 	if (HasCondition((COND_TOO_CLOSE_TO_ATTACK))) //if the enemy is too close but not close enough to ground pound
 		return SCHED_MOVE_AWAY;  //move further away
 
-	if (HasCondition(COND_CAN_SPIN_ATTACK)) //if i can spin
+	if (HasCondition(COND_SHOULD_DODGE_ROCKET))
+		return SCHED_VORTBOSS_DODGE_ROCKET;
+
+	/*if (HasCondition(COND_CAN_SPIN_ATTACK)) //if i can spin
 	{
 		ClearCondition(COND_CAN_SPIN_ATTACK);
 		m_fNextSpinAttack = gpGlobals->curtime + 45.0f; //set cooldown
 		return SCHED_VORTBOSS_SPINATTACK; //speen
-	}
+	}*/
 
 	if (HasCondition(COND_CAN_DO_EYEBLAST)) //if i can eyeblast
 	{
@@ -779,11 +1216,13 @@ int CNPC_VortBoss::SelectCombatSchedule(void)
 	if (HasCondition(COND_CAN_FIRE_CANNON)) //if i can shoot my cannon
 	{
 		ClearCondition(COND_CAN_FIRE_CANNON);
-		m_fNextCannonAttack = gpGlobals->curtime + SequenceDuration(); //set cooldown
+		m_fNextCannonAttack = gpGlobals->curtime + 8.0f; //set cooldown
 		return SCHED_VORTBOSS_CANNON; //pew pew pew
 	}
-
-
+	if (HasCondition(COND_SHOULD_CHARGE))
+	{
+		return SCHED_VORTBOSS_CHARGE;
+	}
 	return BaseClass::SelectSchedule();
 }
 void CNPC_VortBoss::StartTask(const Task_t *pTask)
@@ -811,6 +1250,38 @@ void CNPC_VortBoss::StartTask(const Task_t *pTask)
 	case TASK_VORTBOSS_GROUNDATTACK:
 	{
 		SetIdealActivity(ACT_VORTBOSS_GROUND_ATTACK);
+		break;
+	}
+	case TASK_VORTBOSS_CHARGE:
+	{
+		GetMotor()->MoveStop();
+		SetActivity(ACT_VORTBOSS_CHARGE_START);
+		break;
+	}
+	case TASK_VORTBOSS_DODGEROCKET:
+	{
+		GetMotor()->MoveStop();
+		int i = RandomInt(0, 1);
+		switch(i)
+		{
+		case 0:
+		{
+			SetActivity(ACT_VORTBOSS_DODGE_RIGHT);
+			break;
+		}
+		case 1:
+		{
+			SetActivity(ACT_VORTBOSS_DODGE_LEFT);
+			break;
+		}
+		default:
+		{
+			SetActivity(ACT_VORTBOSS_DODGE_RIGHT);
+			break;
+		}
+		}
+		m_fNextDodge = gpGlobals->curtime + 2.5f;
+		ClearBeam();
 		break;
 	}
 	default:
@@ -851,7 +1322,6 @@ void CNPC_VortBoss::RunTask(const Task_t *pTask)
 		{
 		case SKILL_EASY:
 		{
-
 			break;
 		}
 		case SKILL_MEDIUM:
@@ -884,6 +1354,147 @@ void CNPC_VortBoss::RunTask(const Task_t *pTask)
 		}
 		break;
 	}
+	case TASK_VORTBOSS_DODGEROCKET:
+	{
+		AutoMovement();
+		if (IsActivityFinished())
+		{
+			TaskComplete();
+			return;
+		}
+		break;
+	}
+	case TASK_VORTBOSS_CHARGE:
+	{
+		int skill = g_pGameRules->GetSkillLevel();
+		switch (skill)
+		{
+		case SKILL_EASY:
+		{
+			SetPlaybackRate(0.75f);
+			break;
+		}
+		case SKILL_MEDIUM:
+		{
+			SetPlaybackRate(0.9f);
+			break;
+		}
+		case SKILL_HARD:
+		{
+			SetPlaybackRate(1.25f);
+			break;
+		}
+		default:
+		{
+			break;
+		}
+		}
+		Activity eActivity = GetActivity();
+
+		if (eActivity == ACT_VORTBOSS_CHARGE_STOP || eActivity == ACT_VORTBOSS_CRASH)
+		{
+			SetPlaybackRate(1.0f);
+			if (IsActivityFinished())
+			{
+				TaskComplete();
+				return;
+			}
+			AutoMovement();
+			return;
+		}
+		if ((eActivity == ACT_VORTBOSS_CHARGE_START) && (IsActivityFinished()))
+		{
+			SetActivity(ACT_VORTBOSS_CHARGE_LOOP);
+		}
+		if (eActivity == ACT_VORTBOSS_CHARGE_LOOP || eActivity == ACT_VORTBOSS_CHARGE_START)
+		{
+			if (HasCondition(COND_NEW_ENEMY) || HasCondition(COND_LOST_ENEMY) || HasCondition(COND_ENEMY_DEAD))
+			{
+				SetActivity(ACT_VORTBOSS_CHARGE_STOP);
+				return;
+			}
+			else
+			{
+				if (GetEnemy() != NULL)
+				{
+					Vector	goalDir = (GetEnemy()->GetAbsOrigin() - GetAbsOrigin());
+					VectorNormalize(goalDir);
+
+					if (DotProduct(BodyDirection2D(), goalDir) < 0.25f)
+					{
+							// We've missed the target. Randomly decide not to stop, which will cause
+							// the guard to just try and swing around for another pass.
+							SetActivity(ACT_VORTBOSS_CHARGE_STOP);
+
+					}
+				}
+			}
+		}
+
+		float idealYaw;
+		if (GetEnemy() == NULL)
+		{
+			idealYaw = GetMotor()->GetIdealYaw();
+		}
+		else
+		{
+			idealYaw = CalcIdealYaw(GetEnemy()->GetAbsOrigin());
+		}
+
+		// Add in our steering offset
+		//idealYaw += ChargeSteer();
+
+		// Turn to face
+		GetMotor()->SetIdealYawAndUpdate(idealYaw);
+
+		AIMoveTrace_t moveTrace;
+		if (AutoMovement(GetEnemy(), &moveTrace) == false)
+		{
+			// Only stop if we hit the world
+			if (HandleChargeImpact(moveTrace.vEndPosition, moveTrace.pObstruction))
+			{
+				// If we're starting up, this is an error
+				if (eActivity == ACT_VORTBOSS_CHARGE_START)
+				{
+					TaskFail("Unable to make initial movement of charge\n");
+					return;
+				}
+
+				// Crash unless we're trying to stop already
+				if (eActivity != ACT_VORTBOSS_CHARGE_STOP)
+				{
+					if (moveTrace.fStatus == AIMR_BLOCKED_WORLD && moveTrace.vHitNormal == vec3_origin)
+					{
+						SetActivity(ACT_VORTBOSS_CRASH);
+					}
+					else
+					{
+						SetActivity(ACT_VORTBOSS_CRASH);
+					}
+				}
+			}
+			else if (moveTrace.pObstruction)
+			{
+				// If we hit an antlion, don't stop, but kill it
+				if (moveTrace.pObstruction->Classify() == CLASS_VORTIGAUNT)
+				{
+					if (FClassnameIs(moveTrace.pObstruction, "npc_vortboss"))
+					{
+						// Crash unless we're trying to stop already
+						if (eActivity != ACT_VORTBOSS_CHARGE_STOP)
+						{
+							SetActivity(ACT_VORTBOSS_CHARGE_STOP);
+						}
+					}
+					else
+					{
+						ApplyChargeImpactDamage(this, moveTrace.pObstruction, moveTrace.pObstruction->GetHealth());
+					}
+				}
+			}
+		}
+		break;
+	}
 	default:
 	{
 		BaseClass::RunTask(pTask);
@@ -907,6 +1518,13 @@ AI_BEGIN_CUSTOM_NPC(npc_vortboss, CNPC_VortBoss)
 	DECLARE_ACTIVITY(ACT_VORTBOSS_EYEBLAST)
 	DECLARE_ACTIVITY(ACT_VORTBOSS_GROUND_ATTACK)
 	DECLARE_ACTIVITY(ACT_VORTBOSS_SPINATTACK)
+	DECLARE_ACTIVITY(ACT_VORTBOSS_CHARGE_LOOP)
+	DECLARE_ACTIVITY(ACT_VORTBOSS_CHARGE_START)
+	DECLARE_ACTIVITY(ACT_VORTBOSS_CHARGE_STOP)
+	DECLARE_ACTIVITY(ACT_VORTBOSS_CRASH)
+	DECLARE_ACTIVITY(ACT_VORTBOSS_DODGE_LEFT)
+	DECLARE_ACTIVITY(ACT_VORTBOSS_DODGE_RIGHT)
+
 
 	DECLARE_ANIMEVENT(AE_VORTBOSS_FIRECANNON)
 	DECLARE_ANIMEVENT(AE_VORTBOSS_CHARGECANNON)
@@ -921,6 +1539,8 @@ AI_BEGIN_CUSTOM_NPC(npc_vortboss, CNPC_VortBoss)
 	DECLARE_CONDITION(COND_CAN_DO_GROUND_ATTACK)
 	DECLARE_CONDITION(COND_CAN_FIRE_CANNON)
 	DECLARE_CONDITION(COND_CAN_SPIN_ATTACK)
+	DECLARE_CONDITION(COND_SHOULD_CHARGE)
+	DECLARE_CONDITION(COND_SHOULD_DODGE_ROCKET)
 
 	DECLARE_SQUADSLOT(SQUAD_SLOT_VORTBOSS_SPINBEAM)
 
@@ -928,6 +1548,8 @@ AI_BEGIN_CUSTOM_NPC(npc_vortboss, CNPC_VortBoss)
 	DECLARE_TASK(TASK_VORTBOSS_EYEBLAST)
 	DECLARE_TASK(TASK_VORTBOSS_GROUNDATTACK)
 	DECLARE_TASK(TASK_VORTBOSS_SPINATTACK)
+	DECLARE_TASK(TASK_VORTBOSS_CHARGE)
+	DECLARE_TASK(TASK_VORTBOSS_DODGEROCKET)
 	DEFINE_SCHEDULE
 	(
 			SCHED_VORTBOSS_GROUND_ATTACK,
@@ -938,9 +1560,22 @@ AI_BEGIN_CUSTOM_NPC(npc_vortboss, CNPC_VortBoss)
 			"		TASK_VORTBOSS_GROUNDATTACK			0"
 			"	"
 			"	Interrupts"
+			"		COND_SHOULD_DODGE_ROCKET"
 			"		COND_NEW_ENEMY"
 			"		COND_ENEMY_DEAD"
 			"		COND_LOST_ENEMY"
+	)
+	DEFINE_SCHEDULE
+	(
+	SCHED_VORTBOSS_DODGE_ROCKET,
+
+	"	Tasks"
+	"		TASK_VORTBOSS_DODGEROCKET			0"
+	"	"
+	"	Interrupts"
+	"		COND_NEW_ENEMY"
+	"		COND_ENEMY_DEAD"
+	"		COND_LOST_ENEMY"
 	)
 	DEFINE_SCHEDULE
 	(
@@ -956,6 +1591,7 @@ AI_BEGIN_CUSTOM_NPC(npc_vortboss, CNPC_VortBoss)
 			"		COND_ENEMY_DEAD"
 			"		COND_LOST_ENEMY"
 			"		COND_CAN_DO_GROUND_ATTACK"
+			"		COND_SHOULD_DODGE_ROCKET"
 	)
 	DEFINE_SCHEDULE
 	(
@@ -970,6 +1606,7 @@ AI_BEGIN_CUSTOM_NPC(npc_vortboss, CNPC_VortBoss)
 			"		COND_NEW_ENEMY"
 			"		COND_ENEMY_DEAD"
 			"		COND_LOST_ENEMY"
+
 	//"		COND_TOO_CLOSE_TO_ATTACK"
 	)
 	DEFINE_SCHEDULE
@@ -986,6 +1623,7 @@ AI_BEGIN_CUSTOM_NPC(npc_vortboss, CNPC_VortBoss)
 			"		COND_ENEMY_DEAD"
 			"		COND_LOST_ENEMY"
 			"		COND_CAN_DO_GROUND_ATTACK"
+			"		COND_SHOULD_DODGE_ROCKET"
 	)
 	DEFINE_SCHEDULE
 	(
@@ -1001,5 +1639,18 @@ AI_BEGIN_CUSTOM_NPC(npc_vortboss, CNPC_VortBoss)
 			"		COND_NEW_ENEMY"
 			"		COND_ENEMY_DEAD"
 			"		COND_LOST_ENEMY"
+	)
+	DEFINE_SCHEDULE
+	(
+		SCHED_VORTBOSS_CHARGE,
+
+		"	Tasks"
+		"		TASK_STOP_MOVING					0"
+		"		TASK_FACE_ENEMY						0"
+		"		TASK_VORTBOSS_CHARGE				0"
+		"	"
+		"	Interrupts"
+		"		COND_TASK_FAILED"
+		"		COND_ENEMY_DEAD"
 	)
 AI_END_CUSTOM_NPC()

@@ -36,12 +36,12 @@ static bool giScissorTest = false;
 //			width - 
 //			height - 
 //-----------------------------------------------------------------------------
-void EnableScissorTest( int x, int y, int width, int height )
+void EnableScissorTest(int x, int y, int width, int height)
 {
-	x = clamp( x, 0, ScreenWidth() );
-	y = clamp( y, 0, ScreenHeight() );
-	width = clamp( width, 0, ScreenWidth() - x );
-	height = clamp( height, 0, ScreenHeight() - y );
+	x = clamp(x, 0, ScreenWidth());
+	y = clamp(y, 0, ScreenHeight());
+	width = clamp(width, 0, ScreenWidth() - x);
+	height = clamp(height, 0, ScreenHeight() - y);
 
 	scissor_x = x;
 	scissor_width = width;
@@ -54,13 +54,13 @@ void EnableScissorTest( int x, int y, int width, int height )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void DisableScissorTest( void )
+void DisableScissorTest(void)
 {
 	scissor_x = 0;
 	scissor_width = 0;
 	scissor_y = 0;
 	scissor_height = 0;
-	
+
 	giScissorTest = false;
 }
 
@@ -92,7 +92,7 @@ static int ValidateWRect(const wrect_t *prc)
 // Output : int
 //-----------------------------------------------------------------------------
 static int IntersectWRect(const wrect_t *prc1, const wrect_t *prc2, wrect_t *prc)
-{	
+{
 	wrect_t rc;
 
 	if (!prc)
@@ -126,7 +126,7 @@ static int IntersectWRect(const wrect_t *prc1, const wrect_t *prc2, wrect_t *prc
 //			v1 - 
 // Output : static bool
 //-----------------------------------------------------------------------------
-static bool Scissor( int& x, int& y, int& width, int& height, float& u0, float& v0, float& u1, float& v1 )
+static bool Scissor(int& x, int& y, int& width, int& height, float& u0, float& v0, float& u1, float& v1)
 {
 	// clip sub rect to sprite
 	if ((width == 0) || (height == 0))
@@ -136,8 +136,8 @@ static bool Scissor( int& x, int& y, int& width, int& height, float& u0, float& 
 		(y + height <= scissor_y) || (y >= scissor_y + scissor_height))
 		return false;
 
-	float dudx = (u1-u0) / width;
-	float dvdy = (v1-v0) / height;
+	float dudx = (u1 - u0) / width;
+	float dvdy = (v1 - v0) / height;
 	if (x < scissor_x)
 	{
 		u0 += (scissor_x - x) * dudx;
@@ -180,8 +180,8 @@ static bool Scissor( int& x, int& y, int& width, int& height, float& u0, float& 
 //			*prcSubRect - 
 // Output : static void
 //-----------------------------------------------------------------------------
-static void AdjustSubRect(CEngineSprite *pSprite, int frame, float *pfLeft, float *pfRight, float *pfTop, 
-						  float *pfBottom, int *pw, int *ph, const wrect_t *prcSubRect)
+static void AdjustSubRect(CEngineSprite *pSprite, int frame, float *pfLeft, float *pfRight, float *pfTop,
+	float *pfBottom, int *pw, int *ph, const wrect_t *prcSubRect)
 {
 	wrect_t rc;
 	float f;
@@ -201,7 +201,7 @@ static void AdjustSubRect(CEngineSprite *pSprite, int frame, float *pfLeft, floa
 	*pw = rc.right - rc.left;
 	*ph = rc.bottom - rc.top;
 
-	f = 1.0 / (float)pSprite->GetWidth();;
+	f = 1.0 / (float)pSprite->GetWidth();
 	*pfLeft = ((float)rc.left + 0.5) * f;
 	*pfRight = ((float)rc.right - 0.5) * f;
 
@@ -218,29 +218,29 @@ static void AdjustSubRect(CEngineSprite *pSprite, int frame, float *pfLeft, floa
 //-----------------------------------------------------------------------------
 static unsigned int spriteOriginCache = 0;
 static unsigned int spriteOrientationCache = 0;
-bool CEngineSprite::Init( const char *pName )
+bool CEngineSprite::Init(const char *pName)
 {
 	m_VideoMaterial = NULL;
-	for ( int i = 0; i < kRenderModeCount; ++i )
+	for (int i = 0; i < kRenderModeCount; ++i)
 	{
-		m_material[ i ] = NULL;
+		m_material[i] = NULL;
 	}
 
 	m_width = m_height = m_numFrames = 1;
 
-	Assert( g_pVideo != NULL );
-	
-	if ( g_pVideo != NULL && g_pVideo->LocateVideoSystemForPlayingFile( pName ) != VideoSystem::NONE ) 
+	Assert(g_pVideo != NULL);
+
+	if (g_pVideo != NULL && g_pVideo->LocateVideoSystemForPlayingFile(pName) != VideoSystem::NONE)
 	{
-		m_VideoMaterial = g_pVideo->CreateVideoMaterial( pName, pName, "GAME", VideoPlaybackFlags::DEFAULT_MATERIAL_OPTIONS, VideoSystem::DETERMINE_FROM_FILE_EXTENSION, false ); 
-		
-		if ( m_VideoMaterial == NULL )
+		m_VideoMaterial = g_pVideo->CreateVideoMaterial(pName, pName, "GAME", VideoPlaybackFlags::DEFAULT_MATERIAL_OPTIONS, VideoSystem::DETERMINE_FROM_FILE_EXTENSION, false);
+
+		if (m_VideoMaterial == NULL)
 			return false;
 
 		IMaterial *pMaterial = m_VideoMaterial->GetMaterial();
-		m_VideoMaterial->GetVideoImageSize( &m_width, &m_height );
+		m_VideoMaterial->GetVideoImageSize(&m_width, &m_height);
 		m_numFrames = m_VideoMaterial->GetFrameCount();
-		for ( int i = 0; i < kRenderModeCount; ++i )
+		for (int i = 0; i < kRenderModeCount; ++i)
 		{
 			m_material[i] = pMaterial;
 			pMaterial->IncrementReferenceCount();
@@ -251,44 +251,44 @@ bool CEngineSprite::Init( const char *pName )
 		char pTemp[MAX_PATH];
 		char pMaterialName[MAX_PATH];
 		char pMaterialPath[MAX_PATH];
-		Q_StripExtension( pName, pTemp, sizeof(pTemp) );
-		Q_strlower( pTemp );
-		Q_FixSlashes( pTemp, '/' );
+		Q_StripExtension(pName, pTemp, sizeof(pTemp));
+		Q_strlower(pTemp);
+		Q_FixSlashes(pTemp, '/');
 
 		// Check to see if this is a UNC-specified material name
 		bool bIsUNC = pTemp[0] == '/' && pTemp[1] == '/' && pTemp[2] != '/';
-		if ( !bIsUNC )
+		if (!bIsUNC)
 		{
-			Q_strncpy( pMaterialName, "materials/", sizeof(pMaterialName) );
-			Q_strncat( pMaterialName, pTemp, sizeof(pMaterialName), COPY_ALL_CHARACTERS );
+			Q_strncpy(pMaterialName, "materials/", sizeof(pMaterialName));
+			Q_strncat(pMaterialName, pTemp, sizeof(pMaterialName), COPY_ALL_CHARACTERS);
 		}
 		else
 		{
-			Q_strncpy( pMaterialName, pTemp, sizeof(pMaterialName) );
+			Q_strncpy(pMaterialName, pTemp, sizeof(pMaterialName));
 		}
-		Q_strncpy( pMaterialPath, pMaterialName, sizeof(pMaterialPath) );
-		Q_SetExtension( pMaterialPath, ".vmt", sizeof(pMaterialPath) );
+		Q_strncpy(pMaterialPath, pMaterialName, sizeof(pMaterialPath));
+		Q_SetExtension(pMaterialPath, ".vmt", sizeof(pMaterialPath));
 
-		KeyValues *kv = new KeyValues( "vmt" );
-		if ( !kv->LoadFromFile( g_pFullFileSystem, pMaterialPath, "GAME" ) )
+		KeyValues *kv = new KeyValues("vmt");
+		if (!kv->LoadFromFile(g_pFullFileSystem, pMaterialPath, "GAME"))
 		{
-			Warning( "Unable to load sprite material %s!\n", pMaterialPath );
+			Warning("Unable to load sprite material %s!\n", pMaterialPath);
 			return false;
 		}
 
-		for ( int i = 0; i < kRenderModeCount; ++i )
-		{	
-			if ( i == kRenderNone || i == kRenderEnvironmental )
+		for (int i = 0; i < kRenderModeCount; ++i)
+		{
+			if (i == kRenderNone || i == kRenderEnvironmental)
 			{
 				m_material[i] = NULL;
 				continue;
 			}
 
-			Q_snprintf( pMaterialPath, sizeof(pMaterialPath), "%s_rendermode_%d", pMaterialName, i );
+			Q_snprintf(pMaterialPath, sizeof(pMaterialPath), "%s_rendermode_%d", pMaterialName, i);
 			KeyValues *pMaterialKV = kv->MakeCopy();
-			pMaterialKV->SetInt( "$spriteRenderMode", i );
-			m_material[i] = g_pMaterialSystem->FindProceduralMaterial( pMaterialPath, TEXTURE_GROUP_CLIENT_EFFECTS, pMaterialKV );
-			m_material[ i ]->IncrementReferenceCount();
+			pMaterialKV->SetInt("$spriteRenderMode", i);
+			m_material[i] = g_pMaterialSystem->FindProceduralMaterial(pMaterialPath, TEXTURE_GROUP_CLIENT_EFFECTS, pMaterialKV);
+			m_material[i]->IncrementReferenceCount();
 		}
 
 		kv->deleteThis();
@@ -298,28 +298,28 @@ bool CEngineSprite::Init( const char *pName )
 		m_numFrames = m_material[0]->GetNumAnimationFrames();
 	}
 
-	for ( int i = 0; i < kRenderModeCount; ++i )
+	for (int i = 0; i < kRenderModeCount; ++i)
 	{
-		if ( i == kRenderNone || i == kRenderEnvironmental )
+		if (i == kRenderNone || i == kRenderEnvironmental)
 			continue;
 
-		if ( !m_material[i] )
+		if (!m_material[i])
 			return false;
 	}
 
-	IMaterialVar *orientationVar = m_material[0]->FindVarFast( "$spriteorientation", &spriteOrientationCache );
+	IMaterialVar *orientationVar = m_material[0]->FindVarFast("$spriteorientation", &spriteOrientationCache);
 	m_orientation = orientationVar ? orientationVar->GetIntValue() : C_SpriteRenderer::SPR_VP_PARALLEL_UPRIGHT;
 
-	IMaterialVar *originVar = m_material[0]->FindVarFast( "$spriteorigin", &spriteOriginCache );
+	IMaterialVar *originVar = m_material[0]->FindVarFast("$spriteorigin", &spriteOriginCache);
 	Vector origin, originVarValue;
-	if( !originVar || ( originVar->GetType() != MATERIAL_VAR_TYPE_VECTOR ) )
+	if (!originVar || (originVar->GetType() != MATERIAL_VAR_TYPE_VECTOR))
 	{
 		origin[0] = -m_width * 0.5f;
 		origin[1] = m_height * 0.5f;
 	}
 	else
 	{
-		originVar->GetVecValue( &originVarValue[0], 3 );
+		originVar->GetVecValue(&originVarValue[0], 3);
 		origin[0] = -m_width * originVarValue[0];
 		origin[1] = m_height * originVarValue[1];
 	}
@@ -336,11 +336,11 @@ bool CEngineSprite::Init( const char *pName )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CEngineSprite::Shutdown( void )
+void CEngineSprite::Shutdown(void)
 {
-	if ( g_pVideo != NULL && m_VideoMaterial != NULL )
+	if (g_pVideo != NULL && m_VideoMaterial != NULL)
 	{
-		g_pVideo->DestroyVideoMaterial( m_VideoMaterial );
+		g_pVideo->DestroyVideoMaterial(m_VideoMaterial);
 		m_VideoMaterial = NULL;
 	}
 
@@ -354,25 +354,25 @@ void CEngineSprite::Shutdown( void )
 //-----------------------------------------------------------------------------
 bool CEngineSprite::IsVideo()
 {
-	return ( m_VideoMaterial != NULL );
+	return (m_VideoMaterial != NULL);
 }
 
 //-----------------------------------------------------------------------------
 // Returns the texture coordinate range	used to draw the sprite
 //-----------------------------------------------------------------------------
-void CEngineSprite::GetTexCoordRange( float *pMinU, float *pMinV, float *pMaxU, float *pMaxV )
+void CEngineSprite::GetTexCoordRange(float *pMinU, float *pMinV, float *pMaxU, float *pMaxV)
 {
-	*pMaxU = 1.0f; 
+	*pMaxU = 1.0f;
 	*pMaxV = 1.0f;
-	if ( IsVideo() )
+	if (IsVideo())
 	{
-		m_VideoMaterial->GetVideoTexCoordRange( pMaxU, pMaxV );
+		m_VideoMaterial->GetVideoTexCoordRange(pMaxU, pMaxV);
 	}
-	
-	float flOOWidth = ( m_width != 0 ) ? 1.0f / m_width : 1.0f;
-	float flOOHeight = ( m_height!= 0 ) ? 1.0f / m_height : 1.0f;
 
-	*pMinU = 0.5f * flOOWidth; 
+	float flOOWidth = (m_width != 0) ? 1.0f / m_width : 1.0f;
+	float flOOHeight = (m_height != 0) ? 1.0f / m_height : 1.0f;
+
+	*pMinU = 0.5f * flOOWidth;
 	*pMinV = 0.5f * flOOHeight;
 	*pMaxU = (*pMaxU) - (*pMinU);
 	*pMaxV = (*pMaxV) - (*pMinV);
@@ -382,10 +382,10 @@ void CEngineSprite::GetTexCoordRange( float *pMinU, float *pMinV, float *pMaxU, 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CEngineSprite::SetColor( float r, float g, float b )
+void CEngineSprite::SetColor(float r, float g, float b)
 {
-	Assert( (r >= 0.0) && (g >= 0.0) && (b >= 0.0) );
-	Assert( (r <= 1.0) && (g <= 1.0) && (b <= 1.0) );
+	Assert((r >= 0.0) && (g >= 0.0) && (b >= 0.0));
+	Assert((r <= 1.0) && (g <= 1.0) && (b <= 1.0));
 	m_hudSpriteColor[0] = r;
 	m_hudSpriteColor[1] = g;
 	m_hudSpriteColor[2] = b;
@@ -395,9 +395,9 @@ void CEngineSprite::SetColor( float r, float g, float b )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CEngineSprite::GetHUDSpriteColor( float* color )
+void CEngineSprite::GetHUDSpriteColor(float* color)
 {
-	VectorCopy( m_hudSpriteColor, color );
+	VectorCopy(m_hudSpriteColor, color);
 }
 
 
@@ -405,44 +405,47 @@ void CEngineSprite::GetHUDSpriteColor( float* color )
 // Returns the material 
 //-----------------------------------------------------------------------------
 static unsigned int frameCache = 0;
-IMaterial *CEngineSprite::GetMaterial( RenderMode_t nRenderMode, int nFrame ) 
+IMaterial *CEngineSprite::GetMaterial(RenderMode_t nRenderMode, int nFrame)
 {
-	if ( nRenderMode == kRenderNone || nRenderMode == kRenderEnvironmental )
+	if (nRenderMode == kRenderNone || nRenderMode == kRenderEnvironmental)
 		return NULL;
 
-	if ( IsVideo() )
+	if (IsVideo())
 	{
-		m_VideoMaterial->SetFrame( nFrame );
+		m_VideoMaterial->SetFrame(nFrame);
+		
 	}
-	
-	
+
 	IMaterial *pMaterial = m_material[nRenderMode];
-	IMaterialVar* pFrameVar = pMaterial->FindVarFast( "$frame", &frameCache );
-	if ( pFrameVar )
+	if (pMaterial)
 	{
-		pFrameVar->SetIntValue( nFrame );
+		IMaterialVar* pFrameVar = pMaterial->FindVarFast("$frame", &frameCache);
+		if (pFrameVar)
+		{
+			pFrameVar->SetIntValue(nFrame);
+		}
 	}
 
 	return pMaterial;
-} 
+}
 
-void CEngineSprite::SetFrame( RenderMode_t nRenderMode, int nFrame )
+void CEngineSprite::SetFrame(RenderMode_t nRenderMode, int nFrame)
 {
-	if ( IsVideo() )
+	if (IsVideo())
 	{
-		m_VideoMaterial->SetFrame( nFrame );
+		m_VideoMaterial->SetFrame(nFrame);
 		return;
 	}
 
 
 	IMaterial *pMaterial = m_material[nRenderMode];
-	if ( !pMaterial )
+	if (!pMaterial)
 		return;
 
-	IMaterialVar* pFrameVar = pMaterial->FindVarFast( "$frame", &frameCache );
-	if ( pFrameVar )
+	IMaterialVar* pFrameVar = pMaterial->FindVarFast("$frame", &frameCache);
+	if (pFrameVar)
 	{
-		pFrameVar->SetIntValue( nFrame );
+		pFrameVar->SetIntValue(nFrame);
 	}
 }
 
@@ -451,7 +454,7 @@ void CEngineSprite::SetFrame( RenderMode_t nRenderMode, int nFrame )
 // Purpose: 
 // Output : int
 //-----------------------------------------------------------------------------
-int CEngineSprite::GetOrientation( void )
+int CEngineSprite::GetOrientation(void)
 {
 	return m_orientation;
 }
@@ -460,11 +463,11 @@ int CEngineSprite::GetOrientation( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CEngineSprite::UnloadMaterial( void )
+void CEngineSprite::UnloadMaterial(void)
 {
-	for ( int i = 0; i < kRenderModeCount; ++i )
+	for (int i = 0; i < kRenderModeCount; ++i)
 	{
-		if( m_material[i] )
+		if (m_material[i])
 		{
 			m_material[i]->DecrementReferenceCount();
 			m_material[i] = NULL;
@@ -476,9 +479,9 @@ void CEngineSprite::UnloadMaterial( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CEngineSprite::DrawFrame( RenderMode_t nRenderMode, int frame, int x, int y, const wrect_t *prcSubRect )
+void CEngineSprite::DrawFrame(RenderMode_t nRenderMode, int frame, int x, int y, const wrect_t *prcSubRect)
 {
-	DrawFrameOfSize( nRenderMode, frame, x, y, GetWidth(), GetHeight(), prcSubRect );
+	DrawFrameOfSize(nRenderMode, frame, x, y, GetWidth(), GetHeight(), prcSubRect);
 }
 
 
@@ -489,52 +492,52 @@ void CEngineSprite::DrawFrame( RenderMode_t nRenderMode, int frame, int x, int y
 //			y - 
 //			*prcSubRect - 
 //-----------------------------------------------------------------------------
-void CEngineSprite::DrawFrameOfSize( RenderMode_t nRenderMode, int frame, int x, int y, int iWidth, int iHeight, const wrect_t *prcSubRect )
+void CEngineSprite::DrawFrameOfSize(RenderMode_t nRenderMode, int frame, int x, int y, int iWidth, int iHeight, const wrect_t *prcSubRect)
 {
 	// FIXME: If we ever call this with AVIs, need to have it call GetTexCoordRange and make that work
-	Assert( !IsVideo() );
+	Assert(!IsVideo());
 	float fLeft = 0;
 	float fRight = 1;
 	float fTop = 0;
 	float fBottom = 1;
 
-	if ( prcSubRect )
+	if (prcSubRect)
 	{
-		AdjustSubRect( this, frame, &fLeft, &fRight, &fTop, &fBottom, &iWidth, &iHeight, prcSubRect );
+		AdjustSubRect(this, frame, &fLeft, &fRight, &fTop, &fBottom, &iWidth, &iHeight, prcSubRect);
 	}
 
-	if ( giScissorTest && !Scissor( x, y, iWidth, iHeight, fLeft, fTop, fRight, fBottom ) )
+	if (giScissorTest && !Scissor(x, y, iWidth, iHeight, fLeft, fTop, fRight, fBottom))
 		return;
 
-	SetFrame( nRenderMode, frame );
+	SetFrame(nRenderMode, frame);
 
-	CMatRenderContextPtr pRenderContext( materials );
-	IMesh* pMesh = pRenderContext->GetDynamicMesh( true, NULL, NULL, GetMaterial( nRenderMode ) );
+	CMatRenderContextPtr pRenderContext(materials);
+	IMesh* pMesh = pRenderContext->GetDynamicMesh(true, NULL, NULL, GetMaterial(nRenderMode));
 
 	CMeshBuilder meshBuilder;
-	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
+	meshBuilder.Begin(pMesh, MATERIAL_QUADS, 1);
 
 	float color[3];
-	GetHUDSpriteColor( color );
-	
-	meshBuilder.Color3fv( color );
-	meshBuilder.TexCoord2f( 0, fLeft, fTop );
-	meshBuilder.Position3f( x, y, 0.0f );
+	GetHUDSpriteColor(color);
+
+	meshBuilder.Color3fv(color);
+	meshBuilder.TexCoord2f(0, fLeft, fTop);
+	meshBuilder.Position3f(x, y, 0.0f);
 	meshBuilder.AdvanceVertex();
 
-	meshBuilder.Color3fv( color );
-	meshBuilder.TexCoord2f( 0, fRight, fTop );
-	meshBuilder.Position3f( x + iWidth, y, 0.0f );
+	meshBuilder.Color3fv(color);
+	meshBuilder.TexCoord2f(0, fRight, fTop);
+	meshBuilder.Position3f(x + iWidth, y, 0.0f);
 	meshBuilder.AdvanceVertex();
 
-	meshBuilder.Color3fv( color );
-	meshBuilder.TexCoord2f( 0, fRight, fBottom );
-	meshBuilder.Position3f( x + iWidth, y + iHeight, 0.0f );
+	meshBuilder.Color3fv(color);
+	meshBuilder.TexCoord2f(0, fRight, fBottom);
+	meshBuilder.Position3f(x + iWidth, y + iHeight, 0.0f);
 	meshBuilder.AdvanceVertex();
 
-	meshBuilder.Color3fv( color );
-	meshBuilder.TexCoord2f( 0, fLeft, fBottom );
-	meshBuilder.Position3f( x, y + iHeight, 0.0f );
+	meshBuilder.Color3fv(color);
+	meshBuilder.TexCoord2f(0, fLeft, fBottom);
+	meshBuilder.Position3f(x, y + iHeight, 0.0f);
 	meshBuilder.AdvanceVertex();
 
 	meshBuilder.End();

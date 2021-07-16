@@ -41,8 +41,8 @@ public:
 	void	Operator_ForceNPCFire(CBaseCombatCharacter  *pOperator, bool bSecondary);
 	void	Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator);
 
-	int		GetMinBurst(void) { return 100; }
-	int		GetMaxBurst(void) { return 100; }
+	int		GetMinBurst();
+	int		GetMaxBurst() { return GetMinBurst(); }
 	float	GetFireRate(void) { return 0.1f; }
 
 	bool	CanHolster(void);

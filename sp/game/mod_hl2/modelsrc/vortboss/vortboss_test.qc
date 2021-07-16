@@ -10,6 +10,7 @@ $include "DefineBones.qci"
 
 $attachment "eyeball" "ValveBiped.head" 18 0 0 rotate 180 180 0
 $attachment "cannonmuzzle" "ValveBiped.hlp_wrist_R" 36 3.50 -6 rotate 6 7 -0
+$attachment "thrustercore" "Cylinder002" 0.00 0.00 -9 rotate 0 0 0
 
 $hboxset "default"
 
@@ -279,4 +280,54 @@ $sequence "roar" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
+}
+$sequence "chargestart" {
+	"anims/vortboss_charge_start.smd"
+	activity "ACT_VORTBOSS_CHARGE_START" 1
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	walkframe 40 LX
+}
+$sequence "chargeloop" {
+	"anims/vortboss_charge_loop.smd"
+	activity "ACT_VORTBOSS_CHARGE_LOOP" 1
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	loop
+	walkframe 21 LX
+}
+$sequence "chargestop" {
+	"anims/vortboss_charge_stop.smd"
+	activity "ACT_VORTBOSS_CHARGE_STOP" 1
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	walkframe 40 LX
+}
+$sequence "chargecrash" {
+	"anims/vortboss_crash2.smd"
+	activity "ACT_VORTBOSS_CRASH" 1
+	{ event AE_CL_PLAYSOUND 1 "VortBoss.Crash" }
+	fadein 0.0
+	fadeout 0.2
+	fps 30
+	walkframe 56 LX
+}
+$sequence "dodgeleft" {
+	"anims/vortboss_dodge_left.smd"
+	activity ACT_VORTBOSS_DODGE_LEFT 1
+	fadein 0.0
+	fadeout 0.2
+	fps 30
+	walkframe 20 LY
+}
+$sequence "dodgeright" {
+	"anims/vortboss_dodge_right.smd"
+	activity ACT_VORTBOSS_DODGE_RIGHT 1
+	fadein 0.0
+	fadeout 0.2
+	fps 30
+	walkframe 20 LY
 }

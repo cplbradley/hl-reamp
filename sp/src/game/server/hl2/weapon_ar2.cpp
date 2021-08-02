@@ -33,10 +33,15 @@
 #include "tier0/memdbgon.h"
 #define MINFIRERATE 0.34f
 #define MAXFIRERATE 0.06f
+#define MAXOVERDRIVEFIRERATE 0.03f
 ConVar sk_weapon_ar2_alt_fire_radius( "sk_weapon_ar2_alt_fire_radius", "10" );
 ConVar sk_weapon_ar2_alt_fire_duration( "sk_weapon_ar2_alt_fire_duration", "2" );
 ConVar sk_weapon_ar2_alt_fire_mass( "sk_weapon_ar2_alt_fire_mass", "150" );
 
+enum {
+	WEAPON_STATE_FULLSPEED,
+	WEAPON_STATE_NOTFULLSPEED
+};
 //=========================================================
 //=========================================================
 
@@ -50,6 +55,7 @@ BEGIN_DATADESC( CWeaponAR2 )
 END_DATADESC()
 
 IMPLEMENT_SERVERCLASS_ST(CWeaponAR2, DT_WeaponAR2)
+
 END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS( weapon_ar2, CWeaponAR2 );
@@ -122,12 +128,15 @@ CWeaponAR2::CWeaponAR2( )
 	m_flfirerate = MINFIRERATE;
 
 	m_bAltFiresUnderwater = false;
+	m_bPlayingWoundSound = false;
+	m_iWeaponState = WEAPON_STATE_NOTFULLSPEED;
+	//InitWoundSound();
 }
 
 void CWeaponAR2::Precache( void )
 {
 	BaseClass::Precache();
-	PrecacheScriptSound("Weapon_AR2.Wine");
+	PrecacheScriptSound("Chaingun.Wine");
 	UTIL_PrecacheOther( "prop_combine_ball" );
 	UTIL_PrecacheOther( "env_entity_dissolver" );
 	PrecacheParticleSystem("smg_core");
@@ -162,24 +171,101 @@ void CWeaponAR2::ItemPostFrame( void )
 			pVM->SetPoseParameter( m_nVentPose, flVentPose );
 		}
 	}
-	if (m_flfirerate > MINFIRERATE)
-	{
-		m_flfirerate = MINFIRERATE;
-	}
-	if (m_flfirerate < MAXFIRERATE)
-	{
-		m_flfirerate = MAXFIRERATE;
-	}
+	
 	if (pOwner->m_nButtons & IN_ATTACK)
 	{
-		
 		m_flfirerate -= 0.003f;
 	}
 	if (pOwner->m_nButtons & IN_ATTACK2)
 	{
 		m_flfirerate -= 0.003f;
 	}
+	if (m_flfirerate > MINFIRERATE)
+		m_flfirerate = MINFIRERATE;
+	if (pOwner->HasOverdrive())
+	{
+		if (m_flfirerate < MAXOVERDRIVEFIRERATE)
+			m_flfirerate = MAXOVERDRIVEFIRERATE;
+		if (m_flfirerate == MAXOVERDRIVEFIRERATE)
+			m_iWeaponState = WEAPON_STATE_FULLSPEED;
+		else
+		{
+			m_iWeaponState = WEAPON_STATE_NOTFULLSPEED;
+			m_bPlayingWoundSound = false;
+		}
+	}
+	else
+	{
+		if (m_flfirerate < MAXFIRERATE)
+			m_flfirerate = MAXFIRERATE;
+		if (m_flfirerate == MAXFIRERATE)
+			m_iWeaponState = WEAPON_STATE_FULLSPEED;
+		else
+		{
+			m_iWeaponState = WEAPON_STATE_NOTFULLSPEED;
+			m_bPlayingWoundSound = false;
+		}
+	}
+
+	
+	UpdateWeaponSoundState();
 	BaseClass::ItemPostFrame();
+}
+void CWeaponAR2::Equip(CBaseCombatCharacter *pOwner)
+{
+	BaseClass::Equip(pOwner);
+	InitWoundSound();
+}
+void CWeaponAR2::UpdateWeaponSoundState(void)
+{
+	switch (m_iWeaponState)
+	{
+	case WEAPON_STATE_NOTFULLSPEED:
+		{
+			ShutdownWoundSound();
+			break;
+		}
+	case WEAPON_STATE_FULLSPEED:
+	{
+		if (m_bPlayingWoundSound)
+		{
+			DevMsg("already playing woundsound\n");
+			break;
+		}
+		CSoundEnvelopeController::GetController().SoundChangeVolume(m_pWoundSound, 1.0f, 1.0f);
+		CSoundEnvelopeController::GetController().SoundChangePitch(m_pWoundSound, 300, 40.0f);
+		m_bPlayingWoundSound = true;
+		DevMsg("playing woundsound\n");
+		break;
+	}
+	}
+}
+void CWeaponAR2::InitWoundSound(void)
+{
+	CPASAttenuationFilter filter(this);
+
+	if (!m_pWoundSound)
+	{
+		m_pWoundSound = CSoundEnvelopeController::GetController().SoundCreate(filter, entindex(), "Chaingun.Wine");
+		CSoundEnvelopeController::GetController().Play(m_pWoundSound, 0.0f, 100);
+	}
+}
+void CWeaponAR2::ShutdownWoundSound(void)
+{
+	if (m_pWoundSound)
+	{
+		CSoundEnvelopeController::GetController().SoundChangeVolume(m_pWoundSound, 0.0f, 0.0f);
+		CSoundEnvelopeController::GetController().SoundChangePitch(m_pWoundSound, 100, 0.01f);
+		
+	}
+}
+void CWeaponAR2::DestroyWeaponSound(void)
+{
+	if (m_pWoundSound)
+	{
+		CSoundEnvelopeController::GetController().SoundDestroy(m_pWoundSound);
+		m_pWoundSound = NULL;
+	}
 }
 void CWeaponAR2::WeaponIdle(void)
 {
@@ -533,6 +619,7 @@ void CWeaponAR2::ItemHolsterFrame(void)
 {
 	BaseClass::ItemHolsterFrame();
 	m_flfirerate = MINFIRERATE;
+	ShutdownWoundSound();
 }
 //-----------------------------------------------------------------------------
 // Purpose: 

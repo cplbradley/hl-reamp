@@ -16,6 +16,7 @@
 
 #include "basegrenade_shared.h"
 #include "basehlcombatweapon.h"
+#include "soundenvelope.h"
 
 class CWeaponAR2 : public CHLMachineGun
 {
@@ -39,6 +40,10 @@ public:
 
 	void PrimaryAttack(void);
 
+	void UpdateWeaponSoundState(void);
+	int m_iWeaponState;
+	void DestroyWeaponSound(void);
+	void Equip(CBaseCombatCharacter *pOwner);
 	void	FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool bUseWeaponAngles );
 	void	FireNPCSecondaryAttack( CBaseCombatCharacter *pOperator, bool bUseWeaponAngles );
 	void	Operator_ForceNPCFire( CBaseCombatCharacter  *pOperator, bool bSecondary );
@@ -47,11 +52,15 @@ public:
 	int		GetMinBurst( void ) { return 1; }
 	int		GetMaxBurst( void ) { return 2; }
 	float	GetFireRate(void) { return m_flfirerate;}
+
+	void	InitWoundSound(void);
+	void	ShutdownWoundSound(void);
 	
 	void	ItemHolsterFrame(void);
 	bool	CanHolster( void );
 	bool	Reload( void );
-
+	CSoundPatch *m_pWoundSound;
+	bool m_bPlayingWoundSound;
 	int		CapabilitiesGet( void ) { return bits_CAP_WEAPON_RANGE_ATTACK1; }
 
 	Activity	GetPrimaryAttackActivity( void );

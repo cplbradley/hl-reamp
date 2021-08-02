@@ -12,6 +12,7 @@ public:
 	void togglePrint();
 	virtual void OnThink();
 	virtual void Init(void);
+	void		LevelInit(void);
 
 	void MsgFunc_PurpleSkullKey(bf_read &msg);
 
@@ -30,6 +31,7 @@ public:
 	void togglePrint();
 	virtual void OnThink();
 	virtual void Init(void);
+	void		LevelInit(void);
 
 	void MsgFunc_RedSkullKey(bf_read &msg);
 
@@ -48,6 +50,7 @@ public:
 	void togglePrint();
 	virtual void OnThink();
 	virtual void Init(void);
+	void		LevelInit(void);
 
 	void MsgFunc_BlueSkullKey(bf_read &msg);
 

@@ -14,7 +14,7 @@ public:
 	virtual void Init(void);
 
 	void MsgFunc_PurpleKey(bf_read &msg);
-
+	void LevelInit(void);
 	bool bShowKey;
 protected:
 	virtual void Paint();

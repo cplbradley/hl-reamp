@@ -25,6 +25,11 @@
 #define TRAIN_MEDIUM	0x03
 #define TRAIN_FAST		0x04 
 #define TRAIN_BACK		0x05
+//powerup flags
+#define FL_FURY (0<<1)
+#define FL_QUADJUMP (0<<2)
+#define FL_TRIPLEDMG (0<<3)
+#define FL_OVERDRIVE (0<<4)
 
 // entity messages
 #define PLAY_PLAYER_JINGLE	1

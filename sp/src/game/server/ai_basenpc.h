@@ -191,8 +191,6 @@ enum DesiredWeaponState_t
 enum AI_Efficiency_t
 {
 	// Exclusively used for vortboss spin beam attack
-	AIE_HYPER,
-	// Run at full tilt
 	AIE_NORMAL,
 
 	// Run decision process less often

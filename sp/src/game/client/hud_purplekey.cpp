@@ -57,7 +57,10 @@ void CHudPurpleKey::OnThink()
 
 	BaseClass::OnThink();
 }
-
+void CHudPurpleKey::LevelInit(void)
+{
+	bShowKey = false;
+}
 
 DECLARE_HUDELEMENT(CHudKeyPanel);
 

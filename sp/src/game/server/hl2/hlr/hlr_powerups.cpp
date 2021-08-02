@@ -91,6 +91,7 @@ void CHLRFreemanFury::Touch(CBaseEntity *pOther)
 		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 		pPlayer->GiveNamedItem("weapon_furybar");
 		RemoveDeferred();
+		AddEFlags(EF_NODRAW);
 	}
 }
 ////////////////////////////////////////////
@@ -103,6 +104,7 @@ public:
 	void	Spawn(void);
 	void	Precache(void);
 	void	TimerThink(void);
+	void	ActivateEffects(void);
 	void	Touch(CBaseEntity *pOther);
 	void	Kill(void);
 
@@ -130,6 +132,14 @@ void CHLRQuadJump::Spawn(void)
 	AddSolidFlags(FSOLID_NOT_SOLID | FSOLID_TRIGGER);
 	SetRenderColor(230, 195, 0);
 	SetMoveType(MOVETYPE_NONE);
+
+	ActivateEffects();
+	
+	SetTouch(&CHLRQuadJump::Touch);
+
+}
+void CHLRQuadJump::ActivateEffects(void)
+{
 	m_hSpitEffect = (CParticleSystem *)CreateEntityByName("info_particle_system");
 	if (m_hSpitEffect != NULL)
 	{
@@ -143,8 +153,6 @@ void CHLRQuadJump::Spawn(void)
 			m_hSpitEffect->Activate();
 	}
 	SetLocalAngularVelocity(QAngle(0, 10, 0));
-	SetTouch(&CHLRQuadJump::Touch);
-
 }
 void CHLRQuadJump::Precache(void)
 {
@@ -156,15 +164,17 @@ void CHLRQuadJump::Touch(CBaseEntity *pOther)
 {
 	if (pOther->IsPlayer())
 	{
-		
-		CGameMovement *gm = dynamic_cast<CGameMovement *>(g_pGameMovement);
+		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+//		CGameMovement *gm = dynamic_cast<CGameMovement *>(g_pGameMovement);
 		color32 gold = { 230, 190, 0, 175 };
 		SetTouch(NULL);
 		SetSolid(SOLID_NONE);
 		RemoveSolidFlags(FSOLID_TRIGGER);
 		UTIL_ScreenFade(pOther, gold, 0.5, 0, FFADE_IN);
-		gm->m_iMaxJumps = 4;
-		m_hSpitEffect->StopParticleSystem();
+		//gm->m_iMaxJumps = 4;
+		if (m_hSpitEffect)
+			m_hSpitEffect->StopParticleSystem();
+		pPlayer->m_bQuadJump = true;
 		m_fTimerDelay = gpGlobals->curtime + 30.0f;
 		SetThink(&CHLRQuadJump::TimerThink);
 		SetNextThink(gpGlobals->curtime);
@@ -172,11 +182,12 @@ void CHLRQuadJump::Touch(CBaseEntity *pOther)
 }
 void CHLRQuadJump::TimerThink(void)
 {
-	CGameMovement *gm = dynamic_cast<CGameMovement *>(g_pGameMovement);
+	//CGameMovement *gm = dynamic_cast<CGameMovement *>(g_pGameMovement);
 	if (gpGlobals->curtime >= m_fTimerDelay)
 	{
+		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+		pPlayer->m_bQuadJump = false;
 		RemoveDeferred();
-		gm->m_iMaxJumps = 2;
 		SetThink(&CHLRQuadJump::Kill);
 	}
 	else
@@ -249,11 +260,10 @@ void CHLRTripleDamage::Precache(void)
 }
 void CHLRTripleDamage::Touch(CBaseEntity *pOther)
 {
-	
 	if (pOther->IsPlayer())
 	{
-		ConVar *sk_quaddmg_scale = cvar->FindVar("sk_quaddmg_scale");
-		sk_quaddmg_scale->SetValue(3);
+		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+		pPlayer->m_bTripleDamage = true;
 		SetSolid(SOLID_NONE);
 		RemoveSolidFlags(FSOLID_TRIGGER);
 		m_hSpitEffect->StopParticleSystem();
@@ -271,8 +281,7 @@ void CHLRTripleDamage::TimerThink(void)
 	if (gpGlobals->curtime >= m_fTimerDelay)
 	{
 		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-		ConVar *sk_quaddmg_scale = cvar->FindVar("sk_quaddmg_scale");
-		sk_quaddmg_scale->SetValue(1);
+		pPlayer->m_bTripleDamage = false;
 		SetThink(&CHLRQuadJump::Kill);
 		SetNextThink(gpGlobals->curtime + 0.1f);
 		color32 purple = { 150, 0, 255, 175 };
@@ -482,6 +491,89 @@ void CHLRGravShifter::ResetGrav(void)
 }
 
 void CHLRGravShifter::Kill(void)
+{
+	RemoveDeferred();
+}
+class CHLROverdrive : public CBaseAnimating
+{
+	DECLARE_CLASS(CHLROverdrive, CBaseAnimating);
+public:
+	void Precache(void);
+	void Spawn(void);
+	void Touch(CBaseEntity *pOther);
+	void Kill(void);
+	float m_fTimerDelay;
+
+	void Deactivate(void);
+
+	DECLARE_DATADESC();
+};
+
+LINK_ENTITY_TO_CLASS(hlr_overdrive, CHLROverdrive);
+
+
+BEGIN_DATADESC(CHLROverdrive)
+DEFINE_FUNCTION(Touch),
+DEFINE_FUNCTION(Kill),
+DEFINE_FUNCTION(Deactivate),
+END_DATADESC()
+
+void CHLROverdrive::Precache(void)
+{
+	PrecacheModel(POWERUP_MODEL);
+}
+void CHLROverdrive::Spawn(void)
+{
+	Precache();
+	SetModel(POWERUP_MODEL);
+	UTIL_SetSize(this, -Vector(64.0f, 64.0f, 64.0f), Vector(64.0f, 64.0f, 64.0f));
+	SetSolid(SOLID_BBOX);
+	AddSolidFlags(FSOLID_NOT_SOLID | FSOLID_TRIGGER);
+	SetRenderColor(255, 120, 0);
+	SetMoveType(MOVETYPE_CUSTOM);
+	//m_hSpitEffect = (CParticleSystem *)CreateEntityByName("info_particle_system");
+	/*if (m_hSpitEffect != NULL)
+	{
+	// Setup our basic parameters
+	m_hSpitEffect->KeyValue("start_active", "1");
+	m_hSpitEffect->KeyValue("effect_name", "powerup_td");
+	m_hSpitEffect->SetParent(this);
+	m_hSpitEffect->SetLocalOrigin(vec3_origin);
+	DispatchSpawn(m_hSpitEffect);
+	if (gpGlobals->curtime > 0.5f)
+	m_hSpitEffect->Activate();
+	}*/
+	SetLocalAngularVelocity(QAngle(0, 10, 0));
+	SetTouch(&CHLROverdrive::Touch);
+}
+
+void CHLROverdrive::Touch(CBaseEntity *pOther)
+{
+	if (pOther->IsPlayer())
+	{
+		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+		SetSolid(SOLID_NONE);
+		RemoveSolidFlags(FSOLID_TRIGGER);
+		//m_hSpitEffect->StopParticleSystem();
+		SetModelName(NULL_STRING);
+		color32 orange = { 255, 120, 0, 175 };
+		UTIL_ScreenFade(pOther, orange, 0.5, 0, FFADE_IN);
+		pPlayer->m_bOverdrive = true;
+		SetThink(&CHLROverdrive::Deactivate);
+		SetNextThink(gpGlobals->curtime + 30.0f);
+	}
+}
+void CHLROverdrive::Deactivate(void)
+{
+	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+	pPlayer->m_bOverdrive = false;
+	color32 orange = { 255, 120, 0, 175 };
+	UTIL_ScreenFade(pPlayer, orange, 0.5, 0, FFADE_IN);
+	Kill();
+	SetThink(NULL);
+}
+
+void CHLROverdrive::Kill(void)
 {
 	RemoveDeferred();
 }

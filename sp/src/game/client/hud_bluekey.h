@@ -16,6 +16,8 @@ public:
 	void MsgFunc_BlueKey(bf_read &msg);
 
 	bool bShowKey;
+
+	void LevelInit(void);
 protected:
 	virtual void Paint();
 	int m_nBlueKey;

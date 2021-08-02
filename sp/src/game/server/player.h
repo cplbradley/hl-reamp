@@ -715,6 +715,15 @@ public:
 
 	virtual float GetPlayerMaxSpeed();
 
+
+	virtual bool HasTripleDamage(void);
+	virtual bool HasQuadJump(void);
+	virtual bool HasOverdrive(void);
+	virtual int GetQuadDmgScale(void);
+	CNetworkVar(bool,m_bTripleDamage);
+	bool m_bQuadJump;
+	bool m_bOverdrive;
+
 	// Used to set private physics flags PFLAG_*
 	void	SetPhysicsFlag( int nFlag, bool bSet );
 

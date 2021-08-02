@@ -5159,6 +5159,24 @@ void CBasePlayer::StopDash(void)
 	SetAbsVelocity(m_vecSavedVelocity);
 }
 
+bool CBasePlayer::HasQuadJump(void)
+{
+	return m_bQuadJump;
+}
+bool CBasePlayer::HasOverdrive(void)
+{
+	return m_bOverdrive;
+}
+bool CBasePlayer::HasTripleDamage(void)
+{
+	return m_bTripleDamage;
+}
+int CBasePlayer::GetQuadDmgScale(void)
+{
+	if (HasTripleDamage())
+		return 3;
+	return 1;
+}
 void CBasePlayer::CheckFloorSprite(void)
 {
 	//access the EHANDLE
@@ -8084,6 +8102,7 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropEHandle	(SENDINFO(m_hZoomOwner) ),
 		SendPropArray	( SendPropEHandle( SENDINFO_ARRAY( m_hViewModel ) ), m_hViewModel ),
 		SendPropString	(SENDINFO(m_szLastPlaceName) ),
+		SendPropBool(SENDINFO(m_bTripleDamage)),
 
 #if defined USES_ECON_ITEMS
 		SendPropUtlVector( SENDINFO_UTLVECTOR( m_hMyWearables ), MAX_WEARABLES_SENT_FROM_SERVER, SendPropEHandle( NULL, 0 ) ),

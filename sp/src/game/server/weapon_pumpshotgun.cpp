@@ -502,7 +502,7 @@ void CWeaponPumpShotgun::PrimaryAttack(void)
 		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 	}
 
-	if (m_iClip1)
+	if (m_iClip1 && !pPlayer->HasOverdrive())
 	{
 		// pump so long as some rounds are left.
 		m_bNeedPump = true;
@@ -530,7 +530,7 @@ void CWeaponPumpShotgun::SecondaryAttack(void)
 	pPlayer->m_nButtons &= ~IN_ATTACK2;
 	// MUST call sound before removing a round from the clip of a CMachineGun
 
-
+	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
 	// Don't fire again until fire animation has completed
 	//m_flNextPrimaryAttack = gpGlobals->curtime + 0.3f;
 	//m_iClip1 -= 2;	// Shotgun uses same clip for primary and secondary attacks
@@ -555,9 +555,16 @@ void CWeaponPumpShotgun::SecondaryAttack(void)
 	pGrenade->SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE);
 	pGrenade->SetThrower(GetOwner());
 	pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);
-	m_flNextSecondaryAttack = gpGlobals->curtime + 3.0f;
+	if (pPlayer->HasOverdrive())
+		m_flNextSecondaryAttack = gpGlobals->curtime + 0.75f;
+	else
+	{
+		m_flNextSecondaryAttack = gpGlobals->curtime + 2.0f;
+		m_bNeedPump = true;
+	}
 	SendWeaponAnim(ACT_VM_SECONDARYATTACK);
 	EmitSound("Weapon_SMG1.Double");
+	
 	m_iSecondaryAttacks++;
 	gamestats->Event_WeaponFired(pPlayer, false, GetClassname());
 }

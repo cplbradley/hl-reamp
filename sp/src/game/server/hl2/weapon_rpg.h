@@ -217,6 +217,11 @@ public:
 
 	void	NotifyRocketDied( void );
 
+	void	LaunchRocket(void);
+	void	Rocket1(void);
+	void	Rocket2(void);
+	void	Rocket3(void);
+
 	bool	HasAnyAmmo( void );
 
 	void	SuppressGuiding( bool state = true );

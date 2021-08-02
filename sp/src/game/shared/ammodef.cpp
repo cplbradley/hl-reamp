@@ -10,6 +10,13 @@
 #include "cbase.h"
 #include "ammodef.h"
 
+
+#ifdef CLIENT_DLL
+#include "c_baseplayer.h"
+#else
+#include "player.h"
+#endif
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -52,6 +59,12 @@ int CAmmoDef::Index(const char *psz)
 //-----------------------------------------------------------------------------
 int	CAmmoDef::PlrDamage(int nAmmoIndex)
 {
+	CBasePlayer *pPlayer;
+#ifdef CLIENT_DLL
+	pPlayer = CBasePlayer::GetLocalPlayer();
+#else
+	pPlayer = UTIL_GetLocalPlayer();
+#endif
 	if ( nAmmoIndex < 1 || nAmmoIndex >= m_nAmmoIndex )
 		return 0;
 
@@ -59,7 +72,7 @@ int	CAmmoDef::PlrDamage(int nAmmoIndex)
 	{
 		if ( m_AmmoType[nAmmoIndex].pPlrDmgCVar )
 		{
-			return m_AmmoType[nAmmoIndex].pPlrDmgCVar->GetFloat();
+			return m_AmmoType[nAmmoIndex].pPlrDmgCVar->GetFloat() * pPlayer->GetQuadDmgScale();
 		}
 
 		return 0;

@@ -63,6 +63,10 @@ void CHudRedSkullKey::OnThink()
 
 	BaseClass::OnThink();
 }
+void CHudRedSkullKey::LevelInit(void)
+{
+	bShowKey = false;
+}
 
 
 CHudBlueSkullKey::CHudBlueSkullKey(const char *pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudBlueSkullKey")
@@ -108,7 +112,10 @@ void CHudBlueSkullKey::OnThink()
 
 	BaseClass::OnThink();
 }
-
+void CHudBlueSkullKey::LevelInit(void)
+{
+	bShowKey = false;
+}
 
 CHudPurpleSkullKey::CHudPurpleSkullKey(const char *pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudPurpleSkullKey")
 {
@@ -152,4 +159,8 @@ void CHudPurpleSkullKey::OnThink()
 	togglePrint();
 
 	BaseClass::OnThink();
+}
+void CHudPurpleSkullKey::LevelInit(void)
+{
+	bShowKey = false;
 }

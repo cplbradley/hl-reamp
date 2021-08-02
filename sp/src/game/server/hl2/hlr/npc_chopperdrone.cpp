@@ -1381,7 +1381,6 @@ void CNPC_ChopperDrone::InputStartBullrushBehavior( inputdata_t &inputdata )
 		m_nAttackMode = ATTACK_MODE_BULLRUSH_VEHICLE;
 		SetSecondaryMode( BULLRUSH_MODE_WAIT_FOR_ENEMY );
 		SetLeadingDistance( 0.0f );
-		StopSound("NPC_AttackHelicopter.FireGun");
 	}
 }
 
@@ -1389,6 +1388,9 @@ void CNPC_ChopperDrone::InputStartBullrushBehavior( inputdata_t &inputdata )
 //------------------------------------------------------------------------------
 void CNPC_ChopperDrone::InputStartCarpetBombing( inputdata_t &inputdata )
 {
+	CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
+	if (m_pGunFiringSound)
+		controller.SoundChangeVolume(m_pGunFiringSound, 0.0, 0.1f);
 	m_bIsCarpetBombing = true;
 }
 

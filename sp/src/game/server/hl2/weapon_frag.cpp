@@ -303,7 +303,7 @@ bool CWeaponFrag::Reload( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CWeaponFrag::PrimaryAttack( void )
+void CWeaponFrag::PrimaryAttack(void)
 {
 	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
 	Vector	vecEye = pPlayer->EyePosition();
@@ -311,6 +311,7 @@ void CWeaponFrag::PrimaryAttack( void )
 	Vector vecAng;
 	pPlayer->EyeVectors(&vecAng);
 	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
+	QAngle qEyeAng = pPlayer->EyeAngles();
 	Vector	muzzlePoint = pPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * 6.0f + vUp * -3.0f;
 	Vector vecSrc = vecEye + vForward * 18.0f + vRight * 8.0f + Vector(0, 0, -8);
 	//CheckThrowPosition(pPlayer, vecEye, vecSrc);
@@ -318,6 +319,29 @@ void CWeaponFrag::PrimaryAttack( void )
 	float vertfactor = sk_plr_grenade_vert_factor.GetFloat();
 	Vector vecThrow = vecAng * sk_plr_grenade_launch_speed.GetFloat() + Vector(0, 0, vertfactor);
 	Fraggrenade_Create(muzzlePoint, vec3_angle, vecThrow, AngularImpulse(200, random->RandomInt(-600, 600), 0), pPlayer, 3.0f, false);
+	
+	if (pPlayer->HasOverdrive())
+	{
+		for (int i = 0; i < 2; i++)
+		{
+			if (i == 0)
+			{
+				QAngle qAng = QAngle(qEyeAng[0] + 10, qEyeAng[1] + 10, qEyeAng[2]);
+				Vector vecAimAng;
+				AngleVectors(qAng, &vecAimAng);
+				Vector vecThrow = vecAimAng * sk_plr_grenade_launch_speed.GetFloat() + Vector(0, 0, vertfactor);
+				Fraggrenade_Create(muzzlePoint, vec3_angle, vecThrow, AngularImpulse(200, random->RandomInt(-600, 600), 0), pPlayer, 3.0f, false);
+			}
+			if (i == 1)
+			{
+				QAngle qAng2 = QAngle(qEyeAng[0] + 10, qEyeAng[1] - 10, qEyeAng[2]);
+				Vector vecAimAng;
+				AngleVectors(qAng2, &vecAimAng);
+				Vector vecThrow = vecAimAng * sk_plr_grenade_launch_speed.GetFloat() + Vector(0, 0, vertfactor);
+				Fraggrenade_Create(muzzlePoint, vec3_angle, vecThrow, AngularImpulse(200, random->RandomInt(-600, 600), 0), pPlayer, 3.0f, false);
+			}
+		}
+	}
 	
 	m_flNextPrimaryAttack = gpGlobals->curtime + 0.4f;
 

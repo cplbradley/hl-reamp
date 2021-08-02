@@ -57,3 +57,7 @@ void CHudBlueKey::OnThink()
 
 	BaseClass::OnThink();
 }
+void CHudBlueKey::LevelInit(void)
+{
+	bShowKey = false;
+}

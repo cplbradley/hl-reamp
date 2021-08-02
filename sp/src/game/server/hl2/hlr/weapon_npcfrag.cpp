@@ -152,12 +152,19 @@ void CWeaponNPCFrag::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bool 
 		pGrenade->SetCombineSpawned(true);*/
 		WeaponSound(SINGLE_NPC);
 		pOperator->DoMuzzleFlash();
-		m_iClip1 = m_iClip1 - 1;
 	}
 	else
 	{
-		return;
-
+		Vector vecShoot = (npc->GetActualShootTrajectory(vecShootOrigin) * adjustedspd);
+		Fraggrenade_Create(vecShootOrigin, vec3_angle, vecShoot, vecSpin, npc, 3.0f, true);
+		/*CGrenadeFrag *pGrenade = (CGrenadeFrag *)CBaseEntity::Create("npc_frag_grenade",vecShootOrigin,vec3_angle,npc);
+		pGrenade->SetTimer(3.0f, 1.5f);
+		pGrenade->SetVelocity(vecToss, vecSpin);
+		pGrenade->SetThrower(npc);
+		pGrenade->m_takedamage = DAMAGE_EVENTS_ONLY;
+		pGrenade->SetCombineSpawned(true);*/
+		WeaponSound(SINGLE_NPC);
+		pOperator->DoMuzzleFlash();
 	}
 }
 

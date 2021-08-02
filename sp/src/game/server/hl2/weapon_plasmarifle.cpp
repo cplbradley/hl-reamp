@@ -99,6 +99,7 @@ void CPlasmaBall::Precache(void)
 	PrecacheModel(PLASMA_MODEL);
 	PrecacheModel(PLASMA_MODEL_NPC);
 	PrecacheParticleSystem("smg_plasmaball_core");
+	PrecacheParticleSystem("smg_plasmaball_core_red");
 	PrecacheModel("sprites/smoke.vmt");
 	PrecacheModel("sprites/physcannon_bluecore2b.vmt");
 
@@ -117,11 +118,15 @@ bool CPlasmaBall::CreateTrail(void)
 }
 bool CPlasmaBall::DrawSprite(void)
 {
+	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 	m_pMainGlow = CSprite::SpriteCreate("sprites/physcannon_bluecore2b.vmt", GetLocalOrigin(), false);
 	if (m_pMainGlow != NULL)
 	{
 		m_pMainGlow->FollowEntity(this);
-		m_pMainGlow->SetTransparency(kRenderGlow, 255, 255, 255, 200, kRenderFxNoDissipation);
+		if (pPlayer->HasOverdrive())
+			m_pMainGlow->SetTransparency(kRenderGlow, 255, 0, 0, 200, kRenderFxNoDissipation);
+		else
+			m_pMainGlow->SetTransparency(kRenderGlow, 255, 255, 255, 200, kRenderFxNoDissipation);
 		m_pMainGlow->SetScale(0.3f);
 		m_pMainGlow->SetGlowProxySize(4.0f);
 	}
@@ -147,7 +152,11 @@ void CPlasmaBall::PlasmaTouch(CBaseEntity *pOther) //i touched something
 		{
 			return;
 		}
-		DispatchParticleEffect("smg_plasmaball_core", GetAbsOrigin(), GetAbsAngles(), this); //poof effect!
+		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+		if (pPlayer->HasOverdrive())
+			DispatchParticleEffect("smg_plasmaball_core_red", GetAbsOrigin(), GetAbsAngles(), this); //poof effect!
+		else
+			DispatchParticleEffect("smg_plasmaball_core", GetAbsOrigin(), GetAbsAngles(), this); //poof effect!
 
 		if (pOther->m_takedamage != DAMAGE_NO) //can what i hit take damage?
 		{
@@ -336,6 +345,7 @@ void CWeaponPlasmaRifle::Precache(void)
 	PrecacheScriptSound("NPC_CombineBall.Explosion");
 	PrecacheParticleSystem("plasma_altfire_core");
 	PrecacheParticleSystem("smg_core");
+	PrecacheParticleSystem("smg_core_red");
 	BaseClass::Precache();
 }
 
@@ -657,7 +667,7 @@ void CWeaponPlasmaRifle::PrimaryAttack(void)
 	{
 		trace_t tr;
 		Vector vecDir;
-
+		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 		// Take the Player's EyeAngles and turn it into a direction
 		AngleVectors(pPlayer->EyeAngles(), &vecDir);
 		Vector vecAbsStart = pPlayer->EyePosition();
@@ -666,15 +676,27 @@ void CWeaponPlasmaRifle::PrimaryAttack(void)
 		Vector vecShotDir = (tr.endpos - vecSrc).Normalized();
 		//debugoverlay->AddLineOverlay(tr.startpos, tr.endpos, 0, 255, 0, false, 3.0f);
 		WeaponSound(SINGLE, m_flNextPrimaryAttack); //emit sound
-		m_flNextPrimaryAttack = m_flNextPrimaryAttack + 0.1f;
+		if (pPlayer->HasOverdrive())
+			m_flNextPrimaryAttack = m_flNextPrimaryAttack + 0.05f;
+		else
+			m_flNextPrimaryAttack = m_flNextPrimaryAttack + 0.1f;
 		//m_flNextSecondaryAttack = gpGlobals->curtime + 1.0f;//can't shoot again til after 0.1 seconds
 		CPlasmaBall *pBall = CPlasmaBall::Create(vecSrc, angAiming, pOwner); //emit plasma ball object
 		pBall->SetModel(PLASMA_MODEL); //set model to player model
 		pBall->SetTargetPos(tr.endpos, PLASMA_SPEED);
-		pBall->m_pGlowTrail->SetTransparency(kRenderTransAdd, 0, 175, 255, 200, kRenderFxNone);//emit trail
+		
 		pBall->DrawSprite();
 		pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);//remove 1 round from ammo count
-		pBall->SetRenderColor(58, 215, 255);
+		if (pPlayer->HasOverdrive())
+		{
+			pBall->m_pGlowTrail->SetTransparency(kRenderTransAdd, 255, 0, 0, 200, kRenderFxNone);//emit trail
+			pBall->SetRenderColor(255, 0, 0);
+		}
+		else
+		{
+			pBall->m_pGlowTrail->SetTransparency(kRenderTransAdd, 0, 175, 255, 200, kRenderFxNone);//emit trail
+			pBall->SetRenderColor(58, 215, 255);
+		}
 		pBall->SetLocalAngles(QAngle(random->RandomFloat(-250, -500),
 			random->RandomFloat(-250, -500),
 			random->RandomFloat(-250, -500)));
@@ -685,7 +707,10 @@ void CWeaponPlasmaRifle::PrimaryAttack(void)
 		m_iEnergyLevel++;
 		m_nShotsFired++;
 		int iAttachment = LookupAttachment("barrel");
-		DispatchParticleEffect("smg_core", PATTACH_POINT_FOLLOW, pOwner->GetViewModel(), iAttachment, true);
+		if (pPlayer->HasOverdrive())
+			DispatchParticleEffect("smg_core_red", PATTACH_POINT_FOLLOW, pOwner->GetViewModel(), iAttachment, true);
+		else
+			DispatchParticleEffect("smg_core", PATTACH_POINT_FOLLOW, pOwner->GetViewModel(), iAttachment, true);
 	}
 	m_iPrimaryAttacks++;
 	gamestats->Event_WeaponFired(pPlayer, true, GetClassname());
@@ -815,6 +840,19 @@ void CWeaponPlasmaRifle::ItemPostFrame(void)
 		m_iEnergyLevel = 30;
 	}
 
+	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+	CBaseViewModel *pViewModel = pPlayer->GetViewModel();
+	if (pPlayer->HasOverdrive())
+	{
+		if (pViewModel->m_nSkin == 0)
+			pViewModel->m_nSkin = 1;
+
+	}
+	else
+	{
+		if (pViewModel->m_nSkin == 1)
+			pViewModel->m_nSkin = 0;
+	}
 }
 
 //-----------------------------------------------------------------------------

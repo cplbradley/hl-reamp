@@ -27,44 +27,25 @@
 #include "decals.h"
 #include "particle_parse.h"
 #include "particle_system.h"
-
+#include "hlr_keycard.h"
 #include "tier0/memdbgon.h"
 
-enum {
-	KEYCOLOR_RED,
-	KEYCOLOR_BLUE,
-	KEYCOLOR_PURPLE,
-};
-class CHLRKeycard : public CBaseAnimating
-{
-	DECLARE_CLASS(CHLRKeycard, CBaseAnimating);
-public:
-	void Spawn(void);
-	void Precache(void);
-	void Pickup(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
-	COutputEvent m_OnPickup;
-	int m_nColor;
-	//void Touch(CBaseEntity *pOther);
-	void CreateSprite(void);
-	bool	CreateVPhysics(void);
-	int ObjectCaps(void);
-	CSprite *pSprite;
 
-private:
-
-	void DisplayHud(void);
-
-	DECLARE_DATADESC();
-};
 
 LINK_ENTITY_TO_CLASS(hlr_keycard, CHLRKeycard);
 
 BEGIN_DATADESC(CHLRKeycard)
 DEFINE_FUNCTION(Pickup),
 DEFINE_FUNCTION(Touch),
-DEFINE_KEYFIELD(m_nColor,FIELD_INTEGER,"KeyColor"),
+DEFINE_KEYFIELD(m_nColor, FIELD_INTEGER, "KeyColor"),
+DEFINE_FIELD(m_bDrawHud, FIELD_BOOLEAN),
 DEFINE_OUTPUT(m_OnPickup,"OnPickup"),
 END_DATADESC();
+
+IMPLEMENT_SERVERCLASS_ST(CHLRKeycard, DT_Keycard)
+SendPropBool(SENDINFO(m_bDrawHud)),
+SendPropInt(SENDINFO(m_nColor)),
+END_SEND_TABLE()
 
 
 void CHLRKeycard::Spawn(void)
@@ -77,6 +58,7 @@ void CHLRKeycard::Spawn(void)
 	SetMoveType(MOVETYPE_NONE);
 	SetUse(&CHLRKeycard::Pickup);
 	CreateSprite();
+	m_bDrawHud = false;
 	//AddSpawnFlags(SF_PHYSPROP_ENABLE_PICKUP_OUTPUT);
 	//CreateVPhysics();
 	//SetTouch(&CHLRKeycard::Touch);
@@ -159,55 +141,65 @@ void CHLRKeycard::CreateSprite(void)
 void CHLRKeycard::Pickup(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
 {
 	m_OnPickup.FireOutput(pActivator, this);
+	m_bDrawHud = true;
 	SetTouch(NULL);
 	SetUse(NULL);
 	SetModelName(NULL_STRING);
 	SetSolid(SOLID_NONE);
 	SetSolidFlags(FSOLID_NOT_SOLID);
-	DisplayHud();
-	pSprite->TurnOff();
-	pSprite->SetRenderColorA(0);
+	//DisplayHud();
+	//pSprite->TurnOff();
+	//pSprite->SetRenderColorA(0);
 	pSprite = NULL;
 	UTIL_Remove(pSprite);
-	RemoveDeferred();
+	//RemoveDeferred();
 }
 bool CHLRKeycard::CreateVPhysics(void)
 {
 	return BaseClass::CreateVPhysics();
 }
 
-void CHLRKeycard::DisplayHud(void)
+/*void CHLRKeycard::DisplayHud(void)
 {
 	switch (m_nColor)
 	{
 	case KEYCOLOR_RED:
 	{
-		CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+		/*CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
 		user.MakeReliable();
 		UserMessageBegin(user, "RedKey");
-		WRITE_BOOL(true);
+		WRITE_BOOL(m_bDrawHud);
 		MessageEnd();
+		m_bDrawHud = true;
 		break;
 	}
 	case KEYCOLOR_BLUE:
 	{
-		CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+		/*CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
 		user.MakeReliable();
-		UserMessageBegin(user, "BlueKey");
-		WRITE_BOOL(true);
+		UserMessageBegin(user, "RedKey");
+		WRITE_BOOL(m_bDrawHud);
 		MessageEnd();
+		m_bDrawHud = true;
 		break;
 	}
 	case KEYCOLOR_PURPLE:
 	{
-		CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+		/*CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
 		user.MakeReliable();
-		UserMessageBegin(user, "PurpleKey");
-		WRITE_BOOL(true);
+		UserMessageBegin(user, "RedKey");
+		WRITE_BOOL(m_bDrawHud);
 		MessageEnd();
+		m_bDrawHud = true;
 		break;
 	}
 	default:
 		break;
 	}
-}
+}*/
+
+/*void CHLRKeycard::OnRestore()
+{
+	BaseClass::OnRestore();
+	DisplayHud();
+}*/

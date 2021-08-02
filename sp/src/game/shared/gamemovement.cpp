@@ -2372,24 +2372,26 @@ void CGameMovement::PlaySwimSound()
 	MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.Swim" );
 }
 
-
+int CGameMovement::GetMaxJumps(void)
+{
+	if (!player->IsSuitEquipped())
+		return 1;
+	if (player->HasQuadJump())
+		return 4;
+	return 2;
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 bool CGameMovement::CheckJumpButton( void )
 {
-	if (!player->IsSuitEquipped())
-		m_iMaxJumps = 1;
-	else
-		m_iMaxJumps = 2;
-
 	if (player->pl.deadflag)
 	{
 		mv->m_nOldButtons |= IN_JUMP;	// don't jump again until released
 		return false;
 	}
 
-	if (m_iJumpCount >= m_iMaxJumps)
+	if (m_iJumpCount >= GetMaxJumps())
 		return false;
 	
 	// See if we are waterjumping.  If so, decrement count and return.

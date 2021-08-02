@@ -634,11 +634,17 @@ void CWeaponShotgun::SecondaryAttack( void )
 	m_flNextPrimaryAttack = gpGlobals->curtime + 0.75;
 	m_flNextSecondaryAttack = gpGlobals->curtime + 0.75;
 	//Disabled so we can shoot all the time that we want
-	//m_iClip1--;
+	m_iClip1--;
 	Vector vecSrc = pPlayer->Weapon_ShootPosition();
 	Vector vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT);
 	//We will not shoot bullets anymore
-	pPlayer->FireBullets(14, vecSrc, vecAiming, (GetBulletSpread()/1.5), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false);
+	if (pPlayer->HasOverdrive())
+		pPlayer->FireBullets(28, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false);
+	else
+		pPlayer->FireBullets(14, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false);
+	QAngle angAiming;
+	VectorAngles(vecAiming, angAiming);
+	DispatchParticleEffect("muzzleflash_orange_large_core", vecSrc, angAiming, this);
 	pPlayer->SetMuzzleFlashTime(gpGlobals->curtime + 0.5);
 	CSoundEnt::InsertSound(SOUND_COMBAT, GetAbsOrigin(), 600, 0.2, GetOwner());
 	if (!m_iClip1 && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
@@ -664,6 +670,12 @@ void CWeaponShotgun::PrimaryAttack( void )
 	}
 
 	pPlayer->m_nButtons &= ~IN_ATTACK2;
+
+	if (m_iClip1 == 1)
+	{
+		SecondaryAttack();
+		return;	
+	}
 	// MUST call sound before removing a round from the clip of a CMachineGun
 	WeaponSound(WPN_DOUBLE);
 
@@ -684,7 +696,10 @@ void CWeaponShotgun::PrimaryAttack( void )
 	Vector vecAiming = pPlayer->GetAutoaimVector( AUTOAIM_SCALE_DEFAULT );	
 
 	// Fire the bullets
-	pPlayer->FireBullets( 28, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false );
+	if (pPlayer->HasOverdrive())
+		pPlayer->FireBullets(56, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false);
+	else
+		pPlayer->FireBullets( 28, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false );
 	//pPlayer->ViewPunch( QAngle(random->RandomFloat( -15, 15 ),0,0) );
 	QAngle angAiming;
 	VectorAngles(vecAiming, angAiming);

@@ -285,7 +285,7 @@ END_RECV_TABLE()
 
 		RecvPropFloat	(RECVINFO(m_flMaxspeed)),
 		RecvPropInt		(RECVINFO(m_fFlags)),
-
+		RecvPropBool(RECVINFO(m_bTripleDamage)),
 
 		RecvPropInt		(RECVINFO(m_iObserverMode), 0, RecvProxy_ObserverMode ),
 		RecvPropEHandle	(RECVINFO(m_hObserverTarget), RecvProxy_ObserverTarget ),
@@ -486,6 +486,26 @@ void C_BasePlayer::Spawn( void )
 
 void C_BasePlayer::GroundPound(void)
 {
+}
+
+bool C_BasePlayer::HasQuadJump(void)
+{
+	return m_bQuadJump;
+}
+bool C_BasePlayer::HasOverdrive(void)
+{
+	return m_bOverdrive;
+}
+bool C_BasePlayer::HasTripleDamage(void)
+{
+	return m_bTripleDamage;
+}
+int C_BasePlayer::GetQuadDmgScale(void)
+{
+	if (HasTripleDamage())
+		return 3;
+	else
+	return 1;
 }
 void C_BasePlayer::Dash(void)
 {

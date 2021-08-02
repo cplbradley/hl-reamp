@@ -292,7 +292,6 @@ void CNPC_VortBoss::Spawn(void)
 	m_iHealth = sk_vortboss_health.GetFloat();
 	m_flFieldOfView = 0.5;
 	m_NPCState = NPC_STATE_NONE;
-	SetEfficiency(AIE_HYPER);
 	SetupGlobalModelData();
 	//CapabilitiesClear();
 	//CapabilitiesAdd( bits_CAP_NONE );

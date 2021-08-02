@@ -60,6 +60,8 @@ public:
 	virtual void	TryTouchGround( const Vector& start, const Vector& end, const Vector& mins, const Vector& maxs, unsigned int fMask, int collisionGroup, trace_t& pm );
 
 	int m_iJumpCount;
+
+	int GetMaxJumps(void);
 	int m_iMaxJumps;
 
 	bool	m_bShouldGroundPound;

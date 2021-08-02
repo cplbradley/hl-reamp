@@ -3411,7 +3411,7 @@ void CAI_BaseNPC::UpdateEfficiency( bool bInPVS )
 
 	if ( !ShouldDefaultEfficient() )
 	{
-		minEfficiency = ( bFramerateOk ) ? AIE_HYPER : AIE_EFFICIENT;
+		minEfficiency = ( bFramerateOk ) ? AIE_NORMAL : AIE_EFFICIENT;
 	}
 	else
 	{
@@ -3525,7 +3525,6 @@ void CAI_BaseNPC::UpdateEfficiency( bool bInPVS )
 		// Combat
 			// In PVS
 				// Facing
-					AIE_HYPER,
 					AIE_NORMAL,
 					AIE_NORMAL,
 					AIE_EFFICIENT,
@@ -4232,7 +4231,6 @@ void CAI_BaseNPC::NPCThink( void )
 	{
 		static const char *ppszEfficiencies[] =
 		{
-			"AIE_HYPER"
 			"AIE_NORMAL",
 			"AIE_EFFICIENT",
 			"AIE_VERY_EFFICIENT",
@@ -4251,8 +4249,7 @@ void CAI_BaseNPC::NPCThink( void )
 
 		static float g_DecisionIntervals[] = 
 		{
-			.005, // AIE_HYPER
-			.005,	//	AIE_NORMAL
+			.1,	//	AIE_NORMAL
 			.2, //	AIE_EFFICIENT
 			.4, //	AIE_VERY_EFFICIENT
 			.6, //	AIE_SUPER_EFFICIENT
@@ -4262,13 +4259,9 @@ void CAI_BaseNPC::NPCThink( void )
 		{
 			m_flNextDecisionTime = gpGlobals->curtime + g_DecisionIntervals[GetEfficiency()];
 		}
-		if (GetEfficiency() == AIE_HYPER)
-		{
-			SetNextThink(gpGlobals->curtime + 0.00);
-		}
 		if ( GetMoveEfficiency() == AIME_NORMAL || GetEfficiency() == AIE_NORMAL )
 		{
-			SetNextThink( gpGlobals->curtime + TICK_INTERVAL );
+			SetNextThink(gpGlobals->curtime + .1);
 		}
 		
 		else

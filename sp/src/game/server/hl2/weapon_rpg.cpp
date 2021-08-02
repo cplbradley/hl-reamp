@@ -1611,24 +1611,53 @@ bool CWeaponRPG::WeaponShouldBeLowered(void)
 //-----------------------------------------------------------------------------
 void CWeaponRPG::PrimaryAttack(void)
 {
-	// Can't have an active missile out
+	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+	if (pPlayer->HasOverdrive())
+	{
+		SetThink(&CWeaponRPG::Rocket1);
+		SetNextThink(gpGlobals->curtime);
+	}
+	else
+	{
+		LaunchRocket();
+		pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);
+	}
+}
+void CWeaponRPG::Rocket1(void)
+{
+	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+	LaunchRocket();
+	pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);
+	SetThink(&CWeaponRPG::Rocket2);
+	SetNextThink(gpGlobals->curtime + 0.1f);
+}
+void CWeaponRPG::Rocket2(void)
+{
+	LaunchRocket();
+	SetThink(&CWeaponRPG::Rocket3);
+	SetNextThink(gpGlobals->curtime + 0.1f);
+}
+void CWeaponRPG::Rocket3(void)
+{
+	LaunchRocket();
+}
+void CWeaponRPG::LaunchRocket(void)
+{
 	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
 	Vector	vForward, vRight, vUp;
 	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
 	QAngle vecAngles;
 	VectorAngles(vForward, vecAngles);
-	Vector	muzzlePoint = pPlayer ->Weapon_ShootPosition() + vForward * 12.0f + vRight * 6.0f + vUp * -3.0f;
+	Vector	muzzlePoint = pPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * 6.0f + vUp * -3.0f;
 	m_hMissile = CMissile::Create(muzzlePoint, vecAngles, GetOwner()->edict());
 	m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
 	SuppressGuiding();
 	WeaponSound(SINGLE);
 	SendWeaponAnim(GetPrimaryAttackActivity());
 	//m_bRedraw = true;
-	pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);
+	
 	m_iPrimaryAttacks++;
 	gamestats->Event_WeaponFired(pPlayer, true, GetClassname());
-
-	//DecrementAmmo(GetOwner());
 }
 void CWeaponRPG::SecondaryAttack(void)
 {

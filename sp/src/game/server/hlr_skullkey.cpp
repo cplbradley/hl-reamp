@@ -35,39 +35,48 @@ enum {
 	KEYCOLOR_BLUE,
 	KEYCOLOR_PURPLE,
 };
-class CHLRSkullkey : public CBaseAnimating
+class CHLRSkullKey : public CBaseAnimating
 {
-	DECLARE_CLASS(CHLRSkullkey, CBaseAnimating);
+	DECLARE_CLASS(CHLRSkullKey, CBaseAnimating);
+	DECLARE_SERVERCLASS();
 public:
 	void Spawn(void);
 	void Precache(void);
 	void Pickup(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
 	COutputEvent m_OnPickup;
-	int m_nColor;
+	CNetworkVar(bool, m_bDrawHud);
+	CNetworkVar(int, m_nColor);
 	//void Touch(CBaseEntity *pOther);
 	void CreateSprite(void);
 	bool	CreateVPhysics(void);
 	int ObjectCaps(void);
-	CSprite *pSprite[2];
+	CHandle<CSprite> pSprite[2];
+	void OnRestore();
 
 private:
 
-	void DisplayHud(void);
+	//void DisplayHud(void);
 
 	DECLARE_DATADESC();
 };
 
-LINK_ENTITY_TO_CLASS(hlr_skullkey, CHLRSkullkey);
+LINK_ENTITY_TO_CLASS(hlr_skullkey, CHLRSkullKey);
 
-BEGIN_DATADESC(CHLRSkullkey)
+BEGIN_DATADESC(CHLRSkullKey)
 DEFINE_FUNCTION(Pickup),
 DEFINE_FUNCTION(Touch),
 DEFINE_KEYFIELD(m_nColor, FIELD_INTEGER, "KeyColor"),
 DEFINE_OUTPUT(m_OnPickup, "OnPickup"),
+DEFINE_FIELD(m_bDrawHud,FIELD_BOOLEAN),
 END_DATADESC();
 
+IMPLEMENT_SERVERCLASS_ST(CHLRSkullKey, DT_SkullKey)
+SendPropBool(SENDINFO(m_bDrawHud)),
+SendPropInt(SENDINFO(m_nColor)),
+END_SEND_TABLE()
 
-void CHLRSkullkey::Spawn(void)
+
+void CHLRSkullKey::Spawn(void)
 {
 	Precache();
 	SetModel("models/props/keys/skullkey/skullkey.mdl");
@@ -75,25 +84,26 @@ void CHLRSkullkey::Spawn(void)
 	m_nSkin = m_nColor;
 	SetSolid(SOLID_VPHYSICS);
 	SetMoveType(MOVETYPE_NONE);
-	SetUse(&CHLRSkullkey::Pickup);
+	SetUse(&CHLRSkullKey::Pickup);
 	CreateSprite();
+	m_bDrawHud = false;
 	//AddSpawnFlags(SF_PHYSPROP_ENABLE_PICKUP_OUTPUT);
 	//CreateVPhysics();
-	//SetTouch(&CHLRSkullkey::Touch);
+	//SetTouch(&CHLRSkullKey::Touch);
 	//BaseClass::Spawn();
 }
-int CHLRSkullkey::ObjectCaps(void)
+int CHLRSkullKey::ObjectCaps(void)
 {
 	int flags = BaseClass::ObjectCaps();
 
 	return (flags | FCAP_IMPULSE_USE);
 }
-void CHLRSkullkey::Precache(void)
+void CHLRSkullKey::Precache(void)
 {
 	PrecacheModel("models/props/keys/skullkey/skullkey.mdl");
 	PrecacheMaterial("sprites/animglow01.vmt");
 }
-void CHLRSkullkey::CreateSprite(void)
+void CHLRSkullKey::CreateSprite(void)
 {
 	for (int i = 0; i < 2; i++)
 	{
@@ -124,7 +134,6 @@ void CHLRSkullkey::CreateSprite(void)
 		case KEYCOLOR_RED:
 		{
 			pSprite[i]->SetTransparency(kRenderGlow, 255, 0, 0, 150, kRenderFxPulseFast);
-
 			break;
 		}
 		case KEYCOLOR_BLUE:
@@ -141,7 +150,7 @@ void CHLRSkullkey::CreateSprite(void)
 		}
 	}
 }
-/*void CHLRSkullkey::Touch(CBaseEntity *pOther)
+/*void CHLRSkullKey::Touch(CBaseEntity *pOther)
 {
 if (pOther->IsPlayer())
 {
@@ -171,7 +180,7 @@ SetSolidFlags(FSOLID_NOT_SOLID);
 DisplayHud();
 }
 }*/
-void CHLRSkullkey::Pickup(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
+void CHLRSkullKey::Pickup(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
 {
 	m_OnPickup.FireOutput(pActivator, this);
 	SetTouch(NULL);
@@ -179,53 +188,25 @@ void CHLRSkullkey::Pickup(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 	SetModelName(NULL_STRING);
 	SetSolid(SOLID_NONE);
 	SetSolidFlags(FSOLID_NOT_SOLID);
-	DisplayHud();
+	m_bDrawHud = true;
 	for (int i = 0; i < 2; i++)
 	{
 		pSprite[i]->TurnOff();
-		pSprite[i]->SetRenderColorA(0);
-		pSprite[i] = NULL;
-		UTIL_Remove(pSprite[i]);
+		//pSprite[i]->SetRenderColorA(0);
+		//pSprite[i] = NULL;
+		//UTIL_Remove(pSprite[i]);
 	}
-	RemoveDeferred();
+	//RemoveDeferred();
 }
-bool CHLRSkullkey::CreateVPhysics(void)
+bool CHLRSkullKey::CreateVPhysics(void)
 {
 	return BaseClass::CreateVPhysics();
 }
 
-void CHLRSkullkey::DisplayHud(void)
+void CHLRSkullKey::OnRestore()
 {
-	switch (m_nColor)
+	for (int i = 0; i < 2; i++)
 	{
-	case KEYCOLOR_RED:
-	{
-		CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
-		user.MakeReliable();
-		UserMessageBegin(user, "RedSkullKey");
-		WRITE_BOOL(true);
-		MessageEnd();
-		break;
-	}
-	case KEYCOLOR_BLUE:
-	{
-		CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
-		user.MakeReliable();
-		UserMessageBegin(user, "BlueSkullKey");
-		WRITE_BOOL(true);
-		MessageEnd();
-		break;
-	}
-	case KEYCOLOR_PURPLE:
-	{
-		CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
-		user.MakeReliable();
-		UserMessageBegin(user, "PurpleSkullKey");
-		WRITE_BOOL(true);
-		MessageEnd();
-		break;
-	}
-	default:
-		break;
+		pSprite[i] = dynamic_cast<CSprite*>(pSprite[i].Get());
 	}
 }

@@ -96,7 +96,7 @@ void AirboatGunHeavyTracerCallback( const CEffectData &data )
 	// Use default velocity if none specified
 	if ( !flVelocity )
 	{
-		flVelocity = 8000;
+		flVelocity = 6000;
 	}
 
 	//Get out shot direction and length

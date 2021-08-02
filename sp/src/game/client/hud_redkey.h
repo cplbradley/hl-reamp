@@ -12,7 +12,7 @@ public:
 	void togglePrint();
 	virtual void OnThink();
 	virtual void Init(void);
-
+	void LevelInit(void);
 	void MsgFunc_RedKey(bf_read &msg);
 
 	bool bShowKey;

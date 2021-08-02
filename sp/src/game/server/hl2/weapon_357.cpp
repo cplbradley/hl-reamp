@@ -45,6 +45,7 @@ public:
 
 private:
 	void   	DrawBeam(void);
+	void DrawLargeBeam(void);
 public:
 	float	WeaponAutoAimScale()	{ return 0.6f; }
 			void	Precache(void);
@@ -81,6 +82,8 @@ CWeapon357::CWeapon357(void)
 void CWeapon357::Precache(void)
 {
 	PrecacheParticleSystem("railgun_beam");
+	PrecacheParticleSystem("railgun_overdrive");
+	PrecacheScriptSound("railgun.overdrive");
 	BaseClass::Precache();
 }
 //-----------------------------------------------------------------------------
@@ -134,7 +137,7 @@ void CWeapon357::PrimaryAttack(void)
 	m_iPrimaryAttacks++; //i shot, track that
 	gamestats->Event_WeaponFired(pPlayer, true, GetClassname()); //i shot, tell the gamestats i did that
 
-	WeaponSound(SINGLE); //pew noise
+	 //pew noise
 	pPlayer->DoMuzzleFlash(); //muzzle flash
 
 	SendWeaponAnim(ACT_VM_PRIMARYATTACK); //viewmodel animation
@@ -146,21 +149,31 @@ void CWeapon357::PrimaryAttack(void)
 	
 	if (!pPlayer)
 		return; //Always validate a pointer
+	
 	pPlayer->RemoveAmmo(15, m_iPrimaryAmmoType); //remove 15 charge from stock
+
 	Vector vecAbsStart, vecAbsEnd, vecDir;
 	Vector vecSrc = pPlayer->Weapon_ShootPosition(); //start at headlevel
 	Vector vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT); //autoaiming for lower difficulties
 	AngleVectors(pPlayer->EyeAngles(), &vecDir);//convert angle into vector
 
-
 	Vector vecRev = -vecDir;
-	pPlayer->VelocityPunch(vecRev * sk_plr_357_pushamount.GetFloat());
-
-	DrawBeam(); //trigger beam draw
-	pPlayer->FireBullets(10, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0); //shoot 15 bullets as 1 bullet
-
+	if (pPlayer->HasOverdrive())
+	{
+		pPlayer->VelocityPunch(vecRev * (sk_plr_357_pushamount.GetFloat() * 2));
+		DrawLargeBeam(); //trigger beam draw
+		pPlayer->FireBullets(30, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0); //shoot 15 bullets as 1 bullet
+		EmitSound("railgun.overdrive");
+	}
+	else
+	{
+		pPlayer->VelocityPunch(vecRev * sk_plr_357_pushamount.GetFloat());
+		DrawBeam(); //trigger beam draw
+		pPlayer->FireBullets(10, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0); //shoot 15 bullets as 1 bullet
+		WeaponSound(SINGLE);
+	}
 	pPlayer->SetMuzzleFlashTime(gpGlobals->curtime + 0.5);
-
+	
 	//Disorient the player
 	QAngle angles = pPlayer->GetLocalAngles();
 
@@ -213,6 +226,34 @@ void CWeapon357::DrawBeam(void)
 	Vector vecPartStart;
 	Vector vecEndPos = tr.endpos;
 	DispatchParticleEffect("railgun_beam", vecSrc, tr.endpos, GetAbsAngles(), this);
+}
+void CWeapon357::DrawLargeBeam(void)
+{
+	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+	if (!pPlayer)
+		return; //Always validate a pointer
+
+	// Create Vector for direction
+	Vector vecDir;
+
+	// Take the Player's EyeAngles and turn it into a direction
+	AngleVectors(pPlayer->EyeAngles(), &vecDir);
+
+	// Get the Start/End
+	Vector vecAbsStart = pPlayer->EyePosition();
+	Vector vecAbsEnd = vecAbsStart + (vecDir * MAX_TRACE_LENGTH);
+
+	Vector	vForward, vRight, vUp;
+	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
+	Vector vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * 3.0f + vUp * -3.0f;
+
+	trace_t tr; // Create our trace_t class to hold the end result
+	// Do the TraceLine, and write our results to our trace_t class, tr.
+	UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_SHOT_HULL, pPlayer, COLLISION_GROUP_NONE, &tr);
+
+	Vector vecPartStart;
+	Vector vecEndPos = tr.endpos;
+	DispatchParticleEffect("railgun_overdrive", vecSrc, tr.endpos, GetAbsAngles(), this);
 }
 void CWeapon357::SecondaryAttack(void)
 {

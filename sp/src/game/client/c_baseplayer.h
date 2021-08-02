@@ -83,6 +83,15 @@ public:
 	virtual void	Spawn( void );
 	void			GroundPound(void);
 
+	virtual bool HasTripleDamage(void);
+	virtual bool HasQuadJump(void);
+	virtual bool HasOverdrive(void);
+	virtual int GetQuadDmgScale(void);
+	bool m_bTripleDamage;
+	bool m_bQuadJump;
+	bool m_bOverdrive;
+
+
 	void			Dash(void);
 	virtual void	SharedSpawn(); // Shared between client and server.
 	virtual bool	GetSteamID( CSteamID *pID );
@@ -107,6 +116,9 @@ public:
 	virtual float GetPlayerMaxSpeed();
 
 	void	SetAnimationExtension( const char *pExtension );
+
+
+	int m_iPowerupFlags;
 
 	C_BaseViewModel		*GetViewModel( int viewmodelindex = 0, bool bObserverOK=true );
 	C_BaseCombatWeapon	*GetActiveWeapon( void ) const;

@@ -96,6 +96,14 @@ END_DATADESC()
 acttable_t	CWeaponFrag::m_acttable[] = 
 {
 	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_SLAM, true },
+	{ ACT_HL2MP_IDLE, ACT_HL2MP_IDLE_AR2, false },
+	{ ACT_HL2MP_RUN, ACT_HL2MP_RUN_AR2, false },
+	{ ACT_HL2MP_IDLE_CROUCH, ACT_HL2MP_IDLE_CROUCH_AR2, false },
+	{ ACT_HL2MP_WALK_CROUCH, ACT_HL2MP_WALK_CROUCH_AR2, false },
+	{ ACT_HL2MP_GESTURE_RANGE_ATTACK, ACT_HL2MP_GESTURE_RANGE_ATTACK_AR2, false },
+	{ ACT_HL2MP_GESTURE_RELOAD, ACT_GESTURE_RELOAD_SMG1, false },
+	{ ACT_HL2MP_JUMP, ACT_HL2MP_JUMP_AR2, false },
+	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_AR2, false },
 };
 
 IMPLEMENT_ACTTABLE(CWeaponFrag);
@@ -318,7 +326,7 @@ void CWeaponFrag::PrimaryAttack(void)
 
 	float vertfactor = sk_plr_grenade_vert_factor.GetFloat();
 	Vector vecThrow = vecAng * sk_plr_grenade_launch_speed.GetFloat() + Vector(0, 0, vertfactor);
-	Fraggrenade_Create(muzzlePoint, vec3_angle, vecThrow, AngularImpulse(200, random->RandomInt(-600, 600), 0), pPlayer, 3.0f, false);
+	Fraggrenade_Create(muzzlePoint, vec3_angle, vecThrow, AngularImpulse(random->RandomInt(-600, 600), random->RandomInt(-600, 600),0), pPlayer, 3.0f, false);
 	
 	if (pPlayer->HasOverdrive())
 	{

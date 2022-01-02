@@ -13,6 +13,7 @@ public:
 	virtual void OnThink();
 	virtual void Init(void);
 	void		LevelInit(void);
+	void VidInit();
 
 	void MsgFunc_PurpleSkullKey(bf_read &msg);
 
@@ -20,6 +21,7 @@ public:
 protected:
 	virtual void Paint();
 	int m_nPurpleSkullKey;
+	CHudTexture *icon_skullkey;
 };
 
 class CHudRedSkullKey : public CHudElement, public Panel
@@ -32,6 +34,7 @@ public:
 	virtual void OnThink();
 	virtual void Init(void);
 	void		LevelInit(void);
+	void VidInit();
 
 	void MsgFunc_RedSkullKey(bf_read &msg);
 
@@ -39,6 +42,7 @@ public:
 protected:
 	virtual void Paint();
 	int m_nRedSkullKey;
+	CHudTexture *icon_skullkey;
 };
 
 class CHudBlueSkullKey : public CHudElement, public Panel
@@ -49,6 +53,7 @@ public:
 	CHudBlueSkullKey(const char *pElementName);
 	void togglePrint();
 	virtual void OnThink();
+	void VidInit();
 	virtual void Init(void);
 	void		LevelInit(void);
 
@@ -58,4 +63,5 @@ public:
 protected:
 	virtual void Paint();
 	int m_nBlueSkullKey;
+	CHudTexture *icon_skullkey;
 };

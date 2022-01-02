@@ -257,7 +257,7 @@ END_DATADESC()
 //-----------------------------------------------------------------------------
 void CNPC_PoisonZombie::Precache( void )
 {
-	PrecacheModel("models/zombie/poison.mdl");
+	PrecacheModel("models/mechubus.mdl");
 
 	PrecacheScriptSound( "NPC_PoisonZombie.Die" );
 	PrecacheScriptSound( "NPC_PoisonZombie.ThrowWarn" );
@@ -506,8 +506,8 @@ void CNPC_PoisonZombie::SetZombieModel( void )
 	}
 	else
 	{
-		SetModel( "models/zombie/poison.mdl" );
-		SetHullType(HULL_MEDIUM_TALL);
+		SetModel( "models/mechubus.mdl" );
+		SetHullType(HULL_MECHUBUS);
 	}
 
 	SetBodygroup( ZOMBIE_BODYGROUP_HEADCRAB, m_fIsHeadless );
@@ -679,7 +679,7 @@ void CNPC_PoisonZombie::HandleAnimEvent( animevent_t *pEvent )
 		if (pEnemy)
 		{
 			Vector vecSrc;
-			GetAttachment(LookupAttachment("Blood_Left"), vecSrc);
+			GetAttachment(LookupAttachment("cannon"), vecSrc);
 			//Vector vecEnemyEyePos = pEnemy->EyePosition();
 			Vector vecAim = GetShootEnemyDir(vecSrc, false);
 			Vector vecVelocity = vecAim * adjustspd;

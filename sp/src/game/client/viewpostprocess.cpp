@@ -18,7 +18,7 @@
 #include "bitmap/tgawriter.h"
 #include "filesystem.h"
 #include "tier0/vprof.h"
-
+#include "hl2_shareddefs.h"
 #include "proxyentity.h"
 
 //-----------------------------------------------------------------------------
@@ -2213,6 +2213,8 @@ static ConVar r_queued_post_processing( "r_queued_post_processing", "0" );
 static ConVar mat_postprocess_x( "mat_postprocess_x", "4" );
 static ConVar mat_postprocess_y( "mat_postprocess_y", "1" );
 
+
+
 void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, bool bPostVGui )
 {
 	tmZone( TELEMETRY_LEVEL0, TMZF_NONE, "%s", __FUNCTION__ );
@@ -2627,6 +2629,19 @@ void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, b
 			break;
 		}
 	}
+
+	static IMaterial *pMat = materials->FindMaterial("engine/retrographics", TEXTURE_GROUP_OTHER);
+
+	if (mat_classic_render.GetInt() == 1)
+	{
+		if (pMat)
+		{
+			pMat->AddRef();
+			UpdateScreenEffectTexture();
+			pRenderContext->DrawScreenSpaceRectangle(pMat, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
+			
+		}
+}
 
 #if defined( _X360 )
 	pRenderContext->PopVertexShaderGPRAllocation();

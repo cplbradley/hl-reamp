@@ -10,7 +10,10 @@
 #include "grenade_frag.h"
 #include "Sprite.h"
 #include "SpriteTrail.h"
+#include "particle_parse.h"
 #include "soundent.h"
+#include "explode.h"
+#include "hl2_gamestats.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -28,51 +31,9 @@ ConVar sk_npc_dmg_fraggrenade	( "sk_npc_dmg_fraggrenade","0");
 ConVar sk_fraggrenade_radius	( "sk_fraggrenade_radius", "0");
 
 #define GRENADE_MODEL "models/Weapons/w_grenade.mdl"
-
-class CGrenadeFrag : public CBaseGrenade
-{
-	DECLARE_CLASS( CGrenadeFrag, CBaseGrenade );
-
-#if !defined( CLIENT_DLL )
-	DECLARE_DATADESC();
-#endif
-					
-	~CGrenadeFrag( void );
-
-public:
-	void	Spawn( void );
-	void	OnRestore( void );
-	void	Precache( void );
-	bool	CreateVPhysics( void );
-	void	CreateEffects( void );
-	void	SetTimer( float detonateDelay, float warnDelay );
-	void	SetVelocity( const Vector &velocity, const AngularImpulse &angVelocity );
-	int		OnTakeDamage( const CTakeDamageInfo &inputInfo );
-	void	BlipSound() { EmitSound( "Grenade.Blip" ); }
-	void	DelayThink();
-	void	VPhysicsUpdate( IPhysicsObject *pPhysics );
-	void	OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason );
-	void	SetCombineSpawned( bool combineSpawned ) { m_combineSpawned = combineSpawned; }
-	bool	IsCombineSpawned( void ) const { return m_combineSpawned; }
-	void	SetPunted( bool punt ) { m_punted = punt; }
-	bool	WasPunted( void ) const { return m_punted; }
-
-	// this function only used in episodic.
-#if defined(HL2_EPISODIC) && 0 // FIXME: HandleInteraction() is no longer called now that base grenade derives from CBaseAnimating
-	bool	HandleInteraction(int interactionType, void *data, CBaseCombatCharacter* sourceEnt);
-#endif 
-
-	void	InputSetTimer( inputdata_t &inputdata );
-
-protected:
-	CHandle<CSprite>		m_pMainGlow;
-	CHandle<CSpriteTrail>	m_pGlowTrail;
-
-	float	m_flNextBlipTime;
-	bool	m_inSolid;
-	bool	m_combineSpawned;
-	bool	m_punted;
-};
+extern short	g_sModelIndexFireball;		// (in combatweapon.cpp) holds the index for the fireball 
+extern short	g_sModelIndexWExplosion;	// (in combatweapon.cpp) holds the index for the underwater explosion
+extern short	g_sModelIndexSmoke;			// (in combatweapon.cpp) holds the index for the smoke cloud
 
 LINK_ENTITY_TO_CLASS( npc_grenade_frag, CGrenadeFrag );
 
@@ -88,6 +49,7 @@ BEGIN_DATADESC( CGrenadeFrag )
 	
 	// Function Pointers
 	DEFINE_THINKFUNC( DelayThink ),
+	DEFINE_ENTITYFUNC (NadeTouch),
 
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "SetTimer", InputSetTimer ),
@@ -105,7 +67,7 @@ CGrenadeFrag::~CGrenadeFrag( void )
 void CGrenadeFrag::Spawn( void )
 {
 	Precache( );
-
+	
 	SetModel( GRENADE_MODEL );
 
 	if( GetOwnerEntity() && GetOwnerEntity()->IsPlayer() )
@@ -121,15 +83,21 @@ void CGrenadeFrag::Spawn( void )
 
 	m_takedamage	= DAMAGE_YES;
 	m_iHealth		= 1;
-
+	iBounces		= 1;
 	SetSize( -Vector(4,4,4), Vector(4,4,4) );
-	SetCollisionGroup( COLLISION_GROUP_WEAPON );
-	CreateVPhysics();
+	SetCollisionGroup( COLLISION_GROUP_PROJECTILE );
+	SetCollisionBoundsFromModel();
+	SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
+	//CreateVPhysics();
+	
 
 	BlipSound();
 	m_flNextBlipTime = gpGlobals->curtime + FRAG_GRENADE_BLIP_FREQUENCY;
 
+	SetTouch(&CGrenadeFrag::NadeTouch);
+
 	AddSolidFlags( FSOLID_NOT_STANDABLE );
+	SetSolid(SOLID_BBOX);
 
 	m_combineSpawned	= false;
 	m_punted			= false;
@@ -174,23 +142,23 @@ void CGrenadeFrag::CreateEffects( void )
 	if ( m_pGlowTrail != NULL )
 	{
 		m_pGlowTrail->FollowEntity( this );
-		m_pGlowTrail->SetAttachment( this, nAttachment );
+		//m_pGlowTrail->SetAttachment( this, nAttachment );
 		m_pGlowTrail->SetTransparency( kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone );
-		m_pGlowTrail->SetStartWidth( 8.0f );
+		m_pGlowTrail->SetStartWidth( 16.0f );
 		m_pGlowTrail->SetEndWidth( 1.0f );
-		m_pGlowTrail->SetLifeTime( 0.5f );
+		m_pGlowTrail->SetLifeTime( 3.0f );
 	}
 }
 
-bool CGrenadeFrag::CreateVPhysics()
+/*bool CGrenadeFrag::CreateVPhysics()
 {
 	// Create the object in the physics system
-	VPhysicsInitNormal( SOLID_BBOX, 0, false );
+	VPhysicsInitNormal(SOLID_BBOX, FSOLID_NOT_STANDABLE, false);
 	return true;
-}
+}*/
 
 // this will hit only things that are in newCollisionGroup, but NOT in collisionGroupAlreadyChecked
-class CTraceFilterCollisionGroupDelta : public CTraceFilterEntitiesOnly
+/*class CTraceFilterCollisionGroupDelta : public CTraceFilterEntitiesOnly
 {
 public:
 	// It does have a base, but we'll never network anything below here..
@@ -222,9 +190,9 @@ protected:
 	const IHandleEntity *m_pPassEnt;
 	int		m_collisionGroupAlreadyChecked;
 	int		m_newCollisionGroup;
-};
+};*/
 
-void CGrenadeFrag::VPhysicsUpdate( IPhysicsObject *pPhysics )
+/*void CGrenadeFrag::VPhysicsUpdate( IPhysicsObject *pPhysics )
 {
 	BaseClass::VPhysicsUpdate( pPhysics );
 	Vector vel;
@@ -270,7 +238,7 @@ void CGrenadeFrag::VPhysicsUpdate( IPhysicsObject *pPhysics )
 		angVel *= -0.5f;
 		pPhysics->SetVelocity( &vel, &angVel );
 	}
-}
+}*/
 
 
 void CGrenadeFrag::Precache( void )
@@ -278,6 +246,7 @@ void CGrenadeFrag::Precache( void )
 	PrecacheModel( GRENADE_MODEL );
 
 	PrecacheScriptSound( "Grenade.Blip" );
+	PrecacheScriptSound("Grenade.ImpactHard");
 
 	PrecacheModel( "sprites/redglow1.vmt" );
 	PrecacheModel( "sprites/bluelaser1.vmt" );
@@ -294,7 +263,169 @@ void CGrenadeFrag::SetTimer( float detonateDelay, float warnDelay )
 
 	CreateEffects();
 }
+void CGrenadeFrag::NadeTouch(CBaseEntity *pOther)
+{
+	Assert(pOther);
+	CBaseEntity *pOwner = GetOwnerEntity();
 
+	if (!pOwner)
+		return;
+	Msg("collided\n");
+	if (!pOther->GetSolid() == SOLID_NONE)
+	{
+		if (pOther->IsSolidFlagSet(FSOLID_TRIGGER))
+			return;
+		trace_t	tr;
+		tr = BaseClass::GetTouchTrace();
+
+		if (pOther->GetMoveType() == MOVETYPE_NONE && (tr.surface.flags & SURF_SKY))
+		{
+			UTIL_Remove(this);
+		}
+		// See if we struck the world
+		/*if (pOther->GetMoveType() == MOVETYPE_NONE && !(tr.surface.flags & SURF_SKY))
+		{
+			
+		}*/
+
+		if (pOwner->IsPlayer() && pOther->IsNPC())
+		{
+			Detonate();
+		}
+		if (pOwner->IsNPC() && pOther->IsPlayer())
+		{
+			Detonate();
+		}
+		Vector vecDir = GetAbsVelocity();
+		float speed = VectorNormalize(vecDir);
+		float hitDot = DotProduct(tr.plane.normal, -vecDir);
+		iBounces += 0.5f;
+		Vector vReflection = 2.0f * tr.plane.normal * hitDot + vecDir;
+		SetAbsVelocity(vReflection * (speed * 1/iBounces));
+		EmitSound("Grenade.ImpactHard");
+		if (iBounces > 2.0f)
+		{
+			SetLocalAngularVelocity(QAngle(0, 0, 0));
+		}
+		if (speed < 1)
+		{
+			SetMoveType(MOVETYPE_NONE);
+		}
+		Msg("bounce\n");
+		SetGravity(1.0f);
+		//return;
+	}
+}
+/*void CGrenadeFrag::Detonate(void)
+{
+
+	SetTouch(NULL);
+
+	SetModelName(NULL_STRING);//invisible
+	AddSolidFlags(FSOLID_NOT_SOLID);
+	ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), 0, 0,
+		SF_ENVEXPLOSION_NOFIREBALL, 0.0f, this);
+	RadiusDamage(CTakeDamageInfo(this, GetThrower(), 75, DMG_BLAST), GetAbsOrigin(), 128, CLASS_NONE, NULL);
+	SetThink(&CBaseGrenade::SUB_Remove);
+}*/
+void CGrenadeFrag::Explode(trace_t *pTrace, int bitsDamageType)
+{
+#if !defined( CLIENT_DLL )
+
+	SetModelName(NULL_STRING);//invisible
+	AddSolidFlags( FSOLID_NOT_SOLID );
+
+	m_takedamage = DAMAGE_NO;
+
+	// Pull out of the wall a bit
+	if ( pTrace->fraction != 1.0 )
+	{
+		SetAbsOrigin(pTrace->endpos + (pTrace->plane.normal * 0.6));
+	}
+
+	Vector vecAbsOrigin = GetAbsOrigin();
+	int contents = UTIL_PointContents(vecAbsOrigin);
+
+#if defined( TF_DLL )
+	// Since this code only runs on the server, make sure it shows the tempents it creates.
+	// This solves a problem with remote detonating the pipebombs (client wasn't seeing the explosion effect)
+	CDisablePredictionFiltering disabler;
+#endif
+
+	if (pTrace->fraction != 1.0)
+	{
+		Vector vecNormal = pTrace->plane.normal;
+		surfacedata_t *pdata = physprops->GetSurfaceData(pTrace->surface.surfaceProps);
+		CPASFilter filter(vecAbsOrigin);
+
+		te->Explosion(filter, -1.0, // don't apply cl_interp delay
+			&vecAbsOrigin,
+			!(contents & MASK_WATER) ? g_sModelIndexFireball : g_sModelIndexWExplosion,
+			m_DmgRadius * .03,
+			25,
+			TE_EXPLFLAG_NOFIREBALL,
+			m_DmgRadius,
+			m_flDamage,
+			&vecNormal,
+			(char)pdata->game.material);
+	}
+	else
+	{
+		CPASFilter filter(vecAbsOrigin);
+		te->Explosion(filter, -1.0, // don't apply cl_interp delay
+			&vecAbsOrigin,
+			!(contents & MASK_WATER) ? g_sModelIndexFireball : g_sModelIndexWExplosion,
+			m_DmgRadius * .03,
+			25,
+			TE_EXPLFLAG_NOFIREBALL,
+			m_DmgRadius,
+			m_flDamage);
+	}
+
+#if !defined( CLIENT_DLL )
+	CSoundEnt::InsertSound(SOUND_COMBAT, GetAbsOrigin(), BASEGRENADE_EXPLOSION_VOLUME, 3.0);
+#endif
+
+	// Use the thrower's position as the reported position
+	Vector vecReported = m_hThrower ? m_hThrower->GetAbsOrigin() : vec3_origin;
+
+	CTakeDamageInfo info(this, m_hThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported);
+
+	RadiusDamage(info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL);
+
+	UTIL_DecalTrace(pTrace, "Scorch");
+
+	EmitSound("BaseGrenade.Explode");
+
+	SetThink(&CBaseGrenade::SUB_Remove);
+	SetTouch(NULL);
+	SetSolid(SOLID_NONE);
+
+	AddEffects(EF_NODRAW);
+	SetAbsVelocity(vec3_origin);
+
+#if HL2_EPISODIC
+	// Because the grenade is zipped out of the world instantly, the EXPLOSION sound that it makes for
+	// the AI is also immediately destroyed. For this reason, we now make the grenade entity inert and
+	// throw it away in 1/10th of a second instead of right away. Removing the grenade instantly causes
+	// intermittent bugs with env_microphones who are listening for explosions. They will 'randomly' not
+	// hear explosion sounds when the grenade is removed and the SoundEnt thinks (and removes the sound)
+	// before the env_microphone thinks and hears the sound.
+	SetNextThink(gpGlobals->curtime + 0.1);
+#else
+	SetNextThink(gpGlobals->curtime);
+#endif//HL2_EPISODIC
+
+#if defined( HL2_DLL )
+	CBasePlayer *pPlayer = ToBasePlayer(m_hThrower.Get());
+	if (pPlayer)
+	{
+		gamestats->Event_WeaponHit(pPlayer, true, "weapon_frag", info);
+	}
+#endif
+
+#endif
+}
 void CGrenadeFrag::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason )
 {
 	SetThrower( pPhysGunUser );
@@ -416,16 +547,18 @@ void CGrenadeFrag::InputSetTimer( inputdata_t &inputdata )
 	SetTimer( inputdata.value.Float(), inputdata.value.Float() - FRAG_GRENADE_WARN_TIME );
 }
 
-CBaseGrenade *Fraggrenade_Create( const Vector &position, const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, CBaseEntity *pOwner, float timer, bool combineSpawned )
+CBaseGrenade *Fraggrenade_Create(const Vector &position, const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, CBaseEntity *pOwner, float timer, bool combineSpawned)
 {
-	// Don't set the owner here, or the player can't interact with grenades he's thrown
-	CGrenadeFrag *pGrenade = (CGrenadeFrag *)CBaseEntity::Create( "npc_grenade_frag", position, angles, pOwner );
-	
-	pGrenade->SetTimer( timer, timer - FRAG_GRENADE_WARN_TIME );
-	pGrenade->SetVelocity( velocity, angVelocity );
-	pGrenade->SetThrower( ToBaseCombatCharacter( pOwner ) );
+	// Don't set the owner here, or the player can't interact with grenades he's thrown-------------------------------------
+	CGrenadeFrag *pGrenade = (CGrenadeFrag *)CBaseEntity::Create("npc_grenade_frag", position, angles, pOwner);
+	//pGrenade->SetMoveType(MOVETYPE_FLYGRAVITY);
+	pGrenade->SetTimer(timer, timer - FRAG_GRENADE_WARN_TIME);
+	pGrenade->SetAbsVelocity(velocity);
+	pGrenade->ApplyLocalAngularVelocityImpulse(angVelocity);
+	pGrenade->SetThrower(ToBaseCombatCharacter(pOwner));
+	pGrenade->SetGravity(1.0f);
 	pGrenade->m_takedamage = DAMAGE_EVENTS_ONLY;
-	pGrenade->SetCombineSpawned( combineSpawned );
+	pGrenade->SetCombineSpawned(combineSpawned);
 
 	return pGrenade;
 }

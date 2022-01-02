@@ -81,11 +81,14 @@ void CGrenadeFrag::Spawn( void )
 		m_DmgRadius		= sk_fraggrenade_radius.GetFloat();
 	}
 
+
+	AddEffects(EF_NOINTERP);
 	m_takedamage	= DAMAGE_YES;
 	m_iHealth		= 1;
 	iBounces		= 1;
 	SetSize( -Vector(4,4,4), Vector(4,4,4) );
 	SetCollisionGroup( COLLISION_GROUP_PROJECTILE );
+	SetCollisionBoundsFromModel();
 	SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
 	//CreateVPhysics();
 	
@@ -143,9 +146,9 @@ void CGrenadeFrag::CreateEffects( void )
 		m_pGlowTrail->FollowEntity( this );
 		//m_pGlowTrail->SetAttachment( this, nAttachment );
 		m_pGlowTrail->SetTransparency( kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone );
-		m_pGlowTrail->SetStartWidth( 8.0f );
+		m_pGlowTrail->SetStartWidth( 16.0f );
 		m_pGlowTrail->SetEndWidth( 1.0f );
-		m_pGlowTrail->SetLifeTime( 0.5f );
+		m_pGlowTrail->SetLifeTime( 3.0f );
 	}
 }
 
@@ -310,7 +313,7 @@ void CGrenadeFrag::NadeTouch(CBaseEntity *pOther)
 		{
 			SetMoveType(MOVETYPE_NONE);
 		}
-		Msg("bounce\n");
+		//Msg("bounce\n");
 		SetGravity(1.0f);
 		//return;
 	}

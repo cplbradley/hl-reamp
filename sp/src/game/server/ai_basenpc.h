@@ -156,6 +156,17 @@ enum Interruptability_t
 //										( 1 << 15 )	
 // !! Flags above ( 1 << 15 )	 are reserved for NPC sub-classes
 
+
+
+enum MovementClass_t{
+	MOVECLASS_DEFAULT = 0,
+	MOVECLASS_LIGHT,
+	MOVECLASS_HEAVY,
+	MOVECLASS_LONGRANGE,
+	MOVECLASS_SHORTRANGE,
+	MOVECLASS_ALWAYSJUMP,
+	MOVECLASS_NEVERJUMP,
+};
 //-------------------------------------
 //
 // Return codes from CanPlaySequence.
@@ -557,6 +568,11 @@ public:
 	void NotifyPushMove();
 
 public:
+
+
+	bool				IsStunned(void);
+	void				ToggleStunNPC(void);
+	bool				m_bIsStunned;
 	//-----------------------------------------------------
 	//
 	// AI processing - thinking, schedule selection and task running
@@ -656,6 +672,8 @@ private:
 	void				PostRun( void );
 	void				PerformMovement();
 	void				PostMovement();
+
+
 	
 	virtual int			StartTask ( Task_t *pTask ) { DevMsg( "Called wrong StartTask()\n" ); StartTask( (const Task_t *)pTask ); return 0; } // to ensure correct signature in derived classes
 	virtual int			RunTask ( Task_t *pTask )	{ DevMsg( "Called wrong RunTask()\n" ); RunTask( (const Task_t *)pTask ); return 0; } // to ensure correct signature in derived classes
@@ -1243,6 +1261,15 @@ public:
 	// Pathfinding, navigation & movement
 	//
 	//-----------------------------------------------------
+
+	int					m_iMovementClass;
+	int					GetMovementClass(void) { return m_iMovementClass; }
+	void				SetMovementClass(int mvclass) { m_iMovementClass = mvclass; }
+	float				m_fNextAllowedJump;
+
+	void				SetJumpLimit(void);
+
+
 	
 	CAI_Navigator *		GetNavigator() 				{ return m_pNavigator; }
 	const CAI_Navigator *GetNavigator() const 		{ return m_pNavigator; }

@@ -69,6 +69,9 @@
     <Library Include="..\..\lib\public\vstdlib.lib">
       <Filter>Link Libraries</Filter>
     </Library>
+    <Library Include="..\..\lib\public\discord-rpc.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\public\mathlib\amd3dx.h">
@@ -1769,8 +1772,6 @@
     <ClInclude Include="toolframework_server.h">
       <Filter>Tools Framework</Filter>
     </ClInclude>
-    <ClInclude Include="hl2\hlr\hlr_floorsprite.h" />
-    <ClInclude Include="hl2\hlr\hlr_projectile.h" />
     <ClInclude Include="hl2\hlr\hlr_powerups.h">
       <Filter>Source Files\HLR</Filter>
     </ClInclude>
@@ -1797,6 +1798,21 @@
     </ClInclude>
     <ClInclude Include="hlr_keycard.h">
       <Filter>Source Files\HLR</Filter>
+    </ClInclude>
+    <ClInclude Include="hl2\hlr\hlr_floorsprite.h">
+      <Filter>Source Files\HLR</Filter>
+    </ClInclude>
+    <ClInclude Include="hl2\hlr\hlr_projectile.h">
+      <Filter>Source Files\HLR</Filter>
+    </ClInclude>
+    <ClInclude Include="actual_bullet.h">
+      <Filter>Source Files\HLR</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\hl2\hlr\hlr_shareddefs.h">
+      <Filter>Source Files\HLR</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\singleplayer_animstate.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -3554,6 +3570,25 @@
     </ClCompile>
     <ClCompile Include="hlr_skullkey.cpp">
       <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="weapon_rifle.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr_environmental_resistance.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="actual_bullet.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="logic_difficulty.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="item_custom.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="weapon_gluon.cpp" />
+    <ClCompile Include="..\shared\singleplayer_animstate.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

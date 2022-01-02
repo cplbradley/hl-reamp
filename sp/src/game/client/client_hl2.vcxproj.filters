@@ -49,6 +49,9 @@
     <Filter Include="Source Files\HLR">
       <UniqueIdentifier>{1751502a-0bf3-43b2-baf6-5e9df0014e7b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\sse">
+      <UniqueIdentifier>{4d6f2ba6-88b1-4f2d-8183-74f067840903}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\lib\public\bitmap.lib">
@@ -100,6 +103,12 @@
       <Filter>Link Libraries</Filter>
     </Library>
     <Library Include="..\..\lib\public\vtf.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\..\lib\public\discord-rpc.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\..\lib\public\fmodex_vc.lib">
       <Filter>Link Libraries</Filter>
     </Library>
   </ItemGroup>
@@ -1904,6 +1913,36 @@
     <ClInclude Include="episodic\episodic_screenspaceeffects.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
+    <ClInclude Include="hud_poweruptime.h">
+      <Filter>Source Files\HLR</Filter>
+    </ClInclude>
+    <ClInclude Include="hud_environmental_resistance.h">
+      <Filter>Source Files\HLR</Filter>
+    </ClInclude>
+    <ClInclude Include="fmod_manager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderEditor\ISEdit_ModelRender.h">
+      <Filter>Header Files\sse</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderEditor\IVShaderEditor.h">
+      <Filter>Header Files\sse</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderEditor\SEdit_ModelRender.h">
+      <Filter>Header Files\sse</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderEditor\ShaderEditorSystem.h">
+      <Filter>Header Files\sse</Filter>
+    </ClInclude>
+    <ClInclude Include="IBonusOptions.h">
+      <Filter>Source Files\HLR</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\hl2\hlr\hlr_shareddefs.h">
+      <Filter>Source Files\HLR</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\singleplayer_animstate.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mp3player.cpp">
@@ -3430,14 +3469,44 @@
     <ClCompile Include="c_hlr_floorsprite.cpp">
       <Filter>Source Files\HLR</Filter>
     </ClCompile>
-    <ClCompile Include="c_weapon_furybar.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
     <ClCompile Include="c_hlr_keycard.cpp">
       <Filter>Source Files\HLR</Filter>
     </ClCompile>
     <ClCompile Include="c_hlr_skullkey.cpp">
       <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hud_poweruptime.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hud_environmental_resistance.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="c_hlr_environmental_resistance.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="c_hlr_powerups.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="c_actual_bullet.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hud_railgun_screen.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="ShaderEditor\SEdit_ModelRender.cpp">
+      <Filter>Header Files\sse</Filter>
+    </ClCompile>
+    <ClCompile Include="ShaderEditor\ShaderEditorSystem.cpp">
+      <Filter>Header Files\sse</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr_bonusoptions.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr_masochistmode.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\singleplayer_animstate.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

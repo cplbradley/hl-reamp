@@ -2,6 +2,7 @@
 #include "sprite.h"
 #include "baseanimating.h"
 #include "player.h"
+#include "spritetrail.h"
 #include "hlr_floorsprite.h"
 
 
@@ -14,8 +15,7 @@
 LINK_ENTITY_TO_CLASS(hlr_floorsprite, CHLRFloorSprite);
 
 BEGIN_DATADESC(CHLRFloorSprite)
-DEFINE_THINKFUNC(UpdateThink),
-DEFINE_FUNCTION(UpdatePos),
+DEFINE_FIELD(m_pSprite, FIELD_EHANDLE),
 END_DATADESC()
 
 IMPLEMENT_SERVERCLASS_ST(CHLRFloorSprite,DT_FloorSprite)
@@ -36,14 +36,17 @@ void CHLRFloorSprite::Precache(void)
 }
 bool CHLRFloorSprite::InitSprite(void)
 {
-	m_pSprite = CSprite::SpriteCreate(SPRITE_MATERIAL, GetAbsOrigin(), false);
-	m_pSprite->FollowEntity(this);
-	m_pSprite->SetSpriteScale(0.5f);
-	m_pSprite->SetTransparency(kRenderGlow, 255, 255, 255, 64, kRenderFxNoDissipation);
-	m_pSprite->SetGlowProxySize(16.0f);
+	if (!m_pSprite)
+	{
+		m_pSprite = CSprite::SpriteCreate(SPRITE_MATERIAL, GetAbsOrigin(), false);
+		m_pSprite->FollowEntity(this);
+		m_pSprite->SetSpriteScale(0.5f);
+		m_pSprite->SetTransparency(kRenderGlow, 255, 255, 255, 64, kRenderFxNoDissipation);
+		m_pSprite->SetGlowProxySize(16.0f);
+	}
 	return true;
 }
-void CHLRFloorSprite::UpdatePos(void)
+/*void CHLRFloorSprite::UpdatePos(void)
 {
 	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 	Vector vecPlayerPos = pPlayer->GetAbsOrigin();
@@ -60,4 +63,4 @@ void CHLRFloorSprite::UpdateThink(void)
 {
 	UpdatePos();
 	SetNextThink(gpGlobals->curtime);
-}
+}*/

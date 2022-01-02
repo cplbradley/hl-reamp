@@ -1013,9 +1013,8 @@ int CNPC_AntlionGuard::SelectCombatSchedule( void )
 		bCanCharge = ShouldCharge( GetAbsOrigin(), GetEnemy()->GetAbsOrigin(), true, false );
 	}
 	*/
-
 	// Attack if we can
-	if ( HasCondition(COND_CAN_MELEE_ATTACK1) )
+	if (HasCondition(COND_CAN_MELEE_ATTACK1))
 		return SCHED_MELEE_ATTACK1;
 
 	// Otherwise, summon antlions
@@ -1044,7 +1043,7 @@ int CNPC_AntlionGuard::SelectCombatSchedule( void )
 	}
 
 	// Charging
-	if ( HasCondition( COND_ANTLIONGUARD_CAN_CHARGE ) )
+	if (HasCondition(COND_ANTLIONGUARD_CAN_CHARGE))
 	{
 		// Don't let other squad members charge while we're doing it
 		OccupyStrategySlot( SQUAD_SLOT_ANTLIONGUARD_CHARGE );

@@ -25,9 +25,14 @@
 #include "te_effect_dispatch.h"
 #include "weapon_grapple.h"
 #include "particle_parse.h"
+#include "actual_bullet.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+
+
+extern ConVar mat_classic_render;
 class CShotgunPellet : public CBaseCombatCharacter
 {
 	DECLARE_CLASS(CShotgunPellet, CBaseCombatCharacter);
@@ -297,6 +302,15 @@ acttable_t	CWeaponShotgun::m_acttable[] =
 	{ ACT_RANGE_ATTACK1_LOW,		ACT_RANGE_ATTACK_SHOTGUN_LOW,		true },
 	{ ACT_RELOAD_LOW,				ACT_RELOAD_SHOTGUN_LOW,				false },
 	{ ACT_GESTURE_RELOAD,			ACT_GESTURE_RELOAD_SHOTGUN,			false },
+
+	{ ACT_HL2MP_IDLE, ACT_HL2MP_IDLE_SHOTGUN, false },
+	{ ACT_HL2MP_RUN, ACT_HL2MP_RUN_SHOTGUN, false },
+	{ ACT_HL2MP_IDLE_CROUCH, ACT_HL2MP_IDLE_CROUCH_SHOTGUN, false },
+	{ ACT_HL2MP_WALK_CROUCH, ACT_HL2MP_WALK_CROUCH_SHOTGUN, false },
+	{ ACT_HL2MP_GESTURE_RANGE_ATTACK, ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN, false },
+	{ ACT_HL2MP_GESTURE_RELOAD, ACT_HL2MP_GESTURE_RELOAD_SHOTGUN, false },
+	{ ACT_HL2MP_JUMP, ACT_HL2MP_JUMP_SHOTGUN, false },
+	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_SHOTGUN, false },
 };
 
 IMPLEMENT_ACTTABLE(CWeaponShotgun);
@@ -464,7 +478,7 @@ bool CWeaponShotgun::StartReload( void )
 	SetBodygroup(1,0);
 
 	pOwner->m_flNextAttack = gpGlobals->curtime;
-	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
+	m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
 
 	m_bInReload = true;
 	return true;
@@ -505,7 +519,7 @@ bool CWeaponShotgun::Reload( void )
 	SendWeaponAnim( ACT_VM_RELOAD );
 
 	pOwner->m_flNextAttack = gpGlobals->curtime;
-	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
+	m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
 
 	return true;
 }
@@ -531,7 +545,7 @@ void CWeaponShotgun::FinishReload( void )
 	SendWeaponAnim( ACT_SHOTGUN_RELOAD_FINISH );
 
 	pOwner->m_flNextAttack = gpGlobals->curtime;
-	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
+	m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
 }
 
 //-----------------------------------------------------------------------------
@@ -598,7 +612,7 @@ void CWeaponShotgun::DryFire( void )
 	WeaponSound(EMPTY);
 	SendWeaponAnim( ACT_VM_DRYFIRE );
 	
-	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
+	m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
 }
 
 //-----------------------------------------------------------------------------
@@ -628,9 +642,12 @@ void CWeaponShotgun::SecondaryAttack( void )
 	}
 	m_iPrimaryAttacks++;
 	gamestats->Event_WeaponFired(pPlayer, true, GetClassname());
-	WeaponSound(SINGLE);
+	if (mat_classic_render.GetInt() == 0)
+		WeaponSound(SINGLE);
+	else
+		WeaponSound(SPECIAL2);
 	pPlayer->DoMuzzleFlash();
-	SendWeaponAnim(ACT_VM_PRIMARYATTACK);
+	SendWeaponAnim(GetPrimaryAttackActivity());
 	m_flNextPrimaryAttack = gpGlobals->curtime + 0.75;
 	m_flNextSecondaryAttack = gpGlobals->curtime + 0.75;
 	//Disabled so we can shoot all the time that we want
@@ -638,10 +655,29 @@ void CWeaponShotgun::SecondaryAttack( void )
 	Vector vecSrc = pPlayer->Weapon_ShootPosition();
 	Vector vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT);
 	//We will not shoot bullets anymore
+
+	FireBulletsInfo_t info;
+	info.m_iAmmoType = m_iPrimaryAmmoType;
+	info.m_vecSrc = vecSrc;
+	info.m_vecSpread = GetBulletSpread();
+	info.m_vecDirShooting = vecAiming;
+	info.m_pAttacker = GetOwnerEntity();
 	if (pPlayer->HasOverdrive())
-		pPlayer->FireBullets(28, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false);
+	{
+		//pPlayer->FireBullets(28, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false);
+		//info.m_iShots = 28;
+		//FireActualBullet(info, 6800, GetTracerType());
+		info.m_iShots = 28;
+		FireBullets(info);
+	}
 	else
-		pPlayer->FireBullets(14, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false);
+	{
+		//pPlayer->FireBullets(14, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false);
+		//info.m_iShots = 14;
+		info.m_iShots = 14;
+		//FireActualBullet(info, 6800, GetTracerType());
+		FireBullets(info);
+	}
 	QAngle angAiming;
 	VectorAngles(vecAiming, angAiming);
 	DispatchParticleEffect("muzzleflash_orange_large_core", vecSrc, angAiming, this);
@@ -671,35 +707,55 @@ void CWeaponShotgun::PrimaryAttack( void )
 
 	pPlayer->m_nButtons &= ~IN_ATTACK2;
 
-	if (m_iClip1 == 1)
+	if (m_iClip1 == 1 && !pPlayer->HasOverdrive())
 	{
 		SecondaryAttack();
 		return;	
 	}
 	// MUST call sound before removing a round from the clip of a CMachineGun
-	WeaponSound(WPN_DOUBLE);
+	if (mat_classic_render.GetInt() == 0)
+		WeaponSound(WPN_DOUBLE);
+	else
+		WeaponSound(SPECIAL1);
 
 	pPlayer->DoMuzzleFlash();
 
-	SendWeaponAnim( ACT_VM_SECONDARYATTACK );
+	SendWeaponAnim( GetPrimaryAttackActivity() );
 
 	// player "shoot" animation
 	pPlayer->SetAnimation( PLAYER_ATTACK1 );
 
 	// Don't fire again until fire animation has completed
-	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
-	m_iClip1 -= 2;	// Shotgun uses same clip for primary and secondary attacks
+	
+		// Shotgun uses same clip for primary and secondary attacks
 	Vector	vForward, vRight, vUp;
 	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
 	Vector vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * 3.0f + vUp * -2.0f;
 	
-	Vector vecAiming = pPlayer->GetAutoaimVector( AUTOAIM_SCALE_DEFAULT );	
+	Vector vecAiming = pPlayer->GetAutoaimVector( AUTOAIM_SCALE_DEFAULT );
+	FireBulletsInfo_t info;
+	info.m_iAmmoType = m_iPrimaryAmmoType;
+	info.m_vecSrc = vecSrc;
+	info.m_vecSpread = GetBulletSpread();
+	info.m_vecDirShooting = vecAiming;
+	info.m_pAttacker = GetOwnerEntity();
+	info.m_iShots = 30;
 
 	// Fire the bullets
 	if (pPlayer->HasOverdrive())
-		pPlayer->FireBullets(56, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false);
+	{
+		m_iClip1--;
+		//pPlayer->FireBullets(50, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, true, false);
+		m_flNextPrimaryAttack = gpGlobals->curtime + 0.2f;
+		FireBullets(info);
+	}
 	else
-		pPlayer->FireBullets( 28, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false );
+	{
+		//pPlayer->FireBullets(30, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, true, false);
+		m_iClip1 -= 2;
+		m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
+		FireBullets(info);
+	}
 	//pPlayer->ViewPunch( QAngle(random->RandomFloat( -15, 15 ),0,0) );
 	QAngle angAiming;
 	VectorAngles(vecAiming, angAiming);

@@ -854,11 +854,6 @@ bool CPhysBox::HasPreferredCarryAnglesForPlayer( CBasePlayer *pPlayer )
 // CPhysExplosion -- physically simulated explosion
 //
 // ---------------------------------------------------------------------
-#define SF_PHYSEXPLOSION_NODAMAGE			0x0001
-#define SF_PHYSEXPLOSION_PUSH_PLAYER		0x0002
-#define SF_PHYSEXPLOSION_RADIAL				0x0004
-#define	SF_PHYSEXPLOSION_TEST_LOS			0x0008
-#define SF_PHYSEXPLOSION_DISORIENT_PLAYER	0x0010
 
 LINK_ENTITY_TO_CLASS( env_physexplosion, CPhysExplosion );
 
@@ -1048,6 +1043,131 @@ void CPhysExplosion::Explode( CBaseEntity *pActivator, CBaseEntity *pCaller )
 				else
 				{
 					pEntity->TakeDamage( info );
+				}
+			}
+		}
+	}
+}
+void CPhysExplosion::Explode(CBaseEntity *pActivator, CBaseEntity *pCaller, float radius, float magnitude)
+{
+	CBaseEntity *pEntity = NULL;
+	float		adjustedDamage, falloff, flDist;
+	Vector		vecSpot, vecOrigin;
+
+	falloff = 1.0 / 2.5;
+
+	// iterate on all entities in the vicinity.
+	// I've removed the traceline heuristic from phys explosions. SO right now they will
+	// affect entities through walls. (sjb)
+	// UNDONE: Try tracing world-only?
+	while ((pEntity = FindEntity(pEntity, pActivator, pCaller)) != NULL)
+	{
+		// UNDONE: Ask the object if it should get force if it's not MOVETYPE_VPHYSICS?
+		if (pEntity->m_takedamage != DAMAGE_NO && (pEntity->GetMoveType() == MOVETYPE_VPHYSICS || (pEntity->VPhysicsGetObject() /*&& !pEntity->IsPlayer()*/)))
+		{
+			vecOrigin = GetAbsOrigin();
+
+			vecSpot = pEntity->BodyTarget(vecOrigin);
+			// Squash this down to a circle
+			if (HasSpawnFlags(SF_PHYSEXPLOSION_RADIAL))
+			{
+				vecOrigin[2] = vecSpot[2];
+			}
+
+			// decrease damage for an ent that's farther from the bomb.
+			flDist = (vecOrigin - vecSpot).Length();
+
+			if (radius == 0 || flDist <= radius)
+			{
+				if (HasSpawnFlags(SF_PHYSEXPLOSION_TEST_LOS))
+				{
+					Vector vecStartPos = GetAbsOrigin();
+					Vector vecEndPos = pEntity->BodyTarget(vecStartPos, false);
+
+					if (m_flInnerRadius != 0.0f)
+					{
+						// Find a point on our inner radius sphere to begin from
+						Vector vecDirToTarget = (vecEndPos - vecStartPos);
+						VectorNormalize(vecDirToTarget);
+						vecStartPos = GetAbsOrigin() + (vecDirToTarget * m_flInnerRadius);
+					}
+
+					trace_t tr;
+					UTIL_TraceLine(vecStartPos,
+						pEntity->BodyTarget(vecStartPos, false),
+						MASK_SOLID_BRUSHONLY,
+						this,
+						COLLISION_GROUP_NONE,
+						&tr);
+
+					// Shielded
+					if (tr.fraction < 1.0f && tr.m_pEnt != pEntity)
+						continue;
+				}
+
+				adjustedDamage = flDist * falloff;
+				adjustedDamage = magnitude - adjustedDamage;
+
+				if (adjustedDamage < 1)
+				{
+					adjustedDamage = 1;
+				}
+
+				CTakeDamageInfo info(this, this, adjustedDamage, DMG_BLAST);
+				CalculateExplosiveDamageForce(&info, (vecSpot - vecOrigin), vecOrigin);
+
+				if (HasSpawnFlags(SF_PHYSEXPLOSION_PUSH_PLAYER))
+				{
+					if (pEntity->IsPlayer())
+					{
+						Vector vecPushDir = (pEntity->BodyTarget(GetAbsOrigin(), false) - GetAbsOrigin());
+						float dist = VectorNormalize(vecPushDir);
+
+						float flFalloff = RemapValClamped(dist, radius, radius*0.75f, 0.0f, 1.0f);
+
+						if (HasSpawnFlags(SF_PHYSEXPLOSION_DISORIENT_PLAYER))
+						{
+							//Disorient the player
+							QAngle vecDeltaAngles;
+
+							vecDeltaAngles.x = random->RandomInt(-30, 30);
+							vecDeltaAngles.y = random->RandomInt(-30, 30);
+							vecDeltaAngles.z = 0.0f;
+
+							CBasePlayer *pPlayer = ToBasePlayer(pEntity);
+							pPlayer->SnapEyeAngles(GetLocalAngles() + vecDeltaAngles);
+							pEntity->ViewPunch(vecDeltaAngles);
+						}
+
+						Vector vecPush = (vecPushDir*magnitude*flFalloff*2.0f);
+						if (pEntity->GetFlags() & FL_BASEVELOCITY)
+						{
+							vecPush = vecPush + pEntity->GetBaseVelocity();
+						}
+						if (vecPush.z > 0 && (pEntity->GetFlags() & FL_ONGROUND))
+						{
+							pEntity->SetGroundEntity(NULL);
+							Vector origin = pEntity->GetAbsOrigin();
+							origin.z += 1.0f;
+							pEntity->SetAbsOrigin(origin);
+						}
+
+						pEntity->SetBaseVelocity(vecPush);
+						pEntity->AddFlag(FL_BASEVELOCITY);
+
+						// Fire an output that the player has been pushed
+						m_OnPushedPlayer.FireOutput(this, this);
+						continue;
+					}
+				}
+
+				if (HasSpawnFlags(SF_PHYSEXPLOSION_NODAMAGE))
+				{
+					pEntity->VPhysicsTakeDamage(info);
+				}
+				else
+				{
+					pEntity->TakeDamage(info);
 				}
 			}
 		}

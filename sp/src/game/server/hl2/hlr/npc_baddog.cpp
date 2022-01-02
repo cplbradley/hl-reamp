@@ -256,7 +256,10 @@ public:
 
 	void BecomeTorso(const Vector &vecTorsoForce, const Vector &vecLegsForce);
 
-	bool IsJumpLegal(const Vector &startPos, const Vector &apex, const Vector &endPos) const;
+
+
+	int GetMovementClass(void){ return MOVECLASS_ALWAYSJUMP; }
+
 	bool MovementCost(int moveType, const Vector &vecStart, const Vector &vecEnd, float *pCost);
 	bool ShouldFailNav(bool bMovementFailed);
 
@@ -373,6 +376,9 @@ DEFINE_FIELD(m_flNextMeleeAttack, FIELD_TIME),
 DEFINE_FIELD(m_fJustJumped, FIELD_BOOLEAN),	
 DEFINE_FIELD(m_flJumpStartAltitude, FIELD_FLOAT),
 DEFINE_FIELD(m_flTimeUpdateSound, FIELD_TIME),
+DEFINE_AUTO_ARRAY(m_pGlowTrail,FIELD_EHANDLE),
+DEFINE_FIELD(m_pEyesprite,FIELD_EHANDLE),
+DEFINE_FIELD(m_pEyetrail,FIELD_EHANDLE),
 
 // Function Pointers
 DEFINE_ENTITYFUNC(LeapAttackTouch),
@@ -1818,21 +1824,6 @@ void CNPC_BadDog::BecomeTorso(const Vector &vecTorsoForce, const Vector &vecLegs
 // Input  :
 // Output :
 //-----------------------------------------------------------------------------
-bool CNPC_BadDog::IsJumpLegal(const Vector &startPos, const Vector &apex, const Vector &endPos) const
-{
-	const float MAX_JUMP_RISE = 220.0f;
-	const float MAX_JUMP_DISTANCE = 512.0f;
-	const float MAX_JUMP_DROP = 384.0f;
-
-	if (BaseClass::IsJumpLegal(startPos, apex, endPos, MAX_JUMP_RISE, MAX_JUMP_DROP, MAX_JUMP_DISTANCE))
-	{
-		// Hang onto the jump distance. The AI is going to want it.
-		m_flJumpDist = (startPos - endPos).Length();
-
-		return true;
-	}
-	return false;
-}
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------

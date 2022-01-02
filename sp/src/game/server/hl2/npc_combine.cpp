@@ -174,6 +174,10 @@ DEFINE_INPUTFUNC( FIELD_STRING,	"ThrowGrenadeAtTarget",	InputThrowGrenadeAtTarge
 DEFINE_FIELD( m_iLastAnimEventHandled, FIELD_INTEGER ),
 DEFINE_FIELD( m_fIsElite, FIELD_BOOLEAN ),
 DEFINE_FIELD( m_vecAltFireTarget, FIELD_VECTOR ),
+DEFINE_FIELD(m_pLeftEyeG,FIELD_EHANDLE),
+DEFINE_FIELD(m_pRightEyeG,FIELD_EHANDLE),
+DEFINE_FIELD(m_pLeftEyeT,FIELD_EHANDLE),
+DEFINE_FIELD(m_pRightEyeT,FIELD_EHANDLE),
 
 
 DEFINE_KEYFIELD( m_iTacticalVariant, FIELD_INTEGER, "tacticalvariant" ),
@@ -203,6 +207,14 @@ bool CNPC_Combine::CreateComponents()
 	return true;
 }
 
+
+int CNPC_Combine::GetMovementClass(void)
+{
+	if (HasShotgun())
+		return MOVECLASS_SHORTRANGE;
+	else
+		return MOVECLASS_DEFAULT;
+}
 
 //------------------------------------------------------------------------------
 // Purpose: Don't look, only get info from squad.
@@ -319,6 +331,7 @@ void CNPC_Combine::Spawn( void )
 	m_flNextPainSoundTime	= 0;
 	m_flNextAlertSoundTime	= 0;
 	m_bShouldPatrol			= false;
+
 
 
 	CapabilitiesAdd( bits_CAP_TURN_HEAD | bits_CAP_MOVE_GROUND | bits_CAP_MOVE_JUMP | bits_CAP_MOVE_CLIMB);
@@ -1581,7 +1594,7 @@ int CNPC_Combine::SelectCombatSchedule()
 			{
 				// I'm the leader, but I didn't get the job suppressing the enemy. We know this because
 				// This code only runs if the code above didn't assign me SCHED_COMBINE_SUPPRESS.
-				if ( HasCondition( COND_CAN_RANGE_ATTACK1 ) && OccupyStrategySlotRange( SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2 ) )
+				if (HasCondition(COND_CAN_RANGE_ATTACK1) && OccupyStrategySlotRange(SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2))
 				{
 					return SCHED_RANGE_ATTACK1;
 				}
@@ -1993,7 +2006,7 @@ int CNPC_Combine::SelectScheduleAttack()
 			float flTimeEnemySeen = gpGlobals->curtime - flTimeAtFirstHand;
 			if ( flTimeEnemySeen > 4.0 )
 			{
-				if ( CanGrenadeEnemy() && OccupyStrategySlot( SQUAD_SLOT_GRENADE1 ) )
+				if (CanGrenadeEnemy() && OccupyStrategySlot(SQUAD_SLOT_GRENADE1))
 					return SCHED_RANGE_ATTACK2;
 			}
 		}
@@ -2031,7 +2044,7 @@ int CNPC_Combine::SelectScheduleAttack()
 	}
 
 	// Can I shoot?
-	if ( HasCondition(COND_CAN_RANGE_ATTACK1) )
+	if (HasCondition(COND_CAN_RANGE_ATTACK1))
 	{
 
 		// JAY: HL1 behavior missing?
@@ -2152,7 +2165,7 @@ int CNPC_Combine::TranslateSchedule( int scheduleType )
 		break;
 	case SCHED_COMBINE_TAKECOVER_FAILED:
 		{
-			if ( HasCondition( COND_CAN_RANGE_ATTACK1 ) && OccupyStrategySlotRange( SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2 ) )
+			if (HasCondition(COND_CAN_RANGE_ATTACK1) && OccupyStrategySlotRange(SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2))
 			{
 				return TranslateSchedule( SCHED_RANGE_ATTACK1 );
 			}
@@ -3645,6 +3658,7 @@ DEFINE_SCHEDULE
  ""
  "	Interrupts"
  "		COND_ENEMY_DEAD"
+ "		COND_CANT_ATTACK"
  "		COND_LIGHT_DAMAGE"
  "		COND_HEAVY_DAMAGE"
  "		COND_NO_PRIMARY_AMMO"
@@ -3725,6 +3739,7 @@ DEFINE_SCHEDULE
  "		COND_HEAR_DANGER"
  "		COND_HEAR_MOVE_AWAY"
  "		COND_COMBINE_ATTACK_SLOT_AVAILABLE"
+
  )
 
  //=========================================================
@@ -3821,6 +3836,7 @@ DEFINE_SCHEDULE
  "		COND_GIVE_WAY"
  "		COND_HEAR_DANGER"
  "		COND_HEAR_MOVE_AWAY"
+ "		COND_CANT_ATTACK"
  "		COND_COMBINE_NO_FIRE"
  ""
  // Enemy_Occluded				Don't interrupt on this.  Means
@@ -3842,6 +3858,7 @@ DEFINE_SCHEDULE
  "		TASK_COMBINE_PLAY_SEQUENCE_FACE_ALTFIRE_TARGET		ACTIVITY:ACT_COMBINE_AR2_ALTFIRE"
  ""
  "	Interrupts"
+ "		COND_CANT_ATTACK"
  )
 
  //=========================================================
@@ -3859,6 +3876,7 @@ DEFINE_SCHEDULE
  "		TASK_COMBINE_DEFER_SQUAD_GRENADES	0"
  ""
  "	Interrupts"
+ "		COND_CANT_ATTACK"
  )
 
  //=========================================================
@@ -3904,6 +3922,7 @@ DEFINE_SCHEDULE
  "		TASK_SET_SCHEDULE					SCHEDULE:SCHED_COMBINE_WAIT_IN_COVER"	// don't run immediately after throwing grenade.
  ""
  "	Interrupts"
+ "		COND_CANT_ATTACK"
  )
 
 
@@ -3923,6 +3942,7 @@ DEFINE_SCHEDULE
  "		TASK_SET_SCHEDULE					SCHEDULE:SCHED_HIDE_AND_RELOAD"	// don't run immediately after throwing grenade.
  ""
  "	Interrupts"
+ "		COND_CANT_ATTACK"
  )
 
  DEFINE_SCHEDULE	

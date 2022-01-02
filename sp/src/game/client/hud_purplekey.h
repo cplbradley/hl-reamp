@@ -12,13 +12,15 @@ public:
 	void togglePrint();
 	virtual void OnThink();
 	virtual void Init(void);
+	void VidInit(void);
 
 	void MsgFunc_PurpleKey(bf_read &msg);
 	void LevelInit(void);
 	bool bShowKey;
 protected:
 	virtual void Paint();
-	int m_nPurpleKey;
+	//int m_nPurpleKey;
+	CHudTexture *m_icon;
 };
 
 class CHudKeyPanel : public CHudElement, public Panel
@@ -30,4 +32,5 @@ public:
 	virtual void Init(void);
 protected: 
 	virtual void Paint();
+	CHudTexture *m_background;
 };

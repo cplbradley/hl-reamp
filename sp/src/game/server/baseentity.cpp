@@ -5730,9 +5730,6 @@ model_t *CBaseEntity::GetModel( void )
 //-----------------------------------------------------------------------------
 void CBaseEntity::CalcAbsolutePosition( void )
 {
-	if (!IsEFlagSet( EFL_DIRTY_ABSTRANSFORM ))
-		return;
-
 	RemoveEFlags( EFL_DIRTY_ABSTRANSFORM );
 
 	// Plop the entity->parent matrix into m_rgflCoordinateFrame

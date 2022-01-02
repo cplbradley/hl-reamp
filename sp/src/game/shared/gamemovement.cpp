@@ -629,6 +629,10 @@ CGameMovement::CGameMovement( void )
 	m_bDidGroundPound = false;
 	mv					= NULL;
 
+	m_bBlockingAirControl = false;
+	m_bBlockDistanceFromOrigin = false;
+	m_fDistanceFromOrigin = 0;
+
 	memset( m_flStuckCheckTime, 0, sizeof(m_flStuckCheckTime) );
 }
 
@@ -1207,9 +1211,9 @@ void CGameMovement::FinishMove( void )
 	mv->m_nOldButtons = mv->m_nButtons;
 }
 
-#define PUNCH_DAMPING		30.0f		// bigger number makes the response more damped, smaller is less damped
+#define PUNCH_DAMPING		60.0f		// bigger number makes the response more damped, smaller is less damped
 										// currently the system will overshoot, with larger damping values it won't
-#define PUNCH_SPRING_CONSTANT	65.0f	// bigger number increases the speed at which the view corrects
+#define PUNCH_SPRING_CONSTANT	90.0f	// bigger number increases the speed at which the view corrects
 
 //-----------------------------------------------------------------------------
 // Purpose: Decays the punchangle toward 0,0,0.
@@ -1239,6 +1243,7 @@ void CGameMovement::DecayPunchAngle( void )
 			clamp(player->m_Local.m_vecPunchAngle->x, -89.f, 89.f ), 
 			clamp(player->m_Local.m_vecPunchAngle->y, -179.f, 179.f ),
 			clamp(player->m_Local.m_vecPunchAngle->z, -89.f, 89.f ) );
+
 	}
 	else
 	{
@@ -1801,8 +1806,15 @@ void CGameMovement::AirMove(void)
 	}
 
 	//wishdir = vecViewAngle;
-	AirAccelerate(wishdir, wishspeed, sv_airaccelerate.GetFloat());
-
+	if (m_bBlockingAirControl)
+	{
+		if (m_bBlockDistanceFromOrigin)
+			AirAccelerate(wishdir, wishspeed, (10 * m_fDistanceFromOrigin));
+	}
+	else
+	{
+		AirAccelerate(wishdir, wishspeed, sv_airaccelerate.GetFloat());
+	}
 	// Add in any base velocity to the current velocity.
 	VectorAdd(mv->m_vecVelocity, player->GetBaseVelocity(), mv->m_vecVelocity);
 	//VectorAdd(mv->m_vecVelocity, vecViewAngle, mv->m_vecVelocity);
@@ -2391,6 +2403,11 @@ bool CGameMovement::CheckJumpButton( void )
 		return false;
 	}
 
+	if (m_bBlockingAirControl)
+	{
+		if (!m_bBlockDistanceFromOrigin)
+			return false;
+	}
 	if (m_iJumpCount >= GetMaxJumps())
 		return false;
 	
@@ -2555,12 +2572,12 @@ bool CGameMovement::CheckJumpButton( void )
 	OnJump(mv->m_outJumpVel.z);
 
 	// Set jump time.
-	if (gpGlobals->maxClients == 1)
+/*	if (gpGlobals->maxClients == 1)
 	{
 		player->m_Local.m_flJumpTime = GAMEMOVEMENT_JUMP_TIME;
 		player->m_Local.m_bInDuckJump = true;
 	}
-
+	*/
 #if defined( HL2_DLL )
 
 	if (xc_uncrouch_on_jump.GetBool())
@@ -3738,6 +3755,9 @@ void CGameMovement::SetGroundEntity( trace_t *pm )
 
 		mv->m_vecVelocity.z = 0.0f;
 		m_iJumpCount = 0;
+
+		m_bBlockingAirControl = false;
+		m_bBlockDistanceFromOrigin = false;
 /*#ifndef CLIENT_DLL
 		
 		CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());

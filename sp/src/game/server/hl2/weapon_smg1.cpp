@@ -173,6 +173,8 @@ void CNPCPlasmaBall::PlasmaTouch(CBaseEntity *pOther) //i touched something
 			}
 			ApplyMultiDamage();
 		}
+		string_t str = pOther->m_iClassname;
+		DevMsg("Hit Object %s\n", str);
 		Vector vecStall = Vector(0, 0, 0);
 		SetAbsVelocity(vecStall); //freeze in place
 		SetThink(&CNPCPlasmaBall::KillIt); //schedule remove command

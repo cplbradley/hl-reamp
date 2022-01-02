@@ -548,6 +548,9 @@ void CHLRMechubusMissile::Touch(CBaseEntity *pOther)
 		return;
 	if (GetOwnerEntity() && GetOwnerEntity() == pOther)
 		return;
+
+	string_t str = pOther->m_iClassname;
+	DevMsg("Hit Object %s\n", str);
 	SetTouch(NULL);
 	SetSolid(SOLID_NONE);
 	SetMoveType(MOVETYPE_NONE);

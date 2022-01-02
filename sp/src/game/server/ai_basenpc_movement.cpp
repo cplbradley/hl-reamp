@@ -22,6 +22,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+ConVar ai_always_jump("ai_always_jump", "0");
+
 //=============================================================================
 // PATHING & HIGHER LEVEL MOVEMENT
 //-----------------------------------------------------------------------------
@@ -306,8 +308,12 @@ bool CAI_BaseNPC::IsJumpLegal( const Vector &startPos, const Vector &apex, const
 		return false;
 
 	float dist = (startPos - endPos).Length();
-	if ( dist > maxDist + 0.1) 
+	if ( dist > maxDist + 0.1) q
 		return false;*/
+	if (ai_always_jump.GetInt() == 1)
+		return true;
+	if (m_fNextAllowedJump > gpGlobals->curtime)
+		return false;
 	return true;
 }
 
@@ -325,6 +331,51 @@ bool CAI_BaseNPC::IsJumpLegal( const Vector &startPos, const Vector &apex, const
 	return IsJumpLegal( startPos, apex, endPos, MAX_JUMP_RISE, MAX_JUMP_DROP, MAX_JUMP_DISTANCE );
 }
 
+void CAI_BaseNPC::SetJumpLimit(void)
+{
+	int moveclass = GetMovementClass();
+	float diffmod = g_pGameRules->AdjustProjectileSpeed(1);
+	switch (moveclass)
+	{
+	case MOVECLASS_ALWAYSJUMP:
+	{
+		m_fNextAllowedJump = gpGlobals->curtime;
+		break;
+	}
+	case MOVECLASS_NEVERJUMP:
+		break;
+	case MOVECLASS_DEFAULT:
+	{
+		m_fNextAllowedJump = gpGlobals->curtime + 15.0f / diffmod;
+		break;
+	}
+	case MOVECLASS_HEAVY:
+	{
+		m_fNextAllowedJump = gpGlobals->curtime + 25.0f / diffmod;
+		break;
+	}
+	case MOVECLASS_LIGHT:
+	{
+		m_fNextAllowedJump = gpGlobals->curtime + 10.0f / diffmod;
+		break;
+	}
+	case MOVECLASS_SHORTRANGE:
+	{
+		m_fNextAllowedJump = gpGlobals->curtime + 12.0f / diffmod;
+		break;
+	}
+	case MOVECLASS_LONGRANGE:
+	{
+		m_fNextAllowedJump = gpGlobals->curtime + 18.0f / diffmod;
+		break;
+	}
+	default:
+	{
+		m_fNextAllowedJump = gpGlobals->curtime + 15.0f / diffmod;
+		break;
+	}
+	}
+}
 //-----------------------------------------------------------------------------
 // Purpose: Returns a throw velocity from start to end position
 // Input  :

@@ -29,8 +29,6 @@ CHudRedSkullKey::CHudRedSkullKey(const char *pElementName) : CHudElement(pElemen
 	SetAlpha(255);
 
 	//AW Create Texture for Looking around
-	m_nRedSkullKey = surface()->CreateNewTextureID();
-	surface()->DrawSetTextureFile(m_nRedSkullKey, "HUD/skullkey_red", true, true);
 
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT);
 }
@@ -38,13 +36,18 @@ void CHudRedSkullKey::Init(void)
 {
 	HOOK_HUD_MESSAGE(CHudRedSkullKey, RedSkullKey);
 	bShowKey = 0;
+	icon_skullkey = gHUD.GetIcon("skullkey_icon");
+}
+void CHudRedSkullKey::VidInit()
+{
+	Init();
 }
 void CHudRedSkullKey::Paint()
 {
 	SetPaintBorderEnabled(false);
 	SetPaintBackgroundEnabled(false);
-	surface()->DrawSetTexture(m_nRedSkullKey);
-	surface()->DrawTexturedRect(0, 0, 32, 64);
+	Color red = Color(230, 75, 0, 200);
+	icon_skullkey->DrawSelf(0, -8, red);
 }
 void CHudRedSkullKey::togglePrint()
 {
@@ -78,8 +81,6 @@ CHudBlueSkullKey::CHudBlueSkullKey(const char *pElementName) : CHudElement(pElem
 	SetAlpha(255);
 
 	//AW Create Texture for Looking around
-	m_nBlueSkullKey = surface()->CreateNewTextureID();
-	surface()->DrawSetTextureFile(m_nBlueSkullKey, "HUD/skullkey_blue", true, true);
 
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT);
 }
@@ -87,13 +88,18 @@ void CHudBlueSkullKey::Init(void)
 {
 	HOOK_HUD_MESSAGE(CHudBlueSkullKey, BlueSkullKey);
 	bShowKey = 0;
+	icon_skullkey = gHUD.GetIcon("skullkey_icon");
+}
+void CHudBlueSkullKey::VidInit()
+{
+	Init();
 }
 void CHudBlueSkullKey::Paint()
 {
 	SetPaintBorderEnabled(false);
 	SetPaintBackgroundEnabled(false);
-	surface()->DrawSetTexture(m_nBlueSkullKey);
-	surface()->DrawTexturedRect(0, 0, 32, 64);
+	Color blue = Color(0, 180, 255, 200);
+	icon_skullkey->DrawSelf(0, -8, blue);
 }
 void CHudBlueSkullKey::togglePrint()
 {
@@ -126,8 +132,6 @@ CHudPurpleSkullKey::CHudPurpleSkullKey(const char *pElementName) : CHudElement(p
 	SetAlpha(255);
 
 	//AW Create Texture for Looking around
-	m_nPurpleSkullKey = surface()->CreateNewTextureID();
-	surface()->DrawSetTextureFile(m_nPurpleSkullKey, "HUD/skullkey_purple", true, true);
 
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT);
 }
@@ -135,13 +139,18 @@ void CHudPurpleSkullKey::Init(void)
 {
 	HOOK_HUD_MESSAGE(CHudPurpleSkullKey, PurpleSkullKey);
 	bShowKey = 0;
+	icon_skullkey = gHUD.GetIcon("skullkey_icon");
+}
+void CHudPurpleSkullKey::VidInit()
+{
+	Init();
 }
 void CHudPurpleSkullKey::Paint()
 {
 	SetPaintBorderEnabled(false);
 	SetPaintBackgroundEnabled(false);
-	surface()->DrawSetTexture(m_nPurpleSkullKey);
-	surface()->DrawTexturedRect(0, 0, 32, 64);
+	Color purp = Color(75, 0, 100, 200);
+	icon_skullkey->DrawSelf(0, -8, purp);
 }
 void CHudPurpleSkullKey::togglePrint()
 {

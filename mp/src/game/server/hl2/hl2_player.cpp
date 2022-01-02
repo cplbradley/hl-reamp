@@ -79,16 +79,16 @@ extern int gEvilImpulse101;
 
 ConVar sv_autojump( "sv_autojump", "0" );
 
-ConVar hl2_walkspeed( "hl2_walkspeed", "150" );
+ConVar hl2_walkspeed( "hl2_walkspeed", "450" );
 ConVar hl2_normspeed( "hl2_normspeed", "450" );
 ConVar hl2_sprintspeed( "hl2_sprintspeed", "450" );
 
 ConVar hl2_darkness_flashlight_factor ( "hl2_darkness_flashlight_factor", "1" );
 
 #ifdef HL2MP
-	#define	HL2_WALK_SPEED 150
-	#define	HL2_NORM_SPEED 190
-	#define	HL2_SPRINT_SPEED 320
+	#define	HL2_WALK_SPEED 450
+	#define	HL2_NORM_SPEED 450
+	#define	HL2_SPRINT_SPEED 450
 #else
 	#define	HL2_WALK_SPEED hl2_walkspeed.GetFloat()
 	#define	HL2_NORM_SPEED hl2_normspeed.GetFloat()

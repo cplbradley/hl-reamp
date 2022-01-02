@@ -310,6 +310,12 @@ public:
 	inline float					GetPlaybackRate();
 	inline void						SetPlaybackRate( float rate );
 
+
+
+	int		m_iMuzzleR;
+	int		m_iMuzzleG;
+	int		m_iMuzzleB;
+
 	void							SetModelScale( float scale, float change_duration = 0.0f  );
 	float							GetModelScale() const { return m_flModelScale; }
 	inline bool						IsModelScaleFractional() const;  /// very fast way to ask if the model scale is < 1.0f  (faster than if (GetModelScale() < 1.0f) )

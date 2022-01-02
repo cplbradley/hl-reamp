@@ -1598,7 +1598,11 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 	static int	tracerCount;
 	trace_t		tr;
 	CAmmoDef*	pAmmoDef	= GetAmmoDef();
-	int			nDamageType	= pAmmoDef->DamageType(info.m_iAmmoType);
+	int			nDamageType;
+	if (info.m_iDamageType == DMG_GENERIC)
+		nDamageType = pAmmoDef->DamageType(info.m_iAmmoType);
+	else
+		nDamageType = info.m_iDamageType;
 	int			nAmmoFlags	= pAmmoDef->Flags(info.m_iAmmoType);
 	
 	bool bDoServerEffects = true;
@@ -1612,6 +1616,13 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 	{
 		CBasePlayer *pPlayer = dynamic_cast<CBasePlayer*>(this);
 
+		if (!pPlayer)
+			return;
+		if (pPlayer->IsDead())
+			return;
+		CBaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
+		if (!pWeapon)
+			return;
 		int rumbleEffect = pPlayer->GetActiveWeapon()->GetRumbleEffect();
 
 		if( rumbleEffect != RUMBLE_INVALID )
@@ -1738,7 +1749,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 				pShootThroughPortal = NULL;
 			}
 #else
-			AI_TraceHull( info.m_vecSrc, vecEnd, Vector( -3, -3, -3 ), Vector( 3, 3, 3 ), MASK_SHOT, &traceFilter, &tr );
+			AI_TraceLine(info.m_vecSrc, vecEnd, MASK_SHOT, &traceFilter, &tr);
 #endif //#ifdef PORTAL
 		}
 		else

@@ -111,6 +111,8 @@ public:
 	bool			OnBeginMoveAndShoot();
 	void			OnEndMoveAndShoot();
 
+	int				GetMovementClass(void);
+
 	// Combat
 	WeaponProficiency_t CalcWeaponProficiency( CBaseCombatWeapon *pWeapon );
 	bool			HasShotgun();

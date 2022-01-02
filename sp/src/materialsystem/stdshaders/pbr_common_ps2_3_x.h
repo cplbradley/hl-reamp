@@ -97,6 +97,8 @@ float3 calculateLight(float3 lightIn, float3 lightIntensity, float3 lightOut, fl
 
     // F - Calculate Fresnel term for direct lighting
     float3 F = fresnelSchlick(fresnelReflectance, max(0.0, dot(HalfAngle, lightOut)));
+    float3 F2 = fresnelSchlick(fresnelReflectance, max(0.0, dot(normal, lightOut)));
+    float3 F3 = fresnelSchlick(fresnelReflectance, max(0.0, dot(normal, lightIn)));
 
     // D - Calculate normal distribution for specular BRDF
     float D = ndfGGX(cosHalfAngle, roughness);
@@ -104,30 +106,28 @@ float3 calculateLight(float3 lightIn, float3 lightIntensity, float3 lightOut, fl
     // Calculate geometric attenuation for specular BRDF
     float G = gaSchlickGGX(cosLightIn, lightDirectionAngle, roughness);
 
+    // Cook-Torrance specular microfacet BRDF
+    float3 specularBRDF = (F * D * G) / max(EPSILON, 4.0 * cosLightIn * lightDirectionAngle);
+
+#if LIGHTMAPPED && !FLASHLIGHT
+
+    // Ambient light from static lights is already precomputed in the lightmap. Don't add it again
+    return specularBRDF * lightIntensity * cosLightIn;
+
+#else
+
     // Diffuse scattering happens due to light being refracted multiple times by a dielectric medium
     // Metals on the other hand either reflect or absorb energso diffuse contribution is always, zero
     // To be energy conserving we must scale diffuse BRDF contribution based on Fresnel factor & metalness
-#if SPECULAR
-    // Metalness is not used if F0 map is available
-    float3 kd = float3(1, 1, 1) - F;
-#else
-    float3 kd = lerp(float3(1, 1, 1) - F, float3(0, 0, 0), metalness);
-#endif
-
+    float3 kd = lerp((float3(1, 1, 1) - F2 ) * (float3(1, 1, 1) - F3 ), float3(0, 0, 0), metalness);
     float3 diffuseBRDF = kd * albedo;
-
-    // Cook-Torrance specular microfacet BRDF
-    float3 specularBRDF = (F * D * G) / max(EPSILON, 4.0 * cosLightIn * lightDirectionAngle);
-#if LIGHTMAPPED && !FLASHLIGHT
-    // Ambient light from static lights is already precomputed in the lightmap. Don't add it again
-    return specularBRDF * lightIntensity * cosLightIn;
-#else
     return (diffuseBRDF + specularBRDF) * lightIntensity * cosLightIn;
-#endif
+
+#endif // LIGHTMAPPED && !FLASHLIGHT
 }
 
 // Get diffuse ambient light
-float3 ambientLookupLightmap(float3 normal, float3 EnvAmbientCube[6], float3 textureNormal, float4 lightmapTexCoord1And2, float4 lightmapTexCoord3, sampler LightmapSampler, float4 g_DiffuseModulation)
+float3 ambientLookupLightmap(float3 normal, float3 textureNormal, float4 lightmapTexCoord1And2, float4 lightmapTexCoord3, sampler LightmapSampler, float4 g_DiffuseModulation)
 {
     float2 bumpCoord1;
     float2 bumpCoord2;
@@ -156,30 +156,17 @@ float3 ambientLookupLightmap(float3 normal, float3 EnvAmbientCube[6], float3 tex
     return diffuseLighting;
 }
 
-float3 ambientLookup(float3 normal, float3 EnvAmbientCube[6], float3 textureNormal, float4 lightmapTexCoord1And2, float4 lightmapTexCoord3, sampler LightmapSampler, float4 g_DiffuseModulation)
+float3 ambientLookup(float3 normal, float3 ambientCube[6], float3 textureNormal, float4 lightmapTexCoord1And2, float4 lightmapTexCoord3, sampler LightmapSampler, float4 g_DiffuseModulation)
 {
 #if LIGHTMAPPED
-    return ambientLookupLightmap(normal, EnvAmbientCube, textureNormal, lightmapTexCoord1And2, lightmapTexCoord3, LightmapSampler, g_DiffuseModulation);
+    return ambientLookupLightmap(normal, textureNormal, lightmapTexCoord1And2, lightmapTexCoord3, LightmapSampler, g_DiffuseModulation);
 #else
-    return PixelShaderAmbientLight(normal, EnvAmbientCube);
+    return PixelShaderAmbientLight(normal, ambientCube);
 #endif
 }
 
-// Create an ambient cube from the envmap
-void setupEnvMapAmbientCube(out float3 EnvAmbientCube[6], sampler EnvmapSampler)
-{
-    float4 directionPosX = { 1, 0, 0, 12 }; float4 directionNegX = {-1, 0, 0, 12 };
-    float4 directionPosY = { 0, 1, 0, 12 }; float4 directionNegY = { 0,-1, 0, 12 };
-    float4 directionPosZ = { 0, 0, 1, 12 }; float4 directionNegZ = { 0, 0,-1, 12 };
-    EnvAmbientCube[0] = ENV_MAP_SCALE * texCUBElod(EnvmapSampler, directionPosX).rgb;
-    EnvAmbientCube[1] = ENV_MAP_SCALE * texCUBElod(EnvmapSampler, directionNegX).rgb;
-    EnvAmbientCube[2] = ENV_MAP_SCALE * texCUBElod(EnvmapSampler, directionPosY).rgb;
-    EnvAmbientCube[3] = ENV_MAP_SCALE * texCUBElod(EnvmapSampler, directionNegY).rgb;
-    EnvAmbientCube[4] = ENV_MAP_SCALE * texCUBElod(EnvmapSampler, directionPosZ).rgb;
-    EnvAmbientCube[5] = ENV_MAP_SCALE * texCUBElod(EnvmapSampler, directionNegZ).rgb;
-}
-
 #if PARALLAXOCCLUSION
+#if !WVT
 float2 parallaxCorrect(float2 texCoord, float3 viewRelativeDir, sampler depthMap, float parallaxDepth, float parallaxCenter)
 {
     float fLength = length( viewRelativeDir );
@@ -212,6 +199,7 @@ float2 parallaxCorrect(float2 texCoord, float3 viewRelativeDir, sampler depthMap
 
     float2 texOffset2 = 0;
 
+    [unroll]
     while ( nStepIndex < nNumSteps ) 
     {
         vTexCurrentOffset -= vTexOffsetPerStep;
@@ -245,6 +233,74 @@ float2 parallaxCorrect(float2 texCoord, float3 viewRelativeDir, sampler depthMap
     float2 texSample = texCoord - vParallaxOffset;
     return texSample;
 }
+#else
+float2 parallaxCorrect(float2 texCoord, float3 viewRelativeDir, sampler depthMap, sampler depthMap2, float blend, float parallaxDepth, float parallaxCenter)
+{
+    float fLength = length( viewRelativeDir );
+    float fParallaxLength = sqrt( fLength * fLength - viewRelativeDir.z * viewRelativeDir.z ) / viewRelativeDir.z; 
+    float2 vParallaxDirection = normalize(  viewRelativeDir.xy );
+    float2 vParallaxOffsetTS = vParallaxDirection * fParallaxLength;
+    vParallaxOffsetTS *= parallaxDepth;
+
+     // Compute all the derivatives:
+    float2 dx = ddx( texCoord );
+    float2 dy = ddy( texCoord );
+
+    int nNumSteps = 20;
+
+    float fCurrHeight = 0.0;
+    float fStepSize   = 1.0 / (float) nNumSteps;
+    float fPrevHeight = 1.0;
+    float fNextHeight = 0.0;
+
+    int    nStepIndex = 0;
+    bool   bCondition = true;
+
+    float2 vTexOffsetPerStep = fStepSize * vParallaxOffsetTS;
+    float2 vTexCurrentOffset = texCoord;
+    float  fCurrentBound     = 1.0;
+    float  fParallaxAmount   = 0.0;
+
+    float2 pt1 = 0;
+    float2 pt2 = 0;
+
+    float2 texOffset2 = 0;
+
+    [unroll]
+    while ( nStepIndex < nNumSteps ) 
+    {
+        vTexCurrentOffset -= vTexOffsetPerStep;
+
+        // Sample height map which in this case is stored in the alpha channel of the normal map:
+        fCurrHeight = parallaxCenter + lerp(tex2Dgrad( depthMap, vTexCurrentOffset, dx, dy ).a, tex2Dgrad( depthMap2, vTexCurrentOffset, dx, dy ).a, blend);
+
+        fCurrentBound -= fStepSize;
+
+        if ( fCurrHeight > fCurrentBound ) 
+        {     
+            pt1 = float2( fCurrentBound, fCurrHeight );
+            pt2 = float2( fCurrentBound + fStepSize, fPrevHeight );
+
+            texOffset2 = vTexCurrentOffset - vTexOffsetPerStep;
+
+            nStepIndex = nNumSteps + 1;
+        }
+        else
+        {
+            nStepIndex++;
+            fPrevHeight = fCurrHeight;
+        }
+    }   // End of while ( nStepIndex < nNumSteps )
+
+    float fDelta2 = pt2.x - pt2.y;
+    float fDelta1 = pt1.x - pt1.y;
+    fParallaxAmount = (pt1.x * fDelta2 - pt2.x * fDelta1 ) / ( fDelta2 - fDelta1 );
+    float2 vParallaxOffset = vParallaxOffsetTS * (1 - fParallaxAmount);
+    // The computed texture offset for the displaced point on the pseudo-extruded surface:
+    float2 texSample = texCoord - vParallaxOffset;
+    return texSample;
+}
+#endif
 #endif
 
 float3 worldToRelative(float3 worldVector, float3 surfTangent, float3 surfBasis, float3 surfNormal)
@@ -255,3 +311,18 @@ float3 worldToRelative(float3 worldVector, float3 surfTangent, float3 surfBasis,
        dot(worldVector, surfNormal)
    );
 }
+
+float3 rgb2hsv(float3 c)
+{
+    float4 P = (c.g < c.b) ? float4(c.bg, -1.0, 2.0 / 3.0) : float4(c.gb, 0.0, -1.0 / 3.0);
+    float4 Q = (c.r < P.x) ? float4(P.xyw, c.r) : float4(c.r, P.yzx);
+    float C = Q.x - min(Q.w, Q.y);
+    return float3(abs(Q.z + (Q.w - Q.y) / (6.0 * C + EPSILON)), C / (Q.x + EPSILON), Q.x);
+}
+
+float3 hsv2rgb(float3 c)
+{
+    float4 K = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    float3 p = abs(frac(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * lerp(K.xxx, saturate(p - K.xxx), c.y);
+} 

@@ -69,6 +69,8 @@ void C_HLRKeycard::CheckHudElement()
 	case KEYCOLOR_RED:
 	{
 		m_pRedKey->bShowKey = m_bDrawHud;
+		if (m_bDrawHud)
+			DevMsg("clientside key bool true");
 		break;
 	}
 	case KEYCOLOR_BLUE:

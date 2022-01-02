@@ -11,7 +11,7 @@
 // implementation of CHudBattery class
 //
 #include "cbase.h"
-#include "hud.h"
+/*#include "hud.h"
 #include "hud_macros.h"
 #include "view.h"
 
@@ -86,7 +86,7 @@ void CHudBattery::Init( void )
 //-----------------------------------------------------------------------------
 void CHudBattery::Reset( void )
 {
-	SetLabelText(g_pVGuiLocalize->Find("#Valve_Hud_SUIT"));
+	//SetLabelText(g_pVGuiLocalize->Find("#Valve_Hud_SUIT"));
 	SetDisplayValue(m_iBat);
 }
 
@@ -175,6 +175,6 @@ void CHudBattery::Paint(void)
 		int x = text_xpos + (nLabelWidth - m_iconArmor->Width() / 2);
 		int y = text_ypos - (nLabelHeight + (m_iconArmor->Height() / 2));
 
-		m_iconArmor->DrawSelf(x, y, GetFgColor());
+		m_iconArmor->DrawSelf(x + 32, y-4, GetFgColor());
 	}
-}
+}*/

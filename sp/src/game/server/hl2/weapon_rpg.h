@@ -63,14 +63,13 @@ public:
 
 	unsigned int PhysicsSolidMaskForEntity( void ) const;
 
-	CHandle<CWeaponRPG>		m_hOwner;
-
 	static CMissile *Create( const Vector &vecOrigin, const QAngle &vecAngles, edict_t *pentOwner );
 
 	void CreateDangerSounds( bool bState ){ m_bCreateDangerSounds = bState; }
 
 	static void AddCustomDetonator( CBaseEntity *pEntity, float radius, float height = -1 );
 	static void RemoveCustomDetonator( CBaseEntity *pEntity );
+	void CreateSmokeTrail(void);
 
 protected:
 	virtual void DoExplosion();	
@@ -78,7 +77,7 @@ protected:
 	virtual int AugerHealth() { return m_iMaxHealth - 20; }
 
 	// Creates the smoke trail
-	void CreateSmokeTrail( void );
+
 
 	// Gets the shooting position 
 	void GetShootPosition( CLaserDot *pLaserDot, Vector *pShootPosition );

@@ -42,7 +42,7 @@ CAI_TestHull*	CAI_TestHull::pTestHull			= NULL;
 #ifdef CSTRIKE_DLL
 #define PLAYER_MODEL "models/player/ct_urban.mdl"
 #else
-#define PLAYER_MODEL "models/player.mdl"
+#define PLAYER_MODEL "models/player/gordon.mdl"
 #endif
 
 //-----------------------------------------------------------------------------
@@ -128,9 +128,9 @@ void CAI_TestHull::ReturnTestHull(void)
 //-----------------------------------------------------------------------------
 bool CAI_TestHull::IsJumpLegal(const Vector &startPos, const Vector &apex, const Vector &endPos) const
 {
-	const float MAX_JUMP_RISE		= 1024.0f;
-	const float MAX_JUMP_DISTANCE	= 1024.0f;
-	const float MAX_JUMP_DROP		= 1024.0f;
+	const float MAX_JUMP_RISE		= 9999.0f;
+	const float MAX_JUMP_DISTANCE	= 9999.0f;
+	const float MAX_JUMP_DROP		= 9999.0f;
 
 	return BaseClass::IsJumpLegal( startPos, apex, endPos, MAX_JUMP_RISE, MAX_JUMP_DISTANCE, MAX_JUMP_DROP );
 }

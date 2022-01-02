@@ -1,12 +1,13 @@
 #include "cbase.h"
 #include "c_basecombatweapon.h"
 #include "particle_property.h"
+#include "c_basehlcombatweapon.h"
+#include "particles_new.h"
 
 
-
-class C_WeaponFurybar : public C_BaseCombatWeapon
+class C_WeaponFurybar : public C_BaseHLBludgeonWeapon
 {
-	DECLARE_CLASS(C_WeaponFurybar, C_BaseCombatWeapon);
+	DECLARE_CLASS(C_WeaponFurybar, C_BaseHLBludgeonWeapon);
 	DECLARE_CLIENTCLASS();
 public:
 
@@ -20,9 +21,9 @@ public:
 	CNewParticleEffect *m_pFlame;
 };
 
-IMPLEMENT_CLIENTCLASS_DT(C_WeaponFurybar, DT_WeaponFuryBar, CWeaponFurybar)
-RecvPropBool(RECVINFO(m_bShouldDrawFlames))
-END_RECV_TABLE();
+IMPLEMENT_CLIENTCLASS_DT(C_WeaponFurybar,DT_WeaponFurybar,CWeaponFurybar)
+RecvPropBool(RECVINFO(m_bShouldDrawFlames)),
+END_RECV_TABLE()
 
 void C_WeaponFurybar::OnDataChanged(DataUpdateType_t type)
 {
@@ -38,20 +39,29 @@ void C_WeaponFurybar::ClientThink()
 
 void C_WeaponFurybar::CheckFlames()
 {
-	/*if (m_bShouldDrawFlames)
+	if (m_bShouldDrawFlames)
 	{
+		/*CBasePlayer *pPlayer = CBasePlayer::GetLocalPlayer();
+		C_BaseViewModel *pvm = pPlayer->GetViewModel();
+		Vector vStart, vEnd;
+		int iAttachment1 = pvm->LookupAttachment("0");
+		int iAttachment2 = pvm->LookupAttachment("1");
+		pvm->GetAttachment(iAttachment1, vStart);
+		pvm->GetAttachment(iAttachment2, vEnd);
+
 		if (!m_pFlame)
 		{
-			CBasePlayer *pPlayer = CBasePlayer::GetLocalPlayer();
-			int iAttachment = ParticleProp()->GetParticleAttachment(pPlayer->GetViewModel(), "0", "crowbar_burn");
-			m_pFlame = ParticleProp()->Create("crowbar_burn", PATTACH_POINT_FOLLOW, iAttachment);
+			m_pFlame = ParticleProp()->Create("furybar_burn", PATTACH_CUSTOMORIGIN, 0);
 		}
+		m_pFlame->SetControlPoint(0, vStart);
+		m_pFlame->SetControlPoint(1, vEnd);*/
+
 	}
 	else
 	{
 		if (m_pFlame)
 		{
-			m_pFlame->StopEmission();
+			//m_pFlame->StopEmission();
 		}
-	}*/
+	}
 }

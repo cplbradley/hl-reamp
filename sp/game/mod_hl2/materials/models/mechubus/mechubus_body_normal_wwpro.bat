@@ -1,0 +1,2 @@
+cd /D "C:\Program Files\Wall Worm\Wall Worm Pro Pack/WallWorm.com/VTFLib/bin/x64"
+.\VTFCmd.exe -file "C:\Users\Computor\Documents\Allegorithmic\Substance Designer\export\chaingun\mechubus_body_normal.tga" -output "D:\Steam\steamapps\sourcemods\hlr\materials\models\mechubus"  -version "7.4" -format "bgra8888"  -alphaformat "bgra8888" -mfilter "BOX" -msharpen "NONE" -bumpscale 1.0 -resize -rwidth 512 -rheight 512 -rmethod "NEAREST" -rfilter "TRIANGLE" -rsharpen "NONE"

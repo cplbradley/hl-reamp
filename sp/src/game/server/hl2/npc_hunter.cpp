@@ -1290,9 +1290,11 @@ public:
 	//---------------------------------
 	// Navigation & Movement
 	//---------------------------------
+
+	int				GetMovementClass(void){ return MOVECLASS_HEAVY; }
 	bool			OverrideMoveFacing( const AILocalMoveGoal_t &move, float flInterval );
 	float			MaxYawSpeed();
-	bool			IsJumpLegal(const Vector &startPos, const Vector &apex, const Vector &endPos) const;
+
 	float			GetJumpGravity() const		{ return 3.0f; }
 	bool			ShouldProbeCollideAgainstEntity( CBaseEntity *pEntity );
 	void            TaskFail( AI_TaskFailureCode_t code );
@@ -5904,27 +5906,7 @@ float CNPC_Hunter::MaxYawSpeed()
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-bool CNPC_Hunter::IsJumpLegal(const Vector &startPos, const Vector &apex, const Vector &endPos) const
-{
-	float MAX_JUMP_RISE		= 220.0f;
-	float MAX_JUMP_DISTANCE	= 512.0f;
-	float MAX_JUMP_DROP		= 384.0f;
 
-	trace_t tr;	
-	UTIL_TraceHull( startPos, startPos, GetHullMins(), GetHullMaxs(), MASK_NPCSOLID, this, COLLISION_GROUP_NONE, &tr );
-	if ( tr.startsolid )
-	{
-		// Trying to start a jump in solid! Consider checking for this in CAI_MoveProbe::JumpMoveLimit.
-		Assert( 0 );
-		return false;
-	}
-
-	if ( BaseClass::IsJumpLegal( startPos, apex, endPos, MAX_JUMP_RISE, MAX_JUMP_DROP, MAX_JUMP_DISTANCE ) )
-	{
-		return true;
-	}
-	return false;
-}
 
 
 //-----------------------------------------------------------------------------

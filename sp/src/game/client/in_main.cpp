@@ -19,6 +19,7 @@
 #include "bitbuf.h"
 #include "checksum_md5.h"
 #include "hltvcamera.h"
+#include "c_baseplayer.h"
 #if defined( REPLAY_ENABLED )
 #include "replay/replaycamera.h"
 #endif
@@ -64,11 +65,12 @@ ConVar cl_yawspeed( "cl_yawspeed", "210", FCVAR_NONE, "Client yaw speed.", true,
 ConVar cl_pitchspeed( "cl_pitchspeed", "225", FCVAR_NONE, "Client pitch speed.", true, -100000, true, 100000 );
 ConVar cl_pitchdown( "cl_pitchdown", "89", FCVAR_CHEAT );
 ConVar cl_pitchup( "cl_pitchup", "89", FCVAR_CHEAT );
+ConVar cl_flippy("cl_flippy", "0", FCVAR_NONE);
 #if defined( CSTRIKE_DLL )
 ConVar cl_sidespeed( "cl_sidespeed", "400", FCVAR_CHEAT );
 ConVar cl_upspeed( "cl_upspeed", "320", FCVAR_ARCHIVE|FCVAR_CHEAT );
 ConVar cl_forwardspeed( "cl_forwardspeed", "400", FCVAR_ARCHIVE|FCVAR_CHEAT );
-ConVar cl_backspeed( "cl_backspeed", "400", FCVAR_ARCHIVE|FCVAR_CHEAT );
+ConVar cl_backspeed( "cl_backspeed", "400", FCVAR_ARCHIVE|FCVAR_CHEAT ); 
 #else
 ConVar cl_sidespeed( "cl_sidespeed", "450", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar cl_upspeed( "cl_upspeed", "320", FCVAR_REPLICATED | FCVAR_CHEAT );
@@ -735,24 +737,46 @@ ClampAngles
 */
 void CInput::ClampAngles( QAngle& viewangles )
 {
-	if ( viewangles[PITCH] > cl_pitchdown.GetFloat() )
+	if (cl_flippy.GetBool())
 	{
-		viewangles[PITCH] = cl_pitchdown.GetFloat();
+		CBasePlayer *pPlayer = CBasePlayer::GetLocalPlayer();
+		if (!pPlayer)
+			return;
+		if (!pPlayer->GetGroundEntity() == NULL)
+		{
+			if (viewangles[PITCH] > cl_pitchdown.GetFloat())
+			{
+				viewangles[PITCH] = cl_pitchdown.GetFloat();
+			}
+			if (viewangles[PITCH] < -cl_pitchup.GetFloat())
+			{
+				viewangles[PITCH] = -cl_pitchup.GetFloat();
+			}
+		}
+		else
+			return;
 	}
-	if ( viewangles[PITCH] < -cl_pitchup.GetFloat() )
+	else
 	{
-		viewangles[PITCH] = -cl_pitchup.GetFloat();
+		if (viewangles[PITCH] > cl_pitchdown.GetFloat())
+		{
+			viewangles[PITCH] = cl_pitchdown.GetFloat();
+		}
+		if (viewangles[PITCH] < -cl_pitchup.GetFloat())
+		{
+			viewangles[PITCH] = -cl_pitchup.GetFloat();
+		}
 	}
 
 #ifndef PORTAL	// Don't constrain Roll in Portal because the player can be upside down! -Jeep
-	if ( viewangles[ROLL] > 50 )
+	/*if ( viewangles[ROLL] > 50 )
 	{
 		viewangles[ROLL] = 50;
 	}
 	if ( viewangles[ROLL] < -50 )
 	{
 		viewangles[ROLL] = -50;
-	}
+	}*/
 #endif
 }
 

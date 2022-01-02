@@ -7,6 +7,15 @@
     <Filter Include="Link Libraries">
       <UniqueIdentifier>{C5D73B3A-C648-896C-B7CE-F174808E5BA5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shader Source">
+      <UniqueIdentifier>{C6C1C1A8-80A2-218E-0AF8-94D8DDB5FAD8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader Source\fxc">
+      <UniqueIdentifier>{4D918305-7063-E4C2-0906-D415E5F14EA3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader Source\Headers">
+      <UniqueIdentifier>{A27FE43F-B148-1117-6056-5039540F8CD2}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source Files">
       <UniqueIdentifier>{BA03E055-4FA2-FCE3-8A1C-D348547D379C}</UniqueIdentifier>
     </Filter>
@@ -35,10 +44,16 @@
     <ClInclude Include="BaseVSShader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="common_flashlight_fxc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="common_fxc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="common_hlsl_cpp_consts.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common_lightmappedgeneric_fxc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="common_ps_fxc.h">
@@ -56,24 +71,18 @@
     <ClInclude Include="shader_constant_register_map.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="pbr_common_ps2_3_x.h">
+      <Filter>Shader Source\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseVSShader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Bloom.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="example_model_dx9.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="example_model_dx9_helper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\public\tier0\memoverride.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="screenspace_general.cpp">
+    <ClCompile Include="pbr_dx9.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -89,10 +98,30 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="buildsdkshaders.bat">
-      <Filter></Filter>
+      <Filter>
+      </Filter>
     </None>
     <None Include="buildshaders.bat">
-      <Filter></Filter>
+      <Filter>
+      </Filter>
+    </None>
+    <None Include="mymod_dx9_20b.txt">
+      <Filter>Shader Source</Filter>
+    </None>
+    <None Include="mymod_dx9_30.txt">
+      <Filter>Shader Source</Filter>
+    </None>
+    <None Include="pbr_ps20b.fxc">
+      <Filter>Shader Source\fxc</Filter>
+    </None>
+    <None Include="pbr_ps30.fxc">
+      <Filter>Shader Source\fxc</Filter>
+    </None>
+    <None Include="pbr_vs20b.fxc">
+      <Filter>Shader Source\fxc</Filter>
+    </None>
+    <None Include="pbr_vs30.fxc">
+      <Filter>Shader Source\fxc</Filter>
     </None>
     <None Include="..\..\materialsystem\stdshaders\game_shader_dx9_base.vpc">
       <Filter>VPC Scripts</Filter>

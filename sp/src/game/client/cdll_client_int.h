@@ -15,6 +15,7 @@
 #include "utllinkedlist.h"
 #include "cdll_int.h"
 #include "eiface.h"
+#include "fmod.hpp"
 
 
 class IVModelRender;
@@ -110,6 +111,7 @@ extern IReplayManager *g_pReplayManager;
 extern IReplayScreenshotManager *g_pReplayScreenshotManager;
 extern IEngineReplay *g_pEngineReplay;
 extern IEngineClientReplay *g_pEngineClientReplay;
+
 
 //=============================================================================
 // HPE_BEGIN

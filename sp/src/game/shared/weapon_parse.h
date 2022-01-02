@@ -130,6 +130,9 @@ public:
 
 // SERVER DLL
 
+	Vector m_expOffset; //ADDED
+	QAngle m_expOriOffset; //ADDED
+
 };
 
 // The weapon parse function

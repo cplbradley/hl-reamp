@@ -22,23 +22,24 @@ CHudPurpleKey::CHudPurpleKey(const char *pElementName) : CHudElement(pElementNam
 	SetVisible(false);
 	SetAlpha(255);
 
-	//AW Create Texture for Looking around
-	m_nPurpleKey = surface()->CreateNewTextureID();
-	surface()->DrawSetTextureFile(m_nPurpleKey, "HUD/PurpleKey", true, true);
-
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT);
 }
 void CHudPurpleKey::Init(void)
 {
 	bShowKey = false;
 	HOOK_HUD_MESSAGE(CHudPurpleKey, PurpleKey);
+	m_icon = gHUD.GetIcon("keycard_icon");
+}
+void CHudPurpleKey::VidInit(void)
+{
+	Init();
 }
 void CHudPurpleKey::Paint()
 {
 	SetPaintBorderEnabled(false);
 	SetPaintBackgroundEnabled(false);
-	surface()->DrawSetTexture(m_nPurpleKey);
-	surface()->DrawTexturedRect(0, 0, 32, 64);
+	Color purp = Color(75, 0, 100, 200);
+	m_icon->DrawSelf(0, -16, purp);
 }
 void CHudPurpleKey::MsgFunc_PurpleKey(bf_read &msg)
 {
@@ -62,23 +63,30 @@ void CHudPurpleKey::LevelInit(void)
 	bShowKey = false;
 }
 
-DECLARE_HUDELEMENT(CHudKeyPanel);
+DECLARE_HUDELEMENT_DEPTH(CHudKeyPanel,70);
 
 CHudKeyPanel::CHudKeyPanel(const char *pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudKeyPanel")
 {
 	Panel *pParent = g_pClientMode->GetViewport();
 	SetParent(pParent);
 
-	SetVisible(false);
-	SetAlpha(255);
+	//SetVisible(false);
+	//SetAlpha(255);
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT);
+
 }
 
 void CHudKeyPanel::Init(void)
 {
+	
 }
 
 void CHudKeyPanel::Paint()
 {
-	SetPaintBackgroundEnabled(true);
+	m_background = gHUD.GetIcon("hud_key_background");
+	
+
+	m_background->DrawSelf(0, 0, GetWide(), GetTall(), Color(255, 255, 255, 255));
+	SetPaintBackgroundEnabled(false);
+
 }

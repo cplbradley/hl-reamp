@@ -274,6 +274,15 @@ END_RECV_TABLE()
 		RecvPropInt		(RECVINFO(m_iDefaultFOV)),
 		RecvPropEHandle (RECVINFO(m_hZoomOwner)),
 
+		RecvPropInt(RECVINFO(m_iToxicDamageLeft)),
+		RecvPropInt(RECVINFO(m_iFireDamageLeft)),
+		RecvPropInt(RECVINFO(m_iElectricDamageLeft)),
+		RecvPropInt(RECVINFO(m_iDamageBlockerType)),
+		RecvPropInt(RECVINFO(m_iMaxToxicDamage)),
+		RecvPropInt(RECVINFO(m_iMaxFireDamage)),
+		RecvPropInt(RECVINFO(m_iMaxElectricDamage)),
+
+
 		RecvPropEHandle( RECVINFO(m_hVehicle) ),
 		RecvPropEHandle( RECVINFO(m_hUseEntity) ),
 
@@ -365,6 +374,14 @@ BEGIN_PREDICTION_DATA( C_BasePlayer )
 	DEFINE_PRED_FIELD( m_nWaterLevel, FIELD_CHARACTER, FTYPEDESC_INSENDTABLE ),
 	
 	DEFINE_PRED_FIELD_TOL( m_vecBaseVelocity, FIELD_VECTOR, FTYPEDESC_INSENDTABLE, 0.05 ),
+
+
+	DEFINE_PRED_FIELD(m_iToxicDamageLeft, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD(m_iFireDamageLeft, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD(m_iElectricDamageLeft, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD(m_iMaxToxicDamage, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD(m_iMaxFireDamage, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD(m_iMaxElectricDamage, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
 
 	DEFINE_FIELD( m_nButtons, FIELD_INTEGER ),
 	DEFINE_FIELD( m_flWaterJumpTime, FIELD_FLOAT ),
@@ -470,7 +487,7 @@ void C_BasePlayer::Spawn( void )
 
 	m_iFOV	= 0;	// init field of view.
 
-    SetModel( "models/player.mdl" );
+    SetModel( "models/player/gordon.mdl" );
 
 	Precache();
 
@@ -1307,6 +1324,7 @@ void C_BasePlayer::AddEntity( void )
 
 	// Add in lighting effects
 	CreateLightEffects();
+	SetLocalAnglesDim(X_INDEX, 0);
 }
 
 extern float UTIL_WaterLevel( const Vector &position, float minz, float maxz );

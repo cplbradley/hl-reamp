@@ -109,6 +109,8 @@ public:
 
 	void	PlayFlinchGesture( void );
 
+	int			GetMovementClass(void){ return MOVECLASS_HEAVY; }
+
 protected:
 	// Determines the best type of flinch anim to play.
 	virtual Activity GetFlinchActivity( bool bHeavyDamage, bool bGesture );

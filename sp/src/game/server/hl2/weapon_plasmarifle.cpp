@@ -20,6 +20,7 @@
 #include "gamestats.h"
 #include "particle_parse.h"
 #include "SpriteTrail.h"
+#include "hlr/hlr_shareddefs.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -206,6 +207,90 @@ void CPlasmaBall::ItemPostFrame(void)
 }
 
 
+class CStunBomb : public CBaseAnimating
+{
+	DECLARE_CLASS(CStunBomb, CBaseAnimating);
+public:
+	void Spawn(void);
+	void Precache(void);
+	void Stun(CBaseEntity *pOther);
+	void Touch(CBaseEntity *pOther);
+	void EndTimer();
+	void Destroy();
+
+	CHandle<CAI_BaseNPC> hNPC;
+
+	DECLARE_DATADESC();
+};
+
+LINK_ENTITY_TO_CLASS(hlr_stunbomb, CStunBomb);
+
+BEGIN_DATADESC(CStunBomb)
+END_DATADESC()
+
+void CStunBomb::Precache(void)
+{
+	PrecacheModel(PLASMA_MODEL);
+}
+void CStunBomb::Spawn(void)
+{
+	Precache();
+	SetModel(PLASMA_MODEL);
+	SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
+	UTIL_SetSize(this, -Vector(1.0f, 1.0f, 1.0f), Vector(1.0f, 1.0f, 1.0f));
+	SetSolid(SOLID_BBOX);
+	SetSolidFlags(FSOLID_NOT_SOLID || FSOLID_TRIGGER);
+	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
+	SetTouch(&CStunBomb::Touch);
+}
+void CStunBomb::Touch(CBaseEntity *pOther)
+{
+	if (!pOther)
+		return;
+	if (GetOwnerEntity() && pOther == GetOwnerEntity())
+		return;
+	if (pOther->IsSolid())
+	{
+		if (pOther->IsSolidFlagSet(FSOLID_TRIGGER)) //is it a trigger?
+		{
+			return; //ignore it, keep going
+		}
+		if (pOther->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE) //is it another projectile?
+		{
+			return; //ignore it, keep going
+		}
+		if (pOther->GetCollisionGroup() == COLLISION_GROUP_WEAPON)
+		{
+			return;
+		}
+		if (pOther->IsNPC())
+		{
+			hNPC = pOther->MyNPCPointer();
+			if (!hNPC)
+				return;
+			hNPC->ToggleFreeze();
+			SetTouch(NULL);
+			SetThink(&CStunBomb::EndTimer);
+			SetNextThink(gpGlobals->curtime + 10.0f);
+			SetModelName(NULL_STRING);
+			return;
+		}
+
+		Destroy();
+	}
+}
+void CStunBomb::EndTimer()
+{
+	if (!hNPC)
+		return;
+	CAI_BaseNPC *pNPC = dynamic_cast<CAI_BaseNPC*>(hNPC.Get());
+	pNPC->ToggleFreeze();
+	Destroy();
+}
+void CStunBomb::Destroy()
+{
+	SUB_Remove();
+}
 class CWeaponPlasmaRifle : public CHLSelectFireMachineGun
 {
 	DECLARE_DATADESC();
@@ -319,6 +404,16 @@ acttable_t	CWeaponPlasmaRifle::m_acttable[] =
 	{ ACT_RANGE_AIM_LOW, ACT_RANGE_AIM_SMG1_LOW, false },
 	{ ACT_RELOAD_LOW, ACT_RELOAD_SMG1_LOW, false },
 	{ ACT_GESTURE_RELOAD, ACT_GESTURE_RELOAD_SMG1, true },
+
+
+	{ ACT_HL2MP_IDLE, ACT_HL2MP_IDLE_SMG1, false },
+	{ ACT_HL2MP_RUN, ACT_HL2MP_RUN_SMG1, false },
+	{ ACT_HL2MP_IDLE_CROUCH, ACT_HL2MP_IDLE_CROUCH_SMG1, false },
+	{ ACT_HL2MP_WALK_CROUCH, ACT_HL2MP_WALK_CROUCH_SMG1, false },
+	{ ACT_HL2MP_GESTURE_RANGE_ATTACK, ACT_HL2MP_GESTURE_RANGE_ATTACK_SMG1, false },
+	{ ACT_HL2MP_GESTURE_RELOAD, ACT_GESTURE_RELOAD_SMG1, false },
+	{ ACT_HL2MP_JUMP, ACT_HL2MP_JUMP_SMG1, false },
+	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_SMG1, false },
 };
 
 IMPLEMENT_ACTTABLE(CWeaponPlasmaRifle);
@@ -346,6 +441,7 @@ void CWeaponPlasmaRifle::Precache(void)
 	PrecacheParticleSystem("plasma_altfire_core");
 	PrecacheParticleSystem("smg_core");
 	PrecacheParticleSystem("smg_core_red");
+	UTIL_PrecacheOther("hlr_stunbomb");
 	BaseClass::Precache();
 }
 
@@ -539,9 +635,33 @@ void CWeaponPlasmaRifle::AddViewKick(void)
 void CWeaponPlasmaRifle::SecondaryAttack(void)
 {
 	// Only the player fires this way so we can cast
+	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+	if (pPlayer == NULL)
+		return;
+
+	Vector	vecEye = pPlayer->EyePosition();
+	Vector	vForward, vRight, vUp;
+	Vector vecAng;
+	pPlayer->EyeVectors(&vecAng);
+	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
+	QAngle qEyeAng = pPlayer->EyeAngles();
+	Vector	muzzlePoint = pPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * 6.0f + vUp * -3.0f;
+	Vector vecSrc = vecEye + vForward * 18.0f + vRight * 8.0f + Vector(0, 0, -8);
+	//CheckThrowPosition(pPlayer, vecEye, vecSrc);
+
+	float vertfactor = 180.0f;
+	Vector vecThrow = vecAng * 1200.0f + Vector(0, 0, vertfactor);
+
+	SendWeaponAnim(ACT_VM_PRIMARYATTACK);
+
+	CStunBomb *pBomb = (CStunBomb*)CBaseEntity::Create("hlr_stunbomb", muzzlePoint, vec3_angle, GetOwnerEntity());
+	pBomb->Spawn();
+	pBomb->ApplyLocalAngularVelocityImpulse(AngularImpulse(200, random->RandomInt(-600, 600), 0));
+	pBomb->SetAbsVelocity(vecThrow);
+	m_flNextSecondaryAttack = gpGlobals->curtime + 2.0f;
 
 
-	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
+/*	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
 	if ( pPlayer == NULL )
 	return;
 	if ((UsesClipsForAmmo1() && m_iClip1 == 0) || (!UsesClipsForAmmo1() && !pPlayer->GetAmmoCount(m_iPrimaryAmmoType)))
@@ -561,78 +681,8 @@ void CWeaponPlasmaRifle::SecondaryAttack(void)
 	pPlayer->ViewPunch(QAngle(random->RandomFloat(-30, -15), random->RandomFloat(-20, 20), 0));
 	color32 white = { 255, 255, 255, 64 };
 	UTIL_ScreenFade(pPlayer , white, 0.1, 0, FFADE_IN);
-	m_iEnergyLevel = 0;
+	m_iEnergyLevel = 0;*/
 
-	/*pPlayer->FireBullets(1, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0, -1, -1, 1);
-	trace_t tr; // Create our trace_t class to hold the end result
-	// Do the TraceLine, and write our results to our trace_t class, tr.
-	Vector vecAbsStart = pPlayer->EyePosition();
-	pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);
-	Vector vecAbsEnd = vecAbsStart + (vecAiming * MAX_TRACE_LENGTH);
-	UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_ALL, pPlayer, COLLISION_GROUP_NONE, &tr);
-	m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
-	Vector vecPartStart;
-	Vector vecEndPos = tr.endpos;
-	DispatchParticleEffect("plasma_beam", vecSrc, tr.endpos, GetAbsAngles(), this);/**/
-	/*
-	if ( pPlayer == NULL )
-	return;
-
-	//Must have ammo
-	if ( ( pPlayer->GetAmmoCount( m_iSecondaryAmmoType ) <= 0 ) || ( pPlayer->GetWaterLevel() == 3 ) )
-	{
-	SendWeaponAnim( ACT_VM_DRYFIRE );
-	BaseClass::WeaponSound( EMPTY );
-	m_flNextSecondaryAttack = gpGlobals->curtime + 0.5f;
-	return;
-	}
-
-	if( m_bInReload )
-	m_bInReload = false;
-
-	// MUST call sound before removing a round from the clip of a CMachineGun
-	BaseClass::WeaponSound( WPN_DOUBLE );
-
-	pPlayer->RumbleEffect( RUMBLE_357, 0, RUMBLE_FLAGS_NONE );
-
-	Vector vecSrc = pPlayer->Weapon_ShootPosition();
-	Vector	vecThrow;
-	// Don't autoaim on grenade tosses
-	AngleVectors( pPlayer->EyeAngles() + pPlayer->GetPunchAngle(), &vecThrow );
-	VectorScale( vecThrow, 2000.0f, vecThrow );
-
-	//Create the grenade
-	QAngle angles;
-	VectorAngles( vecThrow, angles );
-	CGrenadeAR2 *pGrenade = (CGrenadeAR2*)Create( "grenade_ar2", vecSrc, angles, pPlayer );
-	pGrenade->SetAbsVelocity( vecThrow );
-
-	pGrenade->SetLocalAngularVelocity( RandomAngle( -400, 400 ) );
-	pGrenade->SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE );
-	pGrenade->SetThrower( GetOwner() );
-	pGrenade->SetDamage( sk_plr_dmg_smg1_grenade.GetFloat() );
-
-	SendWeaponAnim( ACT_VM_SECONDARYATTACK );
-
-	CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), 1000, 0.2, GetOwner(), SOUNDENT_CHANNEL_WEAPON );
-
-	// player "shoot" animation
-	pPlayer->SetAnimation( PLAYER_ATTACK1 );
-
-	// Decrease ammo
-	pPlayer->RemoveAmmo( 1, m_iSecondaryAmmoType );
-
-	// Can shoot again immediately
-	m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
-
-	// Can blow up after a short delay (so have time to release mouse button)
-	m_flNextSecondaryAttack = gpGlobals->curtime + 1.0f;
-
-	// Register a muzzleflash for the AI.
-	pPlayer->SetMuzzleFlashTime( gpGlobals->curtime + 0.5 );
-
-	m_iSecondaryAttacks++;
-	gamestats->Event_WeaponFired( pPlayer, false, GetClassname() );*/
 }
 ////////////////////////////////////////////////////////
 /////											   /////
@@ -665,6 +715,7 @@ void CWeaponPlasmaRifle::PrimaryAttack(void)
 
 	while (m_flNextPrimaryAttack <= gpGlobals->curtime) //while we're allowed to shoot
 	{
+		SetMuzzleLight(0, 128, 255);
 		trace_t tr;
 		Vector vecDir;
 		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
@@ -706,11 +757,22 @@ void CWeaponPlasmaRifle::PrimaryAttack(void)
 			random->RandomFloat(-250, -500)));
 		m_iEnergyLevel++;
 		m_nShotsFired++;
+		DoMuzzleFlash();
 		int iAttachment = LookupAttachment("barrel");
-		if (pPlayer->HasOverdrive())
-			DispatchParticleEffect("smg_core_red", PATTACH_POINT_FOLLOW, pOwner->GetViewModel(), iAttachment, true);
+		if (g_thirdperson.GetBool() == false)
+		{
+			if (pPlayer->HasOverdrive())
+				DispatchParticleEffect("smg_core_red", PATTACH_POINT_FOLLOW, pOwner->GetViewModel(), iAttachment, true);
+			else
+				DispatchParticleEffect("smg_core", PATTACH_POINT_FOLLOW, pOwner->GetViewModel(), iAttachment, true);
+		}
 		else
-			DispatchParticleEffect("smg_core", PATTACH_POINT_FOLLOW, pOwner->GetViewModel(), iAttachment, true);
+		{
+			if (pPlayer->HasOverdrive())
+				DispatchParticleEffect("smg_core_red", PATTACH_POINT_FOLLOW, this, iAttachment, true);
+			else
+				DispatchParticleEffect("smg_core", PATTACH_POINT_FOLLOW, this, iAttachment, true);
+		}
 	}
 	m_iPrimaryAttacks++;
 	gamestats->Event_WeaponFired(pPlayer, true, GetClassname());

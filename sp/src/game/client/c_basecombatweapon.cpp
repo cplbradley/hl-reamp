@@ -262,8 +262,9 @@ void C_BaseCombatWeapon::DrawCrosshair()
 	if ( !crosshair )
 		return;
 
+	crosshair->SetCrosshair(GetWpnData().iconCrosshair, clr);
 	// Find out if this weapon's auto-aimed onto a target
-	bool bOnTarget = ( m_iState == WEAPON_IS_ONTARGET );
+	/*bool bOnTarget = ( m_iState == WEAPON_IS_ONTARGET );
 	
 	if ( player->GetFOV() >= 90 )
 	{ 
@@ -295,7 +296,7 @@ void C_BaseCombatWeapon::DrawCrosshair()
 			crosshair->SetCrosshair( GetWpnData().iconZoomedCrosshair, white );
 		else
 			crosshair->ResetCrosshair();
-	}
+	}*/
 }
 
 //-----------------------------------------------------------------------------

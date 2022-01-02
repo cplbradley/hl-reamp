@@ -72,7 +72,7 @@ int	CAmmoDef::PlrDamage(int nAmmoIndex)
 	{
 		if ( m_AmmoType[nAmmoIndex].pPlrDmgCVar )
 		{
-			return m_AmmoType[nAmmoIndex].pPlrDmgCVar->GetFloat() * pPlayer->GetQuadDmgScale();
+			return m_AmmoType[nAmmoIndex].pPlrDmgCVar->GetFloat();
 		}
 
 		return 0;

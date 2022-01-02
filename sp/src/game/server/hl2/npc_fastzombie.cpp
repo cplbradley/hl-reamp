@@ -244,7 +244,6 @@ public:
 
 	void BecomeTorso(const Vector &vecTorsoForce, const Vector &vecLegsForce);
 
-	bool IsJumpLegal(const Vector &startPos, const Vector &apex, const Vector &endPos) const;
 	bool MovementCost(int moveType, const Vector &vecStart, const Vector &vecEnd, float *pCost);
 	bool ShouldFailNav(bool bMovementFailed);
 
@@ -389,6 +388,7 @@ static const char *s_pLegsModel = "models/gibs/fast_zombie_legs.mdl";
 void CFastZombie::Precache(void)
 {
 	PrecacheModel("models/zombie/fast.mdl");
+	PrecacheModel("models/evilsuit.mdl");
 #ifdef HL2_EPISODIC
 	PrecacheModel("models/zombie/Fast_torso.mdl");
 	PrecacheScriptSound("NPC_FastZombie.CarEnter1");
@@ -759,7 +759,7 @@ void CFastZombie::SetZombieModel(void)
 	}
 	else
 	{
-		SetModel("models/zombie/fast.mdl");
+		SetModel("models/evilsuit.mdl");
 		SetHullType(HULL_HUMAN);
 	}
 
@@ -1565,21 +1565,7 @@ void CFastZombie::BecomeTorso(const Vector &vecTorsoForce, const Vector &vecLegs
 // Input  :
 // Output :
 //-----------------------------------------------------------------------------
-bool CFastZombie::IsJumpLegal(const Vector &startPos, const Vector &apex, const Vector &endPos) const
-{
-	const float MAX_JUMP_RISE = 220.0f;
-	const float MAX_JUMP_DISTANCE = 512.0f;
-	const float MAX_JUMP_DROP = 384.0f;
 
-	if (BaseClass::IsJumpLegal(startPos, apex, endPos, MAX_JUMP_RISE, MAX_JUMP_DROP, MAX_JUMP_DISTANCE))
-	{
-		// Hang onto the jump distance. The AI is going to want it.
-		m_flJumpDist = (startPos - endPos).Length();
-
-		return true;
-	}
-	return false;
-}
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------

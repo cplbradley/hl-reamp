@@ -1,0 +1,114 @@
+#include "cbase.h"
+#include "filesystem.h"
+
+
+#ifndef HLR_SHAREDDEFS_H
+#define HLR_SHAREDDEFS_H
+#endif
+#ifdef _WIN32
+#pragma once
+#endif
+
+static ConVar g_ultragibs("g_ultragibs", "0", FCVAR_REPLICATED | FCVAR_GAMEDLL | FCVAR_CLIENTDLL, "ultragibs");
+static ConVar g_guts_and_glory("g_guts_and_glory", "0", FCVAR_REPLICATED | FCVAR_GAMEDLL | FCVAR_CLIENTDLL, "Guts and Glory!");
+static ConVar g_masochist_mode("g_masochist_mode", "0", FCVAR_HIDDEN, "WARNING: Death will delete your entire save folder.");
+static ConVar g_classic_weapon_pos("g_classic_weapon_pos", "0", FCVAR_REPLICATED | FCVAR_GAMEDLL | FCVAR_CLIENTDLL, "Classic Weapon Positions");
+static ConVar g_thirdperson("g_thirdperson", "0", FCVAR_REPLICATED | FCVAR_GAMEDLL | FCVAR_CLIENTDLL);
+
+static void CC_TestKillSave(void)
+{
+	FileFindHandle_t fhsav;
+	FileFindHandle_t fhhl1;
+	FileFindHandle_t fhhl2;
+	FileFindHandle_t fhhl3;
+	if (const char *pszFileName = g_pFullFileSystem->FindFirstEx("save/*.sav", "MOD", &fhsav))
+	{
+		char szFileExt[4];
+		char szFullFileName[MAX_PATH];
+		do
+		{
+			if (pszFileName[0] != '.')
+			{
+				V_ExtractFileExtension(pszFileName, szFileExt, sizeof(szFileExt));
+				if (!V_stricmp(szFileExt, "sav"))
+				{
+					V_strcpy_safe(szFullFileName, "save/");
+					V_strcat_safe(szFullFileName, pszFileName);
+					g_pFullFileSystem->RemoveFile(szFullFileName, "MOD");
+				}
+			}
+
+			pszFileName = g_pFullFileSystem->FindNext(fhsav);
+		} while (pszFileName);
+
+		g_pFullFileSystem->FindClose(fhsav);
+	}
+	if (const char *pszFileName = g_pFullFileSystem->FindFirstEx("save/*.hl1", "MOD", &fhhl1))
+	{
+		char szFileExt[4];
+		char szFullFileName[MAX_PATH];
+		do
+		{
+			if (pszFileName[0] != '.')
+			{
+				V_ExtractFileExtension(pszFileName, szFileExt, sizeof(szFileExt));
+				if (!V_stricmp(szFileExt, "hl1"))
+				{
+					V_strcpy_safe(szFullFileName, "save/");
+					V_strcat_safe(szFullFileName, pszFileName);
+					g_pFullFileSystem->RemoveFile(szFullFileName, "MOD");
+				}
+			}
+
+			pszFileName = g_pFullFileSystem->FindNext(fhhl1);
+		} while (pszFileName);
+
+		g_pFullFileSystem->FindClose(fhhl1);
+	}
+	if (const char *pszFileName = g_pFullFileSystem->FindFirstEx("save/*.hl2", "MOD", &fhhl2))
+	{
+		char szFileExt[4];
+		char szFullFileName[MAX_PATH];
+		do
+		{
+			if (pszFileName[0] != '.')
+			{
+				V_ExtractFileExtension(pszFileName, szFileExt, sizeof(szFileExt));
+				if (!V_stricmp(szFileExt, "hl2"))
+				{
+					V_strcpy_safe(szFullFileName, "save/");
+					V_strcat_safe(szFullFileName, pszFileName);
+					g_pFullFileSystem->RemoveFile(szFullFileName, "MOD");
+				}
+			}
+
+			pszFileName = g_pFullFileSystem->FindNext(fhhl2);
+		} while (pszFileName);
+
+		g_pFullFileSystem->FindClose(fhhl2);
+	}
+	if (const char *pszFileName = g_pFullFileSystem->FindFirstEx("save/*.hl3", "MOD", &fhhl3))
+	{
+		char szFileExt[4];
+		char szFullFileName[MAX_PATH];
+		do
+		{
+			if (pszFileName[0] != '.')
+			{
+				V_ExtractFileExtension(pszFileName, szFileExt, sizeof(szFileExt));
+				if (!V_stricmp(szFileExt, "hl3"))
+				{
+					V_strcpy_safe(szFullFileName, "save/");
+					V_strcat_safe(szFullFileName, pszFileName);
+					g_pFullFileSystem->RemoveFile(szFullFileName, "MOD");
+				}
+			}
+
+			pszFileName = g_pFullFileSystem->FindNext(fhhl3);
+		} while (pszFileName);
+
+		g_pFullFileSystem->FindClose(fhhl3);
+	}
+}
+
+static ConCommand testkillsave("testkillsave", CC_TestKillSave, "testkillsave", FCVAR_REPLICATED | FCVAR_HIDDEN | FCVAR_CLIENTCMD_CAN_EXECUTE);

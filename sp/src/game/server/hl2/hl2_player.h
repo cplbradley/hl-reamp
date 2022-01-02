@@ -15,6 +15,8 @@
 #include "simtimer.h"
 #include "soundenvelope.h"
 #include "hlr/hlr_floorsprite.h"
+#include "singleplayer_animstate.h"
+
 
 class CAI_Squad;
 class CPropCombineBall;
@@ -94,6 +96,7 @@ public:
 	DECLARE_DATADESC();
 
 	virtual void		CreateCorpse( void ) { CopyToBodyQue( this ); };
+
 
 	virtual void		Precache( void );
 	virtual void		Spawn(void);
@@ -181,7 +184,7 @@ public:
 	void CheckSuitZoom( void );
 
 
-
+	void SetAnimation(PLAYER_ANIM playerAnim);
 
 	// Walking
 	void StartWalking( void );
@@ -279,7 +282,7 @@ public:
 									 }
 
 	void MissedAR2AltFire();
-
+	CNetworkVarEmbedded(CHL2PlayerLocalData, m_HL2Local);
 	inline void EnableCappedPhysicsDamage();
 	inline void DisableCappedPhysicsDamage();
 
@@ -298,6 +301,7 @@ protected:
 
 	virtual void		ItemPostFrame();
 	virtual void		PlayUseDenySound();
+	
 
 private:
 	bool				CommanderExecuteOne( CAI_BaseNPC *pNpc, const commandgoal_t &goal, CAI_BaseNPC **Allies, int numAllies );
@@ -307,7 +311,7 @@ private:
 	Class_T				m_nControlClass;			// Class when player is controlling another entity
 	// This player's HL2 specific data that should only be replicated to 
 	//  the player and not to other players.
-	CNetworkVarEmbedded( CHL2PlayerLocalData, m_HL2Local );
+	
 
 	float				m_flTimeAllSuitDevicesOff;
 
@@ -335,6 +339,16 @@ private:
 	bool				m_bIgnoreFallDamageResetAfterImpact;
 
 	// Suit power fields
+
+
+	CSinglePlayerAnimState *m_pPlayerAnimState;
+	QAngle m_angEyeAngles;
+
+
+
+
+
+
 	float				m_flSuitPowerLoad;	// net suit power drain (total of all device's drainrates)
 	float				m_flAdmireGlovesAnimTime;
 

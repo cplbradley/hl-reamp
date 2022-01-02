@@ -20,12 +20,19 @@
 #include "vstdlib/random.h"
 #include "gamestats.h"
 #include "particle_parse.h"
+#include "actual_bullet.h"
+#include "hl2_shareddefs.h"
+#include "hlr/hlr_shareddefs.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 extern ConVar sk_auto_reload_time;
 extern ConVar sk_plr_num_shotgun_pellets;
+extern ConVar mat_classic_render;
+extern ConVar g_classic_weapon_pos;
+
+ConVar sk_shotgun_pellet_speed("sk_shotgun_pellet_speed", "6800", FCVAR_NONE);
 
 class CWeaponPumpShotgun : public CBaseHLCombatWeapon
 {
@@ -81,6 +88,7 @@ public:
 	void PrimaryAttack(void);
 	void SecondaryAttack(void);
 	void DryFire(void);
+	Activity GetDrawActivity(void);
 
 	void FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bool bUseWeaponAngles);
 	void Operator_ForceNPCFire(CBaseCombatCharacter  *pOperator, bool bSecondary);
@@ -152,6 +160,15 @@ acttable_t	CWeaponPumpShotgun::m_acttable[] =
 	{ ACT_RANGE_ATTACK1_LOW, ACT_RANGE_ATTACK_SHOTGUN_LOW, true },
 	{ ACT_RELOAD_LOW, ACT_RELOAD_SHOTGUN_LOW, false },
 	{ ACT_GESTURE_RELOAD, ACT_GESTURE_RELOAD_SHOTGUN, false },
+
+	{ ACT_HL2MP_IDLE, ACT_HL2MP_IDLE_SHOTGUN, false },
+	{ ACT_HL2MP_RUN, ACT_HL2MP_RUN_SHOTGUN, false },
+	{ ACT_HL2MP_IDLE_CROUCH, ACT_HL2MP_IDLE_CROUCH_SHOTGUN, false },
+	{ ACT_HL2MP_WALK_CROUCH, ACT_HL2MP_WALK_CROUCH_SHOTGUN, false },
+	{ ACT_HL2MP_GESTURE_RANGE_ATTACK, ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN, false },
+	{ ACT_HL2MP_GESTURE_RELOAD, ACT_HL2MP_GESTURE_RELOAD_SHOTGUN, false },
+	{ ACT_HL2MP_JUMP, ACT_HL2MP_JUMP_SHOTGUN, false },
+	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_SHOTGUN, false },
 };
 
 IMPLEMENT_ACTTABLE(CWeaponPumpShotgun);
@@ -311,7 +328,7 @@ bool CWeaponPumpShotgun::StartReload(void)
 	SetBodygroup(1, 0);
 
 	pOwner->m_flNextAttack = gpGlobals->curtime;
-	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
+	m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
 
 	m_bInReload = true;
 	return true;
@@ -352,7 +369,7 @@ bool CWeaponPumpShotgun::Reload(void)
 	SendWeaponAnim(ACT_VM_RELOAD);
 
 	pOwner->m_flNextAttack = gpGlobals->curtime;
-	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
+	m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
 
 	return true;
 }
@@ -378,7 +395,7 @@ void CWeaponPumpShotgun::FinishReload(void)
 	SendWeaponAnim(ACT_SHOTGUN_RELOAD_FINISH);
 
 	pOwner->m_flNextAttack = gpGlobals->curtime;
-	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
+	m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
 }
 
 //-----------------------------------------------------------------------------
@@ -403,7 +420,16 @@ void CWeaponPumpShotgun::FillClip(void)
 		}
 	}
 }
-
+Activity CWeaponPumpShotgun::GetDrawActivity(void)
+{
+	if (g_classic_weapon_pos.GetBool())
+	{
+		DevMsg("classic weapon pos enabled, moving weapon pos\n");
+		return ACT_VM_DRAW_CLASSIC;
+	}
+	else
+		return ACT_VM_DRAW;
+}
 //-----------------------------------------------------------------------------
 // Purpose: Play weapon pump anim
 // Input  :
@@ -417,14 +443,16 @@ void CWeaponPumpShotgun::Pump(void)
 		return;
 
 	m_bNeedPump = false;
-
-	WeaponSound(SPECIAL1);
+	if (mat_classic_render.GetInt() == 0)
+		WeaponSound(SPECIAL1);
+	else
+		WeaponSound(SPECIAL3);
 
 	// Finish reload animation
 	SendWeaponAnim(ACT_SHOTGUN_PUMP);
 
-	pOwner->m_flNextAttack = gpGlobals->curtime + SequenceDuration();
-	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
+	pOwner->m_flNextAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
+	m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
 }
 
 //-----------------------------------------------------------------------------
@@ -437,7 +465,7 @@ void CWeaponPumpShotgun::DryFire(void)
 	WeaponSound(EMPTY);
 	SendWeaponAnim(ACT_VM_DRYFIRE);
 
-	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
+	m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
 }
 
 //-----------------------------------------------------------------------------
@@ -456,17 +484,20 @@ void CWeaponPumpShotgun::PrimaryAttack(void)
 	}
 
 	// MUST call sound before removing a round from the clip of a CMachineGun
-	WeaponSound(SINGLE);
+	if (mat_classic_render.GetInt() == 1)
+		WeaponSound(SPECIAL2);
+	else
+		WeaponSound(SINGLE);
 
 	pPlayer->DoMuzzleFlash();
 
-	SendWeaponAnim(ACT_VM_PRIMARYATTACK);
+	SendWeaponAnim(GetPrimaryAttackActivity());
 
 	// player "shoot" animation
 	pPlayer->SetAnimation(PLAYER_ATTACK1);
 
 	// Don't fire again until fire animation has completed
-	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
+	m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
 	Vector vecAtch;
 	GetAttachment(LookupAttachment("muzzle"), vecAtch);
 	Vector	vForward, vRight, vUp;
@@ -479,7 +510,26 @@ void CWeaponPumpShotgun::PrimaryAttack(void)
 
 	// Fire the bullets, and force the first shot to be perfectly accuracy
 	// Fire the bullets
-	pPlayer->FireBullets(8, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, true, false);
+	//pPlayer->FireBullets(8, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, true, false);
+
+	/*FireBulletsInfo_t info;
+	info.m_iAmmoType = m_iPrimaryAmmoType;
+	info.m_vecSrc = vecSrc;
+	info.m_vecSpread = GetBulletSpread();
+	info.m_vecDirShooting = vecAiming;
+	info.m_pAttacker = GetOwnerEntity();*/
+	if (pPlayer->HasOverdrive())
+	{
+		pPlayer->FireBullets(28, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, true, false);
+		//info.m_iShots = 28;
+		//FireActualBullet(info, sk_shotgun_pellet_speed.GetInt(), GetTracerType());
+	}
+	else
+	{
+		pPlayer->FireBullets(12, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, true, false);
+		//info.m_iShots = 14;
+		//FireActualBullet(info, sk_shotgun_pellet_speed.GetInt(), GetTracerType());
+	}
 	pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);
 	pPlayer->ViewPunch(QAngle(random->RandomFloat(-2, -1), random->RandomFloat(-2, 2), 0));
 	QAngle angAiming;
@@ -530,7 +580,7 @@ void CWeaponPumpShotgun::SecondaryAttack(void)
 	pPlayer->m_nButtons &= ~IN_ATTACK2;
 	// MUST call sound before removing a round from the clip of a CMachineGun
 
-	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
+	m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
 	// Don't fire again until fire animation has completed
 	//m_flNextPrimaryAttack = gpGlobals->curtime + 0.3f;
 	//m_iClip1 -= 2;	// Shotgun uses same clip for primary and secondary attacks
@@ -562,7 +612,7 @@ void CWeaponPumpShotgun::SecondaryAttack(void)
 		m_flNextSecondaryAttack = gpGlobals->curtime + 2.0f;
 		m_bNeedPump = true;
 	}
-	SendWeaponAnim(ACT_VM_SECONDARYATTACK);
+	SendWeaponAnim(GetPrimaryAttackActivity());
 	EmitSound("Weapon_SMG1.Double");
 	
 	m_iSecondaryAttacks++;

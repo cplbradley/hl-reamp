@@ -27,6 +27,7 @@
 #ifdef HL2_DLL
 #include "ai_interactions.h"
 #include "hl2_gamerules.h"
+#include "hlr/hlr_shareddefs.h"
 #endif // HL2_DLL
 
 #include "ai_network.h"
@@ -627,9 +628,16 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 	if ( CanBecomeRagdoll() || IsRagdoll() )
 		 SetState( NPC_STATE_DEAD );
 
+	ConVarRef g_guts_and_glory("g_guts_and_glory");
+
 	if (info.GetDamage() >= (m_iMaxHealth * ai_gib_threshold.GetFloat()))
 	{
-		DevMsg("should gib now\n");
+		DevMsg("threshold passed, should gib now\n");
+		GoreGib();
+	}
+	if (g_guts_and_glory.GetBool() == true)
+	{
+		DevMsg("guts and glory enabled, should gib now\n");
 		GoreGib();
 	}
 	
@@ -697,21 +705,41 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 
 void CAI_BaseNPC::GoreGib(void)
 {
+	ConVarRef ultragibs("g_ultragibs");
 	DevMsg("gibbing\n");
 	int blood = BloodColor();
 	/*if (blood == NULL)
 		return;*/
+	int gibcount;
+	if (ultragibs.GetBool() == true)
+	{
+		gibcount = m_iGibCount * 3;
+		DevMsg("ultragibs enabled, multiplying gib count\n");
+	}
+	else
+		gibcount = m_iGibCount;
+
+
 	switch (blood)
 	{
 	case BLOOD_COLOR_RED:
 	{
 		m_bIsGibbed = true;
+		AddEffects(EF_NODRAW);
 		SetSolid(SOLID_NONE);
 		SetSolidFlags(FSOLID_NOT_SOLID);
 		SetModelName(NULL_STRING);
-		DispatchParticleEffect("hgib_sploosh", WorldSpaceCenter(), GetAbsAngles());
+		if (ultragibs.GetBool() == true)
+		{
+			DispatchParticleEffect("hgib_megasploosh", WorldSpaceCenter(), GetAbsAngles());
+			DevMsg("ultragibs enabled, doing megasploosh\n");
+		}
+		else
+			DispatchParticleEffect("hgib_sploosh", WorldSpaceCenter(), GetAbsAngles());
 		EmitSound("Gore.Splatter");
-		for (int i = 0; i <= m_iGibCount; i++)
+	
+
+		for (int i = 0; i <= gibcount; i++)
 		{
 			int rand = RandomInt(1, 3);
 			switch (rand)
@@ -747,10 +775,11 @@ void CAI_BaseNPC::GoreGib(void)
 	{
 		SetSolid(SOLID_NONE);
 		SetSolidFlags(FSOLID_NOT_SOLID);
+		AddEffects(EF_NODRAW);
 		SetModelName(NULL_STRING);
 		DispatchParticleEffect("agib_sploosh", WorldSpaceCenter(), GetAbsAngles());
 		EmitSound("Gore.Splatter");
-		for (int i = 0; i <= m_iGibCount; i++)
+		for (int i = 0; i <= gibcount; i++)
 		{
 			int rand = RandomInt(1, 4);
 			switch (rand)
@@ -789,10 +818,12 @@ void CAI_BaseNPC::GoreGib(void)
 	{
 			SetSolid(SOLID_NONE);
 			SetSolidFlags(FSOLID_NOT_SOLID);
+			AddEffects(EF_NODRAW);
 			SetModelName(NULL_STRING);
+			
 			DispatchParticleEffect("agib_sploosh", WorldSpaceCenter(), GetAbsAngles());
 			EmitSound("Gore.Splatter");
-			for (int i = 0; i <= m_iGibCount; i++)
+			for (int i = 0; i <= gibcount; i++)
 			{
 				int rand = RandomInt(1, 4);
 				switch (rand)
@@ -929,6 +960,9 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	{
 		PainSound( info );// "Ouch!"
 	}
+
+	if (info.GetAttacker()->IsPlayer())
+		DevMsg("Damage Recieved from player: %f", info.GetDamage());
 	
 
 	if (nextdmg <= gpGlobals->curtime)
@@ -1372,7 +1406,13 @@ void CAI_BaseNPC::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir
 		break;
 
 	case HITGROUP_HEAD:
-		subInfo.ScaleDamage( GetHitgroupDamageMultiplier(ptr->hitgroup, info) );
+		if (subInfo.GetDamageType() & DMG_DIRECT)
+		{
+			subInfo.ScaleDamage(5);
+			DevMsg("Revolver Headshot, multiplying damage x10\n");
+		}
+		else 
+			subInfo.ScaleDamage(GetHitgroupDamageMultiplier(ptr->hitgroup, info));
 		if( bDebug ) DevMsg("Hit Location: Head\n");
 		break;
 
@@ -3976,11 +4016,37 @@ void CAI_BaseNPC::PostNPCThink( void )
 	{
 		DrawServerHitboxes();
 	}
+	if (IsStunned())
+	{
+		SetPlaybackRate(0.1f);
+		SetAnimTime(gpGlobals->curtime);
+		SetSimulationTime(gpGlobals->curtime);
+		CapabilitiesRemove(bits_CAP_MOVE_GROUND);
+	}
+	else
+	{
+		if (!m_afCapability & bits_CAP_MOVE_GROUND)
+			CapabilitiesAdd(bits_CAP_MOVE_GROUND);
+		SetPlaybackRate(1.0f);
+	}
 }
 
 void CAI_BaseNPC::CallNPCThink( void ) 
 { 
 	RebalanceThinks();
+	if (IsStunned())
+	{
+		SetPlaybackRate(0.1f);
+		SetAnimTime(gpGlobals->curtime);
+		SetSimulationTime(gpGlobals->curtime);
+		CapabilitiesRemove(bits_CAP_MOVE_GROUND);
+	}
+	else
+	{
+		if (!m_afCapability & bits_CAP_MOVE_GROUND)
+			CapabilitiesAdd(bits_CAP_MOVE_GROUND);
+		SetPlaybackRate(1.0f);
+	}
 
 	//---------------------------------
 
@@ -4119,6 +4185,21 @@ bool CAI_BaseNPC::CheckPVSCondition()
 }
 
 
+bool CAI_BaseNPC::IsStunned(void)
+{
+	return m_bIsStunned;
+}
+
+void CAI_BaseNPC::ToggleStunNPC(void)
+{
+	if (IsStunned())
+		m_bIsStunned = false;
+	else
+		m_bIsStunned = true;
+
+	
+}
+
 //-----------------------------------------------------------------------------
 // NPC Think - calls out to core AI functions and handles this
 // npc's specific animation events
@@ -4147,6 +4228,20 @@ void CAI_BaseNPC::NPCThink( void )
 
 	//---------------------------------
 	bool bRanDecision = false;
+
+	if (IsStunned())
+	{
+		SetPlaybackRate(0.1f);
+		SetAnimTime(gpGlobals->curtime);
+		SetSimulationTime(gpGlobals->curtime);
+		CapabilitiesRemove(bits_CAP_MOVE_GROUND);
+	}
+	else
+	{
+		if (!m_afCapability & bits_CAP_MOVE_GROUND)
+			CapabilitiesAdd(bits_CAP_MOVE_GROUND);
+		SetPlaybackRate(1.0f);
+	}
 
 	if ( GetEfficiency() < AIE_DORMANT && GetSleepState() == AISS_AWAKE )
 	{
@@ -5010,6 +5105,20 @@ void CAI_BaseNPC::RunAI( void )
 {
 	AI_PROFILE_SCOPE(CAI_BaseNPC_RunAI);
 	g_AIRunTimer.Start();
+
+	if (IsStunned())
+	{
+		SetPlaybackRate(0.1f);
+		SetAnimTime(gpGlobals->curtime);
+		SetSimulationTime(gpGlobals->curtime);
+		CapabilitiesRemove(bits_CAP_MOVE_GROUND);
+	}
+	else
+	{
+		if (!m_afCapability & bits_CAP_MOVE_GROUND)
+			CapabilitiesAdd(bits_CAP_MOVE_GROUND);
+		SetPlaybackRate(1.0f);
+	}
 
 	if( ai_debug_squads.GetBool() )
 	{
@@ -10768,26 +10877,27 @@ CBaseCombatCharacter* CAI_BaseNPC::GetEnemyCombatCharacterPointer()
 // This should be an exact copy of the var's in the header.  Fields
 // that aren't save/restored are commented out
 
-BEGIN_DATADESC( CAI_BaseNPC )
+BEGIN_DATADESC(CAI_BaseNPC)
 
-	//								m_pSchedule  (reacquired on restore)
-	DEFINE_EMBEDDED( m_ScheduleState ),
-	DEFINE_FIELD( m_IdealSchedule,				FIELD_INTEGER ), // handled specially but left in for "virtual" schedules
-	DEFINE_FIELD( m_failSchedule,				FIELD_INTEGER ), // handled specially but left in for "virtual" schedules
-	DEFINE_FIELD( m_bUsingStandardThinkTime,	FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_flLastRealThinkTime,		FIELD_TIME ),
-	//								m_iFrameBlocked (not saved)
-	//								m_bInChoreo (not saved)
-	//								m_bDoPostRestoreRefindPath (not saved)
-	//								gm_flTimeLastSpawn (static)
-	//								gm_nSpawnedThisFrame (static)
-	//								m_Conditions (custom save)
-	//								m_CustomInterruptConditions (custom save)
-	//								m_ConditionsPreIgnore (custom save)
-	//								m_InverseIgnoreConditions (custom save)
-	//								m_poseAim_Pitch (not saved; recomputed on restore)
-	//								m_poseAim_Yaw (not saved; recomputed on restore)
-	//								m_poseMove_Yaw (not saved; recomputed on restore)
+//								m_pSchedule  (reacquired on restore)
+	DEFINE_EMBEDDED(m_ScheduleState),
+	DEFINE_FIELD(m_IdealSchedule, FIELD_INTEGER), // handled specially but left in for "virtual" schedules
+	DEFINE_FIELD(m_failSchedule, FIELD_INTEGER), // handled specially but left in for "virtual" schedules
+	DEFINE_FIELD(m_bUsingStandardThinkTime, FIELD_BOOLEAN),
+	DEFINE_FIELD(m_flLastRealThinkTime, FIELD_TIME),
+//								m_iFrameBlocked (not saved)
+//								m_bInChoreo (not saved)
+//								m_bDoPostRestoreRefindPath (not saved)
+//								gm_flTimeLastSpawn (static)
+//								gm_nSpawnedThisFrame (static)
+//								m_Conditions (custom save)
+//								m_CustomInterruptConditions (custom save)
+//								m_ConditionsPreIgnore (custom save)
+//								m_InverseIgnoreConditions (custom save)
+//								m_poseAim_Pitch (not saved; recomputed on restore)
+//								m_poseAim_Yaw (not saved; recomputed on restore)
+//								m_poseMove_Yaw (not saved; recomputed on restore)
+	DEFINE_FIELD(m_iMovementClass, FIELD_INTEGER),
 	DEFINE_FIELD( m_flTimePingEffect,			FIELD_TIME ),
 	DEFINE_FIELD( m_bForceConditionsGather,		FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bConditionsGathered,		FIELD_BOOLEAN ),
@@ -10920,6 +11030,9 @@ BEGIN_DATADESC( CAI_BaseNPC )
 	DEFINE_KEYFIELD( m_iszEnemyFilterName,		FIELD_STRING, "enemyfilter" ),
 	DEFINE_FIELD( m_bImportanRagdoll,			FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bPlayerAvoidState,			FIELD_BOOLEAN ),
+
+
+	DEFINE_FIELD( m_bIsStunned,FIELD_BOOLEAN),
 
 	// Satisfy classcheck
 	// DEFINE_FIELD( m_ScheduleHistory, CUtlVector < AIScheduleChoice_t > ),
@@ -11133,6 +11246,7 @@ void CAI_BaseNPC::Precache( void )
 	PrecacheModel("models/gibs/human/hgib_2.mdl");
 	PrecacheModel("models/gibs/human/hgib_3.mdl");
 	PrecacheParticleSystem("hgib_sploosh");
+	PrecacheParticleSystem("hgib_megasploosh");
 	PrecacheModel("models/gibs/alien/agib_1.mdl");
 	PrecacheModel("models/gibs/alien/agib_2.mdl");
 	PrecacheModel("models/gibs/alien/agib_3.mdl");
@@ -11501,8 +11615,6 @@ void CAI_BaseNPC::ToggleFreeze(void)
 	{
 		// Freeze them.
 		SetCondition(COND_NPC_FREEZE);
-		SetMoveType(MOVETYPE_NONE);
-		SetGravity(0);
 		SetLocalAngularVelocity(vec3_angle);
 		SetAbsVelocity( vec3_origin );
 	}
@@ -11513,10 +11625,8 @@ void CAI_BaseNPC::ToggleFreeze(void)
 		m_Activity = ACT_RESET;
 
 		// BUGBUG: this might not be the correct movetype!
-		SetMoveType( MOVETYPE_STEP );
 
 		// Doesn't restore gravity to the original value, but who cares?
-		SetGravity(1);
 	}
 }
 
@@ -11572,6 +11682,9 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 
 	SetHullType(HULL_HUMAN);  // Give human hull by default, subclasses should override
 
+	m_bIsStunned = false;
+
+
 	m_iMySquadSlot				= SQUAD_SLOT_NONE;
 	m_flSumDamage				= 0;
 	m_flLastDamageTime			= 0;
@@ -11586,6 +11699,10 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 	m_flEyeIntegRate			= 0.95;
 	SetTarget( NULL );
 
+
+	m_iMovementClass = GetMovementClass();
+
+	m_fNextAllowedJump = gpGlobals->curtime;
 
 	m_bIsGibbed = false;
 
@@ -11613,6 +11730,8 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 	m_failedSchedule			= NULL;
 	m_interuptSchedule			= NULL;
 	m_nDebugPauseIndex			= 0;
+
+	
 
 	g_AI_Manager.AddAI( this );
 	

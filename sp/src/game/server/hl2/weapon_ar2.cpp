@@ -28,6 +28,7 @@
 #include "npc_combine.h"
 #include "rumble_shared.h"
 #include "gamestats.h"
+#include "actual_bullet.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -50,6 +51,8 @@ BEGIN_DATADESC( CWeaponAR2 )
 	DEFINE_FIELD( m_flfirerate,		FIELD_FLOAT),
 	DEFINE_FIELD( m_flDelayedFire,	FIELD_TIME ),
 	DEFINE_FIELD( m_bShotDelayed,	FIELD_BOOLEAN ),
+	DEFINE_SOUNDPATCH(m_pWoundSound),
+	DEFINE_FIELD(m_iWeaponState, FIELD_INTEGER),
 	//DEFINE_FIELD( m_nVentPose, FIELD_INTEGER ),
 
 END_DATADESC()
@@ -126,6 +129,10 @@ CWeaponAR2::CWeaponAR2( )
 	m_nShotsFired	= 0;
 	m_nVentPose		= -1;
 	m_flfirerate = MINFIRERATE;
+
+	m_iMuzzleR = 0;
+	m_iMuzzleG = 128;
+	m_iMuzzleB = 250;
 
 	m_bAltFiresUnderwater = false;
 	m_bPlayingWoundSound = false;
@@ -232,6 +239,8 @@ void CWeaponAR2::UpdateWeaponSoundState(void)
 			DevMsg("already playing woundsound\n");
 			break;
 		}
+		if (!m_pWoundSound)
+			break;
 		CSoundEnvelopeController::GetController().SoundChangeVolume(m_pWoundSound, 1.0f, 1.0f);
 		CSoundEnvelopeController::GetController().SoundChangePitch(m_pWoundSound, 300, 40.0f);
 		m_bPlayingWoundSound = true;
@@ -288,6 +297,9 @@ void CWeaponAR2::PrimaryAttack(void)
 	m_nShotsFired++;
 
 	pPlayer->DoMuzzleFlash();
+	DevMsg("serverside muzzle R = %i\n", m_iMuzzleR);
+	DevMsg("serverside muzzle G = %i\n", m_iMuzzleG);
+	DevMsg("serverside muzzle B = %i\n", m_iMuzzleB);
 
 	// To make the firing framerate independent, we may have to fire more than one bullet here on low-framerate systems, 
 	// especially if the weapon we're firing has a really fast rate of fire.
@@ -315,17 +327,21 @@ void CWeaponAR2::PrimaryAttack(void)
 	}
 	m_iPrimaryAttacks++;
 	gamestats->Event_WeaponFired(pPlayer, true, GetClassname());
-
+	Vector vUp, vRight, vForward;
+	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
+	Vector vecSrc = pPlayer->Weapon_ShootPosition() + vRight * 4.0f + vUp * -3.0f;
 	// Fire the bullets
 	FireBulletsInfo_t info;
 	info.m_iShots = iBulletsToFire;
-	info.m_vecSrc = pPlayer->Weapon_ShootPosition() + RandomVector(-4,4);
+	info.m_vecSrc = vecSrc + RandomVector(-4, 4);
 	info.m_vecDirShooting = pPlayer->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT);
 	info.m_vecSpread = pPlayer->GetAttackSpread(this);
 	info.m_flDistance = MAX_TRACE_LENGTH;
 	info.m_iAmmoType = m_iPrimaryAmmoType;
 	info.m_iTracerFreq = 1;
-	FireBullets(info);
+	info.m_pAttacker = pPlayer;
+	FireActualBullet(info, 8000, GetTracerType());
+	//FireBullets(info);
 
 	//Factor in the view kick
 	AddViewKick();

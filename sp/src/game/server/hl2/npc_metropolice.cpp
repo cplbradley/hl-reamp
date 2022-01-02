@@ -233,6 +233,8 @@ BEGIN_DATADESC( CNPC_MetroPolice )
 
 	DEFINE_OUTPUT( m_OnStunnedPlayer,	"OnStunnedPlayer" ),
 	DEFINE_OUTPUT( m_OnCupCopped, "OnCupCopped" ),
+	DEFINE_FIELD(m_pSprite1,FIELD_EHANDLE),
+	DEFINE_FIELD(m_pSprite2, FIELD_EHANDLE),
 
 END_DATADESC()
 
@@ -3195,7 +3197,7 @@ int CNPC_MetroPolice::SelectRangeAttackSchedule()
 	}
 
 	// Range attack if we're able
-	if( TryToEnterPistolSlot( SQUAD_SLOT_ATTACK1 ) || TryToEnterPistolSlot( SQUAD_SLOT_ATTACK2 ))
+	if (TryToEnterPistolSlot(SQUAD_SLOT_ATTACK1) || TryToEnterPistolSlot(SQUAD_SLOT_ATTACK2))
 		return SCHED_RANGE_ATTACK1;
 	
 	// We're not in a shoot slot... so we've allowed someone else to grab it

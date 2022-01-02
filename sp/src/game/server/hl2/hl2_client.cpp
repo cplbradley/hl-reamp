@@ -23,6 +23,7 @@
 #include "game.h"
 #include "player_resource.h"
 #include "engine/IEngineSound.h"
+#include "hlr/hlr_shareddefs.h"
 
 #include "tier0/vprof.h"
 
@@ -108,6 +109,7 @@ void ClientGamePrecache( void )
 	CBaseEntity::PrecacheModel("models/player.mdl");
 	CBaseEntity::PrecacheModel( "models/gibs/agibs.mdl" );
 	CBaseEntity::PrecacheModel ("models/weapons/v_hands.mdl");
+	CBaseEntity::PrecacheModel("models/player/gordon.mdl");
 
 	CBaseEntity::PrecacheScriptSound( "HUDQuickInfo.LowAmmo" );
 	CBaseEntity::PrecacheScriptSound( "HUDQuickInfo.LowHealth" );
@@ -139,7 +141,14 @@ void respawn( CBaseEntity *pEdict, bool fCopyCorpse )
 	}
 	else
 	{       // restart the entire server
-		engine->ServerCommand("reload\n");
+		ConVarRef masochist("g_masochist_mode");
+		if (masochist.GetBool() == true)
+		{
+			DevMsg("Masochist mode is on so i should boot the player back to the main menu\n");
+			engine->ServerCommand("disconnect\n");
+		}
+		else
+			engine->ServerCommand("reload\n");
 	}
 }
 

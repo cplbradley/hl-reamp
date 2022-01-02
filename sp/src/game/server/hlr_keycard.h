@@ -40,6 +40,11 @@ class CHLRKeycard : public CBaseAnimating
 	DECLARE_CLASS(CHLRKeycard, CBaseAnimating);
 	DECLARE_SERVERCLASS();
 public:
+	int UpdateTransmitState()	// always send to all clients
+	{
+		return SetTransmitState(FL_EDICT_ALWAYS);
+	}
+
 	void Spawn(void);
 	void Precache(void);
 	void Pickup(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
@@ -50,7 +55,7 @@ public:
 	void CreateSprite(void);
 	bool	CreateVPhysics(void);
 	int ObjectCaps(void);
-	CSprite *pSprite;
+	CHandle<CSprite> pSprite;
 	//void OnRestore();
 
 private:

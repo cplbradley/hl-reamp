@@ -13,6 +13,7 @@
 #include <Color.h>
 #include "view.h"
 #include "engine/ivdebugoverlay.h"
+#include "view_scene.h"
 #include "movevars_shared.h"
 #include "iviewrender.h"
 #include "vgui/ISurface.h"
@@ -264,7 +265,7 @@ void C_PropVehicleDriveable::DrawHudElements( )
 
 				Vector screen;
 				screen.Init();
-				ScreenTransform(tr.endpos, screen);
+				HudTransform(tr.endpos, screen);
 
 				int vx, vy, vw, vh;
 				vgui::surface()->GetFullscreenViewport( vx, vy, vw, vh );

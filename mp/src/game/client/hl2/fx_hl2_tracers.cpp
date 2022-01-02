@@ -24,10 +24,11 @@ extern void FX_TracerSound( const Vector &start, const Vector &end, int iTracerT
 extern ConVar muzzleflash_light;
 
 
-CLIENTEFFECT_REGISTER_BEGIN( PrecacheTracers )
-CLIENTEFFECT_MATERIAL( "effects/gunshiptracer" )
-CLIENTEFFECT_MATERIAL( "effects/combinemuzzle1" )
-CLIENTEFFECT_MATERIAL( "effects/combinemuzzle2_nocull" )
+CLIENTEFFECT_REGISTER_BEGIN(PrecacheTracers)
+CLIENTEFFECT_MATERIAL("effects/gunshiptracer")
+CLIENTEFFECT_MATERIAL("effects/combinemuzzle1")
+CLIENTEFFECT_MATERIAL("effects/combinemuzzle2_nocull")
+CLIENTEFFECT_MATERIAL("effects/tracer_middle")
 CLIENTEFFECT_REGISTER_END()
 
 //-----------------------------------------------------------------------------
@@ -192,31 +193,31 @@ DECLARE_CLIENT_EFFECT( "HelicopterTracer", HelicopterTracerCallback );
 // Input  : start - 
 //			end - 
 //-----------------------------------------------------------------------------
-void FX_PlayerAR2Tracer( const Vector &start, const Vector &end )
+void FX_PlayerAR2Tracer(const Vector &start, const Vector &end)
 {
-	VPROF_BUDGET( "FX_PlayerAR2Tracer", VPROF_BUDGETGROUP_PARTICLE_RENDERING );
-	
+	VPROF_BUDGET("FX_PlayerAR2Tracer", VPROF_BUDGETGROUP_PARTICLE_RENDERING);
+
 	Vector	shotDir, dStart, dEnd;
 	float	length;
 
 	//Find the direction of the tracer
-	VectorSubtract( end, start, shotDir );
-	length = VectorNormalize( shotDir );
+	VectorSubtract(end, start, shotDir);
+	length = VectorNormalize(shotDir);
 
 	//We don't want to draw them if they're too close to us
-	if ( length < 128 )
+	if (length < 128)
 		return;
 
 	//Randomly place the tracer along this line, with a random length
-	VectorMA( start, random->RandomFloat( 0.0f, 8.0f ), shotDir, dStart );
-	VectorMA( dStart, MIN( length, random->RandomFloat( 256.0f, 1024.0f ) ), shotDir, dEnd );
+	VectorMA(start, random->RandomFloat(0.0f, 8.0f), shotDir, dStart);
+	VectorMA(dStart, MIN(length, random->RandomFloat(256.0f, 1024.0f)), shotDir, dEnd);
 
 	//Create the line
-	CFXStaticLine *tracerLine = new CFXStaticLine( "Tracer", dStart, dEnd, random->RandomFloat( 6.0f, 12.0f ), 0.01f, "effects/gunshiptracer", 0 );
-	assert( tracerLine );
+	CFXStaticLine *tracerLine = new CFXStaticLine("Tracer", dStart, dEnd, random->RandomFloat(6.0f, 12.0f), 0.1f, "effects/tracer_middle", 0);
+	assert(tracerLine);;
 
 	//Throw it into the list
-	clienteffects->AddEffect( tracerLine );
+	clienteffects->AddEffect(tracerLine);
 }
 
 
@@ -227,31 +228,57 @@ void FX_PlayerAR2Tracer( const Vector &start, const Vector &end )
 //			velocity - 
 //			makeWhiz - 
 //-----------------------------------------------------------------------------
-void FX_AR2Tracer( Vector& start, Vector& end, int velocity, bool makeWhiz )
+void FX_AR2Tracer(Vector& start, Vector& end, int velocity, bool makeWhiz)
 {
-	VPROF_BUDGET( "FX_AR2Tracer", VPROF_BUDGETGROUP_PARTICLE_RENDERING );
-	
+	VPROF_BUDGET("FX_AR2Tracer", VPROF_BUDGETGROUP_PARTICLE_RENDERING);
+
 	//Don't make small tracers
 	float dist;
 	Vector dir;
 
-	VectorSubtract( end, start, dir );
-	dist = VectorNormalize( dir );
+	VectorSubtract(end, start, dir);
+	dist = VectorNormalize(dir);
 
 	// Don't make short tracers.
-	if ( dist < 128 )
+	if (dist < 64)
 		return;
 
-	float length = random->RandomFloat( 128.0f, 256.0f );
-	float life = ( dist + length ) / velocity;	//NOTENOTE: We want the tail to finish its run as well
-	
-	//Add it
-	FX_AddDiscreetLine( start, dir, velocity, length, dist, random->RandomFloat( 0.5f, 1.5f ), life, "effects/gunshiptracer" );
+	float length = random->RandomFloat(128.0f, 256.0f);
+	float life = (dist + length) / velocity;	//NOTENOTE: We `want the tail to finish its run as well
 
-	if( makeWhiz )
+	//Add it
+	FX_AddDiscreetLine(start, dir, velocity, length, dist, random->RandomFloat(0.5f, 1.5f), life, "effects/tracer_middle");
+
+	if (makeWhiz)
 	{
-		FX_TracerSound( start, end, TRACER_TYPE_GUNSHIP );	
+		FX_TracerSound(start, end, TRACER_TYPE_GUNSHIP);
 	}
+
+
+	/*// Grab the data
+	Vector vecStart = GetTracerOrigin(data);
+	float flVelocity = data.m_flScale;
+
+	// Use default velocity if none specified
+	if (!flVelocity)
+	{
+	flVelocity = 10000;
+	}
+
+	//Get out shot direction and length
+	Vector vecShotDir;
+	VectorSubtract(data.m_vOrigin, vecStart, vecShotDir);
+	float flTotalDist = VectorNormalize(vecShotDir);
+
+	// Don't make small tracers
+	if (flTotalDist <= 64)
+	return;
+
+	float flLength = random->RandomFloat(256.0f, 384.0f);
+	float flLife = (flTotalDist + flLength) / flVelocity;	//NOTENOTE: We want the tail to finish its run as well
+
+	// Add it
+	FX_AddDiscreetLine(vecStart, vecShotDir, flVelocity, flLength, flTotalDist, 2.0f, flLife, "effects/gunshiptracer");*/
 }
 
 //-----------------------------------------------------------------------------

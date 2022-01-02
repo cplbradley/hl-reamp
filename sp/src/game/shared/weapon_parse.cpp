@@ -112,7 +112,7 @@ WEAPON_FILE_INFO_HANDLE LookupWeaponInfoSlot( const char *name )
 
 
 // FIXME, handle differently?
-static FileWeaponInfo_t gNullWeaponInfo;
+static FileWeaponInfo_t gNullWeaponInfo; 
 
 
 //-----------------------------------------------------------------------------
@@ -459,6 +459,28 @@ void FileWeaponInfo_t::Parse( KeyValues *pKeyValuesData, const char *szWeaponNam
 				Q_strncpy( aShootSounds[i], soundname, MAX_WEAPON_STRING );
 			}
 		}
+	}
+	KeyValues *pEt = pKeyValuesData->FindKey("ExpOffset");
+	KeyValues *pAEt = pKeyValuesData->FindKey("ExpAngleOffset");
+	if (pEt)
+	{
+		m_expOffset.x = pEt->GetFloat("x", 0.0f);
+		m_expOffset.y = pEt->GetFloat("y", 0.0f);
+		m_expOffset.z = pEt->GetFloat("z", 0.0f);
+	}
+	else
+	{
+		m_expOffset = vec3_origin;
+	}
+	if (pAEt)
+	{
+		m_expOriOffset.x = pAEt->GetFloat("x", 0.0f);
+		m_expOriOffset.y = pAEt->GetFloat("y", 0.0f);
+		m_expOriOffset.z = pAEt->GetFloat("z", 0.0f);
+	}
+	else
+	{
+		m_expOriOffset = vec3_angle;
 	}
 }
 

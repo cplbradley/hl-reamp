@@ -13,6 +13,7 @@
 #include "vgui_controls/Controls.h"
 #include "vgui/ISurface.h"
 #include "ivrenderview.h"
+#include "view_scene.h"
 #include "materialsystem/imaterialsystem.h"
 #include "VGuiMatSurface/IMatSystemSurface.h"
 #include "client_virtualreality.h"
@@ -31,6 +32,7 @@
 
 ConVar crosshair( "crosshair", "1", FCVAR_ARCHIVE );
 ConVar cl_observercrosshair( "cl_observercrosshair", "1", FCVAR_ARCHIVE );
+ConVar cl_thirdperson_crosshair("cl_thirdperson_crosshair", "0");
 
 using namespace vgui;
 
@@ -249,7 +251,7 @@ void CHudCrosshair::Paint( void )
 	if( bBehindCamera )
 		return;
 
-	float flWeaponScale = 1.f;
+	float flWeaponScale = 1.0f;
 	int iTextureW = m_pCrosshair->Width();
 	int iTextureH = m_pCrosshair->Height();
 	C_BaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
@@ -265,19 +267,45 @@ void CHudCrosshair::Paint( void )
 #else
 	Color clr = m_clrCrosshair;
 #endif
-	float flWidth = flWeaponScale * flPlayerScale * (float)iTextureW;
-	float flHeight = flWeaponScale * flPlayerScale * (float)iTextureH;
-	int iWidth = (int)( flWidth + 0.5f );
-	int iHeight = (int)( flHeight + 0.5f );
-	int iX = (int)( x + 0.5f );
-	int iY = (int)( y + 0.5f );
 
-	m_pCrosshair->DrawSelfCropped (
-		iX-(iWidth/2), iY-(iHeight/2),
-		0, 0,
-		iTextureW, iTextureH,
-		iWidth, iHeight,
-		clr );
+	if (cl_thirdperson_crosshair.GetBool() == false)
+	{
+		float flWidth = flWeaponScale * flPlayerScale * (float)iTextureW;
+		float flHeight = flWeaponScale * flPlayerScale * (float)iTextureH;
+		int iWidth = (int)(flWidth + 0.5f);
+		int iHeight = (int)(flHeight + 0.5f);
+		int iX = (int)(x + 0.5f);
+		int iY = (int)(y + 0.5f);
+
+		m_pCrosshair->DrawSelfCropped(
+			iX - (iWidth / 2), iY - (iHeight / 2),
+			0, 0,
+			iTextureW, iTextureH,
+			iWidth, iHeight,
+			clr);
+	}
+	else
+	{
+		float crossx, crossy;
+		Vector vecEyeDirection, vecEndPos, vecAimPoint;
+		pPlayer->EyeVectors(&vecEyeDirection);
+		VectorMA(pPlayer->EyePosition(), MAX_TRACE_LENGTH, vecEyeDirection, vecEndPos);
+		trace_t	trace;
+		UTIL_TraceLine(pPlayer->EyePosition(), vecEndPos, MASK_SOLID_BRUSHONLY, pPlayer, COLLISION_GROUP_NONE, &trace);
+		vecAimPoint = trace.endpos;
+		Vector screen;
+
+		crossx = ScreenWidth() / 2;
+		crossy = ScreenHeight() / 2;
+
+		HudTransform(vecAimPoint, screen);
+		crossx += 0.5 * screen[0] * ScreenWidth() + 0.5;
+		crossy -= 0.5 * screen[1] * ScreenHeight() + 0.5;
+
+		crossx -= m_pCrosshair->Width() / 2;
+		crossy -= m_pCrosshair->Height() / 2;
+		m_pCrosshair->DrawSelf(crossx,crossy,clr);
+	}
 }
 
 //-----------------------------------------------------------------------------

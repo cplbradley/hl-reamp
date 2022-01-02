@@ -1,10 +1,42 @@
 
-
-$scale 1.0
-$modelname	"vortboss_test.mdl"
-$body vortboss_test "vortboss_ref.smd"
+$modelname	"vortboss_test_breakable.mdl"
+$model ufo "ufo.smd"
+$model cannon "cannon.smd"
 $contents "solid"
 $cdmaterials "models/vortboss"
+$bodygroup "body"
+{
+	studio body_normal
+	studio body_badly_damaged
+}
+$texturegroup skins 
+{
+	{ "vortigaunt_base" "vort_eye" "vortcannon_diffuse" "vortufo_diffuse" }
+	{ "vortigaunt_glow" "vort_eye" "vortcannon_glow" "vortufo_glow" }
+}
+
+$lod 75 
+{
+	replacemodel "body_badly_damaged" "body_badly_damaged_lod1"
+	replacemodel "body_normal" "body_normal_lod1"
+	replacemodel "cannon" "cannon_lod1"
+	replacemodel "ufo" "ufo_lod1"
+}
+$lod 110
+{
+	replacemodel "body_badly_damaged" "body_badly_damaged_lod2"
+	replacemodel "body_normal" "body_normal_lod2"
+	replacemodel "cannon" "cannon_lod2"
+	replacemodel "ufo" "ufo_lod2"
+}
+$lod 150
+{
+	replacemodel "body_badly_damaged" "body_badly_damaged_lod3"
+	replacemodel "body_normal" "body_normal_lod3"
+	replacemodel "ufo" "ufo_lod3"
+	replacemodel "cannon" "cannon_lod2"
+}
+
 $include "DefineBones.qci"
 
 
@@ -32,7 +64,7 @@ $hbox 0 "ValveBiped.hand1_L"	     0.00   -6.45   -4.70     8.43    3.40    4.34
 $hbox 0 "ValveBiped.neck1"	   -12.49  -17.89  -14.94    15.11   16.00   14.26
 $hbox 0 "ValveBiped.head"	    -8.84   -8.74  -13.61    18.61   14.43   14.20
 
-$surfaceprop "default"
+$surfaceprop "alienflesh"
 $jointsurfaceprop "Cylinder002"	 "metal"
 $jointsurfaceprop "Cylinder001"	 "metal"
 
@@ -330,4 +362,17 @@ $sequence "dodgeright" {
 	fadeout 0.2
 	fps 30
 	walkframe 20 LY
+}
+$sequence "rocketbarage" {
+	"anims/vortboss_rocket_barage.smd"
+	activity ACT_VORTBOSS_BARAGE 1
+	{ event AE_VORTBOSS_ROCKET_LAUNCH 16 "" }
+	{ event AE_VORTBOSS_ROCKET_LAUNCH 20 "" }
+	{ event AE_VORTBOSS_ROCKET_LAUNCH 24 "" }
+	{ event AE_VORTBOSS_ROCKET_LAUNCH 28 "" }
+	{ event AE_VORTBOSS_ROCKET_LAUNCH 32 "" }
+	{ event AE_VORTBOSS_ROCKET_LAUNCH 36 "" }
+	fadein 0.2
+	fadeout 0.2
+	fps 30
 }

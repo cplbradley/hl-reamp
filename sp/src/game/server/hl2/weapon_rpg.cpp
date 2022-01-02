@@ -32,6 +32,7 @@
 #include "hl2_shareddefs.h"
 #include "rumble_shared.h"
 #include "gamestats.h"
+#include "physobj.h"
 
 #ifdef PORTAL
 #include "portal_util_shared.h"
@@ -48,6 +49,7 @@ extern int g_interactionPlayerLaunchedRPG;
 
 static ConVar sk_apc_missile_damage("sk_apc_missile_damage", "15");
 ConVar rpg_missle_use_custom_detonators("rpg_missle_use_custom_detonators", "1");
+extern ConVar mat_classic_render;
 
 #define APC_MISSILE_DAMAGE	sk_apc_missile_damage.GetFloat()
 
@@ -105,7 +107,6 @@ CLaserDot *GetLaserDotList()
 
 BEGIN_DATADESC(CMissile)
 
-DEFINE_FIELD(m_hOwner, FIELD_EHANDLE),
 DEFINE_FIELD(m_hRocketTrail, FIELD_EHANDLE),
 DEFINE_FIELD(m_flAugerTime, FIELD_TIME),
 DEFINE_FIELD(m_flMarkDeadTime, FIELD_TIME),
@@ -335,11 +336,6 @@ void CMissile::ShotDown(void)
 	m_flMarkDeadTime = gpGlobals->curtime + 0.75;
 
 	// Let the RPG start reloading immediately
-	if (m_hOwner != NULL)
-	{
-		m_hOwner->NotifyRocketDied();
-		m_hOwner = NULL;
-	}
 }
 
 
@@ -349,8 +345,24 @@ void CMissile::ShotDown(void)
 void CMissile::DoExplosion(void)
 {
 	// Explode
-	ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), GetDamage(), CMissile::EXPLOSION_RADIUS,
-		SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS | SF_ENVEXPLOSION_NOSMOKE, 0.0f, this);
+	if (GetOwnerEntity() && GetOwnerEntity()->IsNPC())
+		ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), GetDamage(), CMissile::EXPLOSION_RADIUS/2, SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS | SF_ENVEXPLOSION_NOSMOKE, 0.0f, this,-1,0, GetOwnerEntity()->Classify());
+	else
+	{
+		ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), GetDamage(), CMissile::EXPLOSION_RADIUS, SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS | SF_ENVEXPLOSION_NOSMOKE, 0.0f,GetOwnerEntity());
+		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+		if (!pPlayer)
+			return;
+		Vector vecToPlayer = pPlayer->WorldSpaceCenter() - GetAbsOrigin();
+		float dist = vecToPlayer.Length();
+		if (dist <= 128.0f)
+		{
+			DevMsg("player found, rocketjumping\n");
+			Vector vecDir = vecToPlayer.Normalized();
+			float ratio = dist / 128.0f;
+			pPlayer->VelocityPunch(vecDir * (300/ratio));
+		}
+	}
 }
 
 
@@ -380,13 +392,7 @@ void CMissile::Explode(void)
 		m_hRocketTrail->SetLifetime(0.1f);
 		m_hRocketTrail = NULL;
 	}
-
-	if (m_hOwner != NULL)
-	{
-		m_hOwner->NotifyRocketDied();
-		m_hOwner = NULL;
-	}
-
+	SetTouch(NULL);
 	StopSound("Missile.Ignite");
 	UTIL_Remove(this);
 }
@@ -464,20 +470,6 @@ void CMissile::IgniteThink(void)
 
 	//SetThink(&CMissile::SeekThink);
 	//SetNextThink(gpGlobals->curtime);
-
-	if (m_hOwner && m_hOwner->GetOwner())
-	{
-		CBasePlayer *pPlayer = ToBasePlayer(m_hOwner->GetOwner());
-
-		if (pPlayer)
-		{
-			color32 white = { 255, 225, 205, 64 };
-			UTIL_ScreenFade(pPlayer, white, 0.1f, 0.0f, FFADE_IN);
-
-			pPlayer->RumbleEffect(RUMBLE_RPG_MISSILE, 0, RUMBLE_FLAG_RESTART);
-		}
-	}
-
 	CreateSmokeTrail();
 }
 
@@ -1394,7 +1386,7 @@ void CAPCMissile::ComputeActualDotPosition(CLaserDot *pLaserDot, Vector *pActual
 }
 
 #define	RPG_BEAM_SPRITE		"effects/laser1_noz.vmt"
-#define	RPG_LASER_SPRITE	"sprites/redglow1.vmt"
+#define	RPG_LASER_SPRITE	"sprites/glow04.vmt"
 
 //=============================================================================
 // RPG
@@ -1434,6 +1426,15 @@ acttable_t	CWeaponRPG::m_acttable[] =
 	{ ACT_RUN, ACT_RUN_RPG, true },
 	{ ACT_RUN_CROUCH, ACT_RUN_CROUCH_RPG, true },
 	{ ACT_COVER_LOW, ACT_COVER_LOW_RPG, true },
+
+	{ ACT_HL2MP_IDLE, ACT_HL2MP_IDLE_RPG, false },
+	{ ACT_HL2MP_RUN, ACT_HL2MP_RUN_RPG, false },
+	{ ACT_HL2MP_IDLE_CROUCH, ACT_HL2MP_IDLE_CROUCH_RPG, false },
+	{ ACT_HL2MP_WALK_CROUCH, ACT_HL2MP_WALK_CROUCH_RPG, false },
+	{ ACT_HL2MP_GESTURE_RANGE_ATTACK, ACT_HL2MP_GESTURE_RANGE_ATTACK_RPG, false },
+	{ ACT_HL2MP_GESTURE_RELOAD, ACT_HL2MP_GESTURE_RELOAD_RPG, false },
+	{ ACT_HL2MP_JUMP, ACT_HL2MP_JUMP_RPG, false },
+	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_RPG, false },
 };
 
 IMPLEMENT_ACTTABLE(CWeaponRPG);
@@ -1485,7 +1486,7 @@ void CWeaponRPG::Precache(void)
 	PrecacheScriptSound("Missile.Accelerate");
 
 	// Laser dot...
-	PrecacheModel("sprites/redglow1.vmt");
+	PrecacheModel("sprites/glow04.vmt");
 	PrecacheModel(RPG_LASER_SPRITE);
 	PrecacheModel(RPG_BEAM_SPRITE);
 
@@ -1557,7 +1558,6 @@ void CWeaponRPG::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharac
 		VectorAngles(vecShootDir, vecAngles);
 
 		m_hMissile = CMissile::Create(muzzlePoint, vecAngles, GetOwner()->edict());
-		m_hMissile->m_hOwner = this;
 
 		// NPCs always get a grace period
 		m_hMissile->SetGracePeriod(0.5);
@@ -1611,7 +1611,7 @@ bool CWeaponRPG::WeaponShouldBeLowered(void)
 //-----------------------------------------------------------------------------
 void CWeaponRPG::PrimaryAttack(void)
 {
-	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
 	if (pPlayer->HasOverdrive())
 	{
 		SetThink(&CWeaponRPG::Rocket1);
@@ -1650,9 +1650,13 @@ void CWeaponRPG::LaunchRocket(void)
 	VectorAngles(vForward, vecAngles);
 	Vector	muzzlePoint = pPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * 6.0f + vUp * -3.0f;
 	m_hMissile = CMissile::Create(muzzlePoint, vecAngles, GetOwner()->edict());
+	m_hMissile->SetOwnerEntity(pPlayer);
 	m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
 	SuppressGuiding();
-	WeaponSound(SINGLE);
+	if (mat_classic_render.GetInt() == 0)
+		WeaponSound(SINGLE);
+	else
+		WeaponSound(WPN_DOUBLE);
 	SendWeaponAnim(GetPrimaryAttackActivity());
 	//m_bRedraw = true;
 	
@@ -2129,7 +2133,7 @@ void CWeaponRPG::StartLaserEffects(void)
 		m_hLaserBeam->SetStartAttachment(startAttachment);
 		m_hLaserBeam->SetEndAttachment(endAttachment);
 		m_hLaserBeam->SetNoise(0);
-		m_hLaserBeam->SetColor(255, 0, 0);
+		m_hLaserBeam->SetColor(0, 200, 255);
 		m_hLaserBeam->SetScrollRate(0);
 		m_hLaserBeam->SetWidth(0.5f);
 		m_hLaserBeam->SetEndWidth(0.5f);
@@ -2162,7 +2166,7 @@ void CWeaponRPG::StartLaserEffects(void)
 #endif
 
 		m_hLaserMuzzleSprite->SetAttachment(pOwner->GetViewModel(), LookupAttachment("laser"));
-		m_hLaserMuzzleSprite->SetTransparency(kRenderTransAdd, 255, 255, 255, 255, kRenderFxNoDissipation);
+		m_hLaserMuzzleSprite->SetTransparency(kRenderTransAdd, 0, 200, 255, 255, kRenderFxNoDissipation);
 		m_hLaserMuzzleSprite->SetBrightness(255, 0.5f);
 		m_hLaserMuzzleSprite->SetScale(0.25f, 0.5f);
 		m_hLaserMuzzleSprite->TurnOn();
@@ -2288,11 +2292,11 @@ CLaserDot *CLaserDot::Create(const Vector &origin, CBaseEntity *pOwner, bool bVi
 	UTIL_SetSize(pLaserDot, vec3_origin, vec3_origin);
 
 	//Create the graphic
-	pLaserDot->SpriteInit("sprites/redglow1.vmt", origin);
+	pLaserDot->SpriteInit("sprites/glow04.vmt", origin);
 
 	pLaserDot->SetName(AllocPooledString("TEST"));
 
-	pLaserDot->SetTransparency(kRenderGlow, 255, 255, 255, 255, kRenderFxNoDissipation);
+	pLaserDot->SetTransparency(kRenderGlow, 0, 200, 255, 255, kRenderFxNoDissipation);
 	pLaserDot->SetScale(0.5f);
 
 	pLaserDot->SetOwnerEntity(pOwner);

@@ -205,6 +205,117 @@ void CHud::DrawIconProgressBar( int x, int y, CHudTexture *icon, CHudTexture *ic
 			barOfs, 0, width - barOfs, height, // Cropped subrect
 			clr );
 	}
-}
+	else if (type == HUDPB_HORIZONTAL_INV)
+	{
+		int	barOfs = width * percentage;
 
+		icon2->DrawSelfCropped(
+			x, y,  // Pos
+			0, 0, barOfs, height, // Cropped subrect
+			clr);
+
+		icon->DrawSelfCropped(
+			x, y,
+			barOfs, 0, width - barOfs, height, // Cropped subrect
+			clr);
+	}
+}
+void CHud::DrawIconProgressBarBG(int x, int y, CHudTexture *icon, CHudTexture *icon2, float percentage, Color& clr, Color& clr2, int type)
+{
+	if (icon == NULL)
+		return;
+
+	//Clamp our percentage
+	percentage = MIN(1.0f, percentage);
+	percentage = MAX(0.0f, percentage);
+
+	int	height = icon->Height();
+	int	width = icon->Width();
+
+	//Draw a vertical progress bar
+	if (type == HUDPB_VERTICAL)
+	{
+		int	barOfs = height * percentage;
+
+		icon2->DrawSelfCropped(
+			x, y,  // Pos
+			0, 0, width, barOfs, // Cropped subrect
+			clr2);
+
+		icon->DrawSelfCropped(
+			x, y + barOfs,
+			0, barOfs, width, height - barOfs, // Cropped subrect
+			clr);
+	}
+	else if (type == HUDPB_HORIZONTAL)
+	{
+		int	barOfs = width * percentage;
+
+		icon2->DrawSelfCropped(
+			x, y,  // Pos
+			0, 0, barOfs, height, // Cropped subrect
+			clr2);
+
+		icon->DrawSelfCropped(
+			x + barOfs, y,
+			barOfs, 0, width - barOfs, height, // Cropped subrect
+			clr);
+	}
+	else if (type == HUDPB_HORIZONTAL_INV)
+	{
+		int	barOfs = width * percentage;
+
+		icon2->DrawSelfCropped(
+			x, y,  // Pos
+			0, 0, barOfs, height, // Cropped subrect
+			clr2);
+
+		icon->DrawSelfCropped(
+			x, y-barOfs,
+			barOfs, 0, width - barOfs, height, // Cropped subrect
+			clr);
+	}
+}
+void CHud::DrawIconProgressBarExt(int x, int y, int w, int h, CHudTexture *icon, CHudTexture *icon2, float percentage, Color& clr, int type)
+{
+	if (icon == NULL)
+		return;
+
+	//Clamp our percentage
+	percentage = min(1.0f, percentage);
+	percentage = max(0.0f, percentage);
+
+	int	height = icon->Height();
+	int	width = icon->Width();
+
+	//Draw a vertical progress bar
+	if (type == HUDPB_VERTICAL)
+	{
+		int	barOfs = height * percentage;
+
+		icon2->DrawSelfCropped(
+			x, y,  // Pos
+			0, 0, width, barOfs, // Cropped subrect
+			w, (h * percentage), clr);
+
+		icon->DrawSelfCropped(
+			x, y + (h * percentage),
+			0, barOfs, width, height - barOfs, // Cropped subrect
+			w, h - (h * percentage), clr);
+	}
+	else if (type == HUDPB_HORIZONTAL)
+	{
+		int	barOfs = height * percentage;
+
+		icon2->DrawSelfCropped(
+			x, y,  // Pos
+			0, 0, width, barOfs, // Cropped subrect
+			w, (h * percentage), clr);
+
+		icon->DrawSelfCropped(
+			x + (h * percentage),w,
+			barOfs, 0, width - barOfs, height, // Cropped subrect
+			w - (w * percentage),h, clr);
+	}
+}
 

@@ -419,6 +419,8 @@ public:
 
 	void			FreezeFrame( float flFreezeTime );
 
+	void			SetScreenOverlayMaterial(IMaterial *pMaterial);
+
 	void SetWaterOverlayMaterial( IMaterial *pMaterial )
 	{
 		m_UnderWaterOverlayMaterial.Init( pMaterial );
@@ -443,7 +445,7 @@ private:
 	void			PerformScreenSpaceEffects( int x, int y, int w, int h );
 
 	// Overlays
-	void			SetScreenOverlayMaterial( IMaterial *pMaterial );
+
 	IMaterial		*GetScreenOverlayMaterial( );
 	void			PerformScreenOverlay( int x, int y, int w, int h );
 

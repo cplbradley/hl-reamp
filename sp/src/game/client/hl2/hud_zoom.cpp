@@ -22,8 +22,12 @@
 #include <KeyValues.h>
 #include <vgui_controls/AnimationController.h>
 
+#include "viewrender.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+extern CViewRender g_DefaultViewRender;
 
 //-----------------------------------------------------------------------------
 // Purpose: Draws the zoom screen
@@ -39,6 +43,8 @@ public:
 	void	Init( void );
 	void	LevelInit( void );
 
+	void	MsgFunc_ShowScope(bf_read &msg);
+
 protected:
 	virtual void ApplySchemeSettings(vgui::IScheme *scheme);
 	virtual void Paint( void );
@@ -48,15 +54,18 @@ private:
 	float	m_flZoomStartTime;
 	bool	m_bPainted;
 
-	CPanelAnimationVarAliasType( float, m_flCircle1Radius, "Circle1Radius", "66", "proportional_float" );
-	CPanelAnimationVarAliasType( float, m_flCircle2Radius, "Circle2Radius", "74", "proportional_float" );
+	CPanelAnimationVarAliasType( float, m_flCircle1Radius, "Circle1Radius", "8", "proportional_float" );
+	CPanelAnimationVarAliasType( float, m_flCircle2Radius, "Circle2Radius", "16", "proportional_float" );
 	CPanelAnimationVarAliasType( float, m_flDashGap, "DashGap", "16", "proportional_float" );
-	CPanelAnimationVarAliasType( float, m_flDashHeight, "DashHeight", "4", "proportional_float" );
+	CPanelAnimationVarAliasType( float, m_flDashHeight, "DashHeight", "2", "proportional_float" );
+	bool m_bShowScope;
 
 	CMaterialReference m_ZoomMaterial;
+	CMaterialReference m_BlurMaterial;
 };
 
 DECLARE_HUDELEMENT( CHudZoom );
+DECLARE_HUD_MESSAGE(CHudZoom, ShowScope);
 
 using namespace vgui;
 
@@ -76,10 +85,13 @@ CHudZoom::CHudZoom( const char *pElementName ) : CHudElement(pElementName), Base
 //-----------------------------------------------------------------------------
 void CHudZoom::Init( void )
 {
+	HOOK_HUD_MESSAGE(CHudZoom, ShowScope);
 	m_bZoomOn = false;
 	m_bPainted = false;
 	m_flZoomStartTime = -999.0f;
 	m_ZoomMaterial.Init( "vgui/zoom", TEXTURE_GROUP_VGUI );
+	m_BlurMaterial.Init("vgui/zoom_refract", TEXTURE_GROUP_OTHER);
+	view = (IViewRender *)&g_DefaultViewRender;
 }
 
 //-----------------------------------------------------------------------------
@@ -135,7 +147,7 @@ bool CHudZoom::ShouldDraw( void )
 	return ( bNeedsDraw && CHudElement::ShouldDraw() );
 }
 
-#define	ZOOM_FADE_TIME	0.4f
+#define	ZOOM_FADE_TIME	0.25f
 //-----------------------------------------------------------------------------
 // Purpose: draws the zoom effect
 //-----------------------------------------------------------------------------
@@ -147,6 +159,17 @@ void CHudZoom::Paint( void )
 	C_BaseHLPlayer *pPlayer = dynamic_cast<C_BaseHLPlayer *>(C_BasePlayer::GetLocalPlayer());
 	if ( pPlayer == NULL )
 		return;
+
+	if (m_bShowScope)
+	{
+		if (view->GetScreenOverlayMaterial() != m_BlurMaterial)
+			view->SetScreenOverlayMaterial(m_BlurMaterial);
+	}
+	else
+	{
+		if (view->GetScreenOverlayMaterial() != NULL)
+			view->SetScreenOverlayMaterial(NULL);
+	}
 
 	if ( pPlayer->m_HL2Local.m_bZooming && m_bZoomOn == false )
 	{
@@ -196,6 +219,8 @@ void CHudZoom::Paint( void )
 
 	surface()->DrawOutlinedCircle( xCrosshair, yCrosshair, m_flCircle1Radius * scale, 48);
 	surface()->DrawOutlinedCircle( xCrosshair, yCrosshair, m_flCircle2Radius * scale, 64);
+	surface()->DrawOutlinedCircle(xCrosshair, yCrosshair, 256 * scale, 6);
+	surface()->DrawFilledRect(xCrosshair, yCrosshair - (300*scale), xCrosshair, yCrosshair - (364*scale));
 
 	// draw dashed lines
 	int dashCount = 2;
@@ -268,5 +293,13 @@ void CHudZoom::Paint( void )
 	meshBuilder.End();
 	pMesh->Draw();
 
+	
+	
+
 	m_bPainted = true;
+}
+
+void CHudZoom::MsgFunc_ShowScope(bf_read &msg)
+{
+	m_bShowScope = msg.ReadByte();
 }

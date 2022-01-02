@@ -15,6 +15,7 @@
 #define	GRENADEAR2_H
 
 #include "basegrenade_shared.h"
+#include "SpriteTrail.h"
 
 #define	MAX_AR2_NO_COLLIDE_TIME 0.2
 
@@ -26,7 +27,7 @@ class CGrenadeAR2 : public CBaseGrenade
 public:
 	DECLARE_CLASS( CGrenadeAR2, CBaseGrenade );
 
-	CHandle< SmokeTrail > m_hSmokeTrail;
+	CHandle< CSpriteTrail > m_hSmokeTrail;
 	float				 m_fSpawnTime;
 	float				m_fDangerRadius;
 

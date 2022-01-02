@@ -294,29 +294,31 @@ void CWeaponFrag::SecondaryAttack( void )
 //-----------------------------------------------------------------------------
 void CWeaponFrag::PrimaryAttack( void )
 {
-	if ( m_bRedraw )
-		return;
+	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+	Vector	vecEye = pPlayer->EyePosition();
+	Vector	vForward, vRight, vUp;
+	Vector vecAng;
+	pPlayer->EyeVectors(&vecAng);
+	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
+	QAngle qEyeAng = pPlayer->EyeAngles();
+	Vector	muzzlePoint = pPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * 6.0f + vUp * -3.0f;
+	Vector vecSrc = vecEye + vForward * 18.0f + vRight * 8.0f + Vector(0, 0, -8);
+	//CheckThrowPosition(pPlayer, vecEye, vecSrc);
 
-	CBaseCombatCharacter *pOwner  = GetOwner();
-	
-	if ( pOwner == NULL )
-	{ 
-		return;
-	}
+	float vertfactor = 250;
+	Vector vecThrow = vecAng * 850 + Vector(0, 0, vertfactor);
+#ifndef CLIENT_DLL
+	Fraggrenade_Create(muzzlePoint, vec3_angle, vecThrow, AngularImpulse(200, random->RandomInt(-600, 600), 0), pPlayer, 3.0f, false);
+#endif
+	m_flNextPrimaryAttack = gpGlobals->curtime + 0.4f;
 
-	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );;
+	WeaponSound(WPN_DOUBLE);
 
-	if ( !pPlayer )
-		return;
+	SendWeaponAnim(GetPrimaryAttackActivity());
 
-	// Note that this is a primary attack and prepare the grenade attack to pause.
-	m_AttackPaused = GRENADE_PAUSED_PRIMARY;
-	SendWeaponAnim( ACT_VM_PULLBACK_HIGH );
-	
-	// Put both of these off indefinitely. We do not know how long
-	// the player will hold the grenade.
-	m_flTimeWeaponIdle = FLT_MAX;
-	m_flNextPrimaryAttack = FLT_MAX;
+	//m_bRedraw = true;
+
+	DecrementAmmo(GetOwner());
 
 	// If I'm now out of ammo, switch away
 	if ( !HasPrimaryAmmo() )

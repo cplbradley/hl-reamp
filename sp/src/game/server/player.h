@@ -729,6 +729,27 @@ public:
 
 	void	AllowImmediateDecalPainting();
 
+	//Damage Resistance
+public:
+	virtual bool HasBlocker(void);
+	virtual void SetBlockerDamageType(int dmgtype);
+	virtual void SetBlockerDamageLeft(int dmgleft, int dmgtype);
+	virtual int GetBlockerDamageLeft(int dmgtype);
+	virtual void ToggleDamageBlocker(void);
+
+	CNetworkVar(bool,m_bHasBlocker);
+	CNetworkVar(int,m_iDamageBlockerType);
+	CNetworkVar(int,m_iToxicDamageLeft);
+	CNetworkVar(int, m_iElectricDamageLeft);
+	CNetworkVar(int,m_iFireDamageLeft);
+	CNetworkVar(int, m_iMaxFireDamage);
+	CNetworkVar(int, m_iMaxToxicDamage);
+	CNetworkVar(int, m_iMaxElectricDamage);
+
+
+	bool m_bInCinematicCamera;
+
+public:
 	// Suicide...
 	virtual void CommitSuicide( bool bExplode = false, bool bForce = false );
 	virtual void CommitSuicide( const Vector &vecForce, bool bExplode = false, bool bForce = false );

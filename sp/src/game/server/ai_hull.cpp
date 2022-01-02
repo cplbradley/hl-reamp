@@ -47,6 +47,8 @@ ai_hull_t  Tiny_Centered_Hull	(bits_TINY_CENTERED_HULL,	"TINY_CENTERED_HULL",	Ve
 ai_hull_t  Large_Hull			(bits_LARGE_HULL,			"LARGE_HULL",			Vector(-40,-40,   0),	Vector(40, 40, 100),	Vector(-40,-40, 0),		Vector(40, 40, 100) );
 ai_hull_t  Large_Centered_Hull	(bits_LARGE_CENTERED_HULL,	"LARGE_CENTERED_HULL",	Vector(-38,-38, -38),	Vector(38, 38, 38),		Vector(-30,-30,-30),	Vector(30, 30, 30) );
 ai_hull_t  Medium_Tall_Hull		(bits_MEDIUM_TALL_HULL,		"MEDIUM_TALL_HULL",		Vector(-18,-18,   0),	Vector(18, 18, 100),	Vector(-12,-12, 0),	    Vector(12, 12, 100) );
+ai_hull_t  Mechubus_Hull		(bits_MECHUBUS_HULL,		"MECHUBUS_HULL",		Vector(-50, -35, 0),	Vector(50, 35, 158),	Vector(-40, -25, 0),	Vector(40, 25, 140));
+ai_hull_t  Vortboss_Hull		(bits_VORTBOSS_HULL,		"VORTBOSS_HULL",		Vector(-58, -69, 0),	Vector(58, 69, 134),	Vector(-36, -55, 0),	Vector(36, 55, 120));
 #endif//HL1_DLL
 
 //
@@ -64,6 +66,8 @@ ai_hull_t*	hull[NUM_HULLS] =
 	&Large_Hull,
 	&Large_Centered_Hull,
 	&Medium_Tall_Hull,
+	&Mechubus_Hull,
+	&Vortboss_Hull,
 };
 
 

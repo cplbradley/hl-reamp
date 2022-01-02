@@ -41,7 +41,7 @@ public:
 
 	CWeaponFurybar();
 	
-	CNetworkVar(bool, m_bShouldDrawFlames);
+	
 	float		GetRange(void)		{ return	CROWBAR_RANGE; }
 	float		GetFireRate(void)		{ return	CROWBAR_REFIRE; }
 	void		Equip(CBaseCombatCharacter *pOwner);
@@ -54,6 +54,7 @@ public:
 	float		m_fSwitchTime; 
 	void		AddViewKick(void);
 	float		GetDamageForActivity(Activity hitActivity);
+
 	
 	CGameMovement *gm = dynamic_cast<CGameMovement *>(g_pGameMovement);
 
@@ -68,10 +69,8 @@ private:
 	void HandleAnimEventMeleeHit(animevent_t *pEvent, CBaseCombatCharacter *pOperator);
 };
 
-IMPLEMENT_SERVERCLASS_ST(CWeaponFurybar, DT_WeaponFurybar)
-	SendPropBool(SENDINFO(m_bShouldDrawFlames)),
+IMPLEMENT_SERVERCLASS_ST(CWeaponFurybar,DT_WeaponFurybar)
 END_SEND_TABLE()
-
 #ifndef HL2MP
 LINK_ENTITY_TO_CLASS(weapon_furybar, CWeaponFurybar);
 PRECACHE_WEAPON_REGISTER(weapon_furybar);
@@ -108,6 +107,7 @@ void CWeaponFurybar::Precache(void)
 	BaseClass::Precache();
 	PrecacheScriptSound("Furybar.Hit");
 	PrecacheScriptSound("Powerup.Pickup");
+	PrecacheParticleSystem("furybar_burn");
 }
 //-----------------------------------------------------------------------------
 // Purpose: Add in a view kick for this weapon
@@ -182,6 +182,7 @@ int CWeaponFurybar::WeaponMeleeAttack1Condition(float flDot, float flDist)
 void CWeaponFurybar::ItemPostFrame(void)
 {
 	BaseClass::ItemPostFrame();
+
 	if (gpGlobals->curtime >= m_fSwitchTime)
 	{
 		End();
@@ -259,7 +260,6 @@ void CWeaponFurybar::Equip(CBaseCombatCharacter *pOwner)
 	{
 		ActivateTimer();
 	}
-	m_bShouldDrawFlames = true;
 	EmitSound("Powerup.Pickup");
 	BaseClass::Equip(pOwner);
 }
@@ -278,18 +278,16 @@ void CWeaponFurybar::ActivateTimer(void)
 	UTIL_ScreenFade(pPlayer, red, 0.5, 0, FFADE_IN);
 	m_fSwitchTime = gpGlobals->curtime + 30.0f;
 	gm->m_bShouldGroundPound = true;
-	int iAttachment1 = LookupAttachment("0");
-	int iAttachment2 = LookupAttachment("1");
-	Vector vecStart, vecEnd;
-	pPlayer->GetViewModel()->GetAttachment(iAttachment1, vecStart);
-	pPlayer->GetViewModel()->GetAttachment(iAttachment2, vecEnd);
-	//DispatchParticleEffect("crowbar_burn", PATTACH_ABSORIGIN_FOLLOW, pPlayer->GetViewModel());
-	//DispatchParticleEffect("crowbar_burn", vecStart, vecEnd, GetAbsAngles(), this);
-	//DispatchParticleEffect("crowbar_burn", )
+	//int iAttachment1 = LookupAttachment("0");
+	//int iAttachment2 = LookupAttachment("1");
+	/*Vector vecStart, vecEnd;
+	CBaseViewModel *pvm = pPlayer->GetViewModel();
+	pvm->GetAttachment(0, vecStart);
+	pvm->GetAttachment(1, vecEnd);
+	DispatchParticleEffect("furybar_burn", vecStart, vecEnd, GetAbsAngles(), this);*/
 }
 void CWeaponFurybar::End(void)
 {
-	m_bShouldDrawFlames = false;
 	color32 red = { 200, 0, 0, 128 };
 	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 	CBaseCombatWeapon *pLast = pPlayer->Weapon_GetLast();
@@ -303,6 +301,6 @@ void CWeaponFurybar::End(void)
 	pPlayer->SetMaxSpeed(450.0f);
 	UTIL_ScreenFade(pPlayer, red, 0.5, 0, FFADE_IN);
 	gm->m_bShouldGroundPound = false;
-	StopParticleEffects(pPlayer->GetViewModel());
+	
 
 }

@@ -93,8 +93,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-  </ItemGroup>
-  <ItemGroup>
     <CustomBuild Include="..\..\public\tier0\pointeroverride.asm">
       <Filter>Source Files</Filter>
     </CustomBuild>

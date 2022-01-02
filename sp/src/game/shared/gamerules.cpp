@@ -179,7 +179,7 @@ float CGameRules::AdjustProjectileSpeed(float projspeed)
 	{
 	case SKILL_EASY:
 		//Msg("adjusting speed to easy\n");
-		return (projspeed * 0.75f);
+		return (projspeed * 0.8f);
 		break;
 
 	case SKILL_MEDIUM:
@@ -189,12 +189,12 @@ float CGameRules::AdjustProjectileSpeed(float projspeed)
 
 	case SKILL_HARD:
 		//Msg("adjusting speed to hard\n");
-		return (projspeed * 1.5f);
+		return (projspeed * 1.35);
 		break;
 
 	default:
 		//Msg("adjusting speed to default\n");
-		return projspeed * 0.1f;
+		return projspeed;
 		break;
 	}
 }

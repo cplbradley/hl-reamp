@@ -3526,6 +3526,9 @@
     <ClCompile Include="..\shared\Multiplayer\hlrmp_plasmaball.cpp">
       <Filter>Source Files\HL2MP\Weapons</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\hl2mp\weapon_supershotgun.cpp">
+      <Filter>Source Files\HL2MP\Weapons</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

@@ -24,6 +24,9 @@ private:
 	//CNetworkVector(vDmgPos);
 	CBeam *pSpinBeam;
 	bool bDrawSpinBeam;
+	bool bBleeding;
+
+	CNewParticleEffect *m_pBleedingFX;
 
 	C_NPC_VortBoss(const C_NPC_VortBoss &);
 };
@@ -32,6 +35,7 @@ BEGIN_DATADESC(C_NPC_VortBoss)
 END_DATADESC()
 IMPLEMENT_CLIENTCLASS_DT(C_NPC_VortBoss, DT_VortBoss, CNPC_VortBoss)
 RecvPropBool(RECVINFO(bDrawSpinBeam)),
+RecvPropBool(RECVINFO(bBleeding)),
 END_RECV_TABLE()
 
 
@@ -47,7 +51,7 @@ void C_NPC_VortBoss::OnDataChanged(DataUpdateType_t type)
 
 void C_NPC_VortBoss::ClientThink()
 {
-	if (bDrawSpinBeam)
+	/*if (bDrawSpinBeam)
 	{
 		Vector vecHandPos, m_vLaserDir;
 		QAngle angHandAng;
@@ -90,6 +94,20 @@ void C_NPC_VortBoss::ClientThink()
 			pSpinBeam->SetRenderColorA(0);
 			pSpinBeam = NULL;
 		}
+	}*/
+	if (bBleeding)
+	{
+		CParticleProperty * pProp = ParticleProp();
+		if (!m_pBleedingFX)
+		{
+			m_pBleedingFX = pProp->Create("blood_vortboss_bleeding", PATTACH_ABSORIGIN_FOLLOW);
+			pProp->AddControlPoint(m_pBleedingFX, 1, this, PATTACH_ABSORIGIN_FOLLOW);
+		}
+	}
+	else if (m_pBleedingFX)
+	{
+		m_pBleedingFX->StopEmission();
+		m_pBleedingFX = NULL;
 	}
 	BaseClass::ClientThink();
 }

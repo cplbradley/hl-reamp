@@ -1,27 +1,8 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
-// This is a skeleton file for use when creating a new 
-// NPC. Copy and rename this file for the new
-// NPC and add the copy to the build.
-//
-// Leave this file in the build until we ship! Allowing 
-// this file to be rebuilt with the rest of the game ensures
-// that it stays up to date with the rest of the NPC code.
-//
-// Replace occurances of CNewNPC with the new NPC's
-// classname. Don't forget the lower-case occurance in 
-// LINK_ENTITY_TO_CLASS()
-//
-//
-// ASSUMPTIONS MADE:
-//
-// You're making a character based on CAI_BaseNPC. If this 
-// is not true, make sure you replace all occurances
-// of 'CAI_BaseNPC' in this file with the appropriate 
-// parent class.
-//
-// You're making a human-sized NPC that walks.
-//
+//========= VORTIGAUNT BOSS CREATED BY JUST WAX @ VELOCITY PUNCH ============//
 //=============================================================================//
+
+
+
 #include "cbase.h"
 #include "ai_behavior_follow.h"
 #include "ai_moveprobe.h"
@@ -52,6 +33,7 @@
 #include "Sprite.h"
 #include "SpriteTrail.h"
 #include "particle_parse.h"
+#include "weapon_rpg.h"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -65,6 +47,12 @@ enum SquadSlot_t
 };
 enum
 {
+	BODYSTATE_NORMAL,
+	BODYSTATE_DAMAGED,
+	BODYSTATE_BADLYDAMAGED
+};
+enum
+{
 	SCHED_VORTBOSS_CANNON = LAST_SHARED_SCHEDULE,
 	SCHED_VORTBOSS_EYEBLAST,
 	SCHED_VORTBOSS_CHASEENEMY,
@@ -72,7 +60,8 @@ enum
 	SCHED_VORTBOSS_SPINATTACK,
 	SCHED_VORTBOSS_BACKOFF,
 	SCHED_VORTBOSS_CHARGE,
-	SCHED_VORTBOSS_DODGE_ROCKET
+	SCHED_VORTBOSS_DODGE_ROCKET,
+	SCHED_VORTBOSS_BARAGE
 };
 
 //=========================================================
@@ -85,7 +74,8 @@ enum
 	TASK_VORTBOSS_GROUNDATTACK,
 	TASK_VORTBOSS_SPINATTACK,
 	TASK_VORTBOSS_CHARGE,
-	TASK_VORTBOSS_DODGEROCKET
+	TASK_VORTBOSS_DODGEROCKET,
+	TASK_VORTBOSS_BARAGE
 };
 
 
@@ -99,7 +89,8 @@ enum
 	COND_CAN_DO_GROUND_ATTACK,
 	COND_CAN_SPIN_ATTACK,
 	COND_SHOULD_CHARGE,
-	COND_SHOULD_DODGE_ROCKET
+	COND_SHOULD_DODGE_ROCKET,
+	COND_SHOULD_BARAGE
 };
 
 ConVar sk_vortboss_health("sk_vortboss_health", "2500");
@@ -107,6 +98,12 @@ ConVar sk_vortboss_projectile_speed("sk_vortboss_projectile_speed", "1800");
 ConVar g_debug_vortboss_spinattack("g_debug_vortboss_spinattack", "0");
 ConVar sk_vortboss_dmg_projectile("sk_vortboss_dmg_projectile", "9");
 ConVar	sk_vortboss_dmg_charge("sk_vortboss_dmg_charge", "40");
+ConVar sk_vortboss_rocket_speed("sk_vortboss_rocket_speed", "1200");
+ConVar sk_vortboss_barage_frequency("sk_vortboss_barage_frequency", "20");
+ConVar sk_vortboss_eyeblast_frequency("sk_vortboss_eyeblast_frequency", "15");
+ConVar sk_vortboss_cannon_frequency("sk_vortboss_cannon_frequency", "5");
+
+ConVar g_debug_vortboss_rocket("g_debug_vortboss_rocket", "0");
 
 Activity ACT_VORTBOSS_EYEBLAST;
 Activity ACT_VORTBOSS_CANNON;
@@ -118,6 +115,7 @@ Activity ACT_VORTBOSS_CHARGE_STOP;
 Activity ACT_VORTBOSS_CRASH;
 Activity ACT_VORTBOSS_DODGE_LEFT;
 Activity ACT_VORTBOSS_DODGE_RIGHT;
+Activity ACT_VORTBOSS_BARAGE;
 
 
 int AE_VORTBOSS_CHARGECANNON;
@@ -128,11 +126,45 @@ int AE_VORTBOSS_GROUNDATTACK;
 int AE_VORTBOSS_CLEAR_BEAM;
 int AE_VORTBOSS_START_SPINATTACK;
 int AE_VORTBOSS_END_SPINATTACK;
+int AE_VORTBOSS_ROCKET_LAUNCH;
 
 
 #define VORTBOSS_EYE_ATTACHMENT 1
 #define VORTBOSS_HAND_ATTACHMENT 2
 #define VORTBOSS_MAX_LASER_RANGE 3600
+
+class CRocketTarget : public CBaseAnimating
+{
+	DECLARE_CLASS(CRocketTarget, CBaseAnimating);
+public:
+	void Precache(void);
+	void Spawn(void);
+	void Kill(void);
+	DECLARE_DATADESC();
+};
+LINK_ENTITY_TO_CLASS(rocket_target, CRocketTarget);
+BEGIN_DATADESC(CRocketTarget)
+END_DATADESC()
+
+void CRocketTarget::Precache(void)
+{
+	PrecacheModel("models/utilities/floorcrosshair.mdl");
+}
+void CRocketTarget::Spawn(void)
+{
+	Precache();
+	SetModel("models/utilities/floorcrosshair.mdl");
+	SetModelScale(1.5f);
+	AddEffects(EF_NOSHADOW);
+	SetSolid(SOLID_NONE);
+	SetLocalAngularVelocity(QAngle(0, 0, 90));
+	SetThink(&CRocketTarget::Kill);
+	SetNextThink(gpGlobals->curtime + 2.0f);
+}
+void CRocketTarget::Kill(void)
+{
+	RemoveDeferred();
+}
 //=========================================================
 //=========================================================
 class CNPC_VortBoss : public CAI_BlendedNPC
@@ -150,6 +182,8 @@ public:
 	void	UpdateSpinBeam(void);
 	void	CheckSpinBeam(void);
 
+	void FirePrecalculatedRocket(void);
+
 	//CBeam *pSpinBeam;
 
 	/*
@@ -160,8 +194,8 @@ public:
 
 	void	GroundAttack(void);*/
 
-	CBeam *pEyeTargetBeam;
-	CBeam *pEyeAttackBeam;
+	CHandle<CBeam> pEyeTargetBeam;
+	CHandle<CBeam> pEyeAttackBeam;
 
 
 	void	CreateTargetBeam(void);
@@ -186,9 +220,13 @@ public:
 	bool	EnemyIsRightInFrontOfMe(CBaseEntity **pEntity);
 	void  ChargeDamage(CBaseEntity *pTarget);
 	
+
+	void UpdateBodyState(void);
+
 	virtual int		OnTakeDamage_Alive(const CTakeDamageInfo &info);
 	CNetworkVar(bool,bDrawSpinBeam);
-	//void	Event_Killed(const CTakeDamageInfo &info);
+	CNetworkVar(bool, bBleeding);
+	virtual void Event_Killed(const CTakeDamageInfo &info);
 
 	Vector m_vTargetPos;
 	Vector m_vStartPos;
@@ -196,8 +234,13 @@ public:
 	float m_fNextCannonAttack;
 	float m_fNextSpinAttack;
 	float m_fNextDodge;
-	float m_fNextBarrage;
+	float m_fNextBarage;
 	float	ChargeSteer(void);
+
+	Vector GetRocketTrajectory(void);
+	Vector GetPredictedRocketPosition(void);
+
+	bool	CanBarage(void);
 
 	bool	ShouldCharge(const Vector &startPos, const Vector &endPos, bool useTime, bool bCheckForCancel);
 
@@ -205,6 +248,8 @@ public:
 	bool	HandleChargeImpact(Vector vecImpact, CBaseEntity *pEntity);
 	
 	static int gm_nBodyPitchPoseParam;
+
+	int m_iBodyState;
 
 	float m_fNextTrace;
 
@@ -225,6 +270,7 @@ LINK_ENTITY_TO_CLASS(npc_vortboss, CNPC_VortBoss);
 
 IMPLEMENT_SERVERCLASS_ST(CNPC_VortBoss,DT_VortBoss)
 	SendPropBool(SENDINFO(bDrawSpinBeam)),
+	SendPropBool(SENDINFO(bBleeding)),
 END_SEND_TABLE()
 
 
@@ -233,7 +279,18 @@ int CNPC_VortBoss::gm_nBodyPitchPoseParam = -1;
 // Save/Restore
 //---------------------------------------------------------
 BEGIN_DATADESC(CNPC_VortBoss)
+DEFINE_FIELD(m_fNextEyeBlast,FIELD_FLOAT),
+DEFINE_FIELD(m_fNextCannonAttack,FIELD_FLOAT),
+DEFINE_FIELD(m_fNextBarage,FIELD_FLOAT),
+DEFINE_FIELD(m_fNextSpinAttack,FIELD_FLOAT),
+DEFINE_FIELD(m_fNextDodge,FIELD_FLOAT),
 
+DEFINE_FIELD(pEyeTargetBeam,FIELD_EHANDLE),
+DEFINE_FIELD(pEyeAttackBeam,FIELD_EHANDLE),
+
+DEFINE_FIELD(bDrawSpinBeam,FIELD_BOOLEAN),
+DEFINE_FIELD(m_iBodyState,FIELD_INTEGER),
+DEFINE_FIELD(bBleeding,FIELD_BOOLEAN),
 
 END_DATADESC()
 
@@ -250,13 +307,17 @@ END_DATADESC()
 //-----------------------------------------------------------------------------
 void CNPC_VortBoss::Precache(void)
 {
-	PrecacheModel("models/vortboss_test.mdl");
+	PrecacheModel("models/vortboss_test_breakable.mdl");
 	UTIL_PrecacheOther("hlr_vortprojectile");
 	PrecacheMaterial("sprites/laser.vmt");
 	PrecacheParticleSystem("vortboss_cannon_core");
 	PrecacheParticleSystem("vortboss_ground_attack");
+	PrecacheParticleSystem("blood_vortboss_bleeding");
 	PrecacheScriptSound("BadDog.Smash");
 	PrecacheScriptSound("VortBoss.EyeBlast");
+	UTIL_PrecacheOther("rpg_missile");
+	UTIL_PrecacheOther("rocket_target");
+
 	BaseClass::Precache();
 }
 
@@ -270,8 +331,8 @@ void CNPC_VortBoss::Spawn(void)
 {
 	Precache();
 
-	SetModel("models/vortboss_test.mdl");
-	SetHullType(HULL_LARGE);
+	SetModel("models/vortboss_test_breakable.mdl");
+	SetHullType(HULL_VORTBOSS);
 
 	SetSolid(SOLID_BBOX);
 	AddSolidFlags(FSOLID_NOT_STANDABLE);
@@ -289,9 +350,12 @@ void CNPC_VortBoss::Spawn(void)
 	CapabilitiesAdd(bits_CAP_SKIP_NAV_GROUND_CHECK);
 	CapabilitiesAdd(bits_CAP_MOVE_SHOOT);
 	//CapabilitiesAdd(bits_CAP_INNATE_RANGE_ATTACK1 | bits_CAP_INNATE_RANGE_ATTACK2 | bits_CAP_INNATE_MELEE_ATTACK1);
-	m_iHealth = sk_vortboss_health.GetFloat();
+	SetHealth(sk_vortboss_health.GetFloat());
+	SetMaxHealth(sk_vortboss_health.GetFloat());
 	m_flFieldOfView = 0.5;
 	m_NPCState = NPC_STATE_NONE;
+	m_iBodyState = BODYSTATE_NORMAL;
+	UpdateBodyState();
 	SetupGlobalModelData();
 	//CapabilitiesClear();
 	//CapabilitiesAdd( bits_CAP_NONE );
@@ -343,28 +407,116 @@ void CNPC_VortBoss::UpdateAim()
 	}*/
 }
 
+bool CNPC_VortBoss::CanBarage(void)
+{
+	trace_t tr;
+	UTIL_TraceLine(WorldSpaceCenter(), WorldSpaceCenter() + (Vector(0, 0, 1) * 256), MASK_SOLID, this, COLLISION_GROUP_NONE, &tr); //shoot a trace straight up to see if there's anything directly above us a rocket could hit
+	if (g_debug_vortboss_rocket.GetBool())
+		DebugDrawLine(tr.startpos, tr.endpos, 255, 0, 0, false, 3.0f); //draw the trace 
+
+	if (tr.fraction != 1.0) //if there's something above us the rockets would hit, preventing them from reaching our target
+		return false; //don't fire the barage
+	if (GetRocketTrajectory() == vec3_origin) //if the rocket trajectory test fails
+		return false; //don't fire the barage
+	return true; //fire the barage
+}
+Vector CNPC_VortBoss::GetPredictedRocketPosition(void)
+{
+	Vector vecPredPos;
+	Vector enemyDelta = GetEnemy()->WorldSpaceCenter() - WorldSpaceCenter(); //get the vector from me to my target
+	float flDist = enemyDelta.Length(); //get the length of the vector in float form
+	float basespd = sk_vortboss_rocket_speed.GetFloat(); //get our base rocket speed
+	float adjustedspd = g_pGameRules->AdjustProjectileSpeed(basespd); //scale it based on difficulty 
+	float timeDelta = flDist / adjustedspd; //get the amount of time it would take to reach our target
+	UTIL_PredictedPosition(GetEnemy(), timeDelta, &vecPredPos); //use the above to estimate where our target will be after the given amount of time
+
+	return vecPredPos; //return that position
+}
+Vector CNPC_VortBoss::GetRocketTrajectory(void)
+{
+	int nAttachment = LookupAttachment("cannonmuzzle"); //lookup the cannon muzzle attachment
+	Vector vecCannonPos;
+	GetAttachment(nAttachment, vecCannonPos); //get the world position of the above attachment
+	Vector vecTarget = GetPredictedRocketPosition(); //get our predicted player position estimate
+	
+	float basespd = sk_vortboss_rocket_speed.GetFloat(); //get the base rocket speed
+	float adjustedspd = g_pGameRules->AdjustProjectileSpeed(basespd); //get the scaled rocket speed
+
+	Vector vecShootDir = VecCheckThrow(this, vecCannonPos, vecTarget, adjustedspd, 1.5f); //get our launch trajectory (the calculated arc to fire the rocket at to reach the designated target)
+
+	return vecShootDir; //return that vector
+}
+void CNPC_VortBoss::FirePrecalculatedRocket(void)
+{
+	/*CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+	if (!pPlayer)
+		return;
+	int nAttachment = LookupAttachment("cannonmuzzle");
+	Vector vecCannonPos;
+	GetAttachment(nAttachment, vecCannonPos);
+	
+	Vector vecPredPos;
+	Vector enemyDelta = GetEnemy()->WorldSpaceCenter() - WorldSpaceCenter();
+	float flDist = enemyDelta.Length();
+	float basespd = sk_vortboss_rocket_speed.GetFloat();
+	float adjustedspd = g_pGameRules->AdjustProjectileSpeed(basespd);
+	float timeDelta = flDist / adjustedspd;
+	UTIL_PredictedPosition(GetEnemy(), timeDelta, &vecPredPos);
+	
+	
+	Vector vecShootDir = VecCheckThrow(this, vecCannonPos, vecPredPos, adjustedspd, 1.0f);
+
+	if (vecShootDir == vec3_origin)
+		return;*/
+	int nAttachment = LookupAttachment("cannonmuzzle"); //get our cannon attachment
+	Vector vecCannonPos;
+	GetAttachment(nAttachment, vecCannonPos); //get the world position of the attachment
+
+	Vector vecShootDir = GetRocketTrajectory(); //get the calculated rocket trajectory
+
+	CMissile *pMissile = (CMissile*)CreateEntityByName("rpg_missile"); //create a rocket
+	UTIL_SetOrigin(pMissile, vecCannonPos); //set it's position to the cannon attachment
+	pMissile->SetOwnerEntity(this); //set us as the owner
+	pMissile->SetGravity(1.5f); //set the gravity to 1.5
+	pMissile->Spawn(); //initialize the spawned rocket
+	pMissile->SetMoveType(MOVETYPE_FLYGRAVITY); //make it affected by gravity
+	pMissile->SetAbsVelocity(vecShootDir); //fire it at the calculated trajectory
+	pMissile->CreateSmokeTrail(); //initialize the smoke effects
+	
+	QAngle angdir; 
+	VectorAngles(vecShootDir, angdir); //turn our calculated trajectory into an angle
+	pMissile->SetLocalAngles(angdir); //set it to said angle
+	pMissile->ActiveSteerMode(); //turn on the auto-updating angles
+	
+	CRocketTarget *pTarget = (CRocketTarget*)CreateEntityByName("rocket_target"); //create a floor target
+	UTIL_SetOrigin(pTarget, GetPredictedRocketPosition()); //set it to the predicted enemy position estimate
+	pTarget->Spawn(); //initalize it
+}
+
 bool CNPC_VortBoss::CheckForRockets(void)
 {
-	CBaseEntity *pEntity = NULL;
-	pEntity = gEntList.FindEntityByClassname(pEntity, "rpg_missile");
+	CBaseEntity *pEntity = NULL; //create a null pointer
+	pEntity = gEntList.FindEntityByClassname(pEntity, "rpg_missile"); //set the null pointer to test for any rockets
 
-	if (!pEntity)
+	if (!pEntity) //if it fails to find a rocket, stop.
 		return false;
-	if (m_fNextDodge > gpGlobals->curtime)
+	if (m_fNextDodge > gpGlobals->curtime) //if we already dodged too recently, stop.
 		return false;
-	if (pEntity != this)
+	if (pEntity != this) //if the object we found is NOT me
 	{
-		string_t strname = pEntity->m_iClassname;
-		DevMsg("entity classname within radius: %s\n", strname);
-		if (pEntity->ClassMatches("rpg_missile"))
+		string_t strname = pEntity->m_iClassname; //get the object's classname
+		DevMsg("entity classname within radius: %s\n", strname); //tell the dev we found something, print what it is that we found
+		if (pEntity->ClassMatches("rpg_missile")) //if what we found is a rocket
 		{
-			DevMsg("ROCKET DETECTED\n");
-			float dist = (pEntity->GetAbsOrigin() - this->GetAbsOrigin()).Length();
-			if (dist < 512.0f)
-				return true;
+			DevMsg("ROCKET DETECTED\n"); //tell the dev we found a rocket
+			if (pEntity->GetOwnerEntity() && pEntity->GetOwnerEntity() == this) //if it's my rocket
+				return false; //stop
+			float dist = (pEntity->GetAbsOrigin() - this->GetAbsOrigin()).Length(); //calculated the distance from me to the rocket
+			if (dist < 512.0f) //if it's within our dodgeable range
+				return true; //dodge
 		}
 	}
-	return false;
+	return false; //stop
 }
 
 void CNPC_VortBoss::CheckSpinBeam(void)
@@ -465,16 +617,16 @@ float CNPC_VortBoss::MaxYawSpeed(void)
 		if (pEnemy == NULL)
 			return 2.0f;
 
-		float dist = UTIL_DistApprox2D(GetEnemy()->WorldSpaceCenter(), WorldSpaceCenter());
+		float dist = (GetEnemy()->WorldSpaceCenter() - WorldSpaceCenter()).Length();
 
 		if (dist > 512)
 			return 16.0f;
 
 		//FIXME: Alter by skill level
-		float yawSpeed = RemapVal(dist, 0, 512, 1.0f, 2.0f);
-		yawSpeed = clamp(yawSpeed, 1.0f, 2.0f);
+		/*float yawSpeed = RemapVal(dist, 0, 512, 1.0f, 2.0f);
+		yawSpeed = clamp(yawSpeed, 1.0f, 2.0f);*/
 
-		return yawSpeed;
+		return 2.0f;
 	}
 	if (eActivity == ACT_VORTBOSS_CHARGE_STOP)
 		return 120.0f;
@@ -750,37 +902,37 @@ bool CNPC_VortBoss::ShouldCharge(const Vector &startPos, const Vector &endPos, b
 }
 void CNPC_VortBoss::HandleAnimEvent(animevent_t *pEvent)
 {
-	if (pEvent->event == AE_VORTBOSS_FIRECANNON)
+	if (pEvent->event == AE_VORTBOSS_FIRECANNON) //we're firing the cannon
 	{
-		int nAttachment = LookupAttachment("cannonmuzzle");
+		int nAttachment = LookupAttachment("cannonmuzzle"); //get the cannon attachment
 		Vector vecHandPos;
 		QAngle vecHandAng;
-		GetAttachment(nAttachment, vecHandPos, vecHandAng);
-		CHLRVortProjectile *pVort = (CHLRVortProjectile*)CreateEntityByName("hlr_vortprojectile");
-		UTIL_SetOrigin(pVort, vecHandPos);
-		pVort->Spawn();
+		GetAttachment(nAttachment, vecHandPos, vecHandAng);				//get the world position of our attachment
+		CHLRVortProjectile *pVort = (CHLRVortProjectile*)CreateEntityByName("hlr_vortprojectile"); //create our projectile
+		UTIL_SetOrigin(pVort, vecHandPos);								//set the projectile's position to the attachment position
+		pVort->Spawn();													//initialize the projectile
 
-		Vector enemyDelta = GetEnemy()->WorldSpaceCenter() - WorldSpaceCenter();
-		float flDist = enemyDelta.Length();
-		float fBaseSpeed = sk_vortboss_projectile_speed.GetFloat();
-		float fAdjustedSpeed = g_pGameRules->AdjustProjectileSpeed(fBaseSpeed);
-		float timeDelta = flDist / fAdjustedSpeed;
+		Vector enemyDelta = GetEnemy()->WorldSpaceCenter() - WorldSpaceCenter(); //get the vector from me to the enemy
+		float flDist = enemyDelta.Length();							//get the length of the vector
+		float fBaseSpeed = sk_vortboss_projectile_speed.GetFloat(); //get the base projectile speed
+		float fAdjustedSpeed = g_pGameRules->AdjustProjectileSpeed(fBaseSpeed); //scale the projectile speed based on difficulty
+		float timeDelta = flDist / fAdjustedSpeed;						//calculate the time it'll take to reach the target
 
 		Vector vecTargetPos;
 		Vector vecTargetCenter;
-		UTIL_PredictedPosition(GetEnemy(), timeDelta, &vecTargetPos);
-		if (GetEnemy()->GetGroundEntity() != NULL)
+		UTIL_PredictedPosition(GetEnemy(), timeDelta, &vecTargetPos); //get the predicted enemy position in the given amount of time it'll take to reach the enemy
+		if (GetEnemy()->GetGroundEntity() != NULL)					//if our enemy is on the ground
 		{
-			vecTargetCenter = vecTargetPos + Vector(0, 0, 32);
+			vecTargetCenter = vecTargetPos + Vector(0, 0, 32); //shoot at his torso
 		}
-		else
+		else //if he is NOT on the ground
 		{
-			vecTargetCenter = vecTargetPos;
+			vecTargetCenter = vecTargetPos; //shoot at his feet
 		}
-		Vector vecAim = vecTargetCenter - vecHandPos;
-		VectorNormalize(vecAim);
+		Vector vecAim = vecTargetCenter - vecHandPos; //get the vector from the cannon attachment to the target position
+		VectorNormalize(vecAim); //normalize the vector
 
-		pVort->SetAbsVelocity(vecAim * fAdjustedSpeed);
+		pVort->SetAbsVelocity(vecAim * fAdjustedSpeed); //fire the projectile
 		return;
 	}
 	if (pEvent->event == AE_VORTBOSS_START_SPINATTACK)
@@ -825,6 +977,11 @@ void CNPC_VortBoss::HandleAnimEvent(animevent_t *pEvent)
 		ClearBeam();
 		return;
 	}
+	if (pEvent->event == AE_VORTBOSS_ROCKET_LAUNCH)
+	{
+		FirePrecalculatedRocket();
+		return;
+	}
 	BaseClass::HandleAnimEvent(pEvent);
 }
 
@@ -839,7 +996,26 @@ int CNPC_VortBoss::OnTakeDamage_Alive(const CTakeDamageInfo &info)
 	{
 		dInfo.ScaleDamage(0.3f);
 	}
+
+	UpdateBodyState();
 	return BaseClass::OnTakeDamage_Alive(dInfo);
+}
+
+void CNPC_VortBoss::Event_Killed(const CTakeDamageInfo &info)
+{
+	bBleeding = false;
+	BaseClass::Event_Killed(info);
+}
+
+void CNPC_VortBoss::UpdateBodyState(void)
+{
+	static int BodyGroup_Body = FindBodygroupByName("body");
+	if (GetHealth() < (GetMaxHealth() * 0.25) && m_iBodyState != BODYSTATE_BADLYDAMAGED)
+	{
+		m_iBodyState = BODYSTATE_BADLYDAMAGED;
+		SetBodygroup(BodyGroup_Body, 1);
+		bBleeding = true;
+	}
 }
 void CNPC_VortBoss::SpinAttackThink(void)
 {
@@ -907,11 +1083,6 @@ bool CNPC_VortBoss::HandleChargeImpact(Vector vecImpact, CBaseEntity *pEntity)
 
 	if (!pEntity || pEntity->IsWorld())
 	{
-		// Robin: Due to some of the finicky details in the motor, the guard will hit
-		//		  the world when it is blocked by our enemy when trying to step up 
-		//		  during a moveprobe. To get around this, we see if the enemy's within
-		//		  a volume in front of the guard when we hit the world, and if he is,
-		//		  we hit him anyway.
 		EnemyIsRightInFrontOfMe(&pEntity);
 
 		// Did we manage to find him? If not, increment our charge miss count and abort.
@@ -967,34 +1138,6 @@ bool CNPC_VortBoss::HandleChargeImpact(Vector vecImpact, CBaseEntity *pEntity)
 	}
 
 	return false;
-
-	/*
-
-	ROBIN: Wrote & then removed this. If we want to have large rocks that the guard
-	should smack around, then we should enable it.
-
-	else
-	{
-	// If we hit a physics prop, smack the crap out of it. (large rocks)
-	// Factor the object mass into it, because we want to move it no matter how heavy it is.
-	if ( pEntity->GetMoveType() == MOVETYPE_VPHYSICS )
-	{
-	CTakeDamageInfo info( this, this, 250, DMG_BLAST );
-	info.SetDamagePosition( vecImpact );
-	float flForce = ImpulseScale( pEntity->VPhysicsGetObject()->GetMass(), 250 );
-	flForce *= random->RandomFloat( 0.85, 1.15 );
-
-	// Calculate the vector and stuff it into the takedamageinfo
-	Vector vecForce = BodyDirection3D();
-	VectorNormalize( vecForce );
-	vecForce *= flForce;
-	vecForce *= phys_pushscale.GetFloat();
-	info.SetDamageForce( vecForce );
-
-	pEntity->VPhysicsTakeDamage( info );
-	}
-	}
-	*/
 }
 float CNPC_VortBoss::ChargeSteer(void)
 {
@@ -1105,10 +1248,13 @@ void CNPC_VortBoss::GatherConditions(void)
 				if (ZCompare < 16.0f && ZCompare > -16.0f) //if they're close to the same level as me and I can see them
 					SetCondition(COND_CAN_SPIN_ATTACK); //allow me to spin attack
 			}
+			if (CanBarage() && gpGlobals->curtime > m_fNextBarage)
+				SetCondition(COND_SHOULD_BARAGE);
 			if (gpGlobals->curtime > m_fNextEyeBlast) //if my eyeblast cooldown has passed
 				SetCondition(COND_CAN_DO_EYEBLAST); //tell me that so i can eyeblast. eyeblast takes precidence over cannon.
 			if (gpGlobals->curtime > m_fNextCannonAttack) //if my cannon cooldown has passed
 				SetCondition(COND_CAN_FIRE_CANNON); //tell me that so i can shoot the cannon
+			
 			SetCondition(COND_SHOULD_CHARGE); //otherwise, just charge them
 		}
 		if (flDist > 1024.0f)
@@ -1189,6 +1335,7 @@ int CNPC_VortBoss::SelectSchedule(void)
 }
 int CNPC_VortBoss::SelectCombatSchedule(void)
 {
+
 	if (HasCondition((COND_CAN_DO_GROUND_ATTACK))) //if i can ground attack
 		return SCHED_VORTBOSS_GROUND_ATTACK; //do that
 	if (HasCondition((COND_TOO_FAR_TO_ATTACK))) //if the enemy is too far
@@ -1205,17 +1352,22 @@ int CNPC_VortBoss::SelectCombatSchedule(void)
 		m_fNextSpinAttack = gpGlobals->curtime + 45.0f; //set cooldown
 		return SCHED_VORTBOSS_SPINATTACK; //speen
 	}*/
-
+	if (HasCondition(COND_SHOULD_BARAGE))
+	{
+		ClearCondition(COND_SHOULD_BARAGE);
+		m_fNextBarage = gpGlobals->curtime + sk_vortboss_barage_frequency.GetFloat();
+		return SCHED_VORTBOSS_BARAGE;
+	}
 	if (HasCondition(COND_CAN_DO_EYEBLAST)) //if i can eyeblast
 	{
 		ClearCondition(COND_CAN_DO_EYEBLAST);
-		m_fNextEyeBlast = gpGlobals->curtime + 15.0f; //set cooldown
+		m_fNextEyeBlast = gpGlobals->curtime + sk_vortboss_eyeblast_frequency.GetFloat(); //set cooldown
 		return SCHED_VORTBOSS_EYEBLAST; //blast away
 	}
 	if (HasCondition(COND_CAN_FIRE_CANNON)) //if i can shoot my cannon
 	{
 		ClearCondition(COND_CAN_FIRE_CANNON);
-		m_fNextCannonAttack = gpGlobals->curtime + 8.0f; //set cooldown
+		m_fNextCannonAttack = gpGlobals->curtime + sk_vortboss_cannon_frequency.GetFloat(); //set cooldown
 		return SCHED_VORTBOSS_CANNON; //pew pew pew
 	}
 	if (HasCondition(COND_SHOULD_CHARGE))
@@ -1236,6 +1388,11 @@ void CNPC_VortBoss::StartTask(const Task_t *pTask)
 		break;
 	}
 
+	case TASK_VORTBOSS_BARAGE:
+	{
+		SetIdealActivity(ACT_VORTBOSS_BARAGE);
+		break;
+	}
 	case TASK_VORTBOSS_EYEBLAST:
 	{
 		SetIdealActivity(ACT_VORTBOSS_EYEBLAST);
@@ -1260,25 +1417,39 @@ void CNPC_VortBoss::StartTask(const Task_t *pTask)
 	case TASK_VORTBOSS_DODGEROCKET:
 	{
 		GetMotor()->MoveStop();
-		int i = RandomInt(0, 1);
-		switch(i)
+		QAngle ang = GetLocalAngles();
+		Vector vecF,vecR,vecU;
+		AngleVectors(ang, &vecF,&vecR,&vecU);
+		trace_t tr,tr2;
+		UTIL_TraceLine(WorldSpaceCenter(), WorldSpaceCenter() + (vecR * 150), MASK_SHOT, this, COLLISION_GROUP_NONE, &tr);
+		UTIL_TraceLine(WorldSpaceCenter(), WorldSpaceCenter() + (-vecR * 150), MASK_SHOT, this, COLLISION_GROUP_NONE, &tr2);
+
+		if ((tr.fraction == 1) && (tr2.fraction == 1))
 		{
-		case 0:
-		{
-			SetActivity(ACT_VORTBOSS_DODGE_RIGHT);
-			break;
+			int i = RandomInt(0, 1);
+			switch (i)
+			{
+			case 0:
+			{
+				SetActivity(ACT_VORTBOSS_DODGE_RIGHT);
+				break;
+			}
+			case 1:
+			{
+				SetActivity(ACT_VORTBOSS_DODGE_LEFT);
+				break;
+			}
+			default:
+			{
+				SetActivity(ACT_VORTBOSS_DODGE_RIGHT);
+				break;
+			}
+			}
 		}
-		case 1:
-		{
+		if ((tr.fraction == 1) && (tr2.fraction != 1))
+			SetActivity(ACT_VORTBOSS_DODGE_RIGHT);
+		else if ((tr.fraction != 1) && (tr2.fraction == 1))
 			SetActivity(ACT_VORTBOSS_DODGE_LEFT);
-			break;
-		}
-		default:
-		{
-			SetActivity(ACT_VORTBOSS_DODGE_RIGHT);
-			break;
-		}
-		}
 		m_fNextDodge = gpGlobals->curtime + 2.5f;
 		ClearBeam();
 		break;
@@ -1306,6 +1477,15 @@ void CNPC_VortBoss::RunTask(const Task_t *pTask)
 		break;
 	}
 	case TASK_VORTBOSS_EYEBLAST:
+	{
+		UpdateAim();
+		if (IsActivityFinished())
+		{
+			TaskComplete();
+		}
+		break;
+	}
+	case TASK_VORTBOSS_BARAGE:
 	{
 		UpdateAim();
 		if (IsActivityFinished())
@@ -1523,6 +1703,7 @@ AI_BEGIN_CUSTOM_NPC(npc_vortboss, CNPC_VortBoss)
 	DECLARE_ACTIVITY(ACT_VORTBOSS_CRASH)
 	DECLARE_ACTIVITY(ACT_VORTBOSS_DODGE_LEFT)
 	DECLARE_ACTIVITY(ACT_VORTBOSS_DODGE_RIGHT)
+	DECLARE_ACTIVITY(ACT_VORTBOSS_BARAGE)
 
 
 	DECLARE_ANIMEVENT(AE_VORTBOSS_FIRECANNON)
@@ -1533,6 +1714,7 @@ AI_BEGIN_CUSTOM_NPC(npc_vortboss, CNPC_VortBoss)
 	DECLARE_ANIMEVENT(AE_VORTBOSS_GROUNDATTACK)
 	DECLARE_ANIMEVENT(AE_VORTBOSS_START_SPINATTACK)
 	DECLARE_ANIMEVENT(AE_VORTBOSS_END_SPINATTACK)
+	DECLARE_ANIMEVENT(AE_VORTBOSS_ROCKET_LAUNCH)
 
 	DECLARE_CONDITION(COND_CAN_DO_EYEBLAST)
 	DECLARE_CONDITION(COND_CAN_DO_GROUND_ATTACK)
@@ -1540,6 +1722,7 @@ AI_BEGIN_CUSTOM_NPC(npc_vortboss, CNPC_VortBoss)
 	DECLARE_CONDITION(COND_CAN_SPIN_ATTACK)
 	DECLARE_CONDITION(COND_SHOULD_CHARGE)
 	DECLARE_CONDITION(COND_SHOULD_DODGE_ROCKET)
+	DECLARE_CONDITION(COND_SHOULD_BARAGE)
 
 	DECLARE_SQUADSLOT(SQUAD_SLOT_VORTBOSS_SPINBEAM)
 
@@ -1549,6 +1732,7 @@ AI_BEGIN_CUSTOM_NPC(npc_vortboss, CNPC_VortBoss)
 	DECLARE_TASK(TASK_VORTBOSS_SPINATTACK)
 	DECLARE_TASK(TASK_VORTBOSS_CHARGE)
 	DECLARE_TASK(TASK_VORTBOSS_DODGEROCKET)
+	DECLARE_TASK(TASK_VORTBOSS_BARAGE)
 	DEFINE_SCHEDULE
 	(
 			SCHED_VORTBOSS_GROUND_ATTACK,
@@ -1566,15 +1750,29 @@ AI_BEGIN_CUSTOM_NPC(npc_vortboss, CNPC_VortBoss)
 	)
 	DEFINE_SCHEDULE
 	(
-	SCHED_VORTBOSS_DODGE_ROCKET,
+		SCHED_VORTBOSS_DODGE_ROCKET,
 
-	"	Tasks"
-	"		TASK_VORTBOSS_DODGEROCKET			0"
-	"	"
-	"	Interrupts"
-	"		COND_NEW_ENEMY"
-	"		COND_ENEMY_DEAD"
-	"		COND_LOST_ENEMY"
+		"	Tasks"
+		"		TASK_VORTBOSS_DODGEROCKET			0"
+		"	"
+		"	Interrupts"
+		"		COND_NEW_ENEMY"
+		"		COND_ENEMY_DEAD"
+		"		COND_LOST_ENEMY"
+	)
+	DEFINE_SCHEDULE
+	(
+	SCHED_VORTBOSS_BARAGE,
+
+		"	Tasks"
+		"		TASK_FACE_ENEMY						0"
+		"		TASK_VORTBOSS_BARAGE			0"
+		"		TASK_VORTBOSS_DODGEROCKET			0"
+		"	"
+		"	Interrupts"
+		"		COND_NEW_ENEMY"
+		"		COND_ENEMY_DEAD"
+		"		COND_LOST_ENEMY"
 	)
 	DEFINE_SCHEDULE
 	(
@@ -1583,6 +1781,7 @@ AI_BEGIN_CUSTOM_NPC(npc_vortboss, CNPC_VortBoss)
 			"	Tasks"
 			"		TASK_FACE_ENEMY						0"
 			"		TASK_VORTBOSS_CANNON				0"
+			"		TASK_VORTBOSS_DODGEROCKET			0"
 			//"		TASK_MOVE_AWAY_FROM_ENEMY			0"
 			"	"
 			"	Interrupts"

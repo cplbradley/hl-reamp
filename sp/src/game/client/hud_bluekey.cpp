@@ -23,22 +23,29 @@ CHudBlueKey::CHudBlueKey(const char *pElementName) : CHudElement(pElementName), 
 	SetAlpha(255);
 
 	//AW Create Texture for Looking around
-	m_nBlueKey = surface()->CreateNewTextureID();
-	surface()->DrawSetTextureFile(m_nBlueKey, "HUD/BlueKey", true, true);
+	/*m_nBlueKey = surface()->CreateNewTextureID();
+	surface()->DrawSetTextureFile(m_nBlueKey, "HUD/BlueKey", true, true);*/
 
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT);
+}
+void CHudBlueKey::VidInit(void)
+{
+	Init();
 }
 void CHudBlueKey::Init(void)
 {
 	bShowKey = false;
 	HOOK_HUD_MESSAGE(CHudBlueKey, BlueKey);
+	m_icon = gHUD.GetIcon("keycard_icon");
 }
 void CHudBlueKey::Paint()
 {
 	SetPaintBorderEnabled(false);
 	SetPaintBackgroundEnabled(false);
-	surface()->DrawSetTexture(m_nBlueKey);
-	surface()->DrawTexturedRect(0, 0, 32, 64);
+	/*surface()->DrawSetTexture(m_nBlueKey);
+	surface()->DrawTexturedRect(0, 0, 32, 64);*/
+	Color clrblue = Color(0, 180, 255, 200);
+	m_icon->DrawSelf(0, -16, clrblue);
 }
 void CHudBlueKey::MsgFunc_BlueKey(bf_read &msg)
 {

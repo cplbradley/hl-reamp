@@ -201,6 +201,12 @@ IMPLEMENT_CLIENTCLASS_DT(C_BaseAnimating, DT_BaseAnimating, CBaseAnimating)
 	RecvPropFloat( RECVINFO( m_fadeMaxDist ) ), 
 	RecvPropFloat( RECVINFO( m_flFadeScale ) ), 
 
+	RecvPropInt(RECVINFO(m_iMuzzleR)),
+	RecvPropInt(RECVINFO(m_iMuzzleG)),
+	RecvPropInt(RECVINFO(m_iMuzzleB)),
+
+
+
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_BaseAnimating )
@@ -225,6 +231,9 @@ BEGIN_PREDICTION_DATA( C_BaseAnimating )
 	// DEFINE_PRED_FIELD( m_nPrevResetEventsParity, FIELD_INTEGER, 0 ),
 
 	DEFINE_PRED_FIELD( m_nMuzzleFlashParity, FIELD_CHARACTER, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_iMuzzleR, FIELD_INTEGER,FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD(m_iMuzzleG, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD(m_iMuzzleB, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
 	//DEFINE_FIELD( m_nOldMuzzleFlashParity, FIELD_CHARACTER ),
 
 	//DEFINE_FIELD( m_nPrevNewSequenceParity, FIELD_INTEGER ),
@@ -3317,9 +3326,12 @@ void C_BaseAnimating::ProcessMuzzleFlashEvent()
 
 			dlight_t *dl = effects->CL_AllocDlight(index);
 			dl->origin = vAttachment;
-			dl->color.r = 240;
-			dl->color.g = 185;
-			dl->color.b = random->RandomInt(50, 115);
+			dl->color.r = m_iMuzzleR;
+			DevMsg("clientside muzzle r = %i\n", m_iMuzzleR);
+			dl->color.g = m_iMuzzleG;
+			DevMsg("clientside muzzle g = %i\n", m_iMuzzleG);
+			dl->color.b = m_iMuzzleB;
+			DevMsg("clientside muzzle b = %i\n", m_iMuzzleB);
 			dl->die = gpGlobals->curtime + 0.02f;
 			dl->radius = random->RandomFloat(128.0f, 768.0f);
 			dl->decay = 256.0f;

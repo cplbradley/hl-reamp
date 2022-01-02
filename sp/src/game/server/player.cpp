@@ -72,6 +72,9 @@
 #include "dt_utlvector_send.h"
 #include "vote_controller.h"
 #include "ai_speech.h"
+#include "filesystem.h"
+#include "hlr/hlr_shareddefs.h"
+
 
 #if defined USES_ECON_ITEMS
 #include "econ_wearable.h"
@@ -112,14 +115,14 @@ bool IsInCommentaryMode( void );
 bool IsListeningToCommentary( void );
 
 
-
-
 #if !defined( CSTRIKE_DLL )
 ConVar cl_sidespeed( "cl_sidespeed", "900", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar cl_upspeed( "cl_upspeed", "320", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar cl_forwardspeed( "cl_forwardspeed", "900", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar cl_backspeed( "cl_backspeed", "900", FCVAR_REPLICATED | FCVAR_CHEAT );
 #endif // CSTRIKE_DLL
+
+
 
 // This is declared in the engine, too
 ConVar	sv_noclipduringpause( "sv_noclipduringpause", "0", FCVAR_REPLICATED | FCVAR_CHEAT, "If cheats are enabled, then you can noclip with the game paused (for doing screenshots, etc.)." );
@@ -388,6 +391,16 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_AUTO_ARRAY( m_hViewModel, FIELD_EHANDLE ),
 
 	DEFINE_FIELD(m_hFloorSprite,FIELD_EHANDLE),
+
+
+	DEFINE_FIELD(m_iToxicDamageLeft,FIELD_INTEGER),
+	DEFINE_FIELD(m_iFireDamageLeft, FIELD_INTEGER),
+	DEFINE_FIELD(m_iMaxToxicDamage, FIELD_INTEGER),
+	DEFINE_FIELD(m_iMaxFireDamage,FIELD_INTEGER),
+	DEFINE_FIELD(m_iElectricDamageLeft, FIELD_INTEGER),
+	DEFINE_FIELD(m_iMaxElectricDamage, FIELD_INTEGER),
+
+	DEFINE_FIELD(m_bHasBlocker,FIELD_BOOLEAN),
 	
 	DEFINE_FIELD( m_flMaxspeed, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flWaterJumpTime, FIELD_TIME ),
@@ -585,6 +598,13 @@ CBasePlayer::CBasePlayer( )
 	pl.replay = false;
 	pl.frags = 0;
 	pl.deaths = 0;
+
+
+	m_bHasBlocker = false;
+	m_iDamageBlockerType = NULL;
+	m_iToxicDamageLeft = 0;
+	m_iFireDamageLeft = 0;
+
 
 	m_szNetname[0] = '\0';
 
@@ -793,7 +813,7 @@ void CBasePlayer::SetBonusChallenge( int iBonusChallenge )
 void CBasePlayer::SnapEyeAngles( const QAngle &viewAngles )
 {
 	pl.v_angle = viewAngles;
-	pl.fixangle = FIXANGLE_ABSOLUTE;
+	pl.fixangle = 1;
 }
 
 
@@ -1078,7 +1098,60 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	float flHealthPrev = m_iHealth;
 
 	CTakeDamageInfo info = inputInfo;
+
+	float healthperc = GetHealth() / 100.0f;
+	if (healthperc <= 0.05f)
+		healthperc = 0.05f;
+	if (healthperc <= 0.5f)
+		info.ScaleDamage(healthperc * 2);
+
+	if (HasBlocker())
+	{
+		DevMsg("has blocker on server\n");
+		if (m_iToxicDamageLeft > 0)
+		{
+			DevMsg("has %i toxic damage points \n",m_iToxicDamageLeft);
+			if (info.GetDamageType() & (DMG_ACID | DMG_RADIATION | DMG_POISON))
+			{
+				DevMsg("toxic damage detected, blocking\n");
+				info.ScaleDamage(0);
+				color32 toxic = { 115, 160, 0, 16 };
+				m_iToxicDamageLeft--;
+				UTIL_ScreenFade(this, toxic, 0.3f, 0.0f, FFADE_IN);
+			}
+		}
+		if (m_iFireDamageLeft > 0)
+		{
+			DevMsg("has %i fire damage points \n",m_iFireDamageLeft);
+			if (info.GetDamageType() & DMG_BURN)
+			{
+				DevMsg("fire damage detected, blocking\n");
+				info.ScaleDamage(0);
+				color32 burn = { 250, 120, 0, 16 };
+				m_iFireDamageLeft--;
+				UTIL_ScreenFade(this, burn, 0.3f, 0.0f, FFADE_IN);
+			}
+		}
+		if (m_iElectricDamageLeft > 0)
+		{
+			DevMsg("has %i electric damage points\n", m_iElectricDamageLeft);
+			if (info.GetDamageType() & (DMG_ENERGYBEAM | DMG_PLASMA | DMG_SHOCK | DMG_SONIC))
+			{
+				DevMsg("electric damage detected, blocking\n");
+				info.ScaleDamage(0);
+				color32 shock = { 50, 175, 250, 16 };
+				m_iElectricDamageLeft--;
+				UTIL_ScreenFade(this, shock, 0.3f, 0.0f, FFADE_IN);
+			}
+		}
+	}
 	
+
+	if ((info.GetDamageType() & DMG_BLAST) && (info.GetInflictor()->IsPlayer()))
+	{
+		float scale = g_pGameRules->AdjustProjectileSpeed(0.5);
+		info.ScaleDamage(scale);
+	}
 	IServerVehicle *pVehicle = GetVehicle();
 	if ( pVehicle )
 	{
@@ -1593,6 +1666,68 @@ const impactdamagetable_t &CBasePlayer::GetPhysicsImpactDamageTable()
 	return gDefaultPlayerImpactDamageTable;
 }
 
+void CBasePlayer::ToggleDamageBlocker(void)
+{
+	if (!HasBlocker())
+		m_bHasBlocker = true;
+	else
+		m_bHasBlocker = false;
+}
+bool CBasePlayer::HasBlocker(void)
+{
+	return m_bHasBlocker;
+}
+void CBasePlayer::SetBlockerDamageType(int dmgtype)
+{
+	m_iDamageBlockerType = dmgtype;
+}
+void CBasePlayer::SetBlockerDamageLeft(int dmgleft, int dmgtype)
+{
+	switch (dmgtype)
+	{
+	case 0:
+	{
+		m_iMaxToxicDamage = dmgleft;
+		m_iToxicDamageLeft = dmgleft;
+		break;
+	}
+	case 1:
+	{
+		m_iMaxFireDamage = dmgleft;
+		m_iFireDamageLeft = dmgleft;
+		break;
+	}
+	case 2:
+	{
+		m_iMaxElectricDamage = dmgleft;
+		m_iElectricDamageLeft = dmgleft;
+		break;
+	}
+	default:
+		break;
+	}
+
+}
+int CBasePlayer::GetBlockerDamageLeft(int dmgtype)
+{
+	switch (dmgtype)
+	{
+	case 0:
+	{
+		return m_iToxicDamageLeft;
+	}
+	case 1:
+	{
+		return m_iFireDamageLeft;
+	}
+	case 2:
+	{
+		return m_iElectricDamageLeft;
+	}
+	default:
+		return NULL;
+	}
+}
 
 int CBasePlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 {
@@ -4513,6 +4648,17 @@ void CBasePlayer::PostThink()
 	{
 		if ( IsAlive() )
 		{
+			if (m_bInCinematicCamera)
+			{
+				if (!(m_Local.m_iHideHUD & HIDEHUD_ALL))
+					m_Local.m_iHideHUD |= HIDEHUD_ALL;
+			}
+			else
+			{
+				if (m_Local.m_iHideHUD & HIDEHUD_ALL)
+					m_Local.m_iHideHUD &= ~HIDEHUD_ALL;
+			}
+
 			// set correct collision bounds (may have changed in player movement code)
 			VPROF_SCOPE_BEGIN( "CBasePlayer::PostThink-Bounds" );
 			if ( GetFlags() & FL_DUCKING )
@@ -4904,6 +5050,9 @@ void CBasePlayer::Spawn( void )
 	//check the existence of the floorsprite
 	CheckFloorSprite();
 
+
+	m_bInCinematicCamera = false;
+
 	/*CHLRFloorSprite *m_pFloorSprite = (CHLRFloorSprite *)CreateEntityByName("hlr_floorsprite");
 	m_pFloorSprite->Spawn();
 	m_hFloorSprite = m_pFloorSprite;*/
@@ -5076,7 +5225,7 @@ void CBasePlayer::Precache( void )
 {
 	BaseClass::Precache();
 
-
+	PrecacheModel("models/player/gordon.mdl");
 	PrecacheScriptSound( "Player.FallGib" );
 	PrecacheScriptSound( "Player.Death" );
 	PrecacheScriptSound( "Player.PlasmaDamage" );
@@ -5898,7 +6047,7 @@ CBaseEntity *FindPickerEntity( CBasePlayer *pPlayer )
 	CBaseEntity *pEntity = FindEntityForward( pPlayer, true );
 
 	// If that fails just look for the nearest facing entity
-	if (!pEntity) 
+	if (!pEntity)
 	{
 		Vector forward;
 		Vector origin;
@@ -5979,7 +6128,7 @@ void CBasePlayer::ImpulseCommands( )
 	{
 	case 100:
         // temporary flashlight for level designers
-       /* if ( FlashlightIsOn() )
+		/*if ( FlashlightIsOn() )
 		{
 			FlashlightTurnOff();
 		}
@@ -8096,6 +8245,17 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropInt		(SENDINFO(m_iObserverMode), 3, SPROP_UNSIGNED ),
 		SendPropEHandle	(SENDINFO(m_hObserverTarget) ),
 		SendPropInt		(SENDINFO(m_iFOV), 8, SPROP_UNSIGNED ),
+
+
+		SendPropInt(SENDINFO(m_iDamageBlockerType)),
+		SendPropInt(SENDINFO(m_iToxicDamageLeft), 8, SPROP_UNSIGNED),
+		SendPropInt(SENDINFO(m_iFireDamageLeft), 8, SPROP_UNSIGNED),
+		SendPropInt(SENDINFO(m_iMaxToxicDamage), 8, SPROP_UNSIGNED),
+		SendPropInt(SENDINFO(m_iMaxFireDamage), 8, SPROP_UNSIGNED),
+		SendPropInt(SENDINFO(m_iElectricDamageLeft), 8, SPROP_UNSIGNED),
+		SendPropInt(SENDINFO(m_iMaxElectricDamage), 8, SPROP_UNSIGNED),
+
+
 		SendPropInt		(SENDINFO(m_iFOVStart), 8, SPROP_UNSIGNED ),
 		SendPropFloat	(SENDINFO(m_flFOVTime) ),
 		SendPropInt		(SENDINFO(m_iDefaultFOV), 8, SPROP_UNSIGNED ),

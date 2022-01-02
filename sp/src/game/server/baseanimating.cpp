@@ -195,6 +195,11 @@ BEGIN_DATADESC( CBaseAnimating )
 	DEFINE_FIELD( m_flModelScale, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flDissolveStartTime, FIELD_TIME ),
 
+
+	DEFINE_FIELD(m_iMuzzleR,FIELD_INTEGER),
+	DEFINE_FIELD(m_iMuzzleG,FIELD_INTEGER),
+	DEFINE_FIELD(m_iMuzzleB,FIELD_INTEGER),
+
  // DEFINE_FIELD( m_boneCacheHandle, memhandle_t ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "Ignite", InputIgnite ),
@@ -261,6 +266,10 @@ IMPLEMENT_SERVERCLASS_ST(CBaseAnimating, DT_BaseAnimating)
 	SendPropFloat( SENDINFO( m_fadeMaxDist ), 0, SPROP_NOSCALE ),
 	SendPropFloat( SENDINFO( m_flFadeScale ), 0, SPROP_NOSCALE ),
 
+	SendPropInt(SENDINFO(m_iMuzzleR)),
+	SendPropInt(SENDINFO(m_iMuzzleG)),
+	SendPropInt(SENDINFO(m_iMuzzleB)),
+
 END_SEND_TABLE()
 
 
@@ -282,6 +291,9 @@ CBaseAnimating::CBaseAnimating()
 	m_flPrevAnimTime = gpGlobals->curtime;
 	m_nNewSequenceParity = 0;
 	m_nResetEventsParity = 0;
+	m_iMuzzleR = 240;
+	m_iMuzzleG = 185;
+	m_iMuzzleB = 75;
 	m_boneCacheHandle = 0;
 	m_pStudioHdr = NULL;
 	m_fadeMinDist = 0;
@@ -3348,6 +3360,14 @@ void CBaseAnimating::RefreshCollisionBounds( void )
 	CollisionProp()->RefreshScaledCollisionBounds();
 }
 
+
+
+void CBaseAnimating::SetMuzzleLight(int r, int g, int b)
+{
+	m_iMuzzleR = r;
+	m_iMuzzleG = g;
+	m_iMuzzleB = b;
+}
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 void CBaseAnimating::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bool bCalledByLevelDesigner )

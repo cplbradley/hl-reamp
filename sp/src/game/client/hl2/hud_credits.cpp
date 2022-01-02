@@ -133,6 +133,7 @@ private:
 	char m_szLogo2[256];
 
 	Color m_cColor;
+	Color m_cTitleColor;
 };	
 
 
@@ -246,6 +247,7 @@ void CHudCredits::ReadParams( KeyValues *pKeyValue )
 	m_flY = pKeyValue->GetFloat( "posy", 2 );
 
 	m_cColor = pKeyValue->GetColor( "color" );
+	m_cTitleColor = pKeyValue->GetColor("color2");
 
 	Q_strncpy( m_szLogo, pKeyValue->GetString( "logo", "HALF-LIFE'" ), sizeof( m_szLogo ) );
 	Q_strncpy( m_szLogo2, pKeyValue->GetString( "logo2", "" ), sizeof( m_szLogo2 ) );
@@ -282,6 +284,7 @@ void CHudCredits::DrawOutroCreditsName( void )
 
 		vgui::HScheme scheme = vgui::scheme()->GetScheme( "ClientScheme" );
 		vgui::HFont m_hTFont = vgui::scheme()->GetIScheme(scheme)->GetFont( pCredit->szFontName, true );
+		
 
 		int iFontTall = surface()->GetFontTall ( m_hTFont );
 
@@ -338,9 +341,15 @@ void CHudCredits::DrawOutroCreditsName( void )
 		
 		if ( pCredit->bActive == false )
 			 continue;
-			
+
 		surface()->DrawSetTextFont( m_hTFont );
-		surface()->DrawSetTextColor( cColor[0], cColor[1], cColor[2], cColor[3]  );
+		int cmp = Q_strcmp(pCredit->szFontName, "CreditsOutroTitle");
+		int cmp2 = Q_strcmp(pCredit->szFontName, "ClientSubTitleFont");
+		int cmp3 = Q_strcmp(pCredit->szFontName, "CreditsOutroLogos");
+		if (cmp == 0 || cmp2 == 0 || cmp3 == 0)
+			surface()->DrawSetTextColor(160, 0, 0, cColor[3]);
+		else
+			surface()->DrawSetTextColor(cColor[0], cColor[1], cColor[2], cColor[3]);
 		
 		wchar_t unicode[256];
 		

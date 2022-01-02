@@ -28,7 +28,7 @@
 #include "tier1/convar_serverbounded.h"
 #include "cam_thirdperson.h"
 #include "inputsystem/iinputsystem.h"
-
+#include "c_baseplayer.h"
 #if defined( _X360 )
 #include "xbox/xbox_win32stubs.h"
 #endif
@@ -41,14 +41,16 @@
 // left / right
 #define	YAW		1
 
-#ifdef PORTAL
-	bool g_bUpsideDown = false; // Set when the player is upside down in Portal to invert the mouse.
-#endif //#ifdef PORTAL
+
+bool g_bUpsideDown = false; // Set when the player is upside down in Portal to invert the mouse.
+
 
 extern ConVar lookstrafe;
 extern ConVar cl_pitchdown;
 extern ConVar cl_pitchup;
 extern const ConVar *sv_cheats;
+extern ConVar cl_flippy;
+
 
 class ConVar_m_pitch : public ConVar_ServerBounded
 {
@@ -454,13 +456,12 @@ void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float
 {
 	if ( !((in_strafe.state & 1) || lookstrafe.GetInt()) )
 	{
-#ifdef PORTAL
+
 		if ( g_bUpsideDown )
 		{
 			viewangles[ YAW ] += m_yaw.GetFloat() * mouse_x;
 		}
 		else
-#endif //#ifdef PORTAL
 		{
 			if ( CAM_IsThirdPerson() && thirdperson_platformer.GetInt() )
 			{
@@ -496,25 +497,24 @@ void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float
 	//  to adjust view pitch.
 	if (!(in_strafe.state & 1))
 	{
-#ifdef PORTAL
+
 		if ( g_bUpsideDown )
 		{
 			viewangles[PITCH] -= m_pitch->GetFloat() * mouse_y;
 		}
 		else
-#endif //#ifdef PORTAL
 		{
-			if ( CAM_IsThirdPerson() && thirdperson_platformer.GetInt() )
+			if (CAM_IsThirdPerson() && thirdperson_platformer.GetInt())
 			{
-				if ( mouse_y )
+				if (mouse_y)
 				{
 					Vector vTempOffset = g_ThirdPersonManager.GetCameraOffsetAngles();
 
 					// use the mouse to orbit the camera around the player, and update the idealAngle
-					vTempOffset[ PITCH ] += m_pitch->GetFloat() * mouse_y;
-					cam_idealpitch.SetValue( vTempOffset[ PITCH ] - viewangles[ PITCH ] );
+					vTempOffset[PITCH] += m_pitch->GetFloat() * mouse_y;
+					cam_idealpitch.SetValue(vTempOffset[PITCH] - viewangles[PITCH]);
 
-					g_ThirdPersonManager.SetCameraOffsetAngles( vTempOffset );
+					g_ThirdPersonManager.SetCameraOffsetAngles(vTempOffset);
 
 					// why doesn't this work??? CInput::AdjustYaw is why
 					//cam_idealpitch.SetValue( cam_idealpitch.GetFloat() + m_pitch->GetFloat() * mouse_y );
@@ -526,13 +526,34 @@ void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float
 			}
 
 			// Check pitch bounds
-			if (viewangles[PITCH] > cl_pitchdown.GetFloat())
+			if (cl_flippy.GetBool())
 			{
-				viewangles[PITCH] = cl_pitchdown.GetFloat();
+				CBasePlayer *pPlayer = CBasePlayer::GetLocalPlayer();
+				if (!pPlayer)
+					return;
+				if (!pPlayer->GetGroundEntity() == NULL)
+				{
+					
+					if (viewangles[PITCH] > cl_pitchdown.GetFloat())
+					{
+						viewangles[PITCH] = cl_pitchdown.GetFloat();
+					}
+					if (viewangles[PITCH] < -cl_pitchup.GetFloat())
+					{
+						viewangles[PITCH] = -cl_pitchup.GetFloat();
+					}
+				}
 			}
-			if (viewangles[PITCH] < -cl_pitchup.GetFloat())
+			else
 			{
-				viewangles[PITCH] = -cl_pitchup.GetFloat();
+				if (viewangles[PITCH] > cl_pitchdown.GetFloat())
+				{
+					viewangles[PITCH] = cl_pitchdown.GetFloat();
+				}
+				if (viewangles[PITCH] < -cl_pitchup.GetFloat())
+				{
+					viewangles[PITCH] = -cl_pitchup.GetFloat();
+				}
 			}
 		}
 	}

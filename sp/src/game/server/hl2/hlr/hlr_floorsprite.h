@@ -1,5 +1,6 @@
 #include "cbase.h"
 #include "sprite.h"
+#include "spritetrail.h"
 
 
 #pragma once
@@ -15,8 +16,8 @@ public:
 	void Spawn();
 	void Precache();
 	bool InitSprite();
-	void UpdatePos();
-	void UpdateThink();
+	/*void UpdatePos();
+	void UpdateThink();*/
 
 	CHandle<CSprite> m_pSprite;
 };

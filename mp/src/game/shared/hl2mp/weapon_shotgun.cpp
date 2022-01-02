@@ -8,10 +8,14 @@
 #include "npcevent.h"
 #include "in_buttons.h"
 
+#ifdef GAME_DLL
+#include "grenade_ar2.h"
+#endif
 #ifdef CLIENT_DLL
 	#include "c_hl2mp_player.h"
 #else
 	#include "hl2mp_player.h"
+
 #endif
 
 #include "weapon_hl2mpbasehlmpcombatweapon.h"
@@ -22,6 +26,9 @@
 
 extern ConVar sk_auto_reload_time;
 extern ConVar sk_plr_num_shotgun_pellets;
+
+#define SMG1_GRENADE_DAMAGE 100.0f
+#define SMG1_GRENADE_RADIUS 64.0f
 
 class CWeaponShotgun : public CBaseHL2MPCombatWeapon
 {
@@ -40,7 +47,7 @@ private:
 public:
 	virtual const Vector& GetBulletSpread( void )
 	{
-		static Vector cone = VECTOR_CONE_10DEGREES;
+		static Vector cone = VECTOR_CONE_6DEGREES;;
 		return cone;
 	}
 
@@ -60,6 +67,7 @@ public:
 	void SecondaryAttack( void );
 	void DryFire( void );
 	virtual float GetFireRate( void ) { return 0.7; };
+	const char *GetTracerType(void) { return "AR2Tracer"; }
 
 #ifndef CLIENT_DLL
 	DECLARE_ACTTABLE();
@@ -309,7 +317,7 @@ void CWeaponShotgun::PrimaryAttack( void )
 
 	// Don't fire again until fire animation has completed
 	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
-	m_iClip1 -= 1;
+	pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);
 
 	// player "shoot" animation
 	pPlayer->SetAnimation( PLAYER_ATTACK1 );
@@ -317,8 +325,9 @@ void CWeaponShotgun::PrimaryAttack( void )
 	Vector	vecSrc		= pPlayer->Weapon_ShootPosition( );
 	Vector	vecAiming	= pPlayer->GetAutoaimVector( AUTOAIM_10DEGREES );	
 
-	FireBulletsInfo_t info( 7, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType );
+	FireBulletsInfo_t info( 10, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType );
 	info.m_pAttacker = pPlayer;
+	info.m_iTracerFreq = 1;
 
 	// Fire the bullets, and force the first shot to be perfectly accuracy
 	pPlayer->FireBullets( info );
@@ -343,46 +352,57 @@ void CWeaponShotgun::PrimaryAttack( void )
 //-----------------------------------------------------------------------------
 void CWeaponShotgun::SecondaryAttack( void )
 {
-	// Only the player fires this way so we can cast
-	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
+	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
 
-	if (!pPlayer)
+	if (pPlayer == NULL)
+		return;
+
+	//Must have ammo
+	if ((pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0) || (pPlayer->GetWaterLevel() == 3))
 	{
+		SendWeaponAnim(ACT_VM_DRYFIRE);
+		BaseClass::WeaponSound(EMPTY);
+		m_flNextSecondaryAttack = gpGlobals->curtime + 0.5f;
 		return;
 	}
 
-	pPlayer->m_nButtons &= ~IN_ATTACK2;
+	if (m_bInReload)
+		m_bInReload = false;
+
 	// MUST call sound before removing a round from the clip of a CMachineGun
-	WeaponSound(WPN_DOUBLE);
+	BaseClass::WeaponSound(WPN_DOUBLE);
 
-	pPlayer->DoMuzzleFlash();
+	Vector vecSrc = pPlayer->Weapon_ShootPosition();
+	Vector	vecThrow;
+	// Don't autoaim on grenade tosses
+	AngleVectors(pPlayer->EyeAngles() + pPlayer->GetPunchAngle(), &vecThrow);
+	VectorScale(vecThrow, 1000.0f, vecThrow);
 
-	SendWeaponAnim( ACT_VM_SECONDARYATTACK );
+#ifndef CLIENT_DLL
+	//Create the grenade
+	CGrenadeAR2 *pGrenade = (CGrenadeAR2*)Create("grenade_ar2", vecSrc, vec3_angle, pPlayer);
+	pGrenade->SetAbsVelocity(vecThrow);
 
-	// Don't fire again until fire animation has completed
-	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
-	m_iClip1 -= 2;	// Shotgun uses same clip for primary and secondary attacks
+	pGrenade->SetLocalAngularVelocity(RandomAngle(-400, 400));
+	pGrenade->SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE);
+	pGrenade->SetThrower(GetOwner());
+	pGrenade->SetDamage(SMG1_GRENADE_DAMAGE);
+	pGrenade->SetDamageRadius(SMG1_GRENADE_RADIUS);
+#endif
+
+	SendWeaponAnim(ACT_VM_SECONDARYATTACK);
 
 	// player "shoot" animation
-	pPlayer->SetAnimation( PLAYER_ATTACK1 );
+	pPlayer->SetAnimation(PLAYER_ATTACK1);
 
-	Vector vecSrc	 = pPlayer->Weapon_ShootPosition();
-	Vector vecAiming = pPlayer->GetAutoaimVector( AUTOAIM_10DEGREES );	
+	// Decrease ammo
+	pPlayer->RemoveAmmo(1, m_iSecondaryAmmoType);
 
-	FireBulletsInfo_t info( 12, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType );
-	info.m_pAttacker = pPlayer;
+	// Can shoot again immediately
+	m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
 
-	// Fire the bullets, and force the first shot to be perfectly accuracy
-	pPlayer->FireBullets( info );
-	pPlayer->ViewPunch( QAngle(SharedRandomFloat( "shotgunsax", -5, 5 ),0,0) );
-
-	if (!m_iClip1 && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
-	{
-		// HEV suit - indicate out of ammo condition
-		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0); 
-	}
-
-	m_bNeedPump = true;
+	// Can blow up after a short delay (so have time to release mouse button)
+	m_flNextSecondaryAttack = gpGlobals->curtime + 1.0f;
 }
 
 //-----------------------------------------------------------------------------

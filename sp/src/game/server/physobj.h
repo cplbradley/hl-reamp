@@ -38,6 +38,12 @@
 #define SF_PHYSBOX_NEVER_PUNT				0x400000		// Physcannon will never be able to punt this object.
 #define SF_PHYSBOX_PREVENT_PLAYER_TOUCH_ENABLE 0x800000		// If set, the player will not cause the object to enable its motion when bumped into
 
+#define SF_PHYSEXPLOSION_NODAMAGE			0x0001
+#define SF_PHYSEXPLOSION_PUSH_PLAYER		0x0002
+#define SF_PHYSEXPLOSION_RADIAL				0x0004
+#define	SF_PHYSEXPLOSION_TEST_LOS			0x0008
+#define SF_PHYSEXPLOSION_DISORIENT_PLAYER	0x0010
+
 // UNDONE: Hook collisions into the physics system to generate touch functions and take damage on falls
 // UNDONE: Base class PhysBrush
 class CPhysBox : public CBreakable
@@ -113,6 +119,7 @@ public:
 
 	void	Spawn ( void );
 	void	Explode( CBaseEntity *pActivator, CBaseEntity *pCaller );
+	void	Explode(CBaseEntity *pActivator, CBaseEntity *pCaller, float radius, float magnitude);
 
 	CBaseEntity *FindEntity( CBaseEntity *pEntity, CBaseEntity *pActivator, CBaseEntity *pCaller );
 

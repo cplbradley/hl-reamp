@@ -39,6 +39,7 @@ DEFINE_FUNCTION(Pickup),
 DEFINE_FUNCTION(Touch),
 DEFINE_KEYFIELD(m_nColor, FIELD_INTEGER, "KeyColor"),
 DEFINE_FIELD(m_bDrawHud, FIELD_BOOLEAN),
+DEFINE_FIELD(pSprite, FIELD_EHANDLE),
 DEFINE_OUTPUT(m_OnPickup,"OnPickup"),
 END_DATADESC();
 
@@ -148,9 +149,8 @@ void CHLRKeycard::Pickup(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 	SetSolid(SOLID_NONE);
 	SetSolidFlags(FSOLID_NOT_SOLID);
 	//DisplayHud();
-	//pSprite->TurnOff();
-	//pSprite->SetRenderColorA(0);
-	pSprite = NULL;
+	pSprite->AddEffects(EF_NODRAW);
+	//pSprite = NULL;
 	UTIL_Remove(pSprite);
 	//RemoveDeferred();
 }

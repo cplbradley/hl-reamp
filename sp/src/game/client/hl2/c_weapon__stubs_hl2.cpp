@@ -39,9 +39,10 @@ STUB_WEAPON_CLASS( weapon_357, Weapon357, C_BaseHLCombatWeapon );
 STUB_WEAPON_CLASS( weapon_crossbow, WeaponCrossbow, C_BaseHLCombatWeapon );
 STUB_WEAPON_CLASS( weapon_slam, Weapon_SLAM, C_BaseHLCombatWeapon );
 STUB_WEAPON_CLASS( weapon_crowbar, WeaponCrowbar, C_BaseHLBludgeonWeapon );
-//STUB_WEAPON_CLASS( weapon_furybar, WeaponFurybar, C_BaseHLBludgeonWeapon);
+STUB_WEAPON_CLASS( weapon_furybar, WeaponFurybar, C_BaseHLBludgeonWeapon);
 STUB_WEAPON_CLASS( weapon_fraglauncher, WeaponNPCFrag, C_BaseHLCombatWeapon);
 STUB_WEAPON_CLASS(weapon_npc_chaingun, WeaponChaingun, C_HLSelectFireMachineGun);
+STUB_WEAPON_CLASS(weapon_rifle, WeaponRifle, C_BaseHLCombatWeapon);
 
 #ifdef HL2_EPISODIC
 STUB_WEAPON_CLASS( weapon_hopwire, WeaponHopwire, C_BaseHLCombatWeapon );

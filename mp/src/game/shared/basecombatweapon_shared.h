@@ -135,6 +135,7 @@ namespace vgui2
 #define VECTOR_CONE_10DEGREES		Vector( 0.08716, 0.08716, 0.08716 )
 #define VECTOR_CONE_15DEGREES		Vector( 0.13053, 0.13053, 0.13053 )
 #define VECTOR_CONE_20DEGREES		Vector( 0.17365, 0.17365, 0.17365 )
+#define VECTOR_HALFCONE_20DEGREES	Vector(	0.3, 0.06716, 0.17365 )
 
 //-----------------------------------------------------------------------------
 // Purpose: Base weapon class, shared on client and server

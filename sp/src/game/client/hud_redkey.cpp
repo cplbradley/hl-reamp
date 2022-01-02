@@ -21,30 +21,33 @@ CHudRedKey::CHudRedKey(const char *pElementName) : CHudElement(pElementName), Ba
 	SetVisible(false);
 	SetAlpha(255);
 
-	//AW Create Texture for Looking around
-	m_nRedKey = surface()->CreateNewTextureID();
-	surface()->DrawSetTextureFile(m_nRedKey, "HUD/RedKey", true, true);
 
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT);
+}
+void CHudRedKey::VidInit(void)
+{
+	Init();
 }
 void CHudRedKey::Init(void)
 {
 	HOOK_HUD_MESSAGE(CHudRedKey, RedKey);
+	m_nRedKey = gHUD.GetIcon("keycard_icon");
 	bShowKey = 0;
 }
 void CHudRedKey::Paint()
 {
 	SetPaintBorderEnabled(false);
 	SetPaintBackgroundEnabled(false);
-	surface()->DrawSetTexture(m_nRedKey);
-	surface()->DrawTexturedRect(0, 0, 32, 64);
+	Color red = Color(230, 75, 0, 200);
+	m_nRedKey->DrawSelf(0, -16, red);
+	
 }
 void CHudRedKey::togglePrint()
 {
 	if (!bShowKey)
-		this->SetVisible(false);
+		SetVisible(false);
 	else
-		this->SetVisible(true);
+		SetVisible(true);
 }
 void CHudRedKey::MsgFunc_RedKey(bf_read &msg)
 {

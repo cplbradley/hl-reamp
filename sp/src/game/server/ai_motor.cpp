@@ -360,6 +360,7 @@ void CAI_Motor::MoveJumpStart( const Vector &velocity )
 
 	SetActivity( ACT_JUMP );
 
+	GetOuter()->SetJumpLimit();
 	SetIdealYawAndUpdate( velocity );
 }
 

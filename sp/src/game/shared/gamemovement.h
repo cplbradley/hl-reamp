@@ -67,6 +67,10 @@ public:
 	bool	m_bShouldGroundPound;
 	bool	m_bDidGroundPound;
 
+	bool m_bBlockingAirControl;
+	bool m_bBlockDistanceFromOrigin;
+	float m_fDistanceFromOrigin;
+
 #define BRUSH_ONLY true
 	virtual unsigned int PlayerSolidMask( bool brushOnly = false );	///< returns the solid mask for the given player, so bots can have a more-restrictive set
 	CBasePlayer		*player;

@@ -298,6 +298,9 @@ public:
 	void InputIgniteHitboxFireScale( inputdata_t &inputdata );
 	void InputBecomeRagdoll( inputdata_t &inputdata );
 
+
+	void SetMuzzleLight(int r, int g, int b);
+
 	// Dissolve, returns true if the ragdoll has been created
 	bool Dissolve( const char *pMaterialName, float flStartTime, bool bNPCOnly = true, int nDissolveType = 0, Vector vDissolverOrigin = vec3_origin, int iMagnitude = 0 );
 	bool IsDissolving() { return ( (GetFlags() & FL_DISSOLVING) != 0 ); }
@@ -355,6 +358,10 @@ public:
 
 	// was pev->framerate
 	CNetworkVar( float, m_flPlaybackRate );
+
+	CNetworkVar(int, m_iMuzzleR);
+	CNetworkVar(int, m_iMuzzleG);
+	CNetworkVar(int, m_iMuzzleB);
 
 public:
 	void InitStepHeightAdjust( void );

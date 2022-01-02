@@ -50,7 +50,7 @@ private:
 	CHandle< C_BaseEntity > m_hCurrentVehicle;
 	int		m_iAmmo;
 	int		m_iAmmo2;
-	CHudTexture *m_iconPrimaryAmmo;
+	const CHudTexture *m_iconPrimaryAmmo;
 };
 
 DECLARE_HUDELEMENT( CHudAmmo );
@@ -138,7 +138,7 @@ void CHudAmmo::UpdatePlayerAmmo( C_BasePlayer *player )
 	SetPaintBackgroundEnabled(true);
 
 	// Get our icons for the ammo types
-	m_iconPrimaryAmmo = gWR.GetAmmoIconFromWeapon( wpn->GetPrimaryAmmoType() );
+	m_iconPrimaryAmmo = wpn->GetSpriteAmmo();
 
 	// get the ammo in our clip
 	int ammo1 = wpn->Clip1();

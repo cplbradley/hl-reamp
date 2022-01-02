@@ -33,6 +33,86 @@ extern ConVar in_forceuser;
 #define VIEWMODEL_ANIMATION_PARITY_BITS 3
 #define SCREEN_OVERLAY_MATERIAL "vgui/screens/vgui_overlay"
 
+ConVar r_classic_weapon_pos("r_classic_weapon_pos", "0", FCVAR_REPLICATED);
+//ALL BELOW IS NEW
+#if defined( CLIENT_DLL )
+void ExpWpnTestOffset(ConVar *pConVar, char *pszString);
+ConVar   cl_exp_test_wpn_offset("cl_exp_test_wpn_offset", "0", 0, "Tests weapon offsets",
+	(FnChangeCallback_t)ExpWpnTestOffset);
+
+ConVar   cl_exp_test_wpn_offset_x("cl_exp_test_wpn_offset_x", "0");
+ConVar   cl_exp_test_wpn_offset_y("cl_exp_test_wpn_offset_y", "0");
+ConVar   cl_exp_test_wpn_offset_z("cl_exp_test_wpn_offset_z", "0");
+
+ConVar   cl_exp_test_wpn_ori_offset_x("cl_exp_test_wpn_ori_offset_x", "0");
+ConVar   cl_exp_test_wpn_ori_offset_y("cl_exp_test_wpn_ori_offset_y", "0");
+ConVar   cl_exp_test_wpn_ori_offset_z("cl_exp_test_wpn_ori_offset_z", "0");
+
+// cin: 070105 - applies existing weapon offsets when
+// entering test mode (this will not be called upon
+// weapon change, so beware)
+// this mode should only be used for calibrating the
+// ironsighted mode offests for a particular weapon
+void ExpWpnTestOffset(ConVar *pConVar, char *pszString)
+{
+	CBasePlayer *pPlayer = UTIL_PlayerByIndex(engine->GetLocalPlayer());
+	if (pPlayer)
+	{
+		CBaseCombatWeapon *pWeapon = dynamic_cast<CBaseCombatWeapon *>(pPlayer->GetActiveWeapon());
+		if (pWeapon)
+		{
+			cl_exp_test_wpn_offset_x.SetValue(pWeapon->GetWpnData().m_expOffset.x);
+			cl_exp_test_wpn_offset_y.SetValue(pWeapon->GetWpnData().m_expOffset.y);
+			cl_exp_test_wpn_offset_z.SetValue(pWeapon->GetWpnData().m_expOffset.z);
+
+			cl_exp_test_wpn_ori_offset_x.SetValue(pWeapon->GetWpnData().m_expOriOffset.x);
+			cl_exp_test_wpn_ori_offset_y.SetValue(pWeapon->GetWpnData().m_expOriOffset.y);
+			cl_exp_test_wpn_ori_offset_z.SetValue(pWeapon->GetWpnData().m_expOriOffset.z);
+		}
+	}
+}
+
+
+// last time ironsighted mode was toggled
+float gIronsightedTime(0.0f);
+
+// I bound this to a key for testing(i.e. bind [ ironsight_toggle)
+
+
+void CalcExpWpnOffsets(CBasePlayer *owner, Vector &pos, QAngle &ang)
+{
+	Vector   forward, right, up, offset;
+
+	// this is a simple test mode to help determine the proper values
+	// to place in the weapon script
+	if (cl_exp_test_wpn_offset.GetBool())
+	{
+		ang.x += cl_exp_test_wpn_ori_offset_x.GetFloat();
+		ang.y += cl_exp_test_wpn_ori_offset_y.GetFloat();
+		ang.z += cl_exp_test_wpn_ori_offset_z.GetFloat();
+		offset.Init(cl_exp_test_wpn_offset_x.GetFloat(),
+			cl_exp_test_wpn_offset_y.GetFloat(),
+			cl_exp_test_wpn_offset_z.GetFloat());
+	}
+	else
+	{
+		CBaseCombatWeapon *pWeapon = dynamic_cast<CBaseCombatWeapon *>(ToBasePlayer(owner)->GetActiveWeapon());
+		if (pWeapon)
+		{
+			ang += pWeapon->GetWpnData().m_expOriOffset;
+			offset = pWeapon->GetWpnData().m_expOffset;
+		}
+	}
+
+	// get eye direction angles
+	AngleVectors(ang, &forward, &right, &up);
+
+	// apply the offsets
+	pos += forward   * offset.x;
+	pos += right     * offset.y;
+	pos += up        * offset.z;
+}
+#endif
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -410,7 +490,8 @@ void CBaseViewModel::CalcViewModelView( CBasePlayer *owner, const Vector& eyePos
 #if !defined ( CSTRIKE_DLL )
 	// This was causing weapon jitter when rotating in updated CS:S; original Source had this in above InPrediction block  07/14/10
 	// Add lag
-	CalcViewModelLag( vmorigin, vmangles, vmangoriginal );
+	if (r_classic_weapon_pos.GetBool() == false)
+		CalcViewModelLag( vmorigin, vmangles, vmangoriginal );
 #endif
 
 #if defined( CLIENT_DLL )
@@ -425,7 +506,41 @@ void CBaseViewModel::CalcViewModelView( CBasePlayer *owner, const Vector& eyePos
 	{
 		g_ClientVirtualReality.OverrideViewModelTransform( vmorigin, vmangles, pWeapon && pWeapon->ShouldUseLargeViewModelVROverride() );
 	}
+	if (r_classic_weapon_pos.GetBool() == true)
+	{
+		{
+			Vector   forward, right, up, offset;
 
+			// this is a simple test mode to help determine the proper values
+			// to place in the weapon script
+			if (cl_exp_test_wpn_offset.GetBool())
+			{
+				vmangles.x += cl_exp_test_wpn_ori_offset_x.GetFloat();
+				vmangles.y += cl_exp_test_wpn_ori_offset_y.GetFloat();
+				vmangles.z += cl_exp_test_wpn_ori_offset_z.GetFloat();
+				offset.Init(cl_exp_test_wpn_offset_x.GetFloat(),
+					cl_exp_test_wpn_offset_y.GetFloat(),
+					cl_exp_test_wpn_offset_z.GetFloat());
+			}
+			else
+			{
+				CBaseCombatWeapon *pWeapon = dynamic_cast<CBaseCombatWeapon *>(ToBasePlayer(owner)->GetActiveWeapon());
+				if (pWeapon)
+				{
+					vmangles += pWeapon->GetWpnData().m_expOriOffset;
+					offset = pWeapon->GetWpnData().m_expOffset;
+				}
+			}
+
+			// get eye direction angles
+			AngleVectors(vmangles, &forward, &right, &up);
+
+			// apply the offsets
+			vmorigin += forward   * offset.x;
+			vmorigin += right     * offset.y;
+			vmorigin += up        * offset.z;
+		}
+	}
 	SetLocalOrigin( vmorigin );
 	SetLocalAngles( vmangles );
 

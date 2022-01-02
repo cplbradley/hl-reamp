@@ -21,10 +21,14 @@
 #include "te_effect_dispatch.h"
 #include "gamestats.h"
 #include "beam_shared.h"
+#include "hl2_shareddefs.h"
+#include "hl2_player.h"
+#include "hlr/hlr_shareddefs.h"
 #define PHYSCANNON_BEAM_SPRITE "sprites/physbeam.vmt"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 extern ConVar sk_plr_357_pushamount;
+extern ConVar mat_classic_render;
 //-----------------------------------------------------------------------------
 // CWeapon357
 //-----------------------------------------------------------------------------
@@ -42,6 +46,7 @@ public:
 	virtual void	ItemBusyFrame(void);
 	virtual bool	Holster(CBaseCombatWeapon *pSwitchingTo = NULL);
 			void	Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator);
+			void    GetControlPanelInfo(int nPanelIndex, const char *&pPanelName);
 
 private:
 	void   	DrawBeam(void);
@@ -52,6 +57,7 @@ public:
 
 	DECLARE_SERVERCLASS();
 	DECLARE_DATADESC();
+	DECLARE_ACTTABLE();
 private:
 	void	ToggleZoom(void);
 	void	CheckZoomToggle(void);
@@ -69,6 +75,20 @@ END_SEND_TABLE()
 BEGIN_DATADESC(CWeapon357)
 	DEFINE_FIELD(m_bInZoom, FIELD_BOOLEAN),
 END_DATADESC()
+
+acttable_t CWeapon357::m_acttable[] =
+{
+	{ ACT_HL2MP_IDLE, ACT_HL2MP_IDLE_SMG1, false },
+	{ ACT_HL2MP_RUN, ACT_HL2MP_RUN_SMG1, false },
+	{ ACT_HL2MP_IDLE_CROUCH, ACT_HL2MP_IDLE_CROUCH_SMG1, false },
+	{ ACT_HL2MP_WALK_CROUCH, ACT_HL2MP_WALK_CROUCH_SMG1, false },
+	{ ACT_HL2MP_GESTURE_RANGE_ATTACK, ACT_HL2MP_GESTURE_RANGE_ATTACK_SMG1, false },
+	{ ACT_HL2MP_GESTURE_RELOAD, ACT_GESTURE_RELOAD_SMG1, false },
+	{ ACT_HL2MP_JUMP, ACT_HL2MP_JUMP_SMG1, false },
+	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_SMG1, false },
+};
+
+IMPLEMENT_ACTTABLE(CWeapon357);
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -170,7 +190,10 @@ void CWeapon357::PrimaryAttack(void)
 		pPlayer->VelocityPunch(vecRev * sk_plr_357_pushamount.GetFloat());
 		DrawBeam(); //trigger beam draw
 		pPlayer->FireBullets(10, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0); //shoot 15 bullets as 1 bullet
-		WeaponSound(SINGLE);
+		if (mat_classic_render.GetInt() == 0)
+			WeaponSound(SINGLE);
+		else
+			WeaponSound(SPECIAL1);
 	}
 	pPlayer->SetMuzzleFlashTime(gpGlobals->curtime + 0.5);
 	
@@ -215,13 +238,16 @@ void CWeapon357::DrawBeam(void)
 	Vector vecAbsStart = pPlayer->EyePosition();
 	Vector vecAbsEnd = vecAbsStart + (vecDir * MAX_TRACE_LENGTH);
 
-	Vector	vForward, vRight, vUp;
+	Vector	vecSrc, vForward, vRight, vUp;
 	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
-	Vector vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * 3.0f + vUp * -3.0f;
+	if (!m_bInZoom)
+		vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * 3.0f + vUp * -3.0f;
+	else
+		vecSrc = pPlayer->Weapon_ShootPosition() + vUp * -6.0f;
 
 	trace_t tr; // Create our trace_t class to hold the end result
 	// Do the TraceLine, and write our results to our trace_t class, tr.
-	UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_SHOT_HULL, pPlayer, COLLISION_GROUP_NONE, &tr);
+	UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_SHOT, pPlayer, COLLISION_GROUP_NONE, &tr);
 
 	Vector vecPartStart;
 	Vector vecEndPos = tr.endpos;
@@ -289,25 +315,52 @@ void CWeapon357::ItemPostFrame(void)
 void CWeapon357::ToggleZoom(void)
 {
 	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+	CHL2_Player *phl2 = dynamic_cast<CHL2_Player*>(pPlayer);
+	CBaseViewModel *pViewModel = pPlayer->GetViewModel();
 
 	if (pPlayer == NULL)
 		return;
 
 	if (m_bInZoom)
 	{
+		if (g_thirdperson.GetBool())
+			engine->ClientCommand(pPlayer->edict(), "thirdperson\n");
+
 		if (pPlayer->SetFOV(this, 0, 0.2f))
 		{
 			m_bInZoom = false;
+			phl2->m_HL2Local.m_bZooming = false;
+			pViewModel->RemoveEffects(EF_NODRAW);
+			CSingleUserRecipientFilter filter(pPlayer);
+			UserMessageBegin(filter, "ShowScope");
+			WRITE_BYTE(0);
+			MessageEnd();
 		}
+
 	}
 	else
 	{
+		if (g_thirdperson.GetBool())
+			engine->ClientCommand(pPlayer->edict(), "firstperson\n");
+
 		if (pPlayer->SetFOV(this, 45, 0.1f))
 		{
 			m_bInZoom = true;
+			phl2->m_HL2Local.m_bZooming = true;
+			pViewModel->AddEffects(EF_NODRAW);
+			CSingleUserRecipientFilter filter(pPlayer);
+			UserMessageBegin(filter, "ShowScope");
+			WRITE_BYTE(1);
+			MessageEnd();
 		}
 	}
 }
+
+void CWeapon357::GetControlPanelInfo(int nPanelIndex, const char *&pPanelName)
+{
+	pPanelName = "railgun_battery_screen";
+}
+
 bool CWeapon357::Holster(CBaseCombatWeapon *pSwitchingTo)
 {
 	StopEffects();

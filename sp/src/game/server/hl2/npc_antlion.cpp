@@ -1924,51 +1924,7 @@ bool CNPC_Antlion::AllowedToBePushed( void )
 // Input  :
 // Output :
 //-----------------------------------------------------------------------------
-bool CNPC_Antlion::IsJumpLegal( const Vector &startPos, const Vector &apex, const Vector &endPos ) const
-{
-	const float MAX_JUMP_RISE		= 512;
-	const float MAX_JUMP_DROP		= 512;
-	const float MAX_JUMP_DISTANCE	= 1024;
-	const float MIN_JUMP_DISTANCE   = 128;
 
-	if ( CAntlionRepellant::IsPositionRepellantFree( endPos ) == false )
-		 return false;
-	
-	//Adrian: Don't try to jump if my destination is right next to me.
-	if ( ( endPos - GetAbsOrigin()).Length() < MIN_JUMP_DISTANCE ) 
-		 return false;
-
-	if ( HasSpawnFlags( SF_ANTLION_USE_GROUNDCHECKS ) && g_test_new_antlion_jump.GetBool() == true )
-	{
-		trace_t	tr;
-		AI_TraceHull( endPos, endPos, GetHullMins(), GetHullMaxs(), MASK_NPCSOLID, this, COLLISION_GROUP_NONE, &tr );
-		
-		if ( tr.m_pEnt )
-		{
-			CAI_BaseNPC *pBlocker = tr.m_pEnt->MyNPCPointer();
-
-			if ( pBlocker && pBlocker->Classify() == CLASS_ANTLION )
-			{
-				// HACKHACK
-				CNPC_Antlion *pAntlion = dynamic_cast< CNPC_Antlion * > ( pBlocker );
-
-				if ( pAntlion )
-				{
-					if ( pAntlion->AllowedToBePushed() == true )
-					{
-					//	NDebugOverlay::Line( GetAbsOrigin(), endPos, 255, 0, 0, 0, 2 );
-					//	NDebugOverlay::Box( pAntlion->GetAbsOrigin(), GetHullMins(), GetHullMaxs(), 0, 0, 255, 0, 2 );
-						pAntlion->GetMotor()->SetIdealYawToTarget( endPos );
-						pAntlion->SetSchedule( SCHED_MOVE_AWAY );
-						pAntlion->m_flNextJumpPushTime = gpGlobals->curtime + 2.0f;
-					}
-				}
-			}
-		}
-	}
-
-	return BaseClass::IsJumpLegal( startPos, apex, endPos, MAX_JUMP_RISE, MAX_JUMP_DROP, MAX_JUMP_DISTANCE );
-}
 
 bool CNPC_Antlion::IsFirmlyOnGround( void )
 {
@@ -2446,7 +2402,7 @@ int CNPC_Antlion::SelectSchedule( void )
 				}
 
 				// Range attack if we're able
-				if ( HasCondition( COND_CAN_RANGE_ATTACK1 ) )
+				if ( HasCondition( COND_CAN_RANGE_ATTACK1 ))
 				{
 					if ( OccupyStrategySlot( SQUAD_SLOT_ANTLION_WORKER_FIRE ) )
 					{

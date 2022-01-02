@@ -12,6 +12,7 @@ public:
 	void togglePrint();
 	virtual void OnThink();
 	virtual void Init(void);
+	void VidInit(void);
 
 	void MsgFunc_BlueKey(bf_read &msg);
 
@@ -21,4 +22,5 @@ public:
 protected:
 	virtual void Paint();
 	int m_nBlueKey;
+	CHudTexture *m_icon;
 };

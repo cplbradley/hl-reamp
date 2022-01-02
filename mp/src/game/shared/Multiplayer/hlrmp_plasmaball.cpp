@@ -201,7 +201,6 @@ void PlasmaProjectileCallback(const CEffectData &data)
 		if (pProj)
 		{
 			pProj->AddEffects(EF_NOSHADOW);
-			pProj->DrawSprite()
 
 		}
 	}

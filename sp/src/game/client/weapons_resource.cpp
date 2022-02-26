@@ -102,6 +102,7 @@ void WeaponsResource::LoadWeaponSprites( WEAPON_FILE_INFO_HANDLE hWeaponFileInfo
 	pWeaponInfo->iconCrosshair = NULL;
 	pWeaponInfo->iconAutoaim = NULL;
 	pWeaponInfo->iconSmall = NULL;
+	pWeaponInfo->iconHUDAmmo = NULL;
 
 	char sz[128];
 	Q_snprintf(sz, sizeof( sz ), "scripts/%s", pWeaponInfo->szClassName);
@@ -194,6 +195,16 @@ void WeaponsResource::LoadWeaponSprites( WEAPON_FILE_INFO_HANDLE hWeaponFileInfo
 			{
 				pWeaponInfo->iconAmmo->Precache();
 				pHudHR->SetHistoryGap( pWeaponInfo->iconAmmo->Height() );
+			}
+		}
+
+		p = FindHudTextureInDict(tempList, "hudammo");
+		if (p)
+		{
+			pWeaponInfo->iconHUDAmmo = gHUD.AddUnsearchableHudIconToList(*p);
+			if (pWeaponInfo->iconHUDAmmo)
+			{
+				pWeaponInfo->iconHUDAmmo->Precache();
 			}
 		}
 

@@ -39,6 +39,7 @@ class CWeaponFrag: public CBaseHLCombatWeapon
 	DECLARE_CLASS( CWeaponFrag, CBaseHLCombatWeapon );
 public:
 	DECLARE_SERVERCLASS();
+	DECLARE_DATADESC();
 
 public:
 	CWeaponFrag();
@@ -53,7 +54,7 @@ public:
 
 	void	WeaponIdle(void);
 
-	Activity		GetPrimaryAttackActivity(void);
+	Activity		GetPrimaryAttackActivity(void) override;
 	Activity		GetIdleActivity(void);
 
 	bool	Deploy( void );
@@ -80,9 +81,9 @@ private:
 	bool	m_fDrawbackFinished;
 protected:
 	CHandle<CBaseGrenade> m_Grenada;
-	DECLARE_ACTTABLE();
+	//DECLARE_ACTTABLE();
 
-	DECLARE_DATADESC();
+
 };
 
 
@@ -93,7 +94,7 @@ BEGIN_DATADESC( CWeaponFrag )
 	DEFINE_FIELD( m_fDrawbackFinished, FIELD_BOOLEAN ),
 END_DATADESC()
 
-acttable_t	CWeaponFrag::m_acttable[] = 
+/*acttable_t	CWeaponFrag::m_acttable[] = 
 {
 	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_SLAM, true },
 	{ ACT_HL2MP_IDLE, ACT_HL2MP_IDLE_AR2, false },
@@ -106,14 +107,14 @@ acttable_t	CWeaponFrag::m_acttable[] =
 	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_AR2, false },
 };
 
-IMPLEMENT_ACTTABLE(CWeaponFrag);
+IMPLEMENT_ACTTABLE(CWeaponFrag);*/
 
-IMPLEMENT_SERVERCLASS_ST(CWeaponFrag, DT_WeaponFrag)
-END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS( weapon_frag, CWeaponFrag );
 PRECACHE_WEAPON_REGISTER(weapon_frag);
 
+IMPLEMENT_SERVERCLASS_ST(CWeaponFrag, DT_WeaponFrag)
+END_SEND_TABLE()
 
 
 CWeaponFrag::CWeaponFrag() :
@@ -170,7 +171,6 @@ void CWeaponFrag::WeaponIdle(void)
 	}
 }
 
-
 Activity CWeaponFrag::GetPrimaryAttackActivity(void)
 {
 	switch (m_iLastFireAct)
@@ -178,21 +178,25 @@ Activity CWeaponFrag::GetPrimaryAttackActivity(void)
 	case 0:
 	{
 		m_iLastFireAct = 1;
+		DevMsg("Sending Primary Attack Activity # %i\n", ACT_VM_GRENADELAUNCHER_FIRE1);
 		return ACT_VM_GRENADELAUNCHER_FIRE1;
 	}
 	case 1:
 	{
 		m_iLastFireAct = 2;
+		DevMsg("Sending Primary Attack Activity # %i\n", ACT_VM_GRENADELAUNCHER_FIRE2);
 		return ACT_VM_GRENADELAUNCHER_FIRE2;
 	}
 	case 2:
 	{
 		m_iLastFireAct = 3;
+		DevMsg("Sending Primary Attack Activity # %i\n", ACT_VM_GRENADELAUNCHER_FIRE3);
 		return ACT_VM_GRENADELAUNCHER_FIRE3;
 	}
 	case 3:
 	{
 		m_iLastFireAct = 0;
+		DevMsg("Sending Primary Attack Activity # %i\n", ACT_VM_GRENADELAUNCHER_FIRE4);
 		return ACT_VM_GRENADELAUNCHER_FIRE4;
 	}
 	default:
@@ -352,9 +356,11 @@ void CWeaponFrag::PrimaryAttack(void)
 	}
 	
 	m_flNextPrimaryAttack = gpGlobals->curtime + 0.4f;
+	m_flNextSecondaryAttack = gpGlobals->curtime + 0.4f;
 
 	WeaponSound(WPN_DOUBLE);
-
+	pPlayer->SetAnimation(PLAYER_ATTACK1);
+	DevMsg("Should Be Sending Attack Activity\n");
 	SendWeaponAnim(GetPrimaryAttackActivity());
 
 	//m_bRedraw = true;
@@ -380,20 +386,23 @@ void CWeaponFrag::SecondaryAttack(void)
 {
 	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
 	Vector	vecEye = pPlayer->EyePosition();
-	Vector	vForward, vRight;
+	Vector	vForward, vRight, vUp;
 	Vector vecAng;
 	pPlayer->EyeVectors(&vecAng);
 	Vector vecSrc = vecEye + vForward * 18.0f + vRight * 8.0f + Vector(0, 0, -8);
+
+	Vector	muzzlePoint = pPlayer->Weapon_ShootPosition();
 	//CheckThrowPosition(pPlayer, vecEye, vecSrc);
 
 	float vertfactor = sk_plr_grenade_vert_factor.GetFloat();
 	Vector vecThrow = vecAng * sk_plr_grenade_launch_speed.GetFloat() + Vector(0, 0, vertfactor);
-	Gasgrenade_Create(vecSrc, vec3_angle, vecThrow, AngularImpulse(200, random->RandomInt(-600, 600), 0), pPlayer, 3.0f);
+	Stickynade_Create(muzzlePoint, vec3_angle, vecThrow, AngularImpulse(200, random->RandomInt(-600, 600), 0), pPlayer);
 
 	m_flNextPrimaryAttack = gpGlobals->curtime + 0.4f;
-	m_flNextSecondaryAttack = gpGlobals->curtime + 0.4f;
+	m_flNextSecondaryAttack = gpGlobals->curtime + 2.0f;
 
 	WeaponSound(WPN_DOUBLE);
+	SendWeaponAnim(GetPrimaryAttackActivity());
 
 	//m_bRedraw = true;
 

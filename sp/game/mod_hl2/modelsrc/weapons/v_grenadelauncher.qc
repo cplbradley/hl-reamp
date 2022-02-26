@@ -10,7 +10,7 @@ $origin 0 0 64
 $contents "solid"
 $cdmaterials "models/weapons/v_hand"
 $cdmaterials "models/weapons/grenadelauncher"
-$sequence idle "v_grenadelauncher.smd"  activity ACT_IDLE -1 loop fps 30
+//$sequence idle "v_grenadelauncher.smd"  activity ACT_IDLE -1 loop fps 30
 $sequence fire1 "v_grenadelauncher_sequence_fire1" fps 30.0 activity ACT_VM_GRENADELAUNCHER_FIRE1 -1.0 fadein 0.0 fadeout 0.2 
 $sequence fire2 "v_grenadelauncher_sequence_fire2" fps 30.0 activity ACT_VM_GRENADELAUNCHER_FIRE2 -1.0 fadein 0.0 fadeout 0.2 
 $sequence fire3 "v_grenadelauncher_sequence_fire3" fps 30.0 activity ACT_VM_GRENADELAUNCHER_FIRE3 -1.0 fadein 0.0 fadeout 0.2 

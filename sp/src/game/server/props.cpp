@@ -1823,6 +1823,7 @@ BEGIN_DATADESC( CDynamicProp )
 	DEFINE_KEYFIELD( m_flMaxRandAnimTime, FIELD_FLOAT, "MaxAnimTime"),
 	DEFINE_KEYFIELD( m_bStartDisabled, FIELD_BOOLEAN, "StartDisabled" ),
 	DEFINE_KEYFIELD( m_bDisableBoneFollowers, FIELD_BOOLEAN, "DisableBoneFollowers" ),
+	DEFINE_KEYFIELD(m_fPlaybackRate, FIELD_FLOAT, "PlaybackRate"),
 	DEFINE_FIELD(	 m_bUseHitboxesForRenderBox, FIELD_BOOLEAN ),
 	DEFINE_FIELD(	m_nPendingSequence, FIELD_SHORT ),
 		
@@ -1918,6 +1919,9 @@ void CDynamicProp::Spawn( )
 	CreateVPhysics();
 
 	BoneFollowerHierarchyChanged();
+
+	if (m_fPlaybackRate != 0)
+		SetPlaybackRate(m_fPlaybackRate);
 
 	if( m_bStartDisabled )
 	{
@@ -2273,7 +2277,10 @@ void CDynamicProp::FinishSetSequence( int nSequence )
 	ResetSequence( nSequence );
 	ResetClientsideFrame();
 	RemoveFlag( FL_STATICPROP );
-	SetPlaybackRate( m_iTransitionDirection > 0 ? 1.0f : -1.0f );
+	if (m_fPlaybackRate != 0 && m_fPlaybackRate != 1)
+		SetPlaybackRate( m_fPlaybackRate);
+	else
+		SetPlaybackRate(m_iTransitionDirection > 0 ? 1.0f : -1.0f);
 	SetCycle( m_iTransitionDirection > 0 ? 0.0f : 0.999f );
 }
 

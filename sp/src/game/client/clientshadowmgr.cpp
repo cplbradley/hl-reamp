@@ -2628,6 +2628,7 @@ void CClientShadowMgr::BuildFlashlight( ClientShadowHandle_t handle )
 
 	if (engine->CullBox(mins, maxs))
 		return;
+
 	bool bLightModels = r_flashlightmodels.GetBool();
 	bool bLightSpecificEntity = shadow.m_hTargetEntity.Get() != NULL;
 	bool bLightWorld = ( shadow.m_Flags & SHADOW_FLAGS_LIGHT_WORLD ) != 0;

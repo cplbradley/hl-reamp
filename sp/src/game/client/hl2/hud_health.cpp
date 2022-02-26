@@ -66,6 +66,7 @@ private:
 	CHudTexture *m_iconArmor;
 	CHudTexture *m_backgroundframe;
 	CHudTexture *m_background;
+	CHudTexture *m_skull;
 	int		m_bitsDamage;
 	Color healthbarcolor;
 	Color armorcolor;
@@ -89,6 +90,7 @@ private:
 	CPanelAnimationVarAliasType(float, m_bar1ypos, "bar1_ypos", "0", "proportional_float");
 	CPanelAnimationVarAliasType(float, m_bar2xpos, "bar2_xpos", "0", "proportional_float");
 	CPanelAnimationVarAliasType(float, m_bar2ypos, "bar2_ypos", "0", "proportional_float");
+
 };	
 
 DECLARE_HUDELEMENT( CHudHealth );

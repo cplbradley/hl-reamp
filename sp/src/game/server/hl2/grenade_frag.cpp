@@ -14,6 +14,8 @@
 #include "soundent.h"
 #include "explode.h"
 #include "hl2_gamestats.h"
+#include "physics_saverestore.h"
+#include "vphysics/constraints.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -312,6 +314,7 @@ void CGrenadeFrag::NadeTouch(CBaseEntity *pOther)
 		if (speed < 1)
 		{
 			SetMoveType(MOVETYPE_NONE);
+			SetAbsVelocity(Vector(0, 0, 0));
 		}
 		//Msg("bounce\n");
 		SetGravity(1.0f);
@@ -982,6 +985,136 @@ void CGasTemp::EmitDamage(void)
 	}
 	SetNextThink(gpGlobals->curtime + 0.5f);
 }
+
+/////////////////////////////////////////
+///// STICKY GRENADE  ///////////////////
+/////////////////////////////////////////
+
+#define STICKY_MODEL "models/weapons/w_stickygrenade.mdl"
+
+LINK_ENTITY_TO_CLASS(grenade_sticky, CStickyGrenade);
+BEGIN_DATADESC(CStickyGrenade)
+DEFINE_PHYSPTR(m_pConstraint),
+DEFINE_FIELD(m_hConstrainedEntity, FIELD_EHANDLE),
+END_DATADESC()
+
+
+void CStickyGrenade::Precache(void)
+{
+	PrecacheScriptSound("Weapon_Crossbow.Buildup");
+	PrecacheModel(STICKY_MODEL);
+	PrecacheModel("sprites/redglow1.vmt");
+}
+
+void CStickyGrenade::Spawn(void)
+{
+	Precache();
+	SetModel(STICKY_MODEL);
+	SetMoveType(MOVETYPE_FLYGRAVITY);
+	SetSolid(SOLID_VPHYSICS);
+	SetSolidFlags(FSOLID_NOT_STANDABLE | FSOLID_TRIGGER | FSOLID_NOT_SOLID);
+	SetGravity(1.0f);
+	SetTouch(&CStickyGrenade::OnTouch);
+
+}
+void CStickyGrenade::OnTouch(CBaseEntity *pOther)
+{
+	if (!pOther)
+		return;
+	if (pOther->IsSolidFlagSet(FSOLID_VOLUME_CONTENTS | FSOLID_TRIGGER))
+	{
+			// Some NPCs are triggers that can take damage (like antlion grubs). We should hit them.
+		if ((pOther->m_takedamage == DAMAGE_NO) || (pOther->m_takedamage == DAMAGE_EVENTS_ONLY))
+				return;
+	}
+	if (GetOwnerEntity() && GetOwnerEntity() == pOther)
+		return;
+	if (pOther->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE)
+	{
+		return;
+	}
+
+	trace_t tr; 
+	tr = BaseClass::GetTouchTrace();
+	if (pOther->IsSolid())
+	{
+		if ((pOther->GetMoveType() == MOVETYPE_NONE) && tr.surface.flags && SURF_SKY)
+		{
+			SUB_Remove();
+		}
+
+		if (pOther->IsWorld())
+		{
+			SetMoveType(MOVETYPE_NONE);
+			StartTimer();
+		}
+
+		if (pOther->IsNPC())
+		{
+			SetMoveType(MOVETYPE_VPHYSICS);
+			VPhysicsInitNormal(SOLID_BBOX, FSOLID_NOT_STANDABLE, false);
+			Stick(pOther);
+		}
+		StartTimer();
+	}
+}
+
+void CStickyGrenade::StartTimer(void)
+{
+	SetThink(&CStickyGrenade::Explode);
+	SetNextThink(gpGlobals->curtime + 1.3f);
+	EmitSound("Weapon_Crossbow.Buildup");
+}
+
+void CStickyGrenade::Explode(void)
+{
+	ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), 0, 0,
+		SF_ENVEXPLOSION_NOFIREBALL, 0.0f, this);
+	RadiusDamage(CTakeDamageInfo(this, GetThrower(), 150, DMG_BLAST), GetAbsOrigin(), 64, CLASS_NONE, NULL);
+	RemoveDeferred();
+}
+
+bool CStickyGrenade::Stick(CBaseEntity *pOther)
+{
+	if (m_pConstraint != NULL)
+	{
+		// Should we destroy the constraint and make a new one at this point?
+		Assert(0);
+		return false;
+	}
+
+	if (pOther == NULL)
+		return false;
+
+	IPhysicsObject *pPhysObject = pOther->VPhysicsGetObject();
+	if (pPhysObject == NULL)
+		return false;
+
+	IPhysicsObject *pMyPhysObject = VPhysicsGetObject();
+	if (pPhysObject == NULL)
+		return false;
+
+	// Create the fixed constraint
+	constraint_fixedparams_t fixedConstraint;
+	fixedConstraint.Defaults();
+	fixedConstraint.InitWithCurrentObjectState(pPhysObject, pMyPhysObject);
+
+	IPhysicsConstraint *pConstraint = physenv->CreateFixedConstraint(pPhysObject, pMyPhysObject, NULL, fixedConstraint);
+	if (pConstraint == NULL)
+		return false;
+
+	// Hold on to us
+	m_pConstraint = pConstraint;
+	pConstraint->SetGameData((void *)this);
+	m_hConstrainedEntity = pOther->GetOwnerEntity();;
+
+	// Disable collisions between the two ents
+	PhysDisableObjectCollisions(pPhysObject, pMyPhysObject);
+
+	return true;
+}
+
+
 //////SPAWN FUNCTIONS
 
 CBaseGrenade *Fraggrenade_Create( const Vector &position, const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, CBaseEntity *pOwner, float timer, bool combineSpawned )
@@ -1012,6 +1145,20 @@ CBaseGrenade *Gasgrenade_Create(const Vector &position, const QAngle &angles, co
 	pGrenade->m_takedamage = DAMAGE_EVENTS_ONLY;
 	//pGrenade->SetCombineSpawned(combineSpawned);
 	pGrenade->SetElasticity(0.1f);
+
+	return pGrenade;
+}
+
+CBaseGrenade *Stickynade_Create(const Vector &position, const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, CBaseEntity *pOwner)
+{
+	// Don't set the owner here, or the player can't interact with grenades he's thrown-------------------------------------
+	CGrenadeFrag *pGrenade = (CGrenadeFrag *)CBaseEntity::Create("grenade_sticky", position, angles, pOwner);
+	pGrenade->SetAbsOrigin(position);
+	pGrenade->SetAbsVelocity(velocity);
+	pGrenade->ApplyLocalAngularVelocityImpulse(angVelocity);
+	pGrenade->SetThrower(ToBaseCombatCharacter(pOwner));
+	pGrenade->SetGravity(1.0f);
+	pGrenade->m_takedamage = DAMAGE_EVENTS_ONLY;
 
 	return pGrenade;
 }

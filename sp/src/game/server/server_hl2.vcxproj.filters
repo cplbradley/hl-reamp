@@ -3590,6 +3590,9 @@
     <ClCompile Include="..\shared\singleplayer_animstate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="weapon_drill.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

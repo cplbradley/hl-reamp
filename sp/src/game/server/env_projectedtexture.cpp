@@ -56,6 +56,7 @@ private:
 	CNetworkVector( m_LinearFloatLightColor );
 	CNetworkVar( float, m_flAmbient );
 	CNetworkString( m_SpotlightTextureName, MAX_PATH );
+	string_t texture;
 	CNetworkVar( int, m_nSpotlightTextureFrame );
 	CNetworkVar( float, m_flNearZ );
 	CNetworkVar( float, m_flFarZ );
@@ -67,13 +68,14 @@ LINK_ENTITY_TO_CLASS( env_projectedtexture, CEnvProjectedTexture );
 BEGIN_DATADESC( CEnvProjectedTexture )
 	DEFINE_FIELD( m_hTargetEntity, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_bState, FIELD_BOOLEAN ),
+	DEFINE_KEYFIELD(texture, FIELD_STRING, "texture"),
 	DEFINE_KEYFIELD( m_flLightFOV, FIELD_FLOAT, "lightfov" ),
 	DEFINE_KEYFIELD( m_bEnableShadows, FIELD_BOOLEAN, "enableshadows" ),
 	DEFINE_KEYFIELD( m_bLightOnlyTarget, FIELD_BOOLEAN, "lightonlytarget" ),
 	DEFINE_KEYFIELD( m_bLightWorld, FIELD_BOOLEAN, "lightworld" ),
 	DEFINE_KEYFIELD( m_bCameraSpace, FIELD_BOOLEAN, "cameraspace" ),
 	DEFINE_KEYFIELD( m_flAmbient, FIELD_FLOAT, "ambient" ),
-	DEFINE_AUTO_ARRAY_KEYFIELD( m_SpotlightTextureName, FIELD_CHARACTER, "texturename" ),
+	DEFINE_AUTO_ARRAY(m_SpotlightTextureName, FIELD_CHARACTER),
 	DEFINE_KEYFIELD( m_nSpotlightTextureFrame, FIELD_INTEGER, "textureframe" ),
 	DEFINE_KEYFIELD( m_flNearZ, FIELD_FLOAT, "nearz" ),
 	DEFINE_KEYFIELD( m_flFarZ, FIELD_FLOAT, "farz" ),
@@ -125,11 +127,19 @@ CEnvProjectedTexture::CEnvProjectedTexture( void )
 	m_bCameraSpace = false;
 
 // if ( g_pHardwareConfig->SupportsBorderColor() )
-#if defined( _X360 )
+/*#if defined( _X360 )
 		Q_strcpy( m_SpotlightTextureName.GetForModify(), "effects/flashlight_border" );
 #else
 		Q_strcpy( m_SpotlightTextureName.GetForModify(), "effects/flashlight001" );
-#endif
+#endif*/
+	//Q_strcpy(m_SpotlightTextureName.GetForModify(), texture.ToCStr());
+	/*char *szTexture = (char *)STRING(texture);
+	if (texture != NULL_STRING)
+	{
+		Q_strcpy(m_SpotlightTextureName.GetForModify(), szTexture);
+	}
+	else*/
+	Q_strcpy(m_SpotlightTextureName.GetForModify(), "effects/flashlight001");
 
 	m_nSpotlightTextureFrame = 0;
 	m_LinearFloatLightColor.Init( 1.0f, 1.0f, 1.0f );
@@ -155,15 +165,19 @@ void UTIL_ColorStringToLinearFloatColor( Vector &color, const char *pString )
 
 bool CEnvProjectedTexture::KeyValue( const char *szKeyName, const char *szValue )
 {
-	if ( FStrEq( szKeyName, "lightcolor" ) )
+	if (FStrEq(szKeyName, "lightcolor"))
 	{
 		Vector tmp;
-		UTIL_ColorStringToLinearFloatColor( tmp, szValue );
+		UTIL_ColorStringToLinearFloatColor(tmp, szValue);
 		m_LinearFloatLightColor = tmp;
+	}
+	else if (FStrEq(szKeyName, "texturename"))
+	{
+		Q_strcpy(m_SpotlightTextureName.GetForModify(), szValue);
 	}
 	else
 	{
-		return BaseClass::KeyValue( szKeyName, szValue );
+		return BaseClass::KeyValue(szKeyName, szValue);
 	}
 
 	return true;

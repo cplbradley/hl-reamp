@@ -422,12 +422,6 @@ void CWeaponPumpShotgun::FillClip(void)
 }
 Activity CWeaponPumpShotgun::GetDrawActivity(void)
 {
-	if (g_classic_weapon_pos.GetBool())
-	{
-		DevMsg("classic weapon pos enabled, moving weapon pos\n");
-		return ACT_VM_DRAW_CLASSIC;
-	}
-	else
 		return ACT_VM_DRAW;
 }
 //-----------------------------------------------------------------------------
@@ -449,7 +443,11 @@ void CWeaponPumpShotgun::Pump(void)
 		WeaponSound(SPECIAL3);
 
 	// Finish reload animation
-	SendWeaponAnim(ACT_SHOTGUN_PUMP);
+
+	if (g_classic_weapon_pos.GetBool() == false)
+		SendWeaponAnim(ACT_SHOTGUN_PUMP);
+	else
+		SendWeaponAnim(ACT_VM_PULLBACK_SPECIAL);
 
 	pOwner->m_flNextAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
 	m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
@@ -463,7 +461,10 @@ void CWeaponPumpShotgun::Pump(void)
 void CWeaponPumpShotgun::DryFire(void)
 {
 	WeaponSound(EMPTY);
-	SendWeaponAnim(ACT_VM_DRYFIRE);
+	if (g_classic_weapon_pos.GetBool() == false)
+		SendWeaponAnim(ACT_VM_DRYFIRE);
+	else
+		SendWeaponAnim(ACT_VM_IDLE_SPECIAL);
 
 	m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
 }

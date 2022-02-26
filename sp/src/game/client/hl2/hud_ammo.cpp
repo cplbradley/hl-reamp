@@ -51,6 +51,9 @@ private:
 	int		m_iAmmo;
 	int		m_iAmmo2;
 	const CHudTexture *m_iconPrimaryAmmo;
+
+	CHudTexture *iconbg;
+	Color bgcolor;
 };
 
 DECLARE_HUDELEMENT( CHudAmmo );
@@ -66,6 +69,7 @@ CHudAmmo::CHudAmmo( const char *pElementName ) : BaseClass(NULL, "HudAmmo"), CHu
 	hudlcd->SetGlobalStat( "(ammo_secondary)", "0" );
 	hudlcd->SetGlobalStat( "(weapon_print_name)", "" );
 	hudlcd->SetGlobalStat( "(weapon_name)", "" );
+	
 }
 
 //-----------------------------------------------------------------------------
@@ -77,16 +81,8 @@ void CHudAmmo::Init( void )
 	m_iAmmo2	= -1;
 	
 	m_iconPrimaryAmmo = NULL;
-
-	wchar_t *tempString = g_pVGuiLocalize->Find("#Valve_Hud_AMMO");
-	if (tempString)
-	{
-		SetLabelText(tempString);
-	}
-	else
-	{
-		SetLabelText(L"AMMO");
-	}
+	bgcolor = Color(255, 255, 255, 255);
+	iconbg = gHUD.GetIcon("ammo_background");
 }
 
 //-----------------------------------------------------------------------------
@@ -94,6 +90,7 @@ void CHudAmmo::Init( void )
 //-----------------------------------------------------------------------------
 void CHudAmmo::VidInit( void )
 {
+	iconbg = gHUD.GetIcon("ammo_background");
 }
 
 //-----------------------------------------------------------------------------
@@ -135,10 +132,10 @@ void CHudAmmo::UpdatePlayerAmmo( C_BasePlayer *player )
 	}
 
 	SetPaintEnabled(true);
-	SetPaintBackgroundEnabled(true);
+	SetPaintBackgroundEnabled(false);
 
 	// Get our icons for the ammo types
-	m_iconPrimaryAmmo = wpn->GetSpriteAmmo();
+	m_iconPrimaryAmmo = wpn->GetSpriteHUDAmmo();
 
 	// get the ammo in our clip
 	int ammo1 = wpn->Clip1();
@@ -335,18 +332,27 @@ void CHudAmmo::Paint( void )
 {
 	BaseClass::Paint();
 
+	
+	if (iconbg)
+	{
+		iconbg->DrawSelf(0, 0, GetWide(), GetTall(), bgcolor);
+	}
+	else
+	{
+		DevMsg("can't find the ammo background for some fucking reason\n");
+	}
 #ifndef HL2MP
 	if ( m_hCurrentVehicle == NULL && m_iconPrimaryAmmo )
 	{
-		int nLabelHeight;
+		/*int nLabelHeight;
 		int nLabelWidth;
 		surface()->GetTextSize( m_hTextFont, m_LabelText, nLabelWidth, nLabelHeight );
 
 		// Figure out where we're going to put this
 		int x = text_xpos + ( nLabelWidth - m_iconPrimaryAmmo->Width() ) / 2;
-		int y = text_ypos - ( nLabelHeight + ( m_iconPrimaryAmmo->Height() / 2 ) );
+		int y = text_ypos - ( nLabelHeight + ( m_iconPrimaryAmmo->Height() / 2 ) );*/
 		
-		m_iconPrimaryAmmo->DrawSelf( x, y, GetFgColor() );
+		m_iconPrimaryAmmo->DrawSelf(0, 0, GetWide(), GetTall(), bgcolor);
 	}
 #endif // HL2MP
 }

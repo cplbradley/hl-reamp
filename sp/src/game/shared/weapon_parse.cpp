@@ -340,6 +340,7 @@ FileWeaponInfo_t::FileWeaponInfo_t()
 	iconInactive = 0;
 	iconAmmo = 0;
 	iconAmmo2 = 0;
+	iconHUDAmmo = 0;
 	iconCrosshair = 0;
 	iconAutoaim = 0;
 	iconZoomedCrosshair = 0;

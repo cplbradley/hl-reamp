@@ -1943,6 +1943,9 @@
     <ClInclude Include="..\shared\singleplayer_animstate.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="hud_deathskull.h">
+      <Filter>Source Files\HLR</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mp3player.cpp">
@@ -3507,6 +3510,9 @@
     </ClCompile>
     <ClCompile Include="..\shared\singleplayer_animstate.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hud_deathskull.cpp">
+      <Filter>Source Files\HLR</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

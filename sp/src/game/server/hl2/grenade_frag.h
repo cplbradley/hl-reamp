@@ -18,6 +18,7 @@ struct edict_t;
 
 CBaseGrenade *Fraggrenade_Create( const Vector &position, const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, CBaseEntity *pOwner, float timer, bool combineSpawned );
 CBaseGrenade *Gasgrenade_Create(const Vector &position, const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, CBaseEntity *pOwner, float timer);
+CBaseGrenade *Stickynade_Create(const Vector &position, const QAngle &angles, const Vector &vecocity, const AngularImpulse &angVelocity, CBaseEntity *pOwner);
 bool	Fraggrenade_WasPunted( const CBaseEntity *pEntity );
 bool	Fraggrenade_WasCreatedByCombine( const CBaseEntity *pEntity ); 
 static	CGrenadeFrag *Create(const Vector &position, const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, CBaseEntity *pOwner, float timer, bool combineSpawned);
@@ -130,6 +131,7 @@ class CGasTemp : public CBaseCombatCharacter
 {
 	DECLARE_CLASS(CGasTemp, CBaseCombatCharacter);
 	DECLARE_DATADESC();
+
 public:
 	void Spawn(void);
 	void EmitDamage(void);
@@ -137,6 +139,32 @@ public:
 	float m_fLastDamage;
 	float m_fNextDamage;
 	float m_fFinalDamage;
+
+};
+
+class CStickyGrenade : public CBaseGrenade
+{
+	DECLARE_CLASS(CStickyGrenade, CBaseGrenade);
+	DECLARE_DATADESC();
+
+public:
+	void Spawn(void);
+	void Precache(void);
+	void Explode(void);
+	void StartTimer(void);
+	void OnTouch(CBaseEntity *pOther);
+	bool Stick(CBaseEntity *pOther);
+	IPhysicsConstraint			*m_pConstraint;
+	EHANDLE						m_hConstrainedEntity;
+private:
+
+protected:
+
+
+
+
+	//CHandle<CSprite>		m_pMainGlow;
+	//CHandle<CSpriteTrail>	m_pGlowTrail;
 
 };
 #endif // GRENADE_FRAG_H

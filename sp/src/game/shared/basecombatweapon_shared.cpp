@@ -61,8 +61,6 @@ ConVar tf_weapon_criticals_bucket_bottom("tf_weapon_criticals_bucket_bottom", "-
 ConVar tf_weapon_criticals_bucket_default("tf_weapon_criticals_bucket_default", "300.0", FCVAR_REPLICATED | FCVAR_CHEAT);
 #endif // TF
 
-extern ConVar g_classic_weapon_pos;
-
 CBaseCombatWeapon::CBaseCombatWeapon()
 {
 	// Constructor must call this
@@ -238,7 +236,6 @@ void CBaseCombatWeapon::Precache(void)
 	// Msg( "Client got %s\n", GetClassname() );
 #endif
 	m_iPrimaryAmmoType = m_iSecondaryAmmoType = -1;
-
 
 	// Add this weapon to the weapon registry, and get our index into it
 	// Get weapon data from script file
@@ -493,6 +490,14 @@ CHudTexture const *CBaseCombatWeapon::GetSpriteAmmo(void) const
 CHudTexture const *CBaseCombatWeapon::GetSpriteAmmo2(void) const
 {
 	return GetWpnData().iconAmmo2;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Returns the icon used for the ammo counter in the HUD
+//-----------------------------------------------------------------------------
+CHudTexture const *CBaseCombatWeapon::GetSpriteHUDAmmo(void) const
+{
+	return GetWpnData().iconHUDAmmo;
 }
 
 //-----------------------------------------------------------------------------
@@ -1020,10 +1025,7 @@ void CBaseCombatWeapon::SetActivity(Activity act, float duration)
 
 	// FORCE IDLE on sequences we don't have (which should be many)
 	if (sequence == ACTIVITY_NOT_AVAILABLE)
-	{
-		DevMsg("SEQUENCE UNAVAILBE UH-OH\n");
 		sequence = SelectWeightedSequence(ACT_VM_IDLE);
-	}
 
 	//Adrian: Oh man again...
 #if !defined( CLIENT_DLL ) && (defined( HL2MP ) || defined( PORTAL ))
@@ -1450,13 +1452,10 @@ bool CBaseCombatWeapon::Deploy()
 
 Activity CBaseCombatWeapon::GetDrawActivity(void)
 {
-	if (g_classic_weapon_pos.GetBool())
-	{
-		DevMsg("classic weapon pos enabled, moving weapon pos\n");
-		return ACT_VM_DRAW_CLASSIC;
-	}
-	else
+	if (g_classic_weapon_pos.GetBool() == false)
 		return ACT_VM_DRAW;
+	else
+		return ACT_VM_DRAW_SPECIAL;
 }
 
 //-----------------------------------------------------------------------------
@@ -2059,14 +2058,13 @@ bool CBaseCombatWeapon::Reload(void)
 //=========================================================
 void CBaseCombatWeapon::WeaponIdle(void)
 {
-	
 	//Idle again if we've finished
 	if (HasWeaponIdleTimeElapsed())
 	{
-		if (g_classic_weapon_pos.GetBool())
-			SendWeaponAnim(ACT_VM_IDLE_CLASSIC);
-		else
+		if (g_classic_weapon_pos.GetBool() == false)
 			SendWeaponAnim(ACT_VM_IDLE);
+		else
+			SendWeaponAnim(ACT_VM_IDLE_SPECIAL);
 	}
 }
 
@@ -2074,17 +2072,15 @@ void CBaseCombatWeapon::WeaponIdle(void)
 //=========================================================
 Activity CBaseCombatWeapon::GetPrimaryAttackActivity(void)
 {
-	if (g_classic_weapon_pos.GetBool())
-		return ACT_VM_PRIMARYATTACK_CLASSIC;
-	else
+	if (g_classic_weapon_pos.GetBool() == false)
 		return ACT_VM_PRIMARYATTACK;
+	else
+		return ACT_VM_PRIMARYATTACK_SPECIAL;
 }
 
 //=========================================================
 Activity CBaseCombatWeapon::GetSecondaryAttackActivity(void)
 {
-	if (g_classic_weapon_pos.GetBool())
-		return ACT_VM_SECONDARYATTACK_CLASSIC;
 	return ACT_VM_SECONDARYATTACK;
 }
 

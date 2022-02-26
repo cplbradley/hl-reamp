@@ -656,27 +656,28 @@ void CWeaponShotgun::SecondaryAttack( void )
 	Vector vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT);
 	//We will not shoot bullets anymore
 
-	FireBulletsInfo_t info;
+	/*FireBulletsInfo_t info;
 	info.m_iAmmoType = m_iPrimaryAmmoType;
 	info.m_vecSrc = vecSrc;
 	info.m_vecSpread = GetBulletSpread();
 	info.m_vecDirShooting = vecAiming;
 	info.m_pAttacker = GetOwnerEntity();
+	info.m_iTracerFreq = 1;*/
 	if (pPlayer->HasOverdrive())
 	{
-		//pPlayer->FireBullets(28, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false);
+		pPlayer->FireBullets(20, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false);
 		//info.m_iShots = 28;
 		//FireActualBullet(info, 6800, GetTracerType());
-		info.m_iShots = 28;
-		FireBullets(info);
+		//info.m_iShots = 28;
+		//FireBullets(info);
 	}
 	else
 	{
-		//pPlayer->FireBullets(14, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false);
+		pPlayer->FireBullets(14, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false);
 		//info.m_iShots = 14;
-		info.m_iShots = 14;
+		//info.m_iShots = 14;
 		//FireActualBullet(info, 6800, GetTracerType());
-		FireBullets(info);
+		//FireBullets(info);
 	}
 	QAngle angAiming;
 	VectorAngles(vecAiming, angAiming);
@@ -740,6 +741,7 @@ void CWeaponShotgun::PrimaryAttack( void )
 	info.m_vecDirShooting = vecAiming;
 	info.m_pAttacker = GetOwnerEntity();
 	info.m_iShots = 30;
+	info.m_iTracerFreq = 1;
 
 	// Fire the bullets
 	if (pPlayer->HasOverdrive())

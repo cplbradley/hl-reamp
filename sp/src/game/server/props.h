@@ -178,6 +178,7 @@ protected:
 	float			m_explodeDamage;
 	float			m_explodeRadius;
 	string_t		m_iszBreakModelMessage;
+	float			m_fPlaybackRate;
 
 	// Count of how many pieces we'll break into, custom or generic
 	int				m_iNumBreakableChunks;

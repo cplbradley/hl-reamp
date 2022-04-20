@@ -62,6 +62,7 @@ void CHLRHudHealthbar::Spawn(void)
 void CHLRHudHealthbar::InputEnable(inputdata_t &inputdata)
 {
 	Enable();
+	inputdata.value.Convert()
 }
 
 void CHLRHudHealthbar::Enable(void)

@@ -1518,7 +1518,7 @@ void CBasePlayer::OnDamagedByExplosion( const CTakeDamageInfo &info )
 		return;
 
 	int effect = shock ? 
-		random->RandomInt( 35, 37 ) : 
+		random->RandomInt( 32, 34 ) : 
 		random->RandomInt( 32, 34 );
 
 	CSingleUserRecipientFilter user( this );
@@ -5226,6 +5226,7 @@ void CBasePlayer::Precache( void )
 	BaseClass::Precache();
 
 	PrecacheModel("models/player/gordon.mdl");
+	PrecacheModel("models/player/mark6.mdl");
 	PrecacheScriptSound( "Player.FallGib" );
 	PrecacheScriptSound( "Player.Death" );
 	PrecacheScriptSound( "Player.PlasmaDamage" );

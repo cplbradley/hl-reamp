@@ -14,6 +14,7 @@
 #include <vgui_controls/Controls.h>
 #include <vgui_controls/cvartogglecheckbutton.h>
 #include <vgui_controls/Label.h>
+#include <vgui_controls/Slider.h>
 
 #include "tier0/memdbgon.h"
 
@@ -34,6 +35,10 @@ private:
 	vgui::CheckButton* m_pGibs;
 	vgui::CheckButton* m_pClassic;
 	vgui::CheckButton* m_pGuts;
+	vgui::Slider* m_pautoaimscale;
+	vgui::CheckButton* m_pautoaim;
+	vgui::Slider* m_pRainSlider;
+	int iautoaimscale;
 };
 
 class CHLRBonusOptions : public vgui::PropertyDialog
@@ -80,7 +85,7 @@ CON_COMMAND(OpenBonusOptions, "")
 CHLRBonusOptions::CHLRBonusOptions(VPANEL parent) : BaseClass(nullptr, "BonusOptions")
 {
 	SetParent(parent);
-	SetBounds(0, 0, 420, 350);
+	SetBounds(0, 0, 512, 420);
 	SetDeleteSelfOnClose(true);
 	SetSizeable(false);
 	SetApplyButtonVisible(true);
@@ -113,8 +118,22 @@ void CHLRBonusOptions::Activate()
 CHLRSubBonusOptions::CHLRSubBonusOptions(vgui::Panel *parent) : BaseClass(parent, NULL)
 {
 	m_pGibs = new CheckButton(this, "GibsButton", "UltraGibs");
+
 	m_pClassic = new CheckButton(this, "ClassicButton", "Retro Mode");
+
 	m_pGuts = new CheckButton(this, "GutsButton", "Guts and Glory");
+
+	m_pautoaim = new CheckButton(this, "Autoaim", "Aim Assist");
+
+	m_pRainSlider = new Slider(this, "RainDensity");
+	m_pRainSlider->SetRange(0, 100);
+
+
+	m_pautoaimscale = new Slider(this, "AutoaimScale");
+	m_pautoaimscale->SetRange(0, 10);
+	m_pautoaimscale->SetNumTicks(10);
+
+
 	LoadControlSettings("resource/ui/bonusoptions.res");
 }
 
@@ -123,6 +142,16 @@ void CHLRSubBonusOptions::OnResetData()
 	ConVarRef gibs("g_ultragibs");
 	ConVarRef classic("mat_classic_render");
 	ConVarRef guts("g_guts_and_glory");
+	ConVarRef autoaimscale("hud_autoaim_scale");
+	ConVarRef autoaim("hud_draw_active_reticle");
+	ConVarRef raindensity("r_RainSplashPercentage");
+
+
+	iautoaimscale = autoaimscale.GetFloat() * 10;
+
+	m_pautoaimscale->SetValue(iautoaimscale);
+
+	m_pRainSlider->SetValue(raindensity.GetFloat());
 	if (gibs.GetBool() == true)
 		m_pGibs->SetSelected(true);
 	else
@@ -137,12 +166,27 @@ void CHLRSubBonusOptions::OnResetData()
 		m_pGuts->SetSelected(true);
 	else
 		m_pGuts->SetSelected(false);
+
+	if (autoaim.GetBool())
+		m_pautoaim->SetSelected(true);
+	else
+		m_pautoaim->SetSelected(false);
 }
 void CHLRSubBonusOptions::OnApplyChanges()
 {
 	ConVarRef gibs("g_ultragibs");
 	ConVarRef classic("mat_classic_render");
 	ConVarRef guts("g_guts_and_glory");
+	ConVarRef autoaimscale("hud_autoaim_scale");
+	ConVarRef autoaim("hud_draw_active_reticle");
+
+	iautoaimscale = m_pautoaimscale->GetValue();
+
+	float scale = iautoaimscale / 10.0f;
+
+	autoaimscale.SetValue(scale);
+
+
 	if (m_pGibs->IsSelected())
 		gibs.SetValue(1);
 	else
@@ -157,8 +201,15 @@ void CHLRSubBonusOptions::OnApplyChanges()
 		guts.SetValue(1);
 	else
 		guts.SetValue(0);
+	if (m_pautoaim->IsSelected())
+		autoaim.SetValue(1);
+	else
+		autoaim.SetValue(0);
 
+	ConVarRef raindensity("r_RainSplashPercentage");
+	raindensity.SetValue(m_pRainSlider->GetValue());
 	
+
 	DevMsg("changing data\n");
 
 }

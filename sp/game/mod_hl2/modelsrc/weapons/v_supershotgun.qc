@@ -6,9 +6,11 @@
 $scale 1
 $modelname	"weapons/v_supershotgun.mdl"
 $origin -0 -5 65
-$body v_supershotgun "v_supershotgun.smd"
+$model v_supershotgun "v_supershotgun.smd"
+//$model arms "armstest.smd"
 $cdmaterials "models/weapons/sawedoff"
 $cdmaterials "models/weapons/v_hand"
+//$cdmaterials "models/player/mark6"
 $sequence draw "v_supershotgun_sequence_draw" fps 30.0 activity ACT_VM_DRAW -1.0 fadein 0.2 fadeout 0.2 
 $sequence fire "v_supershotgun_sequence_fire" fps 30.0 activity ACT_VM_PRIMARYATTACK -1.0 fadein 0.2 fadeout 0.2 snap 
 $sequence fire2 "v_supershotgun_sequence_fire" fps 30.0 activity ACT_VM_SECONDARYATTACK -1.0 fadein 0.2 fadeout 0.2 snap 

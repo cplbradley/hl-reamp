@@ -22,6 +22,7 @@ IMPLEMENT_NETWORKCLASS_ALIASED( DynamicProp, DT_DynamicProp )
 
 BEGIN_NETWORK_TABLE( CDynamicProp, DT_DynamicProp )
 	RecvPropBool(RECVINFO(m_bUseHitboxesForRenderBox)),
+	RecvPropBool(RECVINFO(m_bViewmodelGroup)),
 END_NETWORK_TABLE()
 
 C_DynamicProp::C_DynamicProp( void )
@@ -116,6 +117,14 @@ unsigned int C_DynamicProp::ComputeClientSideAnimationFlags()
 	return 0;
 }
 
+
+RenderGroup_t C_DynamicProp::GetRenderGroup()
+{
+	if (m_bViewmodelGroup)
+		return RENDER_GROUP_VIEW_MODEL_OPAQUE;
+	else
+		return BaseClass::GetRenderGroup();
+}
 // ------------------------------------------------------------------------------------------ //
 // ------------------------------------------------------------------------------------------ //
 class C_BasePropDoor : public C_DynamicProp

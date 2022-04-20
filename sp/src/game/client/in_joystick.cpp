@@ -279,7 +279,7 @@ envelope_t	controlEnvelope;
 // value for the pitch of the control stick, and
 // vice-versa.
 //-----------------------------------------------
-ConVar joy_pegged("joy_pegged", "0.75");// Once the stick is pushed this far, it's assumed pegged.
+ConVar joy_pegged("joy_pegged", "0.9");// Once the stick is pushed this far, it's assumed pegged.
 ConVar joy_virtual_peg("joy_virtual_peg", "0");
 static float ResponseCurveLookDefault( float x, int axis, float otherAxis, float dist, float frametime )
 {

@@ -29,7 +29,11 @@ class VPlane;
 #else
 #define VIEW_NEARZ	3
 #endif
+
+
 //#define VIEW_FARZ	28400
+
+
 
 
 //-----------------------------------------------------------------------------

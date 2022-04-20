@@ -126,16 +126,15 @@ bool CNPCPlasmaBall::DrawSprite(void)
 }
 void CNPCPlasmaBall::PlasmaTouch(CBaseEntity *pOther) //i touched something
 {
-	if (pOther->IsSolid()) //is what i touched solid?
+	if (pOther->IsSolidFlagSet(FSOLID_TRIGGER | FSOLID_VOLUME_CONTENTS))
 	{
-		if (pOther->IsSolidFlagSet(FSOLID_TRIGGER)) //is it a trigger?
-		{
-			return; //carry on like nothing happened
-		}
-		if (pOther->GetCollisionGroup() == (COLLISION_GROUP_PROJECTILE | COLLISION_GROUP_WEAPON))
-		{
+		// Some NPCs are triggers that can take damage (like antlion grubs). We should hit them.
+		if ((pOther->m_takedamage == DAMAGE_NO) || (pOther->m_takedamage == DAMAGE_EVENTS_ONLY))
 			return;
-		}
+		if (pOther->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE)
+			return;
+	}
+
 		DispatchParticleEffect("smg_plasmaball_core", GetAbsOrigin(), GetAbsAngles(), this); //poof effect!
 
 		if (pOther->m_takedamage != DAMAGE_NO) //can what i hit take damage?
@@ -180,7 +179,6 @@ void CNPCPlasmaBall::PlasmaTouch(CBaseEntity *pOther) //i touched something
 		SetThink(&CNPCPlasmaBall::KillIt); //schedule remove command
 		SetTouch(NULL);
 		SetNextThink(gpGlobals->curtime + 0.01f); //execute remove command after 0.01 seconds
-	}
 }
 void CNPCPlasmaBall::KillIt(void)
 {

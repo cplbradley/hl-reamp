@@ -1825,6 +1825,7 @@ BEGIN_DATADESC( CDynamicProp )
 	DEFINE_KEYFIELD( m_bDisableBoneFollowers, FIELD_BOOLEAN, "DisableBoneFollowers" ),
 	DEFINE_KEYFIELD(m_fPlaybackRate, FIELD_FLOAT, "PlaybackRate"),
 	DEFINE_FIELD(	 m_bUseHitboxesForRenderBox, FIELD_BOOLEAN ),
+	DEFINE_FIELD(	m_bViewmodelGroup, FIELD_BOOLEAN),
 	DEFINE_FIELD(	m_nPendingSequence, FIELD_SHORT ),
 		
 	// Inputs
@@ -1851,6 +1852,7 @@ END_DATADESC()
 
 IMPLEMENT_SERVERCLASS_ST(CDynamicProp, DT_DynamicProp)
 	SendPropBool( SENDINFO( m_bUseHitboxesForRenderBox ) ),
+	SendPropBool(SENDINFO(m_bViewmodelGroup)),
 END_SEND_TABLE()
 
 //-----------------------------------------------------------------------------
@@ -1939,6 +1941,11 @@ void CDynamicProp::Spawn( )
 	{
 		AddSolidFlags( FSOLID_NOT_SOLID );
 	}
+
+	m_bViewmodelGroup = HasSpawnFlags(SF_DYNAMICPROP_USE_VIEWMODEL_RENDERGROUP);
+
+	if (m_bViewmodelGroup)
+		DevMsg("Model using viewmodel rendergroup. hopefully this doesn't fuck shit up too much.\n");
 
 	//m_debugOverlays |= OVERLAY_ABSBOX_BIT;
 

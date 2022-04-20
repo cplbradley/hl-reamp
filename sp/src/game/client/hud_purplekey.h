@@ -34,3 +34,4 @@ protected:
 	virtual void Paint();
 	CHudTexture *m_background;
 };
+

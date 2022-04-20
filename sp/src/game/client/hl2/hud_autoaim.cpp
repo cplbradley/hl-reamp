@@ -8,6 +8,7 @@
 #include "cbase.h"
 #include "hud.h"
 #include "hudelement.h"
+#include "in_main.h"
 #include "iclientmode.h"
 #include "c_basehlplayer.h"
 #include "view_scene.h"
@@ -24,13 +25,15 @@
 ConVar hud_draw_active_reticle("hud_draw_active_reticle", "0" );
 ConVar hud_draw_fixed_reticle("hud_draw_fixed_reticle", "0", FCVAR_ARCHIVE );
 ConVar hud_autoaim_scale_icon( "hud_autoaim_scale_icon", "0" );
-ConVar hud_autoaim_method( "hud_autoaim_method", "1" );
+ConVar hud_autoaim_method( "hud_autoaim_method", "2" );
 
 ConVar hud_reticle_scale("hud_reticle_scale", "1.0" );
 ConVar hud_reticle_minalpha( "hud_reticle_minalpha", "125" );
 ConVar hud_reticle_maxalpha( "hud_reticle_maxalpha", "255" );
 ConVar hud_alpha_speed("hud_reticle_alpha_speed", "700" );
 ConVar hud_magnetism("hud_magnetism", "0.3" );
+ConVar hud_autoaim_interp_frac("hud_autoaim_scale", "0.5", FCVAR_ARCHIVE);
+ConVar g_aim_assist("g_aim_assist", "0", FCVAR_ARCHIVE);
 
 enum 
 {
@@ -235,7 +238,9 @@ void CHUDAutoAim::OnThink()
 
 						engine->GetViewAngles( viewangles );
 
-						Vector vecDir = pLocalPlayer->m_HL2Local.m_vecAutoAimPoint - pLocalPlayer->EyePosition();
+						//pLocalPlayer->m_HL2Local.m_hAutoAimTarget->WorldSpaceCenter()
+						//Vector vecDir = pLocalPlayer->m_HL2Local.m_vecAutoAimPoint - pLocalPlayer->EyePosition();
+						Vector vecDir = pLocalPlayer->m_HL2Local.m_hAutoAimTarget->WorldSpaceCenter() - pLocalPlayer->EyePosition();
 						VectorNormalize(vecDir);
 						VectorAngles( vecDir, targetangles );
 
@@ -364,19 +369,25 @@ void CHUDAutoAim::OnThink()
 
 	case AUTOAIM_METHOD_DRIFT:
 		{
-			if( pLocalPlayer->m_HL2Local.m_hAutoAimTarget.Get() )
+		extern kbutton_t in_jlook;
+			if( pLocalPlayer->m_HL2Local.m_hAutoAimTarget.Get())
 			{
+				DevMsg("in_jlook.state = %i\n", in_jlook.state);
 				QAngle viewangles;
 
 				engine->GetViewAngles( viewangles );
-				
+				Vector vecResult, vecAngles;
+				QAngle fuckidk, fuckthis;
 				Vector vecDir = pLocalPlayer->m_HL2Local.m_vecAutoAimPoint - pLocalPlayer->EyePosition();
-				VectorNormalize(vecDir);
-
-				VectorAngles( vecDir, viewangles );
-
+				VectorAngles(vecDir, fuckidk);
+				AngleVectors(viewangles, &vecAngles);
+				//InterpolateVector(0.1, vecAngles, vecDir, vecResult);
+				//VectorAngles(vecResult, viewangles );
+				InterpolateAngles(viewangles, fuckidk, fuckthis, (hud_autoaim_interp_frac.GetFloat() * 0.1f));
+				
 				//viewangles[PITCH] = clamp( viewangles[ PITCH ], -cl_pitchup.GetFloat(), cl_pitchdown.GetFloat() );
-				engine->SetViewAngles( viewangles );
+				fuckthis[ROLL] = 0.0f;
+				engine->SetViewAngles(fuckthis);
 			}
 		}
 		break;

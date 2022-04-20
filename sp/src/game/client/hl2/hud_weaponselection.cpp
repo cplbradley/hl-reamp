@@ -10,6 +10,7 @@
 #include "history_resource.h"
 #include "input.h"
 #include "../hud_crosshair.h"
+#include "engine/IEngineSound.h"
 
 #include "VGuiMatSurface/IMatSystemSurface.h"
 #include <KeyValues.h>
@@ -1057,6 +1058,8 @@ void CHudWeaponSelection::OpenSelection( void )
 	ConVar *host_timescale = cvar->FindVar("host_timescale");
 	engine->ClientCmd_Unrestricted("sv_cheats 1");
 	host_timescale->SetValue(0.3f);
+	CSingleUserRecipientFilter user(CBasePlayer::GetLocalPlayer());
+	enginesound->SetPlayerDSP(user, 31, false);
 }
 
 //-----------------------------------------------------------------------------
@@ -1070,6 +1073,8 @@ void CHudWeaponSelection::HideSelection( void )
 	ConVar *host_timescale = cvar->FindVar("host_timescale");
 	engine->ClientCmd_Unrestricted("sv_cheats 0");
 	host_timescale->SetValue(1.0f);
+	CSingleUserRecipientFilter user(CBasePlayer::GetLocalPlayer());
+	enginesound->SetPlayerDSP(user, 1, false);
 }
 
 //-----------------------------------------------------------------------------

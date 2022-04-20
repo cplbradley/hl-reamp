@@ -88,16 +88,14 @@ bool CHLRVortProjectile::DrawSprite(void) //this is what i glow like
 }
 void CHLRVortProjectile::Touch(CBaseEntity *pOther) //i touched something
 {
-	if (pOther->IsSolid()) //is what i touched solid?
+	if (pOther->IsSolidFlagSet(FSOLID_TRIGGER | FSOLID_VOLUME_CONTENTS))
 	{
-		if (pOther->IsSolidFlagSet(FSOLID_TRIGGER)) //is it a trigger?
-		{
-			return; //carry on like nothing happened
-		}
+		// Some NPCs are triggers that can take damage (like antlion grubs). We should hit them.
+		if ((pOther->m_takedamage == DAMAGE_NO) || (pOther->m_takedamage == DAMAGE_EVENTS_ONLY))
+			return;
 		if (pOther->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE)
-		{
-			return; //i don't collide with other projectiles
-		}
+			return;
+	}
 
 		if (pOther->m_takedamage != DAMAGE_NO) //can what i hit take damage?
 		{
@@ -121,7 +119,6 @@ void CHLRVortProjectile::Touch(CBaseEntity *pOther) //i touched something
 		SetThink(&CHLRVortProjectile::KillIt); //i'm gonna kill myself
 		SetTouch(NULL); //i can't touch anything anymore
 		SetNextThink(gpGlobals->curtime + 0.01f); //i'm killing myself in 0.01 seconds
-	}
 }
 void CHLRVortProjectile::KillIt(void)
 {
@@ -241,16 +238,14 @@ void CHLRPistolProjectile::Touch(CBaseEntity *pOther) //i touched something
 	{
 		return;
 	}
-	if (pOther->IsSolid()) //is what i touched solid?
+	if (pOther->IsSolidFlagSet(FSOLID_TRIGGER | FSOLID_VOLUME_CONTENTS))
 	{
-		if (pOther->IsSolidFlagSet(FSOLID_TRIGGER)) //is it a trigger?
-		{
-			return; //carry on like nothing happened
-		}
-		if (pOther->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE)
-		{
+		// Some NPCs are triggers that can take damage (like antlion grubs). We should hit them.
+		if ((pOther->m_takedamage == DAMAGE_NO) || (pOther->m_takedamage == DAMAGE_EVENTS_ONLY))
 			return;
-		}
+		if (pOther->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE)
+			return;
+	}
 		if (pOther->m_takedamage != DAMAGE_NO) //can what i hit take damage?
 		{
 			SetThink(NULL);
@@ -285,7 +280,6 @@ void CHLRPistolProjectile::Touch(CBaseEntity *pOther) //i touched something
 		SetTouch(NULL);
 		RemoveDeferred();
 		SetNextThink(gpGlobals->curtime + 0.01f); //execute remove command after 0.01 seconds
-	}
 }
 void CHLRPistolProjectile::KillIt(void)
 {
@@ -505,7 +499,6 @@ void CHLRMechubusMissile::Spawn(void)
 	Precache();
 	SetModel("models/spitball_large.mdl");
 	//SetModelName(NULL_STRING);
-	AddEFlags(EF_NODRAW);
 	SetSolid(SOLID_NONE);
 	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 	DispatchEffects();
@@ -534,18 +527,15 @@ void CHLRMechubusMissile::EnableTouch(void)
 }
 void CHLRMechubusMissile::Touch(CBaseEntity *pOther)
 {
-	if (pOther == NULL)
-		return;
-	if (pOther->IsSolidFlagSet(FSOLID_VOLUME_CONTENTS | FSOLID_TRIGGER))
+	if (pOther->IsSolidFlagSet(FSOLID_TRIGGER | FSOLID_VOLUME_CONTENTS))
 	{
 		// Some NPCs are triggers that can take damage (like antlion grubs). We should hit them.
 		if ((pOther->m_takedamage == DAMAGE_NO) || (pOther->m_takedamage == DAMAGE_EVENTS_ONLY))
 			return;
+		if (pOther->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE)
+			return;
 	}
 
-	// Don't hit other spit
-	if (pOther->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE)
-		return;
 	if (GetOwnerEntity() && GetOwnerEntity() == pOther)
 		return;
 

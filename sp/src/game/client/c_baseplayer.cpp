@@ -487,7 +487,7 @@ void C_BasePlayer::Spawn( void )
 
 	m_iFOV	= 0;	// init field of view.
 
-    SetModel( "models/player/gordon.mdl" );
+    SetModel( "models/player/mark6.mdl" );
 
 	Precache();
 

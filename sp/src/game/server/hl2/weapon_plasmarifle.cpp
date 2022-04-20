@@ -135,7 +135,7 @@ bool CPlasmaBall::DrawSprite(void)
 }
 void CPlasmaBall::PlasmaTouch(CBaseEntity *pOther) //i touched something
 {
-	if (pOther->IsSolid()) //is what i touched solid?
+	/*if (pOther->IsSolid()) //is what i touched solid?
 	{
 		if (pOther->IsSolidFlagSet(FSOLID_TRIGGER)) //is it a trigger?
 		{
@@ -152,12 +152,24 @@ void CPlasmaBall::PlasmaTouch(CBaseEntity *pOther) //i touched something
 		if (pOther->IsPlayer())
 		{
 			return;
-		}
-		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-		if (pPlayer->HasOverdrive())
-			DispatchParticleEffect("smg_plasmaball_core_red", GetAbsOrigin(), GetAbsAngles(), this); //poof effect!
-		else
-			DispatchParticleEffect("smg_plasmaball_core", GetAbsOrigin(), GetAbsAngles(), this); //poof effect!
+		}*/
+	if (pOther->IsSolidFlagSet(FSOLID_TRIGGER | FSOLID_VOLUME_CONTENTS))
+	{
+		// Some NPCs are triggers that can take damage (like antlion grubs). We should hit them.
+		if ((pOther->m_takedamage == DAMAGE_NO) || (pOther->m_takedamage == DAMAGE_EVENTS_ONLY))
+			return;
+		if (pOther->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE)
+			return;
+	}
+	if (pOther->IsPlayer())
+		return;
+
+	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+
+	if (pPlayer->HasOverdrive())
+		DispatchParticleEffect("smg_plasmaball_core_red", GetAbsOrigin(), GetAbsAngles(), this); //poof effect!
+	else
+		DispatchParticleEffect("smg_plasmaball_core", GetAbsOrigin(), GetAbsAngles(), this); //poof effect!
 
 		if (pOther->m_takedamage != DAMAGE_NO) //can what i hit take damage?
 		{
@@ -178,7 +190,7 @@ void CPlasmaBall::PlasmaTouch(CBaseEntity *pOther) //i touched something
 		SetThink(&CPlasmaBall::KillIt); //schedule remove command
 		SetTouch(NULL);
 		SetNextThink(gpGlobals->curtime + 0.01f); //execute remove command after 0.01 seconds, this allows time to trigger the particle
-	}
+	//}
 }
 void CPlasmaBall::SetTargetPos(const Vector &vecTargetpos, const float &fVelocity)
 {

@@ -51,6 +51,7 @@ public:
 	virtual void OnThink();
 			void MsgFunc_Damage( bf_read &msg );
 			void MsgFunc_Battery(bf_read &msg);
+			void MsgFunc_SuitPickup(bf_read &msg);
 	virtual void PaintValue(vgui::HFont font, int xpos, int ypos, int value, Color &color);
 
 	virtual void Paint(void);
@@ -96,6 +97,7 @@ private:
 DECLARE_HUDELEMENT( CHudHealth );
 DECLARE_HUD_MESSAGE( CHudHealth, Damage );
 DECLARE_HUD_MESSAGE(CHudHealth, Battery);
+DECLARE_HUD_MESSAGE(CHudHealth, SuitPickup);
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -120,6 +122,7 @@ void CHudHealth::Init()
 {
 	HOOK_HUD_MESSAGE( CHudHealth, Damage );
 	HOOK_HUD_MESSAGE(CHudHealth, Battery);
+	HOOK_HUD_MESSAGE(CHudHealth, SuitPickup);
 	Reset();
 
 }
@@ -318,4 +321,13 @@ void CHudHealth::PaintValue(vgui::HFont font, int xpos, int ypos, int value, Col
 	surface()->DrawSetTextPos(xpos, ypos);
 	surface()->DrawSetTextColor(color);
 	surface()->DrawUnicodeString(unicode);
+}
+
+void CHudHealth::MsgFunc_SuitPickup(bf_read& msg)
+{
+	int m_irecieved = msg.ReadByte();
+
+	if (m_irecieved)
+		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("HLRSuitPowerup");
+
 }

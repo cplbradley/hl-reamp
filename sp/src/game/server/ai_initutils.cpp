@@ -42,7 +42,7 @@ CAI_TestHull*	CAI_TestHull::pTestHull			= NULL;
 #ifdef CSTRIKE_DLL
 #define PLAYER_MODEL "models/player/ct_urban.mdl"
 #else
-#define PLAYER_MODEL "models/player/gordon.mdl"
+#define PLAYER_MODEL "models/player/mark6.mdl"
 #endif
 
 //-----------------------------------------------------------------------------

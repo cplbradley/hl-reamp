@@ -107,7 +107,7 @@ LINK_ENTITY_TO_CLASS(item_large_box_srounds, CItem_LargeBoxSRounds);
 LINK_ENTITY_TO_CLASS(item_ammo_pistol_large, CItem_LargeBoxSRounds);
 
 // ========================================================================
-//	>> BoxMRounds
+//	>> Energy Ammo Dropped
 // ========================================================================
 class CItem_BoxMRounds : public CItem
 {
@@ -191,21 +191,39 @@ LINK_ENTITY_TO_CLASS(item_box_mrounds, CItem_BoxMRounds);
 LINK_ENTITY_TO_CLASS(item_ammo_smg1, CItem_BoxMRounds);
 
 // ========================================================================
-//	>> LargeBoxMRounds
+//	>> Energy Ammo Placed
 // ========================================================================
 class CItem_LargeBoxMRounds : public CItem
 {
 public:
 	DECLARE_CLASS( CItem_LargeBoxMRounds, CItem );
+	CHandle <CSprite> m_pAmmoSprite;
 	void Spawn( void )
 	{ 
 		Precache( );
-		SetModel( "models/items/boxmrounds.mdl");
+		SetModel( "models/items/energy_ammo.mdl");
 		BaseClass::Spawn( );
+		DrawSprite();
 	}
 	void Precache( void )
 	{
-		PrecacheModel ("models/items/boxmrounds.mdl");
+		PrecacheModel ("models/items/energy_ammo.mdl");
+		PrecacheMaterial("sprites/energy.vmt");
+	}
+	bool DrawSprite(void)
+	{
+		m_pAmmoSprite = CSprite::SpriteCreate("sprites/energy.vmt", GetAbsOrigin(), false);
+		//		int	nAttachment = LookupAttachment("root");
+		if (m_pAmmoSprite != NULL)
+		{
+			//m_pAmmoSprite->SetAbsOrigin(this->GetAbsOrigin() + Vector(0, 0, 16));
+			m_pAmmoSprite->FollowEntity(this);
+			m_pAmmoSprite->SetLocalOrigin(vec3_origin + Vector(0, 0, 16));
+			m_pAmmoSprite->SetTransparency(kRenderGlow, 255, 255, 255, 255, kRenderFxHologram);
+			m_pAmmoSprite->SetScale(0.3f);
+			m_pAmmoSprite->SetGlowProxySize(16.0f);
+		}
+		return true;
 	}
 	bool MyTouch( CBasePlayer *pPlayer )
 	{
@@ -222,9 +240,10 @@ public:
 };
 LINK_ENTITY_TO_CLASS(item_large_box_mrounds, CItem_LargeBoxMRounds);
 LINK_ENTITY_TO_CLASS(item_ammo_smg1_large, CItem_LargeBoxMRounds);
+LINK_ENTITY_TO_CLASS(item_ammo_energy, CItem_LargeBoxMRounds);
 
 // ========================================================================
-//	>> BoxLRounds
+//	>> Heavy Ammo Dropped
 // ========================================================================
 class CItem_BoxLRounds : public CItem
 {
@@ -308,21 +327,39 @@ LINK_ENTITY_TO_CLASS(item_box_lrounds, CItem_BoxLRounds);
 LINK_ENTITY_TO_CLASS(item_ammo_ar2, CItem_BoxLRounds);
 
 // ========================================================================
-//	>> LargeBoxLRounds
+//	>> Heavy Ammo Placed
 // ========================================================================
 class CItem_LargeBoxLRounds : public CItem
 {
 public:
 	DECLARE_CLASS( CItem_LargeBoxLRounds, CItem );
+	CHandle <CSprite> m_pAmmoSprite;
 	void Spawn( void )
 	{ 
 		Precache( );
-		SetModel( "models/items/combine_rifle_cartridge01.mdl");
+		SetModel( "models/items/heavy_ammo.mdl");
 		BaseClass::Spawn( );
+		DrawSprite();
 	}
 	void Precache( void )
 	{
-		PrecacheModel ("models/items/combine_rifle_cartridge01.mdl");
+		PrecacheModel ("models/items/heavy_ammo.mdl");
+		PrecacheMaterial("sprites/heavyammo.vmt");
+	}
+	bool DrawSprite(void)
+	{
+		m_pAmmoSprite = CSprite::SpriteCreate("sprites/heavyammo.vmt", GetAbsOrigin(), false);
+		//		int	nAttachment = LookupAttachment("root");
+		if (m_pAmmoSprite != NULL)
+		{
+			//m_pAmmoSprite->SetAbsOrigin(this->GetAbsOrigin() + Vector(0, 0, 16));
+			m_pAmmoSprite->FollowEntity(this);
+			m_pAmmoSprite->SetLocalOrigin(vec3_origin + Vector(0, 0, 16));
+			m_pAmmoSprite->SetTransparency(kRenderGlow, 255, 255, 255, 255, kRenderFxHologram);
+			m_pAmmoSprite->SetScale(0.3f);
+			m_pAmmoSprite->SetGlowProxySize(16.0f);
+		}
+		return true;
 	}
 	bool MyTouch( CBasePlayer *pPlayer )
 	{
@@ -339,6 +376,7 @@ public:
 };
 LINK_ENTITY_TO_CLASS(item_large_box_lrounds, CItem_LargeBoxLRounds);
 LINK_ENTITY_TO_CLASS(item_ammo_ar2_large, CItem_LargeBoxLRounds);
+LINK_ENTITY_TO_CLASS(item_ammo_heavy, CItem_LargeBoxLRounds);
 
 
 // ========================================================================
@@ -515,27 +553,44 @@ public:
 LINK_ENTITY_TO_CLASS(item_box_flare_rounds, CItem_BoxFlareRounds);
 
 // ========================================================================
-// RPG Round
+// Explosive Ammo Placed
 // ========================================================================
 class CItem_RPG_Round : public CItem
 {
 public:
 	DECLARE_CLASS( CItem_RPG_Round, CItem );
-
+	CHandle <CSprite> m_pAmmoSprite;
 
 	void Spawn( void )
 	{ 
 		Precache( );
-		SetModel( "models/weapons/w_missile_closed.mdl");
+		SetModel( "models/items/explosive_ammo.mdl");
 		BaseClass::Spawn( );
+		DrawSprite();
 	}
 	void Precache( void )
 	{
-		PrecacheModel ("models/weapons/w_missile_closed.mdl");
+		PrecacheModel ("models/items/explosive_ammo.mdl");
+		PrecacheMaterial("sprites/rocket.vmt");
+	}
+	bool DrawSprite(void)
+	{
+		m_pAmmoSprite = CSprite::SpriteCreate("sprites/rocket.vmt", GetAbsOrigin(), false);
+		//		int	nAttachment = LookupAttachment("root");
+		if (m_pAmmoSprite)
+		{
+			//m_pAmmoSprite->SetAbsOrigin(this->GetAbsOrigin() + Vector(0, 0, 16));
+			m_pAmmoSprite->FollowEntity(this);
+			m_pAmmoSprite->SetLocalOrigin(vec3_origin + Vector(0, 0, 16));
+			m_pAmmoSprite->SetTransparency(kRenderGlow, 255, 255, 255, 255, kRenderFxHologram);
+			m_pAmmoSprite->SetScale(0.3f);
+			m_pAmmoSprite->SetGlowProxySize(16.0f);
+		}
+		return true;
 	}
 	bool MyTouch( CBasePlayer *pPlayer )
 	{
-		if (ITEM_GiveAmmo( pPlayer, SIZE_AMMO_RPG_ROUND, "RPG_Round"))
+		if (ITEM_GiveAmmo( pPlayer, SIZE_AMMO_EXPLOSIVE_BOX, "RPG_Round"))
 		{
 			if ( g_pGameRules->ItemShouldRespawn( this ) == GR_ITEM_RESPAWN_NO )
 			{
@@ -548,6 +603,11 @@ public:
 };
 LINK_ENTITY_TO_CLASS( item_ml_grenade, CItem_RPG_Round );
 LINK_ENTITY_TO_CLASS( item_rpg_round, CItem_RPG_Round );
+LINK_ENTITY_TO_CLASS(item_ammo_explosive, CItem_RPG_Round);
+
+// ========================================================================
+//	>> Explosive Ammo Dropped
+// ========================================================================
 
 class CItem_RPG_Drop : public CItem
 {
@@ -702,7 +762,7 @@ LINK_ENTITY_TO_CLASS(item_box_sniper_rounds, CItem_BoxSniperRounds);
 
 
 // ========================================================================
-//	>> BoxBuckshot
+//	>> Shotgun Ammo Dropped
 // ========================================================================
 class CItem_DropBuckshot : public CItem
 {
@@ -782,19 +842,42 @@ public:
 	}
 };
 LINK_ENTITY_TO_CLASS(item_drop_buckshot, CItem_DropBuckshot);
+
+// ========================================================================
+//	>> Shotgun Ammo Placed
+// ========================================================================
 class CItem_BoxBuckshot : public CItem
 {
 public:
+	CHandle <CSprite>	m_pAmmoSprite;
 	DECLARE_CLASS(CItem_BoxBuckshot, CItem);
 	void Spawn(void)
 	{
 		Precache();
-		SetModel("models/items/boxbuckshot.mdl");
+		SetModel("models/items/shotgunshellbox.mdl");
 		BaseClass::Spawn();
+		DrawSprite();
+		SetMoveType(MOVETYPE_NONE);
+		SetMoveCollide(MOVECOLLIDE_FLY_CUSTOM);
+		SetSolid(SOLID_BBOX);
 	}
 	void Precache(void)
 	{
-		PrecacheModel("models/items/boxbuckshot.mdl");
+		PrecacheModel("models/items/shotgunshellbox.mdl");
+		PrecacheMaterial("sprites/buckshot.vmt");
+	}
+	bool DrawSprite(void)
+	{
+		m_pAmmoSprite = CSprite::SpriteCreate("sprites/buckshot.vmt", GetAbsOrigin(), false);
+		if (m_pAmmoSprite)
+		{
+			m_pAmmoSprite->FollowEntity(this);
+			m_pAmmoSprite->SetLocalOrigin(vec3_origin + Vector(0, 0, 16));
+			m_pAmmoSprite->SetTransparency(kRenderGlow, 255, 255, 255, 255, kRenderFxHologram);
+			m_pAmmoSprite->SetScale(0.3f);
+			m_pAmmoSprite->SetGlowProxySize(16.0f);
+		}
+		return true;
 	}
 	bool MyTouch(CBasePlayer *pPlayer)
 	{
@@ -810,6 +893,7 @@ public:
 	}
 };
 LINK_ENTITY_TO_CLASS(item_box_buckshot, CItem_BoxBuckshot);
+LINK_ENTITY_TO_CLASS(item_ammo_shotgun, CItem_BoxBuckshot);
 
 
 // ========================================================================
@@ -848,6 +932,7 @@ public:
 };
 
 LINK_ENTITY_TO_CLASS( item_ammo_ar2_altfire, CItem_AR2AltFireRound );
+LINK_ENTITY_TO_CLASS(item_ammo_atomic, CItem_AR2AltFireRound);
 
 // ==================================================================
 // Ammo crate which will supply infinite ammo of the specified type

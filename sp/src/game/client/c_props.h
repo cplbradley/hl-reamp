@@ -32,11 +32,13 @@ public:
 	unsigned int ComputeClientSideAnimationFlags();
 	bool TestBoneFollowers( const Ray_t &ray, unsigned int fContentsMask, trace_t& tr );
 	bool TestCollision( const Ray_t &ray, unsigned int fContentsMask, trace_t& tr );
+	RenderGroup_t GetRenderGroup(void);
 
 private:
 	C_DynamicProp( const C_DynamicProp & );
 
 	bool	m_bUseHitboxesForRenderBox;
+	bool	m_bViewmodelGroup;
 	int		m_iCachedFrameCount;
 	Vector	m_vecCachedRenderMins;
 	Vector	m_vecCachedRenderMaxs;

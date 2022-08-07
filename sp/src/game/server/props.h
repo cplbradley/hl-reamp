@@ -253,7 +253,6 @@ private:
 #define SF_DYNAMICPROP_USEHITBOX_FOR_RENDERBOX		64
 #define SF_DYNAMICPROP_NO_VPHYSICS					128
 #define SF_DYNAMICPROP_DISABLE_COLLISION			256
-#define SF_DYNAMICPROP_USE_VIEWMODEL_RENDERGROUP	512
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -277,6 +276,7 @@ public:
 	void	OnRestore( void );
 	bool	OverridePropdata( void );
 	void	HandleAnimEvent( animevent_t *pEvent );
+	//void	UseKey(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value);
 
 	// baseentity - watch dynamic hierarchy updates
 	virtual void	SetParent( CBaseEntity* pNewParent, int iAttachment = -1 );
@@ -299,6 +299,9 @@ public:
 
 	COutputEvent		m_pOutputAnimBegun;
 	COutputEvent		m_pOutputAnimOver;
+	//COutputEvent		m_pOutputOnUse;
+
+	//int	ObjectCaps(void);
 
 	string_t			m_iszDefaultAnim;
 
@@ -316,7 +319,6 @@ public:
 	bool				m_bDisableBoneFollowers;
 
 	CNetworkVar( bool, m_bUseHitboxesForRenderBox );
-	CNetworkVar(bool, m_bViewmodelGroup);
 
 protected:
 	void FinishSetSequence( int nSequence );

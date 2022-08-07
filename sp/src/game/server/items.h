@@ -48,7 +48,7 @@ public:
 
 	virtual void Spawn( void );
 	virtual void Precache();
-	void DelayedKill(void);
+	virtual void DelayedKill(void);
 
 	unsigned int PhysicsSolidMaskForEntity( void ) const;
 

@@ -11,7 +11,7 @@
 #include "vgui/iinput.h"
 #include "vgui_controls/controls.h"
 
-#include "ShaderEditor/SEdit_ModelRender.h"
+#include "SEdit_ModelRender.h"
 #include "model_types.h"
 
 #ifndef SOURCE_2006

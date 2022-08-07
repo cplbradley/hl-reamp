@@ -39,6 +39,7 @@ BEGIN_DATADESC( CFogController )
 	DEFINE_INPUTFUNC( FIELD_COLOR32,	"SetColorSecondary",	InputSetColorSecondary ),
 	DEFINE_INPUTFUNC( FIELD_INTEGER,	"SetFarZ",		InputSetFarZ ),
 	DEFINE_INPUTFUNC( FIELD_STRING,		"SetAngles",	InputSetAngles ),
+	DEFINE_INPUTFUNC(FIELD_VOID, "DisableLerp", InputDisableLerp),
 
 	DEFINE_INPUTFUNC( FIELD_COLOR32,	"SetColorLerpTo",		InputSetColorLerpTo ),
 	DEFINE_INPUTFUNC( FIELD_COLOR32,	"SetColorSecondaryLerpTo",	InputSetColorSecondaryLerpTo ),
@@ -312,6 +313,22 @@ void CFogController::InputStartFogTransition(inputdata_t &data)
 
 	m_fog.lerptime = gpGlobals->curtime + m_fog.duration + 0.1;
     SetNextThink( gpGlobals->curtime + m_fog.duration );
+}
+
+void CFogController::InputDisableLerp(inputdata_t& data)
+{
+	SetThink(&CFogController::DisableLerp);
+	SetNextThink(gpGlobals->curtime);
+}
+
+void CFogController::DisableLerp(void)
+{
+	float foglerp = m_fog.maxdensity - 0.01f;
+	m_fog.maxdensity = foglerp;
+	if (foglerp <= 0.0f)
+		SetThink(NULL);
+	else
+		SetNextThink(gpGlobals->curtime);
 }
 
 void CFogController::SetLerpValues( void )

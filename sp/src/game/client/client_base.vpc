@@ -34,7 +34,7 @@ $Configuration	"Release"
 {
 	$General
 	{
-		$OutputDirectory			".\Release_$GAMENAME"		[$WIN32]
+		$OutputDirectory			"..\..\..\..\..\..\..\..\sourcemods\hlr\bin"		[$WIN32]
 		$IntermediateDirectory		".\Release_$GAMENAME"		[$WIN32]
 
 		$OutputDirectory			".\Release_$GAMENAME_360"	[$X360]

@@ -32,7 +32,7 @@
 
 ConVar crosshair( "crosshair", "1", FCVAR_ARCHIVE );
 ConVar cl_observercrosshair( "cl_observercrosshair", "1", FCVAR_ARCHIVE );
-ConVar cl_thirdperson_crosshair("cl_thirdperson_crosshair", "0");
+ConVar cl_thirdperson_crosshair("cl_thirdperson_crosshair", "0", FCVAR_ARCHIVE);
 
 using namespace vgui;
 
@@ -291,7 +291,7 @@ void CHudCrosshair::Paint( void )
 		pPlayer->EyeVectors(&vecEyeDirection);
 		VectorMA(pPlayer->EyePosition(), MAX_TRACE_LENGTH, vecEyeDirection, vecEndPos);
 		trace_t	trace;
-		UTIL_TraceLine(pPlayer->EyePosition(), vecEndPos, MASK_SOLID_BRUSHONLY, pPlayer, COLLISION_GROUP_NONE, &trace);
+		UTIL_TraceLine(pPlayer->EyePosition(), vecEndPos, MASK_SHOT, pPlayer, COLLISION_GROUP_NONE, &trace);
 		vecAimPoint = trace.endpos;
 		Vector screen;
 
@@ -304,7 +304,12 @@ void CHudCrosshair::Paint( void )
 
 		crossx -= m_pCrosshair->Width() / 2;
 		crossy -= m_pCrosshair->Height() / 2;
-		m_pCrosshair->DrawSelf(crossx,crossy,clr);
+		Color crosscolor;
+		if (trace.m_pEnt && trace.m_pEnt->IsNPC())
+			crosscolor = Color(190, 0, 0, 255);
+		else
+			crosscolor = clr;
+		m_pCrosshair->DrawSelf(crossx,crossy, crosscolor);
 	}
 }
 

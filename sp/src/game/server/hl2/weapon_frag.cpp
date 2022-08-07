@@ -358,7 +358,7 @@ void CWeaponFrag::PrimaryAttack(void)
 	m_flNextPrimaryAttack = gpGlobals->curtime + 0.4f;
 	m_flNextSecondaryAttack = gpGlobals->curtime + 0.4f;
 
-	WeaponSound(WPN_DOUBLE);
+	WeaponSound(SINGLE);
 	pPlayer->SetAnimation(PLAYER_ATTACK1);
 	DevMsg("Should Be Sending Attack Activity\n");
 	SendWeaponAnim(GetPrimaryAttackActivity());

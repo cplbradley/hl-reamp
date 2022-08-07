@@ -141,7 +141,7 @@ void CGrenadeFrag::CreateEffects( void )
 	}
 
 	// Start up the eye trail
-	m_pGlowTrail	= CSpriteTrail::SpriteTrailCreate( "sprites/bluelaser1.vmt", GetLocalOrigin(), false );
+	m_pGlowTrail = CSpriteTrail::SpriteTrailCreate( "sprites/bluelaser1.vmt", GetLocalOrigin(), false );
 
 	if ( m_pGlowTrail != NULL )
 	{
@@ -473,6 +473,19 @@ void CGrenadeFrag::DelayThink()
 #endif
 		m_bHasWarnedAI = true;
 	}
+
+	m_flAlpha -= 50.0f;
+	m_flScale -= 0.1;
+
+	if (m_flScale <= 0.0f)
+		m_flScale = 0.0f;
+	if (m_flAlpha <= 0.0f)
+		m_flAlpha = 0.0f;
+
+	
+
+	m_pMainGlow->SetRenderColorA(m_flAlpha);
+	m_pMainGlow->SetScale(m_flScale);
 	
 	if( gpGlobals->curtime > m_flNextBlipTime )
 	{
@@ -489,6 +502,12 @@ void CGrenadeFrag::DelayThink()
 	}
 
 	SetNextThink( gpGlobals->curtime + 0.1 );
+}
+void CGrenadeFrag::BlipSound()
+{
+	EmitSound("Grenade.Blip");
+	m_flAlpha = 250.0f;
+	m_flScale = 0.5f;
 }
 
 void CGrenadeFrag::SetVelocity( const Vector &velocity, const AngularImpulse &angVelocity )
@@ -798,6 +817,7 @@ void CGrenadeGas::NadeTouch(CBaseEntity *pOther)
 	}
 
 }
+
 /*void CGrenadeFrag::Detonate(void)
 {
 
@@ -906,7 +926,7 @@ void CGrenadeGas::DelayThink()
 #endif
 		m_bHasWarnedAI = true;
 	}
-
+	
 	if (gpGlobals->curtime > m_flNextBlipTime)
 	{
 		BlipSound();

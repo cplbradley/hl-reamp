@@ -759,29 +759,16 @@ void CNPC_Vortigaunt::HandleAnimEvent( animevent_t *pEvent )
 		EndHandGlow();
 		return;
 	}
-	/*if (pEvent->event == AE_VORT_PORTALIN)
+	if (pEvent->event == AE_VORT_PORTALIN)
 	{
-		
-		if (GetGroundEntity() != NULL)
-		{
-			Msg("portaling in\n");
-			char *szModel = (char *)STRING(GetModelName());
-			if (!szModel || !*szModel)
-			{
-				szModel = "models/vortigaunt.mdl";
-				SetModelName(AllocPooledString(szModel));
-				//DispatchParticleEffect("vortigaunt_telein", WorldSpaceCenter(), vec3_angle, this);
-			}
-		}
+		ClearEffects();
 		return;
 	}
 	if (pEvent->event == AE_VORT_PORTALOUT)
 	{
-		Msg("portaling out\n");
-		SetModelName(NULL_STRING);
-		
+		AddEffects(EF_NODRAW);
 		return;
-	}*/
+	}
 	if (pEvent->event == AE_VORT_PORTALOUTPARTICLE)
 	{
 		return;
@@ -1168,9 +1155,9 @@ Activity CNPC_Vortigaunt::NPC_TranslateActivity( Activity eNewActivity )
 	if ( eNewActivity == ACT_RANGE_ATTACK2 )
 		return (Activity) ACT_VORTIGAUNT_DISPEL;
 
-	if (eNewActivity == ACT_JUMP)
+	/*if (eNewActivity == ACT_JUMP)
 	{
-		CAI_Navigator *pNav = GetNavigator();
+		CAI_Navigator* pNav = GetNavigator();
 		CAI_Path *pPath = pNav->GetPath();
 		//AI_Waypoint_t *pWaypoint = pPath->GetCurWaypoint();
 	
@@ -1199,8 +1186,8 @@ Activity CNPC_Vortigaunt::NPC_TranslateActivity( Activity eNewActivity )
 			Teleport(pPath->GetCurWaypoint()->GetPos());
 			return (Activity)ACT_LAND;
 		}
+		*/
 
-	}
 	return BaseClass::NPC_TranslateActivity( eNewActivity );
 }
 
@@ -1267,12 +1254,14 @@ void CNPC_Vortigaunt::Spawn( void )
 	char *szModel = (char *)STRING( GetModelName() );
 	if (!szModel || !*szModel)
 	{
-		szModel = "models/vortigaunt.mdl";
+		szModel = "models/elder_vortigaunt.mdl";
 		SetModelName( AllocPooledString(szModel) );
 	}
 
 	//DrawStuff();
 
+
+	m_nSkin = RandomInt(0, 3);
 	BaseClass::Spawn();
 
 	m_HackedGunPos.x = 0.0f;
@@ -1558,7 +1547,12 @@ int CNPC_Vortigaunt::TranslateSchedule( int scheduleType )
 
 		break;
 		*/
+	case SCHED_RUN_FROM_ENEMY:
+		return SCHED_MOVE_AWAY_FROM_ENEMY;
+		break;
 	}
+
+
 	
 	return BaseClass::TranslateSchedule( scheduleType );
 }

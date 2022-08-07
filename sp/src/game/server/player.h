@@ -1127,6 +1127,9 @@ public:
 	float					m_flSideMove;
 	int						m_nNumCrateHudHints;
 
+	void		CheckFloorSprite(void);
+	void		CheckThirdPerson(void);
+
 private:
 
 	// Used in test code to teleport the player to random locations in the map.
@@ -1154,7 +1157,7 @@ private:
 
 	EHANDLE					m_hFloorSprite;
 
-	void		CheckFloorSprite(void);
+	
 
 	Vector m_vecSavedVelocity;
 

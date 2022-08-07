@@ -1,5 +1,5 @@
 
-$modelname	"vortboss_test_breakable.mdl"
+$modelname	"vortboss_test_weights.mdl"
 $model ufo "ufo.smd"
 $model cannon "cannon.smd"
 $contents "solid"
@@ -11,8 +11,9 @@ $bodygroup "body"
 }
 $texturegroup skins 
 {
-	{ "vortigaunt_base" "vort_eye" "vortcannon_diffuse" "vortufo_diffuse" }
+	{ "vortigaunt_base" "vort_eye" "vortcannon_diffuse" "vortufo" }
 	{ "vortigaunt_glow" "vort_eye" "vortcannon_glow" "vortufo_glow" }
+	[ "vortigaunt_base" "vort_eye" "vortcannon_diffuse" "vortufo_damaged" }
 }
 
 $lod 75 
@@ -116,6 +117,19 @@ $collisionjoints "vortboss_phy.smd"
 	$jointconstrain "ValveBiped.head" x limit -39 39 0.2
 	$jointconstrain "ValveBiped.head" y limit -57 57 0.2
 	$jointconstrain "ValveBiped.head" z limit -32 46 0.2
+}
+
+$weightlist cannon_weight {
+	"ValveBiped.hips"	0.0
+	"ValveBiped.spine1"	0.4
+	"ValveBiped.spine2"	0.8
+	"ValveBiped.spine3" 1.0
+}
+$weightlist move_weight {
+	"ValveBiped.hips"	1.0
+	"ValveBiped.spine1" 0.6
+	"ValveBiped.spine2" 0.2
+	"ValveBiped.spine3" 0.0
 }
 $sequence "idle01" {
 	"anims/vortboss_idle.smd"
@@ -251,6 +265,7 @@ $sequence "firecannon" {
 	node "aim"
 	fadein 0.2
 	fadeout 0.2
+	weightlist "cannon_weight"
 	fps 40
 	
 }

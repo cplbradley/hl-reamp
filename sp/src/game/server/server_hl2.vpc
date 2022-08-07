@@ -14,7 +14,7 @@ $Configuration
 {
 	$Compiler
 	{
-		$AdditionalIncludeDirectories	"$BASE;$SRCDIR\game\shared\hl2;.\hl2"
+		$AdditionalIncludeDirectories	"$BASE;$SRCDIR\game\shared\hl2;.\hl2; .\hl2\hlr"
 		$PreprocessorDefinitions		"$BASE;HL2_DLL;USES_SAVERESTORE"
 	}
 }
@@ -49,7 +49,52 @@ $Project "Server (HL2)"
 		$File	"vehicle_choreo_generic.cpp"
 		$File	"$SRCDIR\game\shared\vehicle_choreo_generic_shared.h"
 		$File	"$SRCDIR\game\shared\weapon_parse_default.cpp"
-
+		$Folder "HLR"
+			{
+				$File "hl2/hlr/item_custom.cpp"
+				$File "hl2/hlr/actual_bullet.cpp"
+				$File "hl2/hlr/actual_bullet.h"
+				$File "hl2/hlr/logic_difficulty.cpp"
+				$File "hl2/hlr/hlr_environmental_resistance.cpp"
+				$File "hl2/hlr/hlr_keycard.cpp"
+				$File "hl2/hlr/hlr_keycard.h"
+				$File "hl2/hlr/hlr_skullkey.cpp"
+				$File "hl2/hlr/npc_legs.cpp"
+				$File "hl2/hlr/npc_vortboss.cpp"
+				$File "hl2/hlr/hlr_floorsprite.cpp"
+				$File "hl2/hlr/hlr_floorsprite.h"
+				$File "hl2/hlr/hlr_hud_healthbar.cpp"
+				$File "hl2/hlr/hlr_jumppad.cpp"
+				$File "hl2/hlr/hlr_jumpreset.cpp"
+				$File "hl2/hlr/hlr_megamelon.cpp"
+				$File "hl2/hlr/hlr_powerups.cpp"
+				$File "hl2/hlr/hlr_powerups.h"
+				$File "hl2/hlr/hlr_projectile.cpp"
+				$File "hl2/hlr/hlr_projectile.h"
+				$File "hl2/hlr/npc_baddog.cpp"
+				$File "hl2/hlr/npc_bloat.cpp"
+				$File "hl2/hlr/npc_chopperdrone.cpp"
+				$File "hl2/hlr/weapon_bfg.cpp"
+				$File "hl2/hlr/weapon_npc_chaingun.cpp"
+				$File "hl2/hlr/weapon_npc_chaingun.h"
+				$File "hl2/hlr/weapon_npcfrag.cpp"
+				$File "hl2/hlr/weapon_plasmarifle.cpp"
+				$File "hl2/hlr/weapon_furybar.cpp"
+				$File "hl2/hlr/weapon_rifle.cpp"
+				$File "hl2/hlr/weapon_plasma.cpp"
+				$File "hl2/hlr/weapon_plasmarifle.cpp"
+				$File "hl2/hlr/weapon_pumpshotgun.cpp"
+				$File "hl2/hlr/weapon_gluon.cpp"
+				$File "hl2/hlr/npc_antlionwarrior.cpp"
+				$File "$SRCDIR\game\shared\hl2\hlr\hlr_shareddefs.h"
+				$File "$SRCDIR\game\shared\singleplayer_animstate.cpp"
+				$File "$SRCDIR\game\shared\singleplayer_animstate.h"
+			}
+			$Folder "FMOD"
+			{
+				$File "$SRCDIR\game\shared\fmod\fmod_dynamic_player.cpp"
+				$File "$SRCDIR\game\shared\fmod\fmod_dynamic_player.h"
+			}
 		$Folder	"HL2 DLL"
 		{
 			$File	"$SRCDIR\game\shared\hl2\achievements_hl2.cpp"
@@ -249,6 +294,13 @@ $Project "Server (HL2)"
 			$File	"hl2\weapon_smg1.cpp"
 			$File	"hl2\weapon_stunstick.cpp"
 			$File	"hl2\weapon_stunstick.h"
+			$File	"episodic\npc_hunter.cpp"
+			$File	"episodic\npc_hunter.h"
+			$File	"episodic\prop_scalable.cpp"
+			$File	"episodic\weapon_striderbuster.cpp"
+			$File	"episodic\weapon_striderbuster.h"
+			$File	"hl2\grenade_spit.cpp"
+			$File	"hl2\grenade_spit.h"
 			
 			$Folder	"Unused"
 			{
@@ -264,6 +316,7 @@ $Project "Server (HL2)"
 				$File	"hl2\weapon_flaregun.cpp"
 				$File	"hl2\weapon_flaregun.h"
 			}
+			
 		}
 	}
 }

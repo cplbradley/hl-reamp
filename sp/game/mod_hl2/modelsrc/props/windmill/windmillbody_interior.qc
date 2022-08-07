@@ -4,11 +4,12 @@
 // http://dev.wallworm.com 
 
 $scale 1.0
-$modelname	"props/windmill/windmillbody_interior.mdl"
+$modelname	"props/windmill/windmillbody_interior2.mdl"
 $staticprop
-$body windmillbody_interior "windmillbody_interior.smd"
+$body windmillbody_interior "windmill_interior.smd"
 $contents "solid"
 $cdmaterials "models/props/windmill"
 $sequence idle "windmillbody_interior.smd" activity ACT_IDLE -1 fps 1
+$surfaceprop "brick"
 
 $include	"windmillbody_interior_wwmt_custom.qci"

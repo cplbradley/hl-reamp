@@ -2410,6 +2410,9 @@ bool CGameMovement::CheckJumpButton( void )
 	}
 	if (m_iJumpCount >= GetMaxJumps())
 		return false;
+
+	if (m_bLaunchpadTimedBlock)
+		return false;
 	
 	// See if we are waterjumping.  If so, decrement count and return.
 	if (player->m_flWaterJumpTime)

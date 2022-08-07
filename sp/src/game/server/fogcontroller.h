@@ -46,6 +46,8 @@ public:
 	void InputSetFarZ( inputdata_t &data );
 	void InputSetAngles( inputdata_t &inputdata );
 	void InputSetMaxDensity( inputdata_t &inputdata );
+	void InputDisableLerp(inputdata_t& inputdata);
+	void DisableLerp(void);
 
 	void InputSetColorLerpTo(inputdata_t &data);
 	void InputSetColorSecondaryLerpTo(inputdata_t &data);

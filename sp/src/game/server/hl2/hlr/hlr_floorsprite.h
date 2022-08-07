@@ -16,8 +16,10 @@ public:
 	void Spawn();
 	void Precache();
 	bool InitSprite();
-	/*void UpdatePos();
-	void UpdateThink();*/
-
+	void DrawSprite();
+	/*void UpdatePos();*/
+	void UpdateThink();
 	CHandle<CSprite> m_pSprite;
+private:
+	int spriteAlpha;
 };

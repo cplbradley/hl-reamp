@@ -134,6 +134,8 @@ CWeaponAR2::CWeaponAR2( )
 	m_iMuzzleG = 128;
 	m_iMuzzleB = 250;
 
+	vMuzzleFlashLightColor = Vector(0, 128, 250);
+
 	m_bAltFiresUnderwater = false;
 	m_bPlayingWoundSound = false;
 	m_iWeaponState = WEAPON_STATE_NOTFULLSPEED;
@@ -297,9 +299,9 @@ void CWeaponAR2::PrimaryAttack(void)
 	m_nShotsFired++;
 
 	pPlayer->DoMuzzleFlash();
-	DevMsg("serverside muzzle R = %i\n", m_iMuzzleR);
+	/*DevMsg("serverside muzzle R = %i\n", m_iMuzzleR);
 	DevMsg("serverside muzzle G = %i\n", m_iMuzzleG);
-	DevMsg("serverside muzzle B = %i\n", m_iMuzzleB);
+	DevMsg("serverside muzzle B = %i\n", m_iMuzzleB);*/
 
 	// To make the firing framerate independent, we may have to fire more than one bullet here on low-framerate systems, 
 	// especially if the weapon we're firing has a really fast rate of fire.

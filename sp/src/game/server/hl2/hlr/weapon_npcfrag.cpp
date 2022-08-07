@@ -111,7 +111,7 @@ IMPLEMENT_ACTTABLE(CWeaponNPCFrag);
 void CWeaponNPCFrag::Precache(void)
 {
 	CBaseCombatWeapon::Precache();
-	UTIL_PrecacheOther("npc_handgrenade");
+	UTIL_PrecacheOther("npc_grenade_frag");
 }
 
 //-----------------------------------------------------------------------------
@@ -132,7 +132,10 @@ void CWeaponNPCFrag::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bool 
 	
 	vecShootOrigin = pOperator->Weapon_ShootPosition();
 	vecShootDir = npc->GetEnemy()->WorldSpaceCenter();
-	UTIL_PredictedPosition(npc->GetEnemy(), 1.0f, &vecTarget);
+
+	float dist = (vecShootDir - vecShootOrigin).Length2D();
+	float timedelta = (dist / adjustedspd);
+	UTIL_PredictedPosition(npc->GetEnemy(), timedelta, &vecTarget);
 	Vector vecMins = -Vector(4, 4, 4);
 	Vector vecMaxs = Vector(4, 4, 4);
 	//Vector vecLaunch = VecCheckToss(this, vecShootOrigin, vecTarget, -1, 1.0f, true, &vecMins, &vecMaxs);

@@ -15,7 +15,7 @@
 #include "iviewrender.h"
 #include "hud_basechat.h"
 #include "weapon_selection.h"
-#include "hud_healthbar.h"
+#include "hlr/hud_healthbar.h"
 #include <vgui/IVGui.h>
 #include <vgui/Cursor.h>
 #include <vgui/IPanel.h>
@@ -43,7 +43,7 @@
 #endif
 //Fenix: Needed for the custom background loading screens
 #include "GameUI/IGameUI.h"
-#include "mapload_background.h"
+#include "hlr/mapload_background.h"
 #if defined( REPLAY_ENABLED )
 #include "replay/replaycamera.h"
 #include "replay/ireplaysystem.h"

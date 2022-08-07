@@ -83,7 +83,10 @@ typedef enum
 	AE_WPN_HIDE,		// Used to hide player weapons
 	AE_WPN_UNHIDE,		// Used to unhide player weapons
 
-	AE_WPN_PLAYWPNSOUND,	// Play a weapon sound from the weapon script file
+	AE_WPN_PLAYWPNSOUND,
+	
+	AE_SUPERSHOTGUN_OPENBARREL,
+	AE_SUPERSHOTGUN_CLOSEBARREL,	// Play a weapon sound from the weapon script file
 
 	LAST_SHARED_ANIMEVENT,
 } Animevent;

@@ -362,7 +362,8 @@ bool CNPC_BaseZombie::FindNearestPhysicsObject( int iMaxMass )
 		vcollide_t *pCollide = modelinfo->GetVCollide( pList[i]->GetModelIndex() );
 		
 		Vector objMins, objMaxs;
-		physcollision->CollideGetAABB( &objMins, &objMaxs, pCollide->solids[0], pList[i]->GetAbsOrigin(), pList[i]->GetAbsAngles() );
+		if (pCollide)
+			physcollision->CollideGetAABB( &objMins, &objMaxs, pCollide->solids[0], pList[i]->GetAbsOrigin(), pList[i]->GetAbsAngles() );
 
 		if ( objMaxs.z < vecZombieKnees.z )
 			continue;

@@ -30,8 +30,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-
-
 extern ConVar mat_classic_render;
 class CShotgunPellet : public CBaseCombatCharacter
 {
@@ -187,6 +185,7 @@ private:
 	bool	m_bNeedPump;		// When emptied completely
 	bool	m_bDelayedFire1;	// Fire primary when finished reloading
 	bool	m_bDelayedFire2;	// Fire secondary when finished reloading
+	
 
 
 public:
@@ -231,6 +230,8 @@ public:
 	void PrimaryAttack( void );
 	void SecondaryAttack( void );
 	void DryFire( void );
+	static int gm_nBarrelPoseParam;
+	//void HandleAnimEvent(animevent_t* pEvent);
 
 
 	void FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool bUseWeaponAngles );
@@ -259,7 +260,7 @@ acttable_t	CWeaponShotgun::m_acttable[] =
 {
 	{ ACT_IDLE,						ACT_IDLE_SMG1,					true },	// FIXME: hook to shotgun unique
 
-	{ ACT_RANGE_ATTACK1,			ACT_RANGE_ATTACK_SHOTGUN,			true },
+	{ ACT_RANGE_ATTACK1,			ACT_HLR_SUPERSHOTGUN_FIRE,			true },
 	{ ACT_RELOAD,					ACT_RELOAD_SHOTGUN,					false },
 	{ ACT_WALK,						ACT_WALK_RIFLE,						true },
 	{ ACT_IDLE_ANGRY,				ACT_IDLE_ANGRY_SHOTGUN,				true },
@@ -303,22 +304,25 @@ acttable_t	CWeaponShotgun::m_acttable[] =
 	{ ACT_RELOAD_LOW,				ACT_RELOAD_SHOTGUN_LOW,				false },
 	{ ACT_GESTURE_RELOAD,			ACT_GESTURE_RELOAD_SHOTGUN,			false },
 
-	{ ACT_HL2MP_IDLE, ACT_HL2MP_IDLE_SHOTGUN, false },
+	{ ACT_HL2MP_IDLE, ACT_HLR_SUPERSHOTGUN_IDLE, false },
 	{ ACT_HL2MP_RUN, ACT_HL2MP_RUN_SHOTGUN, false },
 	{ ACT_HL2MP_IDLE_CROUCH, ACT_HL2MP_IDLE_CROUCH_SHOTGUN, false },
 	{ ACT_HL2MP_WALK_CROUCH, ACT_HL2MP_WALK_CROUCH_SHOTGUN, false },
-	{ ACT_HL2MP_GESTURE_RANGE_ATTACK, ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN, false },
-	{ ACT_HL2MP_GESTURE_RELOAD, ACT_HL2MP_GESTURE_RELOAD_SHOTGUN, false },
+	{ ACT_HL2MP_GESTURE_RANGE_ATTACK, ACT_HLR_SUPERSHOTGUN_FIRE, false },
+	{ ACT_HL2MP_GESTURE_RELOAD, ACT_HLR_SUPERSHOTGUN_RELOAD, false },
 	{ ACT_HL2MP_JUMP, ACT_HL2MP_JUMP_SHOTGUN, false },
-	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_SHOTGUN, false },
+	{ ACT_RANGE_ATTACK1, ACT_HLR_SUPERSHOTGUN_FIRE, false },
 };
 
 IMPLEMENT_ACTTABLE(CWeaponShotgun);
+
+int CWeaponShotgun::gm_nBarrelPoseParam = -1;
 
 void CWeaponShotgun::Precache( void )
 {
 	PrecacheParticleSystem("muzzleflash_orange_large_core");
 	CBaseCombatWeapon::Precache();
+	
 }
 
 //-----------------------------------------------------------------------------
@@ -381,8 +385,18 @@ void CWeaponShotgun::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatC
 		case EVENT_WEAPON_SHOTGUN_FIRE:
 		{
 			FireNPCPrimaryAttack( pOperator, false );
+			break;
 		}
-		break;
+		case AE_SUPERSHOTGUN_OPENBARREL:
+		{
+			SetPoseParameter(gm_nBarrelPoseParam, 45.0f);
+			break;
+		}
+		case AE_SUPERSHOTGUN_CLOSEBARREL:
+		{
+			SetPoseParameter(gm_nBarrelPoseParam, 0.0f);
+			break;
+		}
 
 		default:
 			CBaseCombatWeapon::Operator_HandleAnimEvent( pEvent, pOperator );
@@ -471,8 +485,9 @@ bool CWeaponShotgun::StartReload( void )
 
 	if (j <= 0)
 		return false;
-
-	SendWeaponAnim( ACT_SHOTGUN_RELOAD_START );
+	CBasePlayer* pPlayer = ToBasePlayer(GetOwner());
+	pPlayer->SetAnimation(PLAYER_RELOAD);
+	SendWeaponAnim(ACT_SHOTGUN_RELOAD_START);
 
 	// Make shotgun shell visible
 	SetBodygroup(1,0);
@@ -481,6 +496,9 @@ bool CWeaponShotgun::StartReload( void )
 	m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
 
 	m_bInReload = true;
+	
+	gm_nBarrelPoseParam = LookupPoseParameter("barrel_angle");
+	SetPoseParameter(gm_nBarrelPoseParam, 45.0f);
 	return true;
 }
 
@@ -546,6 +564,7 @@ void CWeaponShotgun::FinishReload( void )
 
 	pOwner->m_flNextAttack = gpGlobals->curtime;
 	m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
+	SetPoseParameter(gm_nBarrelPoseParam, 0.0f);
 }
 
 //-----------------------------------------------------------------------------
@@ -958,18 +977,18 @@ void CWeaponShotgun::ItemPostFrame( void )
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-CWeaponShotgun::CWeaponShotgun( void )
+CWeaponShotgun::CWeaponShotgun(void)
 {
 	m_bReloadsSingly = true;
 
-	m_bNeedPump		= false;
+	m_bNeedPump = false;
 	m_bDelayedFire1 = false;
 	m_bDelayedFire2 = false;
 
-	m_fMinRange1		= 0.0;
-	m_fMaxRange1		= 500;
-	m_fMinRange2		= 0.0;
-	m_fMaxRange2		= 200;
+	m_fMinRange1 = 0.0;
+	m_fMaxRange1 = 500;
+	m_fMinRange2 = 0.0;
+	m_fMaxRange2 = 200;
 }
 
 //-----------------------------------------------------------------------------

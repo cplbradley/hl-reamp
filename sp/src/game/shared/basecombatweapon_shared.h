@@ -360,6 +360,10 @@ public:
 	virtual bool			UsesClipsForAmmo2( void ) const;
 	bool					IsMeleeWeapon() const;
 
+	CNetworkVar(Vector,vMuzzleFlashLightColor);
+
+	virtual void DoMuzzleFlashLight(Vector vecColor, Vector vecSrc);
+
 	// derive this function if you mod uses encrypted weapon info files
 	virtual const unsigned char *GetEncryptionKey( void );
 

@@ -5,11 +5,12 @@
 
 $scale 1.0
 $modelname	"weapons/v_blaster.mdl"
-$body v_blaster "v_blaster.smd"
+$body v_blaster "v_blaster_hands.smd"
+$model hands "v_hands_mark6.smd"
 $contents "solid"
 $origin 0 0 64
 $cdmaterials "models/weapons/blaster"
-$cdmaterials "models/weapons/v_hand"
+$cdmaterials "models/weapons/v_hands"
 $attachment "muzzle" "Box001" -0.00 -8.00 3
 $sequence fire "v_blaster_sequence_fire" fps 30.0 activity ACT_VM_PRIMARYATTACK -1.0 fadein 0.2 fadeout 0.2 snap 
 $sequence idle "v_blaster_sequence_idle" fps 3.0 loop  activity ACT_VM_IDLE -1.0 fadein 0.2 fadeout 0.2 

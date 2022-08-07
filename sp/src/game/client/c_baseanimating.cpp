@@ -3327,11 +3327,8 @@ void C_BaseAnimating::ProcessMuzzleFlashEvent()
 			dlight_t *dl = effects->CL_AllocDlight(index);
 			dl->origin = vAttachment;
 			dl->color.r = m_iMuzzleR;
-			DevMsg("clientside muzzle r = %i\n", m_iMuzzleR);
 			dl->color.g = m_iMuzzleG;
-			DevMsg("clientside muzzle g = %i\n", m_iMuzzleG);
 			dl->color.b = m_iMuzzleB;
-			DevMsg("clientside muzzle b = %i\n", m_iMuzzleB);
 			dl->die = gpGlobals->curtime + 0.02f;
 			dl->radius = random->RandomFloat(128.0f, 768.0f);
 			dl->decay = 256.0f;

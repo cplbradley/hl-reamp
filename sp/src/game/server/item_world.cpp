@@ -95,10 +95,12 @@ BEGIN_DATADESC( CItem )
 
 	// Function Pointers
 	DEFINE_ENTITYFUNC( ItemTouch ),
+	DEFINE_THINKFUNC(CheckQuantity),
 	DEFINE_THINKFUNC(SeekThink),
 	DEFINE_THINKFUNC(TraceThink),
 	DEFINE_THINKFUNC( Materialize ),
 	DEFINE_THINKFUNC( ComeToRest ),
+	DEFINE_THINKFUNC(DelayedKill),
 
 #if defined( HL2MP ) || defined( TF_DLL )
 	DEFINE_FIELD( m_flNextResetCheckTime, FIELD_TIME ),
@@ -122,6 +124,10 @@ CItem::CItem()
 }
 void CItem::CheckQuantity(void)
 {
+}
+void CItem::DelayedKill(void)
+{
+
 }
 bool CItem::CreateItemVPhysicsObject( void )
 {

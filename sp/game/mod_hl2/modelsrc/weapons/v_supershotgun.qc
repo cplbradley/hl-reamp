@@ -4,19 +4,29 @@
 // http://dev.wallworm.com 
 
 $scale 1
-$modelname	"weapons/v_supershotgun.mdl"
+$modelname	"weapons/v_supershotgun_armtest.mdl"
 $origin -0 -5 65
-$model v_supershotgun "v_supershotgun.smd"
-//$model arms "armstest.smd"
+$model v_supershotgun "ss2019.smd"
+$model hands "v_hands_mark6.smd"
+$attachment "muzzle" "Object001" 1.00 -21.00 3.00 rotate -0 0 0
+$attachment "1" "stock_low" 0.00 55.00 0.00 rotate -0 0 0
+
 $cdmaterials "models/weapons/sawedoff"
-$cdmaterials "models/weapons/v_hand"
-//$cdmaterials "models/player/mark6"
+$cdmaterials "models/weapons/v_hands"
+
 $sequence draw "v_supershotgun_sequence_draw" fps 30.0 activity ACT_VM_DRAW -1.0 fadein 0.2 fadeout 0.2 
 $sequence fire "v_supershotgun_sequence_fire" fps 30.0 activity ACT_VM_PRIMARYATTACK -1.0 fadein 0.2 fadeout 0.2 snap 
 $sequence fire2 "v_supershotgun_sequence_fire" fps 30.0 activity ACT_VM_SECONDARYATTACK -1.0 fadein 0.2 fadeout 0.2 snap 
-$sequence reload1 "v_supershotgun_sequence_reload1" fps 25.0 activity ACT_SHOTGUN_RELOAD_START -1.0 fadein 0.2 fadeout 0.2 
-$sequence reload2 "v_supershotgun_sequence_reload2" fps 25.0 activity ACT_VM_RELOAD -1.0 fadein 0.2 fadeout 0.2 
-$sequence reload3 "v_supershotgun_sequence_reload3" fps 25.0 activity ACT_SHOTGUN_RELOAD_FINISH -1.0 fadein 0.2 fadeout 0.2 
+$sequence reload1 "v_supershotgun_sequence_reload1" fps 25.0 activity ACT_SHOTGUN_RELOAD_START -1.0 fadein 0.2 fadeout 0.2 { 
+{ event AE_CL_PLAYSOUND 3 "Weapon_Shotgun.Barrel_Open" }
+}
+$sequence reload2 "v_supershotgun_sequence_reload2" fps 25.0 activity ACT_VM_RELOAD -1.0 fadein 0.2 fadeout 0.2 {
+{ event 6001 1 "2" }
+{ event 6001 2 "2" }
+}
+$sequence reload3 "v_supershotgun_sequence_reload3" fps 25.0 activity ACT_SHOTGUN_RELOAD_FINISH -1.0 fadein 0.2 fadeout 0.2 { 
+{ event AE_CL_PLAYSOUND 0 "Weapon_Shotgun.Barrel_Close" }
+}
 $sequence idle "v_supershotgun_sequence_idle" fps 4 loop  activity ACT_VM_IDLE -1.0 fadein 0.2 fadeout 0.2 
 
 $include	"v_supershotgun_wwmt_custom.qci"

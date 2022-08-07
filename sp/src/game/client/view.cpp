@@ -107,7 +107,7 @@ extern ConVar cl_forwardspeed;
 static ConVar v_centermove( "v_centermove", "0.15");
 static ConVar v_centerspeed( "v_centerspeed","500" );
 
-ConVar r_nearZ("r_nearz", "7", FCVAR_CHEAT | FCVAR_CLIENTDLL);
+ConVar r_nearZ("r_nearz", "1", FCVAR_CHEAT | FCVAR_CLIENTDLL);
 
 #ifdef TF_CLIENT_DLL
 // 54 degrees approximates a 35mm camera - we determined that this makes the viewmodels

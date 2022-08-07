@@ -17,7 +17,7 @@
 #include "particlemgr.h"
 #include "steam/steam_api.h"
 #include "discord_rpc.h"
-#include "fmod.hpp"
+//#include "fmod.hpp"
 #include <time.h>
 #include "initializer.h"
 #include "smoke_fog_overlay.h"
@@ -90,6 +90,10 @@
 #include "ihudlcd.h"
 #include "toolframework_client.h"
 #include "hltvcamera.h"
+
+//#include "fmod/fmod_system.h"
+
+
 #if defined( REPLAY_ENABLED )
 #include "replay/replaycamera.h"
 #include "replay/replay_ragdoll.h"
@@ -133,6 +137,8 @@
 #include "haptics/ihaptics.h"
 #include "haptics/haptic_utils.h"
 #include "haptics/haptic_msgs.h"
+
+
 
 #if defined( TF_CLIENT_DLL )
 #include "abuse_report.h"
@@ -1076,6 +1082,8 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 
 	g_pClientMode->Enable();
 
+	//FMODSystem()->InitFMOD();
+
 	if ( !view )
 	{
 		view = ( IViewRender * )&g_DefaultViewRender;
@@ -1245,6 +1253,8 @@ void CHLClient::Shutdown( void )
 
 	g_pClientMode->Disable();
 	g_pClientMode->Shutdown();
+
+	//FMODSystem()->ExitFMOD();
 
 	input->Shutdown_All();
 	C_BaseTempEntity::ClearDynamicTempEnts();

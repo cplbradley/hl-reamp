@@ -19,8 +19,17 @@ $sequence idle "w_grenadelauncher.smd"  activity ACT_IDLE -1 loop fps 30
 
 $include	"w_grenadelauncher_wwmt_custom.qci"
 
+$sequence "idle1" {
+	"w_shotgun_anims\idle1.smd"
+	activity "ACT_VM_IDLE" 1
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	loop
+}
+
 $sequence "fire" {
-	"w_grenadelauncher.smd"
+	"w_shotgun_anims\fire.smd"
 	activity "ACT_RANGE_ATTACK_SHOTGUN" 1
 	{ event AE_NPC_MUZZLEFLASH 0 "SHOTGUN MUZZLE" }
 	{ event 6001 0 "2" }
@@ -28,4 +37,20 @@ $sequence "fire" {
 	fadein 0.2
 	fadeout 0.2
 	fps 5
+}
+
+$sequence "draw" {
+	"w_shotgun_anims\draw.smd"
+	activity "ACT_VM_DRAW" 1
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+}
+
+$sequence "holster" {
+	"w_shotgun_anims\holster.smd"
+	activity "ACT_VM_HOLSTER" 1
+	fadein 0.2
+	fadeout 0.2
+	fps 30
 }

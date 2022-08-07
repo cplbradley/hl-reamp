@@ -18,6 +18,8 @@
 #include "haptics/haptic_utils.h"
 #ifdef CLIENT_DLL
 #include "prediction.h"
+#include "dlight.h"
+#include "r_efx.h"
 #endif
 // NVNT end extra includes
 
@@ -1413,12 +1415,13 @@ bool CBaseCombatWeapon::DefaultDeploy(char *szViewModel, char *szWeaponModel, in
 		SetViewModel();
 		SendWeaponAnim(iActivity);
 
-		pOwner->SetNextAttack(gpGlobals->curtime + SequenceDuration());
+		//pOwner->SetNextAttack(gpGlobals->curtime + SequenceDuration());
+		pOwner->SetNextAttack(gpGlobals->curtime + 0.25f);
 	}
 
 	// Can't shoot again until we've finished deploying
-	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
-	m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
+	m_flNextPrimaryAttack = gpGlobals->curtime; // +SequenceDuration();
+	m_flNextSecondaryAttack = gpGlobals->curtime; // +SequenceDuration();
 	m_flHudHintMinDisplayTime = 0;
 
 	m_bAltFireHudHintDisplayed = false;
@@ -2251,7 +2254,22 @@ void CBaseCombatWeapon::UpdateAutoFire(void)
 		pOwner->m_nButtons |= IN_ATTACK;
 	}
 }
-
+void CBaseCombatWeapon::DoMuzzleFlashLight(Vector vecColor, Vector vecSrc)
+{
+#ifdef CLIENT_DLL
+	DevMsg("Muzzle Client\n");
+		dlight_t* dl = effects->CL_AllocDlight(index);
+		dl->origin = vecSrc;
+		dl->color.r = vecColor[0];
+		dl->color.g = vecColor[1];
+		dl->color.b = vecColor[2];
+		dl->die = gpGlobals->curtime + 0.02f;
+		dl->radius = random->RandomFloat(128.0f, 768.0f);
+		dl->decay = 256.0f;
+#else
+	DevMsg("Muzzle Server\n");
+#endif
+}
 //-----------------------------------------------------------------------------
 // Purpose: Primary fire button attack
 //-----------------------------------------------------------------------------
@@ -2273,7 +2291,6 @@ void CBaseCombatWeapon::PrimaryAttack(void)
 	}
 
 	pPlayer->DoMuzzleFlash();
-
 	SendWeaponAnim(GetPrimaryAttackActivity());
 
 	// player "shoot" animation

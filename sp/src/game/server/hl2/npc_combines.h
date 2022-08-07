@@ -39,6 +39,7 @@ public:
 
 	void		ClearAttackConditions( void );
 
+
 	bool		m_fIsBlocking;
 
 	bool		IsLightDamage( const CTakeDamageInfo &info );

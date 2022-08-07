@@ -132,8 +132,8 @@ public:
 	void Precache( void )
 	{
 		PrecacheModel ("models/items/resdrop.mdl");
-		PrecacheMaterial("sprites/energy.vmt");
-		PrecacheMaterial("sprites/laserbeam.vmt");
+		PrecacheModel("sprites/energy.vmt");
+		PrecacheModel("sprites/laserbeam.vmt");
 	}
 	
 	void DrawSprite(void)
@@ -208,7 +208,7 @@ public:
 	void Precache( void )
 	{
 		PrecacheModel ("models/items/energy_ammo.mdl");
-		PrecacheMaterial("sprites/energy.vmt");
+		PrecacheModel("sprites/energy.vmt");
 	}
 	bool DrawSprite(void)
 	{
@@ -268,8 +268,8 @@ public:
 	void Precache( void )
 	{
 		PrecacheModel("models/items/resdrop.mdl");
-		PrecacheMaterial("sprites/laserbeam.vmt");
-		PrecacheMaterial("sprites/heavyammo.vmt");
+		PrecacheModel("sprites/laserbeam.vmt");
+		PrecacheModel("sprites/heavyammo.vmt");
 	}
 	void DrawSprite(void)
 	{
@@ -336,7 +336,7 @@ public:
 	CHandle <CSprite> m_pAmmoSprite;
 	void Spawn( void )
 	{ 
-		Precache( );
+		Precache();
 		SetModel( "models/items/heavy_ammo.mdl");
 		BaseClass::Spawn( );
 		DrawSprite();
@@ -344,7 +344,7 @@ public:
 	void Precache( void )
 	{
 		PrecacheModel ("models/items/heavy_ammo.mdl");
-		PrecacheMaterial("sprites/heavyammo.vmt");
+		PrecacheModel("sprites/heavyammo.vmt");
 	}
 	bool DrawSprite(void)
 	{
@@ -571,7 +571,7 @@ public:
 	void Precache( void )
 	{
 		PrecacheModel ("models/items/explosive_ammo.mdl");
-		PrecacheMaterial("sprites/rocket.vmt");
+		PrecacheModel("sprites/rocket.vmt");
 	}
 	bool DrawSprite(void)
 	{
@@ -634,8 +634,8 @@ public:
 	void Precache(void)
 	{
 		PrecacheModel("models/items/resdrop.mdl");
-		PrecacheMaterial("sprites/rocket.vmt");
-		PrecacheMaterial("sprites/laserbeam.vmt");
+		PrecacheModel("sprites/rocket.vmt");
+		PrecacheModel("sprites/laserbeam.vmt");
 	}
 	void DrawSprite(void)
 	{
@@ -787,8 +787,8 @@ public:
 	void Precache( void )
 	{
 		PrecacheModel ("models/items/resdrop.mdl");
-		PrecacheMaterial("sprites/buckshot.vmt");
-		PrecacheMaterial("sprites/laserbeam.vmt");
+		PrecacheModel("sprites/buckshot.vmt");
+		PrecacheModel("sprites/laserbeam.vmt");
 	}
 	void DrawSprite(void)
 	{
@@ -864,7 +864,7 @@ public:
 	void Precache(void)
 	{
 		PrecacheModel("models/items/shotgunshellbox.mdl");
-		PrecacheMaterial("sprites/buckshot.vmt");
+		PrecacheModel("sprites/buckshot.vmt");
 	}
 	bool DrawSprite(void)
 	{
@@ -903,18 +903,37 @@ class CItem_AR2AltFireRound : public CItem
 {
 public:
 	DECLARE_CLASS( CItem_AR2AltFireRound, CItem );
+	CHandle<CSprite> m_pAmmoSprite;
 
 	void Precache( void )
 	{
 		PrecacheParticleSystem( "combineball" );
-		PrecacheModel ("models/items/combine_rifle_ammo01.mdl");
+		PrecacheModel ("models/items/atomic_ammo.mdl");
+		PrecacheModel("sprites/atomic.vmt");
 	}
 
 	void Spawn( void )
 	{ 
 		Precache( );
-		SetModel( "models/items/combine_rifle_ammo01.mdl");
+		SetModel("models/items/atomic_ammo.mdl");
+		DrawSprite();
 		BaseClass::Spawn( );
+		int nSequence = LookupSequence("idle");
+		SetSequence(nSequence);
+		SetPlaybackRate(1.0f);
+	}
+	bool DrawSprite(void)
+	{
+		m_pAmmoSprite = CSprite::SpriteCreate("sprites/atomic.vmt", GetAbsOrigin(), false);
+		if (m_pAmmoSprite)
+		{
+			m_pAmmoSprite->FollowEntity(this);
+			m_pAmmoSprite->SetLocalOrigin(vec3_origin + Vector(0, 0, 16));
+			m_pAmmoSprite->SetTransparency(kRenderGlow, 255, 255, 255, 255, kRenderFxHologram);
+			m_pAmmoSprite->SetScale(0.3f);
+			m_pAmmoSprite->SetGlowProxySize(16.0f);
+		}
+		return true;
 	}
 
 	bool MyTouch( CBasePlayer *pPlayer )

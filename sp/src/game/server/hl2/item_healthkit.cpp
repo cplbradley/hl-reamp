@@ -118,6 +118,7 @@ class CHealthVial : public CItem
 {
 public:
 	DECLARE_CLASS( CHealthVial, CItem );
+	DECLARE_DATADESC();
 protected:
 	CHandle<CSpriteTrail>	m_pGlowTrail;
 	CHandle<CSprite>		m_pMainGlow;
@@ -213,6 +214,9 @@ protected:
 
 LINK_ENTITY_TO_CLASS( item_healthvial, CHealthVial );
 PRECACHE_REGISTER( item_healthvial );
+BEGIN_DATADESC(CHealthVial)
+DEFINE_THINKFUNC(DelayedKill),
+END_DATADESC()
 
 //-----------------------------------------------------------------------------
 // Wall mounted health kit. Heals the player when used.

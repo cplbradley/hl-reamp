@@ -189,7 +189,7 @@ float CGameRules::AdjustProjectileSpeed(float projspeed)
 
 	case SKILL_HARD:
 		//Msg("adjusting speed to hard\n");
-		return (projspeed * 1.35);
+		return (projspeed * 1.4);
 		break;
 
 	default:

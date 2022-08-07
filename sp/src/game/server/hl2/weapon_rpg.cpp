@@ -473,10 +473,11 @@ void CMissile::IgniteThink(void)
 	CreateSmokeTrail();
 }
 
-void CMissile::ActiveSteerMode(void)
+bool CMissile::ActiveSteerMode(void)
 {
 	SetThink(&CMissile::SteerThink);
 	SetNextThink(gpGlobals->curtime);
+	return true;
 }
 void CMissile::SteerThink(void)
 {

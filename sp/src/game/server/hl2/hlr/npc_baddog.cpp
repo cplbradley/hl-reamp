@@ -51,8 +51,8 @@
 // If flying at an enemy, and this close or closer, start playing the maul animation!!
 #define FASTZOMBIE_MAUL_RANGE	300
 
-ConVar sk_baddog_jump_speed("sk_baddog_jump_speed", "700", FCVAR_NONE, "BadDog Jumpspeed");
-ConVar	sk_baddog_health("sk_baddog_health", "1000", FCVAR_NONE, "BadDog Health");
+ConVar sk_baddog_jump_speed("sk_baddog_jump_speed", "0", FCVAR_NONE, "BadDog Jumpspeed");
+ConVar	sk_baddog_health("sk_baddog_health", "0", FCVAR_NONE, "BadDog Health");
 
 #ifdef HL2_EPISODIC
 
@@ -972,7 +972,7 @@ void CNPC_BadDog::AttackSound(void)
 //-----------------------------------------------------------------------------
 void CNPC_BadDog::IdleSound(void)
 {
-	EmitSound("NPC_dog.Idlemode_loop");
+	//EmitSound("NPC_dog.Idlemode_loop");
 	MakeAISpookySound(360.0f);
 }
 

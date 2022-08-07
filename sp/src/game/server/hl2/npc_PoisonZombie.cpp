@@ -437,6 +437,7 @@ void CNPC_PoisonZombie::Event_Killed( const CTakeDamageInfo &info )
 		EmitSound( "NPC_PoisonZombie.Die" );
 	}
 
+	UTIL_Remove(this);
 	/*if ( !m_fIsTorso )
 	{
 		EvacuateNest(info.GetDamageType() == DMG_BLAST, info.GetDamage(), info.GetAttacker() );

@@ -220,6 +220,7 @@ public:
 	virtual bool	Holster(CBaseCombatWeapon *pSwitchingTo = NULL);
 	DECLARE_DATADESC();
 	DECLARE_SERVERCLASS();
+	DECLARE_ACTTABLE();
 };
 
 LINK_ENTITY_TO_CLASS(weapon_bfg, CWeaponBFG);
@@ -230,6 +231,19 @@ END_DATADESC()
 
 IMPLEMENT_SERVERCLASS_ST(CWeaponBFG,DT_WeaponBFG)
 END_SEND_TABLE()
+
+acttable_t	CWeaponBFG::m_acttable[] =
+{
+	{ ACT_HL2MP_IDLE,					ACT_HL2MP_IDLE_PHYSGUN,					false },
+	{ ACT_HL2MP_RUN,					ACT_HL2MP_RUN_PHYSGUN,					false },
+	{ ACT_HL2MP_IDLE_CROUCH,			ACT_HL2MP_IDLE_CROUCH_PHYSGUN,			false },
+	{ ACT_HL2MP_WALK_CROUCH,			ACT_HL2MP_WALK_CROUCH_PHYSGUN,			false },
+	{ ACT_HL2MP_GESTURE_RANGE_ATTACK,	ACT_HL2MP_GESTURE_RANGE_ATTACK_PHYSGUN,	false },
+	{ ACT_HL2MP_GESTURE_RELOAD,			ACT_HL2MP_GESTURE_RELOAD_PHYSGUN,		false },
+	{ ACT_HL2MP_JUMP,					ACT_HL2MP_JUMP_PHYSGUN,					false },
+};
+
+IMPLEMENT_ACTTABLE(CWeaponBFG);
 
 void CWeaponBFG::Precache(void)
 {
@@ -249,7 +263,13 @@ void CWeaponBFG::PrimaryAttack(void)
 
 	EmitSound("Weapon_BFG.Single");
 	pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);
-	DispatchParticleEffect("bfg_weapon_core", PATTACH_POINT_FOLLOW, pPlayer->GetViewModel(), iAttachment, true);
+	CBaseEntity* pObj = NULL;
+	ConVarRef g_thirdperson("g_thirdperson");
+	if (g_thirdperson.GetBool())
+		pObj = this;
+	else
+		pObj = pPlayer->GetViewModel();
+	DispatchParticleEffect("bfg_weapon_core", PATTACH_POINT_FOLLOW, pObj, iAttachment, true);
 	m_flNextPrimaryAttack = (gpGlobals->curtime + 6.0f);
 	WackyFOVShit();
 	SetThink(&CWeaponBFG::LaunchBall);
@@ -263,17 +283,26 @@ void CWeaponBFG::LaunchBall(void)
 		return;
 	ResetFOV();
 	SendWeaponAnim(ACT_VM_SECONDARYATTACK);
-	Vector vecAiming;
+	Vector vecAiming, vecSrc, vecAttachment;
 	QAngle angAiming = pPlayer->EyeAngles();
 	AngleVectors(angAiming, &vecAiming);
-		
-	Vector vecSrc = pPlayer->Weapon_ShootPosition();
+	ConVarRef g_thirdperson("g_thirdperson");
+	QAngle angAttachment;
+	if (g_thirdperson.GetBool())
+	{
+		int iAttachment = LookupAttachment("muzzle");
+		GetAttachment(iAttachment, vecAttachment, angAttachment);
+		vecSrc = vecAttachment + Vector(0, 0, 16); //MEGAHACK: attachment returning world position too low, which is fucking dumb, because it return the correct position for the particle *shrug*
+	}
+	else
+		vecSrc = pPlayer->Weapon_ShootPosition();
+
 	if (!pPlayer->HasOverdrive())
 	{
-		CProjectileBFG *pOrb = (CProjectileBFG *)CreateEntityByName("bfg_projectile");
-		pOrb->Spawn();
-		pOrb->SetOwnerEntity(pPlayer);
-		UTIL_SetOrigin(pOrb, vecSrc);
+		CProjectileBFG* pOrb = (CProjectileBFG*)Create("bfg_projectile", vecSrc, angAiming, pPlayer);
+		//pOrb->Spawn();
+		//pOrb->SetOwnerEntity(pPlayer);
+		//UTIL_SetOrigin(pOrb, vecSrc);
 		pOrb->SetLocalAngles(QAngle(random->RandomFloat(-250, -500),
 			random->RandomFloat(-250, -500),
 			random->RandomFloat(-250, -500)));

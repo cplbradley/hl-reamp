@@ -19,6 +19,7 @@
 #include <vgui/ISystem.h>
 #include <vgui_controls/AnimationController.h>
 #include <vgui_controls/Panel.h>
+#include "../public/toolframework/ienginetool.h"
 
 #include "vgui/ILocalize.h"
 
@@ -1059,7 +1060,7 @@ void CHudWeaponSelection::OpenSelection( void )
 	engine->ClientCmd_Unrestricted("sv_cheats 1");
 	host_timescale->SetValue(0.3f);
 	CSingleUserRecipientFilter user(CBasePlayer::GetLocalPlayer());
-	enginesound->SetPlayerDSP(user, 31, false);
+	//enginesound->SetPlayerDSP(user, 31, false);
 }
 
 //-----------------------------------------------------------------------------
@@ -1074,7 +1075,7 @@ void CHudWeaponSelection::HideSelection( void )
 	engine->ClientCmd_Unrestricted("sv_cheats 0");
 	host_timescale->SetValue(1.0f);
 	CSingleUserRecipientFilter user(CBasePlayer::GetLocalPlayer());
-	enginesound->SetPlayerDSP(user, 1, false);
+	//enginesound->SetPlayerDSP(user, 1, false);
 }
 
 //-----------------------------------------------------------------------------

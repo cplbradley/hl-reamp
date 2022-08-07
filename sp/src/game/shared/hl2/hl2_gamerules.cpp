@@ -1437,7 +1437,7 @@ ConVar  alyx_darkness_force( "alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REP
 	{
 		if ( pRecipient == NULL)
 			return false;
-		if ( pRecipient->m_iHealth < pRecipient->m_iMaxHealth *0.8f ) //Is the player missing at least 20% of their health?
+		if ( pRecipient->m_iHealth < pRecipient->m_iMaxHealth * 0.8f ) //Is the player missing at least 20% of their health?
 			return true; //I should drop some health when I die
 
 		return false; //Otherwise nah, i'll just die lol

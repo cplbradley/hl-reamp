@@ -63,6 +63,7 @@ public:
 
 	int GetMaxJumps(void);
 	int m_iMaxJumps;
+	bool			m_bLaunchpadTimedBlock;
 
 	bool	m_bShouldGroundPound;
 	bool	m_bDidGroundPound;
@@ -110,6 +111,8 @@ protected:
 	//bool			DoubleJump(void);
 
 	void			GroundPound(void);
+
+	
 
 	// Handles both ground friction and water friction
 	void			Friction( void );

@@ -4,8 +4,7 @@
 //
 //==================================================================================================
 
-//  STATIC: "WVT"                       "0..1"
-
+//  STATIC: "SEAMLESS"                  "0..1"
 //  DYNAMIC: "COMPRESSED_VERTS"         "0..1"
 //  DYNAMIC: "DOWATERFOG"               "0..1"
 //  DYNAMIC: "SKINNING"                 "0..1"
@@ -16,7 +15,13 @@
 
 static const bool g_bSkinning           = SKINNING ? true : false;
 static const int g_FogType              = DOWATERFOG;
-const float4 cBaseTexCoordTransform[2]  : register(SHADER_SPECIFIC_CONST_0);
+#if SEAMLESS
+const float4 SeamlessScale : register( SHADER_SPECIFIC_CONST_0 );
+#define SEAMLESS_SCALE (SeamlessScale.x)
+#else
+const float4 cBaseTexCoordTransform[2]	: register(SHADER_SPECIFIC_CONST_0);
+#endif
+const float4 cDetailTexCoordTransform[2]	: register( SHADER_SPECIFIC_CONST_6 );
 
 //-----------------------------------------------------------------------------
 // Input vertex format
@@ -31,9 +36,7 @@ struct VS_INPUT
     float2 vTexCoord0               : TEXCOORD0;
     float4 vLightmapTexCoord        : TEXCOORD1;
     float4 vLightmapTexCoordOffset  : TEXCOORD2;
-#if WVT
-    float4 vColor                   : COLOR0;
-#endif
+	
 };
 
 struct VS_OUTPUT
@@ -42,16 +45,19 @@ struct VS_OUTPUT
     float4 projPosSetup             : POSITION;
     float  fog                      : FOG;
     // Stuff that is seen by the pixel shader
+#if SEAMLESS
+	float3 SeamlessTexCoord         : TEXCOORD0;
+#else	
     float2 baseTexCoord             : TEXCOORD0;
+#endif
     float4 lightAtten               : TEXCOORD1;
     float3 worldNormal              : TEXCOORD2;
     float3 worldPos                 : TEXCOORD3;
     float3 projPos                  : TEXCOORD4;
     float4 lightmapTexCoord1And2    : TEXCOORD5;
     float4 lightmapTexCoord3        : TEXCOORD6;
-#if WVT
-    float blend                     : COLOR0;
-#endif
+	float4 detailTexCoord			: TEXCOORD7;
+	
 };
 
 //-----------------------------------------------------------------------------
@@ -60,10 +66,14 @@ struct VS_OUTPUT
 VS_OUTPUT main( const VS_INPUT v )
 {
     VS_OUTPUT o = ( VS_OUTPUT )0;
-
+#if SEAMLESS
+    o.lightmapTexCoord3.zw = v.vTexCoord0;
+    o.lightmapTexCoord1And2.xy = v.vLightmapTexCoord + v.vLightmapTexCoordOffset;
+#else
     o.lightmapTexCoord3.z = dot(v.vTexCoord0, cBaseTexCoordTransform[0]) + cBaseTexCoordTransform[0].w;
     o.lightmapTexCoord3.w = dot(v.vTexCoord0, cBaseTexCoordTransform[1]) + cBaseTexCoordTransform[1].w;
     o.lightmapTexCoord1And2.xy = v.vLightmapTexCoord + v.vLightmapTexCoordOffset;
+#endif
 
     float2 lightmapTexCoord2 = o.lightmapTexCoord1And2.xy + v.vLightmapTexCoordOffset;
     float2 lightmapTexCoord3 = lightmapTexCoord2 + v.vLightmapTexCoordOffset;
@@ -110,15 +120,18 @@ VS_OUTPUT main( const VS_INPUT v )
     #if (NUM_LIGHTS > 3)
         o.lightAtten.w = GetVertexAttenForLight(worldPos, 3, false);
     #endif
-
-    #if WVT
-        o.blend = v.vColor.a;
-    #endif
-
+#if SEAMLESS
+	{
+		// we need to fill in the texture coordinate projections
+		o.SeamlessTexCoord = SEAMLESS_SCALE*worldPos;
+	}
+#else
     // Base texture coordinate transform
     o.baseTexCoord.x = dot(v.vTexCoord0, cBaseTexCoordTransform[0]);
     o.baseTexCoord.y = dot(v.vTexCoord0, cBaseTexCoordTransform[1]);
     o.baseTexCoord = v.vTexCoord0;
-
+#endif
+	o.detailTexCoord.x = dot( v.vTexCoord0, cDetailTexCoordTransform[0] );
+	o.detailTexCoord.y = dot( v.vTexCoord0, cDetailTexCoordTransform[1] );
     return o;
 }

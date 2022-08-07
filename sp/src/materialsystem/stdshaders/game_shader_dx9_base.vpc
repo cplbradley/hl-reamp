@@ -51,11 +51,11 @@ $Project
 	{
 		$File	"BaseVSShader.cpp"
 
-		$File	"example_model_dx9.cpp"
-		$File	"example_model_dx9_helper.cpp"
+	//	$File	"example_model_dx9.cpp"
+	//	$File	"example_model_dx9_helper.cpp"
 
-		$File	"Bloom.cpp"
-		$File	"screenspace_general.cpp"
+	//	$File	"Bloom.cpp"
+	//	$File	"screenspace_general.cpp"
 	}
 
 	$Folder	"Header Files"
@@ -86,6 +86,4 @@ $Project
 	$File	"buildsdkshaders.bat"
 	$File	"buildshaders.bat"
 
-	$Shaders	"stdshader_dx9_20b.txt"
-	$Shaders	"stdshader_dx9_30.txt"
 }

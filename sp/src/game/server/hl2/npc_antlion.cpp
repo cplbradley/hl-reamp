@@ -1058,11 +1058,15 @@ void CNPC_Antlion::HandleAnimEvent( animevent_t *pEvent )
 				GetAttachment( "mouth", vSpitPos );
 
 				Vector	vTarget;
+
+				float adjustedspd = g_pGameRules->AdjustProjectileSpeed(sk_antlion_worker_spit_speed.GetFloat());
+				float dist = (GetEnemy()->GetAbsOrigin() - GetAbsOrigin()).Length();
+				float traveltime = dist / adjustedspd;
 				
 				// If our enemy is looking at us and far enough away, lead him
 				if ( HasCondition( COND_ENEMY_FACING_ME ) && UTIL_DistApprox( GetAbsOrigin(), GetEnemy()->GetAbsOrigin() ) > (40*12) )
 				{
-					UTIL_PredictedPosition( GetEnemy(), 0.5f, &vTarget ); 
+					UTIL_PredictedPosition( GetEnemy(), traveltime, &vTarget );
 					vTarget.z = GetEnemy()->GetAbsOrigin().z;
 				}
 				else
@@ -1099,8 +1103,8 @@ void CNPC_Antlion::HandleAnimEvent( animevent_t *pEvent )
 				SetNextAttack( gpGlobals->curtime + flTime + random->RandomFloat( 0.5f, 2.0f ) );
 
 				// Tell any squadmates not to fire for some portion of the time this volley will be in the air (except on hard)
-				if ( g_pGameRules->IsSkillLevel( SKILL_HARD ) == false )
-					DelaySquadAttack( flTime );
+				//if ( g_pGameRules->IsSkillLevel( SKILL_HARD ) == false )
+					//DelaySquadAttack( flTime );
 
 				for ( int i = 0; i < 1; i++ )
 				{

@@ -24,6 +24,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <Library Include="..\..\lib\public\discord-rpc.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
     <Library Include="..\..\lib\public\mathlib.lib">
       <Filter>Link Libraries</Filter>
     </Library>
@@ -98,26 +101,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="buildsdkshaders.bat">
-      <Filter>
-      </Filter>
+      <Filter></Filter>
     </None>
     <None Include="buildshaders.bat">
-      <Filter>
-      </Filter>
-    </None>
-    <None Include="mymod_dx9_20b.txt">
-      <Filter>Shader Source</Filter>
-    </None>
-    <None Include="mymod_dx9_30.txt">
-      <Filter>Shader Source</Filter>
-    </None>
-    <None Include="pbr_ps20b.fxc">
-      <Filter>Shader Source\fxc</Filter>
+      <Filter></Filter>
     </None>
     <None Include="pbr_ps30.fxc">
-      <Filter>Shader Source\fxc</Filter>
-    </None>
-    <None Include="pbr_vs20b.fxc">
       <Filter>Shader Source\fxc</Filter>
     </None>
     <None Include="pbr_vs30.fxc">

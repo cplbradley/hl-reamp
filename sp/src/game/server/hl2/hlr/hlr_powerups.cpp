@@ -31,6 +31,7 @@
 
 extern IGameMovement *g_pGameMovement;
 #define POWERUP_MODEL "models/items/powerup.mdl"
+#define OVERDRIVE_MODEL "models/items/powerup_od.mdl"
 #define FF_MODEL "models/items/powerup_fury.mdl"
 #define POWERUP_TIMER_SOUND "Powerup.Timer"
 #define POWERUP_IDLE_SOUND "Powerup.Idle"
@@ -73,11 +74,11 @@ void CHLRFreemanFury::Spawn(void)
 {
 	Precache();
 	SetModel(FF_MODEL);
-	SetModelScale(1.25f);
+	//SetModelScale(1.25f);
 	UTIL_SetSize(this, -Vector(64.0f, 64.0f, 64.0f), Vector(64.0f, 64.0f, 64.0f));
 	SetSolid(SOLID_BBOX);
 	AddSolidFlags(FSOLID_NOT_SOLID | FSOLID_TRIGGER);
-	//SetRenderColor(200, 55, 0);
+	SetRenderColor(150, 0, 0);
 	SetMoveType(MOVETYPE_NONE);
 	m_hSpitEffect = (CParticleSystem *)CreateEntityByName("info_particle_system");
 	RegisterThinkContext("timercontext");
@@ -99,7 +100,8 @@ void CHLRFreemanFury::Spawn(void)
 }
 void CHLRFreemanFury::SetAnimation(void)
 {
-//	int iSequence = LookupSequence("loop");
+	int iSequence = LookupSequence("idle");
+	SetSequence(iSequence);
 	EmitSound(POWERUP_IDLE_SOUND);
 	//SetPlaybackRate(1.0f);
 }
@@ -484,6 +486,7 @@ BEGIN_DATADESC(CHLRGravShifter)
 DEFINE_FUNCTION(Touch),
 DEFINE_FUNCTION(Kill),
 DEFINE_THINKFUNC(ResetGrav),
+
 END_DATADESC()
 
 void CHLRGravShifter::Precache(void)
@@ -590,6 +593,7 @@ DEFINE_FUNCTION(Touch),
 DEFINE_FUNCTION(Kill),
 DEFINE_FUNCTION(Deactivate),
 DEFINE_FIELD(m_hSpitEffect, FIELD_EHANDLE),
+DEFINE_FIELD(m_iTimeLeft,FIELD_INTEGER),
 END_DATADESC()
 
 IMPLEMENT_SERVERCLASS_ST(CHLROverdrive, DT_Overdrive)
@@ -600,12 +604,12 @@ END_SEND_TABLE()
 
 void CHLROverdrive::Precache(void)
 {
-	PrecacheModel(POWERUP_MODEL);
+	PrecacheModel(OVERDRIVE_MODEL);
 }
 void CHLROverdrive::Spawn(void)
 {
 	Precache();
-	SetModel(POWERUP_MODEL);
+	SetModel(OVERDRIVE_MODEL);
 	UTIL_SetSize(this, -Vector(64.0f, 64.0f, 64.0f), Vector(64.0f, 64.0f, 64.0f));
 	SetSolid(SOLID_BBOX);
 	AddSolidFlags(FSOLID_NOT_SOLID | FSOLID_TRIGGER);

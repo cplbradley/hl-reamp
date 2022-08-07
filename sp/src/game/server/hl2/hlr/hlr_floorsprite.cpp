@@ -4,7 +4,7 @@
 #include "player.h"
 #include "spritetrail.h"
 #include "hlr_floorsprite.h"
-
+#include "interpolatortypes.h"
 
 
 
@@ -12,10 +12,14 @@
 
 #define SPRITE_MATERIAL "sprites/floorsprite.vmt"
 
+
 LINK_ENTITY_TO_CLASS(hlr_floorsprite, CHLRFloorSprite);
+PRECACHE_REGISTER(hlr_floorsprite);
 
 BEGIN_DATADESC(CHLRFloorSprite)
 DEFINE_FIELD(m_pSprite, FIELD_EHANDLE),
+DEFINE_THINKFUNC(UpdateThink),
+DEFINE_FUNCTION(DrawSprite),
 END_DATADESC()
 
 IMPLEMENT_SERVERCLASS_ST(CHLRFloorSprite,DT_FloorSprite)
@@ -25,14 +29,14 @@ END_SEND_TABLE()
 void CHLRFloorSprite::Spawn(void)
 {
 	Precache();
-	InitSprite();
-	//SetThink(&CHLRFloorSprite::UpdateThink);
-	//SetNextThink(gpGlobals->curtime);
+	DrawSprite();
+	SetThink(&CHLRFloorSprite::UpdateThink);
+	SetNextThink(gpGlobals->curtime);
 	DevMsg("floorsprite spawned\n");
 }
 void CHLRFloorSprite::Precache(void)
 {
-	PrecacheMaterial(SPRITE_MATERIAL);
+	PrecacheModel(SPRITE_MATERIAL);
 }
 bool CHLRFloorSprite::InitSprite(void)
 {
@@ -41,10 +45,19 @@ bool CHLRFloorSprite::InitSprite(void)
 		m_pSprite = CSprite::SpriteCreate(SPRITE_MATERIAL, GetAbsOrigin(), false);
 		m_pSprite->FollowEntity(this);
 		m_pSprite->SetSpriteScale(0.5f);
-		m_pSprite->SetTransparency(kRenderGlow, 255, 255, 255, 64, kRenderFxNoDissipation);
+		m_pSprite->SetTransparency(kRenderGlow, 255, 255, 255, 255, kRenderFxNoDissipation);
 		m_pSprite->SetGlowProxySize(16.0f);
 	}
 	return true;
+}
+void CHLRFloorSprite::DrawSprite(void)
+{
+	CBasePlayer* pPlayer = UTIL_GetLocalPlayer();
+	if (!pPlayer)
+		return;
+
+	if (pPlayer->IsSuitEquipped())
+		InitSprite();
 }
 /*void CHLRFloorSprite::UpdatePos(void)
 {
@@ -58,9 +71,20 @@ bool CHLRFloorSprite::InitSprite(void)
 	QAngle angDown;
 	VectorAngles(vecDown, angDown);
 	SetAbsAngles(angDown);
-}
+}*/
 void CHLRFloorSprite::UpdateThink(void)
 {
-	UpdatePos();
+	//UpdatePos();
+
+	CBasePlayer* pPlayer = UTIL_GetLocalPlayer();
+	if (pPlayer->GetGroundEntity() == NULL)
+		spriteAlpha+= 4;
+	else
+		spriteAlpha-= 4;
+	if (spriteAlpha < 1)
+		spriteAlpha = 1;
+	if (spriteAlpha > 64)
+		spriteAlpha = 64;
+	m_pSprite->SetRenderColorA(spriteAlpha);
 	SetNextThink(gpGlobals->curtime);
-}*/
+}

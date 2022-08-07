@@ -11622,7 +11622,11 @@ void CAI_BaseNPC::ToggleFreeze(void)
 	{
 		// Unfreeze them.
 		SetCondition(COND_NPC_UNFREEZE);
-		m_Activity = ACT_RESET;
+		SetPlaybackRate(1.0f);
+		ClearCondition(COND_NPC_FREEZE);
+		SetIdealActivity(ACT_IDLE);
+		SetSchedule(SCHED_IDLE_STAND);
+		NPCThink();
 
 		// BUGBUG: this might not be the correct movetype!
 

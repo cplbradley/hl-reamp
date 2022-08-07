@@ -1149,7 +1149,7 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 	if ((info.GetDamageType() & DMG_BLAST) && (info.GetInflictor()->IsPlayer()))
 	{
-		float scale = g_pGameRules->AdjustProjectileSpeed(0.5);
+		float scale = g_pGameRules->AdjustProjectileSpeed(0.5f);
 		info.ScaleDamage(scale);
 	}
 	IServerVehicle *pVehicle = GetVehicle();
@@ -5049,6 +5049,8 @@ void CBasePlayer::Spawn( void )
 
 	//check the existence of the floorsprite
 	CheckFloorSprite();
+	//check if we should be in third person
+	CheckThirdPerson();
 
 
 	m_bInCinematicCamera = false;
@@ -5247,6 +5249,7 @@ void CBasePlayer::Precache( void )
 #endif
 
 	UTIL_PrecacheOther("hlr_floorsprite");
+	PrecacheMaterial("sprites / floorsprite.vmt");
 
 	PrecacheParticleSystem("baddog_groundsmash_radialsmoke");
 	// in the event that the player JUST spawned, and the level node graph
@@ -5327,8 +5330,27 @@ int CBasePlayer::GetQuadDmgScale(void)
 		return 3;
 	return 1;
 }
+void CBasePlayer::CheckThirdPerson(void)
+{
+	ConVarRef thirdperson("g_thirdperson");
+	ConVarRef thirdpersoncrosshair("cl_thirdperson_crosshair");
+	int thirdpersonsetting;
+	if (thirdperson.GetBool())
+	{
+		thirdpersonsetting = 1;
+		engine->ClientCommand(edict(), "thirdperson\n");
+	}
+	else
+		thirdpersonsetting = 0;
+
+	thirdperson.SetValue(thirdpersonsetting);
+	thirdpersoncrosshair.SetValue(thirdpersonsetting);
+}
 void CBasePlayer::CheckFloorSprite(void)
 {
+
+	if (!IsSuitEquipped())
+		return;
 	//access the EHANDLE
 	CHLRFloorSprite *m_pFloorSprite = dynamic_cast<CHLRFloorSprite*>(m_hFloorSprite.Get());
 
@@ -5476,6 +5498,7 @@ void CBasePlayer::OnRestore( void )
 	BaseClass::OnRestore();
 
 	CheckFloorSprite();
+	CheckThirdPerson();
 	SetViewEntity( m_hViewEntity );
 	SetDefaultFOV(m_iDefaultFOV);		// force this to reset if zero
 

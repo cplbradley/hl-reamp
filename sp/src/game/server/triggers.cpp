@@ -2763,6 +2763,7 @@ void CAI_ChangeHintGroup::InputActivate( inputdata_t &inputdata )
 #define SF_CAMERA_PLAYER_SNAP_TO		16
 #define SF_CAMERA_PLAYER_NOT_SOLID		32
 #define SF_CAMERA_PLAYER_INTERRUPT		64
+#define SF_CAMERA_CINEMATIC				128
 
 
 //-----------------------------------------------------------------------------
@@ -2805,6 +2806,7 @@ private:
 	float m_initialSpeed;
 	float m_acceleration;
 	float m_deceleration;
+	float m_camFOV = 70.0f;
 	int	  m_state;
 	Vector m_vecMoveDir;
 
@@ -2863,6 +2865,7 @@ BEGIN_DATADESC( CTriggerCamera )
 #endif
 	DEFINE_FIELD( m_nPlayerButtons, FIELD_INTEGER ),
 	DEFINE_FIELD( m_nOldTakeDamage, FIELD_INTEGER ),
+	DEFINE_KEYFIELD( m_camFOV, FIELD_FLOAT, "CameraFOV"),
 
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
@@ -2887,6 +2890,7 @@ void CTriggerCamera::Spawn( void )
 	m_nRenderMode = kRenderTransTexture;
 
 	m_state = USE_OFF;
+	
 	
 	m_initialSpeed = m_flSpeed;
 
@@ -2933,6 +2937,10 @@ bool CTriggerCamera::KeyValue( const char *szKeyName, const char *szValue )
 	else if (FStrEq(szKeyName, "deceleration"))
 	{
 		m_deceleration = atof( szValue );
+	}
+	else if (FStrEq(szKeyName, "CameraFOV"))
+	{
+		m_camFOV = atof(szValue);
 	}
 	else
 		return BaseClass::KeyValue( szKeyName, szValue );
@@ -3013,9 +3021,18 @@ void CTriggerCamera::Enable( void )
 
 
 	m_nPlayerButtons = pPlayer->m_nButtons;
+	ConVarRef thirdperson("g_thirdperson");
 
-	pPlayer->SetFOV(this, 75.0f, 0.2f);
-	pPlayer->m_bInCinematicCamera = true;
+	if (thirdperson.GetBool())
+		engine->ClientCommand(pPlayer->edict(),"firstperson\n");
+
+	pPlayer->SetFOV(this, m_camFOV, 0.2f);
+
+	if (HasSpawnFlags(SF_CAMERA_CINEMATIC))
+	{
+		pPlayer->m_bInCinematicCamera = true;
+		engine->ClientCommand(pPlayer->edict(), "r_nearz 0.1\n");
+	}
 	
 	// Make the player invulnerable while under control of the camera.  This will prevent situations where the player dies while under camera control but cannot restart their game due to disabled player inputs.
 	m_nOldTakeDamage = m_hPlayer->m_takedamage;
@@ -3167,7 +3184,17 @@ void CTriggerCamera::Disable( void )
 		m_hPlayer->m_takedamage = m_nOldTakeDamage;
 	}
 	CBasePlayer *pPlayer = ((CBasePlayer*)m_hPlayer.Get());
-	pPlayer->m_bInCinematicCamera = false;
+	ConVarRef thirdperson("g_thirdperson");
+
+	if (thirdperson.GetBool())
+		engine->ClientCommand(pPlayer->edict(), "thirdperson\n");
+
+	if (SF_CAMERA_CINEMATIC)
+	{
+		if (pPlayer)
+			pPlayer->m_bInCinematicCamera = false;
+		engine->ClientCommand(pPlayer->edict(), "r_nearz 1\n");
+	}
 	m_state = USE_OFF;
 	m_flReturnTime = gpGlobals->curtime;
 	SetThink( NULL );

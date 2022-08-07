@@ -131,8 +131,8 @@ static const char *s_pChunkModelName[CHOPPER_MAX_CHUNKS] =
 // CVars
 ConVar	sk_chopperdrone_health( "sk_chopperdrone_health","1750");
 ConVar	sk_chopperdrone_firingcone( "sk_chopperdrone_firingcone","20.0", 0, "The angle in degrees of the cone in which the shots will be fired" );
-ConVar	sk_chopperdrone_burstcount( "sk_chopperdrone_burstcount","15", 0, "How many shot bursts to fire after charging up. The bigger the number, the longer the firing is" );
-ConVar	sk_chopperdrone_roundsperburst( "sk_chopperdrone_roundsperburst","4", 0, "How many shots to fire in a single burst" );
+ConVar	sk_chopperdrone_burstcount( "sk_chopperdrone_burstcount","12", 0, "How many shot bursts to fire after charging up. The bigger the number, the longer the firing is" );
+ConVar	sk_chopperdrone_roundsperburst( "sk_chopperdrone_roundsperburst","3", 0, "How many shots to fire in a single burst" );
 
 ConVar	sk_chopperdrone_grenadedamage( "sk_chopperdrone_grenadedamage","25.0", 0, "The amount of damage the helicopter grenade deals." );
 ConVar	sk_chopperdrone_grenaderadius( "sk_chopperdrone_grenaderadius","275.0", 0, "The damage radius of the helicopter grenade." );

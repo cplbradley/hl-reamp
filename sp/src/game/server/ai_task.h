@@ -471,6 +471,8 @@ enum sharedtasks_e
 
 		TASK_FREEZE,
 
+		TASK_UNFREEZE,
+
 		// regather conditions at the start of a schedule (all conditions are cleared between schedules)
 		TASK_GATHER_CONDITIONS,
 

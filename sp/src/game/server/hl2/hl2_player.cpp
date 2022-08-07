@@ -1412,7 +1412,6 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	speed = GetAbsVelocity().Length2D();
 
 
-
 	if (GetFlags() & (FL_FROZEN | FL_ATCONTROLS))
 	{
 		speed = 0;
@@ -1420,11 +1419,6 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	}
 
 	Activity idealActivity = ACT_HL2MP_RUN;
-
-	if (GetGroundEntity() == NULL)
-	{
-		playerAnim = PLAYER_JUMP;
-	}
 
 	if (playerAnim == PLAYER_JUMP)
 	{

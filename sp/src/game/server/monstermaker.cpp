@@ -104,10 +104,13 @@ DEFINE_OUTPUT(m_OnSpawnNPC, "OnSpawnNPC"),
 
 // Function Pointers
 DEFINE_THINKFUNC(MakerThink),
+DEFINE_FIELD(m_bSuccessfulSpawn, FIELD_BOOLEAN),
 //DEFINE_THINKFUNC(TriggerMake),
 //DEFINE_FUNCTION(TriggerMake),
-DEFINE_FUNCTION(MakeParticle),
+DEFINE_FUNCTION(SpawnNPC),
 //DEFINE_THINKFUNC(MakeNPC),
+DEFINE_FUNCTION(MakeInstantParticle),
+DEFINE_FUNCTION(MakeParticle),
 
 DEFINE_FIELD(m_hIgnoreEntity, FIELD_EHANDLE),
 DEFINE_KEYFIELD(m_iszIngoreEnt, FIELD_STRING, "IgnoreEntity"),
@@ -124,6 +127,7 @@ void CBaseNPCMaker::Spawn(void)
 	m_nLiveChildren = 0;
 	Precache();
 	SetModel("models/props/null.mdl");
+	//AddEffects(EF_NODRAW);
 
 
 	// If I can make an infinite number of NPC, force them to fade
@@ -131,6 +135,8 @@ void CBaseNPCMaker::Spawn(void)
 	{
 		m_spawnflags |= SF_NPCMAKER_FADE;
 	}
+
+	RegisterThinkContext("SpawnThink");
 
 	//Start on?
 	if (m_bDisabled == false)
@@ -143,12 +149,16 @@ void CBaseNPCMaker::Spawn(void)
 		//wait to be activated.
 		SetThink(&CBaseNPCMaker::SUB_DoNothing);
 	}
+
+	m_bSuccessfulSpawn = true;
 }
 void CBaseNPCMaker::Precache(void)
 {
 	BaseClass::Precache();
 	PrecacheModel("models/props/null.mdl");
+	PrecacheParticleSystem("npcspawn_core");
 	PrecacheParticleSystem("npcspawn_instant");
+	PrecacheParticleSystem("npcspawn_fast");
 
 }
 //-----------------------------------------------------------------------------
@@ -172,7 +182,16 @@ bool CBaseNPCMaker::HumanHullFits(const Vector &vecLocation)
 
 	return false;
 }
-
+void CBaseNPCMaker::SpawnNPC(void)
+{
+	CAI_BaseNPC *pent = dynamic_cast<CAI_BaseNPC*>(m_hNPC[queuedid[npcid]].Get());
+	ChildPreSpawn(pent);
+	npcid--;
+	DispatchSpawn(pent);
+	pent->SetOwnerEntity(this);
+	DispatchActivate(pent);
+	ChildPostSpawn(pent);
+}
 //-----------------------------------------------------------------------------
 // Purpose: Returns whether or not it is OK to make an NPC at this instant.
 //-----------------------------------------------------------------------------
@@ -379,7 +398,15 @@ void CBaseNPCMaker::InputSetSpawnFrequency(inputdata_t &inputdata)
 }
 void CBaseNPCMaker::MakeParticle(Vector vecSrc)
 {
+	DispatchParticleEffect("npcspawn_core", vecSrc, vec3_angle, this);
+}
+void CBaseNPCMaker::MakeInstantParticle(Vector vecSrc)
+{
 	DispatchParticleEffect("npcspawn_instant", vecSrc, vec3_angle, this);
+}
+void CBaseNPCMaker::MakeFastParticle(Vector vecSrc)
+{
+	DispatchParticleEffect("npcspawn_fast", vecSrc, vec3_angle, this);
 }
 
 LINK_ENTITY_TO_CLASS(npc_maker, CNPCMaker);
@@ -392,6 +419,10 @@ DEFINE_KEYFIELD(m_SquadName, FIELD_STRING, "NPCSquadName"),
 DEFINE_KEYFIELD(m_spawnEquipment, FIELD_STRING, "additionalequipment"),
 DEFINE_KEYFIELD(m_strHintGroup, FIELD_STRING, "NPCHintGroup"),
 DEFINE_KEYFIELD(m_RelationshipString, FIELD_STRING, "Relationship"),
+
+DEFINE_FIELD(m_bSuccessfulSpawn, FIELD_BOOLEAN),
+
+
 
 END_DATADESC()
 
@@ -411,7 +442,7 @@ CNPCMaker::CNPCMaker(void)
 void CNPCMaker::Precache(void)
 {
 	BaseClass::Precache();
-	PrecacheParticleSystem("npcspawn_instant");
+	PrecacheParticleSystem("npcspawn_core");
 
 	const char *pszNPCName = STRING(m_iszNPCClassname);
 	if (!pszNPCName || !pszNPCName[0])
@@ -424,7 +455,32 @@ void CNPCMaker::Precache(void)
 	}
 }
 
+void CNPCMaker::Spawn(void)
+{
+	BaseClass::Spawn();
+	RegisterThinkContext("SpawnThink");
+}
 
+void CNPCMaker::SpawnNPC(void)
+{
+	CAI_BaseNPC* pent = dynamic_cast<CAI_BaseNPC*>(m_hNPC[queuedid[npcid]].Get());
+	if (!pent)
+	{
+		m_bSuccessfulSpawn = false;
+		DevMsg("NPC spawn failed, redoing it\n");
+		return;
+	}
+	DevMsg("Spawning NPC ID %i\n", queuedid[npcid]);
+	npcid--;
+	ChildPreSpawn(pent);
+
+	DispatchSpawn(pent);
+	pent->SetOwnerEntity(this);
+	DispatchActivate(pent);
+	SetContextThink(NULL, gpGlobals->curtime, "SpawnContext");
+	//ChildPostSpawn(pent);
+	m_bSuccessfulSpawn = true;
+}
 //-----------------------------------------------------------------------------
 // Purpose: Creates the NPC.
 //-----------------------------------------------------------------------------
@@ -435,18 +491,21 @@ void CNPCMaker::MakeNPC(void)
 
 	CAI_BaseNPC	*pent = (CAI_BaseNPC*)CreateEntityByName(STRING(m_iszNPCClassname));
 
+	
+
 	if (!pent)
 	{
 		Warning("NULL Ent in NPCMaker!\n");
 		return;
 	}
-	
+	npcid++;
+	queuedid[npcid] = pent->entindex();
+	m_hNPC[queuedid[npcid]].Set(pent);
+
 	// ------------------------------------------------
 	//  Intialize spawned NPC's relationships
 	// ------------------------------------------------
 	pent->SetRelationshipString(m_RelationshipString);
-
-	m_OnSpawnNPC.Set(pent, pent, this);
 
 	pent->SetAbsOrigin(GetAbsOrigin());
 
@@ -467,20 +526,42 @@ void CNPCMaker::MakeNPC(void)
 	pent->SetSquadName(m_SquadName);
 	pent->SetHintGroup(m_strHintGroup);
 
-	ChildPreSpawn(pent);
+	DevMsg("Storing NPC ID %i\n", queuedid[npcid]);
 
-	DispatchSpawn(pent);
-	pent->SetOwnerEntity(this);
-	DispatchActivate(pent);
-	Vector vecSrc = pent->WorldSpaceCenter();
-	MakeParticle(vecSrc);
 	if (m_ChildTargetName != NULL_STRING)
 	{
 		// if I have a netname (overloaded), give the child NPC that name as a targetname
 		pent->SetName(m_ChildTargetName);
 	}
-
+	if ((HasSpawnFlags(SF_NPCMAKER_INSTANT | SF_NPCMAKER_NOPARTICLE)) || (m_flSpawnFrequency <= 1.0f))
+	{
+		DevMsg("Instant or No Particle\n");
+		SpawnNPC();
+		if ((m_spawnflags & SF_NPCMAKER_NOPARTICLE) == 0)
+		{
+			MakeInstantParticle(pent->WorldSpaceCenter());
+		}
+	}
+	else
+	{
+		if (((m_spawnflags & SF_NPCMAKER_FAST) == 0) || (m_flSpawnFrequency >= 2.0f))
+		{
+			SetContextThink(&CTemplateNPCMaker::SpawnNPC, gpGlobals->curtime + 1.9f, "SpawnContext");
+			MakeParticle(GetNPCHullCenter(pent));
+		}
+		else
+		{
+			SetContextThink(&CTemplateNPCMaker::SpawnNPC, gpGlobals->curtime + 0.9f, "SpawnContext");
+			MakeFastParticle(GetNPCHullCenter(pent));
+		}
+	}
 	ChildPostSpawn(pent);
+
+	if (!SuccessfullySpawnedNPC())
+		return;
+
+	
+	m_OnSpawnNPC.Set(pent, pent, this);
 
 	m_nLiveChildren++;// count this NPC
 
@@ -541,6 +622,20 @@ void CBaseNPCMaker::MakerThink(void)
 	MakeNPC();
 }
 
+Vector CBaseNPCMaker::GetNPCHullCenter(CAI_BaseNPC* pNPC)
+{
+	Vector hullMins = pNPC->GetHullMins();
+	Vector hullMaxs = pNPC->GetHullMaxs();
+
+	int hullx = 0;
+	int hully = 0;
+	float hullz = (hullMaxs[2]) * 0.5f;
+
+	Vector hullCenter = Vector(hullx, hully, hullz) + pNPC->GetAbsOrigin();
+
+	return hullCenter;
+}
+
 //-------------------	----------------------------------------------------------
 // Purpose: 
 // Input  : *pVictim - 
@@ -590,6 +685,8 @@ DEFINE_INPUTFUNC(FIELD_INTEGER, "SpawnMultiple", InputSpawnMultiple),
 DEFINE_INPUTFUNC(FIELD_STRING, "ChangeDestinationGroup", InputChangeDestinationGroup),
 DEFINE_INPUTFUNC(FIELD_INTEGER, "SetMinimumSpawnDistance", InputSetMinimumSpawnDistance),
 
+DEFINE_FIELD(m_bSuccessfulSpawn,FIELD_BOOLEAN),
+
 END_DATADESC()
 
 
@@ -601,11 +698,15 @@ void CTemplateNPCMaker::PrecacheTemplateEntity(CBaseEntity *pEntity)
 	pEntity->Precache();
 }
 
-
+void CTemplateNPCMaker::Spawn(void)
+{
+	BaseClass::Spawn();
+	RegisterThinkContext("SpawnContext");
+}
 void CTemplateNPCMaker::Precache()
 {
 	BaseClass::Precache();
-	PrecacheParticleSystem("npcspawn_instant");
+	PrecacheParticleSystem("npcspawn_core");
 	if (!m_iszTemplateData)
 	{
 		//
@@ -786,6 +887,27 @@ CNPCSpawnDestination *CTemplateNPCMaker::FindSpawnDestination()
 	return NULL;
 }
 
+
+void CTemplateNPCMaker::SpawnNPC(void)
+{
+	CAI_BaseNPC* pent = dynamic_cast<CAI_BaseNPC*>(m_hNPC[queuedid[npcid]].Get());
+	if (!pent)
+	{
+		m_bSuccessfulSpawn = false;
+		DevMsg("NPC spawn failed, redoing it\n");
+		return;
+	}
+	DevMsg("Spawning NPC ID %i\n", queuedid[npcid]);
+	npcid--;
+	ChildPreSpawn(pent);
+
+	DispatchSpawn(pent);
+	pent->SetOwnerEntity(this);
+	DispatchActivate(pent);
+	SetContextThink(NULL, gpGlobals->curtime, "SpawnContext");
+	//ChildPostSpawn(pent);
+	m_bSuccessfulSpawn = true;
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -826,7 +948,6 @@ void CTemplateNPCMaker::MakeNPC(void)
 		Warning("NULL Ent in NPCMaker!\n");
 		return;
 	}
-
 	if (pDestination)
 	{
 		pent->SetAbsOrigin(pDestination->GetAbsOrigin());
@@ -850,7 +971,12 @@ void CTemplateNPCMaker::MakeNPC(void)
 		pent->SetAbsAngles(angles);
 	}
 
-	m_OnSpawnNPC.Set(pEntity, pEntity, this);
+	
+
+	npcid++;
+	queuedid[npcid] = pent->entindex();
+	m_hNPC[queuedid[npcid]].Set(pent);
+	DevMsg("Storing NPC ID %i in queue slot #%i \n", queuedid[npcid],npcid);
 
 	if (m_spawnflags & SF_NPCMAKER_FADE)
 	{
@@ -866,13 +992,40 @@ void CTemplateNPCMaker::MakeNPC(void)
 
 	ChildPreSpawn(pent);
 
-	DispatchSpawn(pent);
+	/*DispatchSpawn(pent);
 	pent->SetOwnerEntity(this);
-	DispatchActivate(pent);
-	Vector vecSrc = pent->WorldSpaceCenter();
-	MakeParticle(vecSrc);
+	DispatchActivate(pent);*/
+	if ((HasSpawnFlags(SF_NPCMAKER_INSTANT | SF_NPCMAKER_NOPARTICLE)) || (m_flSpawnFrequency <= 1.0f))
+	{
+		DevMsg("Creating NPC with either Instant/NoParticle flags or a frequence of 1 or less.\n");
+		SpawnNPC();
+		if ((m_spawnflags & SF_NPCMAKER_NOPARTICLE) == 0)
+		{
+			MakeInstantParticle(pent->WorldSpaceCenter());
+		}
+	}
+	else
+	{
+		if ((HasSpawnFlags(SF_NPCMAKER_FAST)) || (m_flSpawnFrequency <= 2.0f))
+		{
+			
+			DevMsg("Fast flag checked or spawn frequency between 1 and 2, doing fast spawn\n");
+			SetContextThink(&CTemplateNPCMaker::SpawnNPC, gpGlobals->curtime + 1.0f, "SpawnContext");
+			MakeFastParticle(GetNPCHullCenter(pent));
+		}
+		else
+		{
+			DevMsg("Creating NPC at normal 2 second delay\n");
+			SetContextThink(&CTemplateNPCMaker::SpawnNPC, gpGlobals->curtime + 2.0f, "SpawnContext");
+			MakeParticle(GetNPCHullCenter(pent));
+		}
+	}
 	ChildPostSpawn(pent);
 
+	if (!SuccessfullySpawnedNPC())
+		return;
+
+	m_OnSpawnNPC.Set(pEntity, pEntity, this);
 	m_nLiveChildren++;// count this NPC
 
 	if (!(m_spawnflags & SF_NPCMAKER_INF_CHILD))

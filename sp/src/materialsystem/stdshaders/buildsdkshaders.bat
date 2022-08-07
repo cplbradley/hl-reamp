@@ -24,9 +24,10 @@ set tt_all_chkpt=%tt_start%
 
 set BUILD_SHADER=call buildshaders.bat
 set ARG_EXTRA=
+//%BUILD_SHADER% mymod_dx9_30			-game %GAMEDIR% -source %SOURCEDIR% -dx9_30	-force30 
+//%BUILD_SHADER% core_dx9_20b			-game %GAMEDIR% -source %SOURCEDIR% -dx9_20
+%BUILD_SHADER% pbr_dx9_30			-game %GAMEDIR% -source %SOURCEDIR% -dx9_30	-force30
 
-%BUILD_SHADER% mymod_dx9_20b		        -game %GAMEDIR% -source %SOURCEDIR%
-%BUILD_SHADER% mymod_dx9_30			-game %GAMEDIR% -source %SOURCEDIR% -dx9_30	-force30 
 
 
 rem echo.

@@ -2,6 +2,7 @@
 #include "basecombatweapon.h"
 #include "basecombatcharacter.h"
 #include "player.h"
+#include "hl2_player.h"
 #include "gamerules.h"
 #include "in_buttons.h"
 #include "soundent.h"
@@ -28,10 +29,12 @@ public:
 	void Spawn(void); //everything below is for setting up functions and variables
 	void Precache(void);
 	void Reenable(void);
+	void AllowJump(void);
 	void SetForce(inputdata_t &inputdata);
 	void Enable(inputdata_t &inputdata);
 	void Disable(inputdata_t &inputdata);
 	void TouchThink(CBaseEntity *pOther);
+	void PlayAnim(void);
 	COutputEvent m_OnLaunch;
 	void DistanceContext(void);
 	float m_flgravitymod;
@@ -51,8 +54,9 @@ public:
 	DECLARE_DATADESC();
 };
 LINK_ENTITY_TO_CLASS(hlr_launchpad, CLaunchpad);
+LINK_ENTITY_TO_CLASS(hlr_jumppad, CLaunchpad);
 BEGIN_DATADESC(CLaunchpad)
-DEFINE_INPUT(m_flpushforce, FIELD_FLOAT, "pushforce"),
+DEFINE_KEYFIELD(m_flpushforce, FIELD_FLOAT, "pushforce"),
 DEFINE_KEYFIELD(target, FIELD_STRING, "target"),
 DEFINE_KEYFIELD(m_iszSound, FIELD_SOUNDNAME, "puntsound"),
 DEFINE_KEYFIELD(m_bIsEnabled, FIELD_BOOLEAN, "isenabled"),
@@ -64,6 +68,10 @@ DEFINE_OUTPUT(m_OnLaunch, "OnLaunch"),
 // Function Pointers
 DEFINE_FUNCTION(TouchThink),
 DEFINE_FUNCTION(Reenable),
+
+DEFINE_THINKFUNC(DistanceContext),
+DEFINE_FUNCTION(AllowJump),
+DEFINE_FUNCTION(PlayAnim),
 DEFINE_INPUTFUNC(FIELD_VOID,"Enable",Enable),
 DEFINE_INPUTFUNC(FIELD_VOID, "Disable",Disable),
 DEFINE_INPUTFUNC(FIELD_FLOAT, "SetForce", SetForce),
@@ -76,6 +84,9 @@ void CLaunchpad::Spawn(void)
 	AddSolidFlags(FSOLID_NOT_SOLID | FSOLID_TRIGGER | FSOLID_USE_TRIGGER_BOUNDS);
 
 	RegisterThinkContext("DistanceContext");
+	RegisterThinkContext("ResetContext");
+	RegisterThinkContext("AllowJumpContext");
+	RegisterThinkContext("AnimContext");
 
 	//SetModel(JUMPPAD_MODEL);
 	SetTouch(&CLaunchpad::TouchThink);
@@ -170,8 +181,7 @@ void CLaunchpad::TouchThink(CBaseEntity *pOther) //something touched me
 	if (pOther->IsWorld())
 		return;
 	SetTouch(NULL); //disable temporarily
-	SetThink(&CLaunchpad::Reenable);//schedule re-enable
-	SetNextThink(gpGlobals->curtime + 0.1f);//after 0.1 seconds
+	SetContextThink(&CLaunchpad::Reenable, gpGlobals->curtime + 0.1f, "ResetContext");//schedule re-enable
 	//emit sound
 	char *szSoundFile = (char *)STRING(m_iszSound);
 	CBaseEntity *signalEntity = gEntList.FindEntityByName(NULL, target); //point to the target entity assigned in hammer
@@ -209,15 +219,18 @@ void CLaunchpad::TouchThink(CBaseEntity *pOther) //something touched me
 				pOther->SetAbsVelocity(veccurvel); //apply the new velocity
 				//pOther->VelocityPunch(vecDir * flpunchforce); //do punch
 				SetTouch(NULL); //disable temporarily
-				SetThink(&CLaunchpad::Reenable);//schedule re-enable
-				SetNextThink(gpGlobals->curtime + 0.1f);//after 0.1 seconds
 				EmitSound(szSoundFile);//emit sound
 				if (pOther->IsPlayer())
 				{
+					SetContextThink(&CLaunchpad::AllowJump, gpGlobals->curtime + 0.5f, "AllowJumpContext");
+					SetContextThink(&CLaunchpad::PlayAnim, gpGlobals->curtime + 0.1f, "AnimContext");
 					extern IGameMovement *g_pGameMovement;
 					CGameMovement *gm = dynamic_cast<CGameMovement *>(g_pGameMovement);
 					gm->m_iJumpCount = 1;
+					gm->m_bLaunchpadTimedBlock = true;
+					
 				}
+
 			}
 		}
 		else
@@ -232,13 +245,18 @@ void CLaunchpad::TouchThink(CBaseEntity *pOther) //something touched me
 			pOther->SetAbsVelocity(vecStall);
 			if (pOther->IsPlayer()) //if it's the player 
 			{
+				CBasePlayer* pPlayer = ToBasePlayer(pOther);
+				CHL2_Player* phl2player = dynamic_cast<CHL2_Player*>(pPlayer);
 				extern IGameMovement *g_pGameMovement; //call the game movement code 
 				CGameMovement *gm = dynamic_cast<CGameMovement *>(g_pGameMovement); //create a pointer for the game movement code
 				gm->m_iJumpCount = 1; //set the jump count to 1 
 				Vector vecVel = gm->GetMoveData()->m_vecVelocity;
 				gm->GetMoveData()->m_vecVelocity += -vecVel;
+				gm->m_bLaunchpadTimedBlock = true;
 				//pOther->VelocityPunch(vecToss * flVelocity); //launch the player
 				pOther->SetAbsVelocity(vecToss * flVelocity);
+				SetContextThink(&CLaunchpad::AllowJump, gpGlobals->curtime + 0.5f, "AllowJumpContext");
+				SetContextThink(&CLaunchpad::PlayAnim, gpGlobals->curtime + 0.1f, "AnimContext");
 				if (m_bBlockAirControl)
 				{
 					gm->m_bBlockingAirControl = true;
@@ -250,6 +268,7 @@ void CLaunchpad::TouchThink(CBaseEntity *pOther) //something touched me
 						m_fMaxThink = gpGlobals->curtime + m_fThinkLength;
 					}
 				}
+				phl2player->SetAnimation(PLAYER_JUMP);
 				
 			}
 			else
@@ -278,11 +297,23 @@ void CLaunchpad::TouchThink(CBaseEntity *pOther) //something touched me
 				//Msg("smarty launch\n");
 	}
 }
+void CLaunchpad::AllowJump(void)
+{
+	extern IGameMovement* g_pGameMovement;
+	CGameMovement* gm = dynamic_cast<CGameMovement*>(g_pGameMovement);
+	gm->m_bLaunchpadTimedBlock = false;
+
+}
 void CLaunchpad::Reenable(void)
 {
 	SetTouch(&CLaunchpad::TouchThink);//re-enable
 }
-
+void CLaunchpad::PlayAnim(void)
+{
+	CBasePlayer* pPlayer = UTIL_GetLocalPlayer();
+	CHL2_Player* phl2player = dynamic_cast<CHL2_Player*>(pPlayer);
+	phl2player->SetAnimation(PLAYER_JUMP);
+}
 void CLaunchpad::DistanceContext(void)
 {
 	extern IGameMovement *g_pGameMovement; //call the game movement code 
@@ -314,4 +345,85 @@ void CLaunchpad::DistanceContext(void)
 	gm->m_fDistanceFromOrigin = ratio;
 
 	SetNextThink(gpGlobals->curtime + 0.01f, "DistanceContext");
+}
+
+
+class CTriggerLaunch : public CBaseTrigger
+{
+	DECLARE_CLASS(CTriggerLaunch, CBaseTrigger);
+public:
+	void Spawn(void);
+	void Enable(void);
+	void Touch(CBaseEntity* pOther);
+	void Reenable(void);
+
+
+	float m_flPushForce;
+
+
+	COutputEvent m_OnLaunch;
+
+	DECLARE_DATADESC()
+};
+
+LINK_ENTITY_TO_CLASS(trigger_launch, CTriggerLaunch);
+BEGIN_DATADESC(CTriggerLaunch)
+	DEFINE_KEYFIELD(m_flPushForce,FIELD_FLOAT,"PushForce")
+END_DATADESC()
+
+	
+
+
+void CTriggerLaunch::Spawn(void)
+{
+	BaseClass::Spawn();
+	InitTrigger();
+
+}
+
+void CTriggerLaunch::Touch(CBaseEntity* pOther)
+{
+	if (!pOther->IsPlayer())
+		return;
+
+	QAngle angSrc = this->GetAbsAngles(); //get angles from hammer
+	Vector vecDir;
+	Vector vecdnspd;
+	Vector veccurvel;
+	float fldnspd;
+	float flpunchforce;
+	AngleVectors(angSrc, &vecDir); //transform angles into a vector
+	vecdnspd = pOther->GetAbsVelocity(); //get velocity vector
+	fldnspd = vecdnspd[2]; //isolate y value of said vector
+	if (fldnspd < 0.0f)
+		flpunchforce = (m_flPushForce + abs(fldnspd));
+	else
+		flpunchforce = (m_flPushForce); //calculate punch force by adding abs of downward velocity to defined push force
+	if (pOther->IsSolid()) //was the thing that touched me solid?
+	{
+		veccurvel = pOther->GetAbsVelocity(); //whats its current velocity
+		veccurvel[2] += flpunchforce; //add the punch force to the y value of the current velocity
+		pOther->SetAbsVelocity(veccurvel); //apply the new velocity
+		//pOther->VelocityPunch(vecDir * flpunchforce); //do punch
+		SetNextThink(gpGlobals->curtime + 0.1f);//after 0.1 seconds
+		if (pOther->IsPlayer())
+		{
+			extern IGameMovement* g_pGameMovement;
+			CGameMovement* gm = dynamic_cast<CGameMovement*>(g_pGameMovement);
+			gm->m_iJumpCount = 1;
+			gm->m_bLaunchpadTimedBlock = true;
+		}
+		SetTouch(NULL);
+		SetThink(&CTriggerLaunch::Reenable);
+		SetNextThink(gpGlobals->curtime + 0.25f);
+	}
+
+}
+
+void CTriggerLaunch::Reenable(void)
+{
+	extern IGameMovement* g_pGameMovement;
+	CGameMovement* gm = dynamic_cast<CGameMovement*>(g_pGameMovement);
+	gm->m_bLaunchpadTimedBlock = false;
+	SetTouch(&CTriggerLaunch::Touch);
 }

@@ -24,6 +24,9 @@
 #define SF_NPCMAKER_HIDEFROMPLAYER	128 // Don't spawn if the player's looking at me
 #define SF_NPCMAKER_ALWAYSUSERADIUS	256	// Use radius spawn whenever spawning
 #define SF_NPCMAKER_NOPRELOADMODELS 512	// Suppress preloading into the cache of all referenced .mdl files
+#define SF_NPCMAKER_INSTANT			1024 //Spawn instantly with the instant spawn particle
+#define SF_NPCMAKER_NOPARTICLE		2048 //Don't use any particles at all, will always spawn the NPC instantly
+#define SF_NPCMAKER_FAST			4096
 
 //=========================================================
 //=========================================================
@@ -60,10 +63,15 @@ public:
 
 	virtual void DeathNotice(CBaseEntity *pChild);// NPC maker children use this to tell the NPC maker that they have died.
 	virtual void MakeNPC(void) = 0;
-	void MakeParticle(Vector vecSrc);
+	virtual void MakeParticle(Vector vecSrc);
+	virtual void MakeInstantParticle(Vector vecSrc);
+	virtual void MakeFastParticle(Vector vecSrc);
+	virtual void SpawnNPC(void);
 
 	virtual	void ChildPreSpawn(CAI_BaseNPC *pChild) {};
 	virtual	void ChildPostSpawn(CAI_BaseNPC *pChild);
+
+	virtual Vector GetNPCHullCenter(CAI_BaseNPC *pNPC);
 
 	CBaseNPCMaker(void) {}
 
@@ -76,6 +84,10 @@ public:
 	void InputAddMaxChildren(inputdata_t &inputdata);
 	void InputSetMaxLiveChildren(inputdata_t &inputdata);
 	void InputSetSpawnFrequency(inputdata_t &inputdata);
+	
+
+	bool m_bSuccessfulSpawn;
+	bool SuccessfullySpawnedNPC(void) { return m_bSuccessfulSpawn; }
 
 	// State changers
 	void Toggle(void);
@@ -100,6 +112,9 @@ public:
 	bool	m_bDisabled;
 
 	EHANDLE m_hIgnoreEntity;
+	EHANDLE m_hNPC[2048];
+	int npcid;
+	int queuedid[32];
 	string_t m_iszIngoreEnt;
 };
 
@@ -112,8 +127,10 @@ public:
 	CNPCMaker(void);
 
 	void Precache(void);
+	void Spawn(void);
 
 	virtual void MakeNPC(void);
+	virtual void SpawnNPC(void);
 
 	DECLARE_DATADESC();
 
@@ -136,12 +153,14 @@ public:
 	}
 
 	virtual void Precache();
+	void Spawn(void);
 
 	virtual CNPCSpawnDestination *FindSpawnDestination();
 	virtual void MakeNPC(void);
 	void MakeNPCInRadius(void);
 	void MakeNPCInLine(void);
 	virtual void MakeMultipleNPCS(int nNPCs);
+	virtual void SpawnNPC(void);
 
 protected:
 	virtual void PrecacheTemplateEntity(CBaseEntity *pEntity);

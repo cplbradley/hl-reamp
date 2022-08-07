@@ -4,11 +4,12 @@
 // http://dev.wallworm.com 
 
 $scale 1.0
-$modelname	"weapons/v_railgun.mdl"
-$body v_railgun "v_railgun.smd"
+$modelname	"weapons/v_railgun_hands.mdl"
+$body v_railgun "newrailgin.smd"
+$model hands "v_hands_mark6.smd"
 $origin 0 0 64
 $contents "solid"
-$cdmaterials "models/weapons/v_hand"
+$cdmaterials "models/weapons/v_hands"
 $cdmaterials "models/weapons/railgun"
 $sequence draw "v_railgun_sequence_draw" fps 30.0 fadein 0.2 fadeout 0.2 
 $sequence fire "v_railgun_sequence_fire" fps 30.0 activity ACT_VM_PRIMARYATTACK -1.0 fadein 0.2 fadeout 0.2 snap 

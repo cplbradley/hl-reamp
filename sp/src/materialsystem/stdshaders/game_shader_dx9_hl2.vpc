@@ -23,8 +23,8 @@ $Project "Shaders"
 		{
 			$File	"pbr_ps30.fxc"
 			$File	"pbr_vs30.fxc"
-			$File	"pbr_ps20b.fxc"
-			$File	"pbr_vs20b.fxc"
+			$File	"coreball_ps2x.fxc"
+			$File	"coreball_vs20.fxc"
 		}
 
 		$Folder "Headers"
@@ -32,12 +32,11 @@ $Project "Shaders"
 			$File	"pbr_common_ps2_3_x.h"
 		}
 
-		$File	"mymod_dx9_30.txt"
-		$File	"mymod_dx9_20b.txt"
 	}
 
 	$Folder "Source Files"
 	{
 		$File	"pbr_dx9.cpp"
+		$File	"coreball_dx9.cpp"
 	}
 }

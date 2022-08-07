@@ -1811,48 +1811,53 @@ LINK_ENTITY_TO_CLASS( dynamic_prop, CDynamicProp );
 LINK_ENTITY_TO_CLASS( prop_dynamic, CDynamicProp );	
 LINK_ENTITY_TO_CLASS( prop_dynamic_override, CDynamicProp );	
 
-BEGIN_DATADESC( CDynamicProp )
+BEGIN_DATADESC(CDynamicProp)
 
-	// Fields
-	DEFINE_KEYFIELD( m_iszDefaultAnim, FIELD_STRING, "DefaultAnim"),	
-	DEFINE_FIELD(	 m_iGoalSequence, FIELD_INTEGER ),
-	DEFINE_FIELD(	 m_iTransitionDirection, FIELD_INTEGER ),
-	DEFINE_KEYFIELD( m_bRandomAnimator, FIELD_BOOLEAN, "RandomAnimation"),	
-	DEFINE_FIELD(	 m_flNextRandAnim, FIELD_TIME ),
-	DEFINE_KEYFIELD( m_flMinRandAnimTime, FIELD_FLOAT, "MinAnimTime"),
-	DEFINE_KEYFIELD( m_flMaxRandAnimTime, FIELD_FLOAT, "MaxAnimTime"),
-	DEFINE_KEYFIELD( m_bStartDisabled, FIELD_BOOLEAN, "StartDisabled" ),
-	DEFINE_KEYFIELD( m_bDisableBoneFollowers, FIELD_BOOLEAN, "DisableBoneFollowers" ),
-	DEFINE_KEYFIELD(m_fPlaybackRate, FIELD_FLOAT, "PlaybackRate"),
-	DEFINE_FIELD(	 m_bUseHitboxesForRenderBox, FIELD_BOOLEAN ),
-	DEFINE_FIELD(	m_bViewmodelGroup, FIELD_BOOLEAN),
-	DEFINE_FIELD(	m_nPendingSequence, FIELD_SHORT ),
-		
-	// Inputs
-	DEFINE_INPUTFUNC( FIELD_STRING,	"SetAnimation",	InputSetAnimation ),
-	DEFINE_INPUTFUNC( FIELD_STRING,	"SetDefaultAnimation",	InputSetDefaultAnimation ),
-	DEFINE_INPUTFUNC( FIELD_VOID,		"TurnOn",		InputTurnOn ),
-	DEFINE_INPUTFUNC( FIELD_VOID,		"TurnOff",		InputTurnOff ),
-	DEFINE_INPUTFUNC( FIELD_VOID,		"Enable",		InputTurnOn ),
-	DEFINE_INPUTFUNC( FIELD_VOID,		"Disable",		InputTurnOff ),
-	DEFINE_INPUTFUNC( FIELD_VOID,		"EnableCollision",	InputEnableCollision ),
-	DEFINE_INPUTFUNC( FIELD_VOID,		"DisableCollision",	InputDisableCollision ),
-	DEFINE_INPUTFUNC( FIELD_FLOAT,		"SetPlaybackRate",	InputSetPlaybackRate ),
 
-	// Outputs
-	DEFINE_OUTPUT( m_pOutputAnimBegun, "OnAnimationBegun" ),
-	DEFINE_OUTPUT( m_pOutputAnimOver, "OnAnimationDone" ),
 
-	// Function Pointers
-	DEFINE_THINKFUNC( AnimThink ),
+// Fields
+DEFINE_KEYFIELD(m_iszDefaultAnim, FIELD_STRING, "DefaultAnim"),
+DEFINE_FIELD(m_iGoalSequence, FIELD_INTEGER),
+DEFINE_FIELD(m_iTransitionDirection, FIELD_INTEGER),
+DEFINE_KEYFIELD(m_bRandomAnimator, FIELD_BOOLEAN, "RandomAnimation"),
+DEFINE_FIELD(m_flNextRandAnim, FIELD_TIME),
+DEFINE_KEYFIELD(m_flMinRandAnimTime, FIELD_FLOAT, "MinAnimTime"),
+DEFINE_KEYFIELD(m_flMaxRandAnimTime, FIELD_FLOAT, "MaxAnimTime"),
+DEFINE_KEYFIELD(m_bStartDisabled, FIELD_BOOLEAN, "StartDisabled"),
+DEFINE_KEYFIELD(m_bDisableBoneFollowers, FIELD_BOOLEAN, "DisableBoneFollowers"),
+DEFINE_KEYFIELD(m_fPlaybackRate, FIELD_FLOAT, "PlaybackRate"),
+DEFINE_FIELD(m_bUseHitboxesForRenderBox, FIELD_BOOLEAN),
+DEFINE_FIELD(m_nPendingSequence, FIELD_SHORT),
 
-	DEFINE_EMBEDDED( m_BoneFollowerManager ),
+// Inputs
+DEFINE_INPUTFUNC(FIELD_STRING, "SetAnimation", InputSetAnimation),
+DEFINE_INPUTFUNC(FIELD_STRING, "SetDefaultAnimation", InputSetDefaultAnimation),
+DEFINE_INPUTFUNC(FIELD_VOID, "TurnOn", InputTurnOn),
+DEFINE_INPUTFUNC(FIELD_VOID, "TurnOff", InputTurnOff),
+DEFINE_INPUTFUNC(FIELD_VOID, "Enable", InputTurnOn),
+DEFINE_INPUTFUNC(FIELD_VOID, "Disable", InputTurnOff),
+DEFINE_INPUTFUNC(FIELD_VOID, "EnableCollision", InputEnableCollision),
+DEFINE_INPUTFUNC(FIELD_VOID, "DisableCollision", InputDisableCollision),
+DEFINE_INPUTFUNC(FIELD_FLOAT, "SetPlaybackRate", InputSetPlaybackRate),
+
+
+// Outputs
+DEFINE_OUTPUT(m_pOutputAnimBegun, "OnAnimationBegun"),
+DEFINE_OUTPUT(m_pOutputAnimOver, "OnAnimationDone"),
+//DEFINE_OUTPUT(m_pOutputOnUse, "OnUse"),
+
+
+
+// Function Pointers
+DEFINE_THINKFUNC(AnimThink),
+//DEFINE_FUNCTION(UseKey),
+
+DEFINE_EMBEDDED(m_BoneFollowerManager),
 
 END_DATADESC()
 
 IMPLEMENT_SERVERCLASS_ST(CDynamicProp, DT_DynamicProp)
 	SendPropBool( SENDINFO( m_bUseHitboxesForRenderBox ) ),
-	SendPropBool(SENDINFO(m_bViewmodelGroup)),
 END_SEND_TABLE()
 
 //-----------------------------------------------------------------------------
@@ -1880,6 +1885,7 @@ void CDynamicProp::Spawn( )
 		SetClassname( "prop_dynamic" );
 	}
 
+//	SetUse(&CDynamicProp::UseKey);
 	// If the prop is not-solid, the bounding box needs to be 
 	// OBB to correctly surround the prop as it rotates.
 	// Check the classname so we don't mess with doors & other derived classes.
@@ -1942,11 +1948,6 @@ void CDynamicProp::Spawn( )
 		AddSolidFlags( FSOLID_NOT_SOLID );
 	}
 
-	m_bViewmodelGroup = HasSpawnFlags(SF_DYNAMICPROP_USE_VIEWMODEL_RENDERGROUP);
-
-	if (m_bViewmodelGroup)
-		DevMsg("Model using viewmodel rendergroup. hopefully this doesn't fuck shit up too much.\n");
-
 	//m_debugOverlays |= OVERLAY_ABSBOX_BIT;
 
 #ifdef TF_DLL
@@ -1961,7 +1962,11 @@ void CDynamicProp::Spawn( )
 	}
 #endif
 }
-
+/*int CDynamicProp::ObjectCaps(void)
+{
+	int flags = BaseClass::ObjectCaps();
+	return (flags | FCAP_IMPULSE_USE);
+}*/
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -2113,7 +2118,10 @@ IPhysicsObject *CDynamicProp::GetRootPhysicsObjectForBreak()
 
 	return BaseClass::GetRootPhysicsObjectForBreak();
 }
-
+/*void CDynamicProp::UseKey(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value)
+{
+	m_pOutputOnUse.FireOutput(pActivator, this);
+}*/
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------

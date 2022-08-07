@@ -9,8 +9,8 @@
 
 #include "cbase.h"
 #include "client_factorylist.h"
-#include "ShaderEditor/IVShaderEditor.h"
-#include "ShaderEditor/SEdit_ModelRender.h"
+#include "IVShaderEditor.h"
+#include "SEdit_ModelRender.h"
 #include "ivrenderview.h"
 #include "iviewrender.h"
 #include "viewrender.h"

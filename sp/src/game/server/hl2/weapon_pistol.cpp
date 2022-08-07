@@ -318,7 +318,7 @@ void CWeaponPistol::FireProjectile(void)
 	AngleVectors(angAiming, &vecAiming);
 	Vector vecAbsStart = pPlayer->EyePosition();
 	Vector vecAbsEnd = vecAbsStart + (vecDir * MAX_TRACE_LENGTH);
-	UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_ALL, pPlayer, COLLISION_GROUP_NONE, &tr);
+	UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_SHOT, pPlayer, COLLISION_GROUP_NONE, &tr);
 	Vector vecShotDir = (tr.endpos - vecSrc).Normalized();
 	//pPlayer->FireBullets(1, vecSrc, vecShotDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false);
 	int iAttachment = LookupAttachment("muzzle");

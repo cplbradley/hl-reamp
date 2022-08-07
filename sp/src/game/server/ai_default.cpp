@@ -1436,6 +1436,7 @@ AI_DEFINE_SCHEDULE
 
 	"	Tasks"
 	"		 TASK_FREEZE				0"
+	"		 TASK_UNFREEZE				10"
 
 	"	Interrupts"
 	"		COND_NPC_UNFREEZE"

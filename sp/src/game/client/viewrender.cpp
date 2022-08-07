@@ -61,7 +61,7 @@
 #include "PortalRender.h"
 #endif
 #if defined( HL2_CLIENT_DLL ) || defined( CSTRIKE_DLL )
-#define USE_MONITORS
+#define USE_MONITORS 1
 #endif
 #include "rendertexture.h"
 #include "viewpostprocess.h"

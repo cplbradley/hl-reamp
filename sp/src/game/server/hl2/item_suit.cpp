@@ -55,8 +55,9 @@ public:
 			WRITE_BYTE(1);
 			MessageEnd();
 		}
-		pPlayer->EquipSuit();
 
+		pPlayer->EquipSuit();
+		pPlayer->CheckFloorSprite();
 				
 		return true;
 	}

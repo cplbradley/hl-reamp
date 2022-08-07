@@ -12,6 +12,7 @@
 #include "iclientmode.h"
 #include "vgui_video.h"
 #include "engine/IEngineSound.h"
+#include "in_buttons.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -24,7 +25,7 @@ VideoPanel::VideoPanel( unsigned int nXPos, unsigned int nYPos, unsigned int nHe
 	m_nPlaybackHeight( 0 ),
 	m_bAllowAlternateMedia( allowAlternateMedia )
 {
-	vgui::VPANEL pParent = enginevgui->GetPanel( PANEL_ROOT );
+	vgui::VPANEL pParent = enginevgui->GetPanel(PANEL_ROOT);
 	SetParent( pParent );
 	SetVisible( false );
 	
@@ -33,7 +34,7 @@ VideoPanel::VideoPanel( unsigned int nXPos, unsigned int nYPos, unsigned int nHe
 
 	m_bBlackBackground = true;
 
-	SetKeyBoardInputEnabled( true );
+	SetKeyBoardInputEnabled( false );
 	SetMouseInputEnabled( false );
 
 	SetProportional( false );
@@ -82,6 +83,9 @@ bool VideoPanel::BeginPlayback( const char *pFilename )
 		pFilename = "media/ep1_recap_25fps.bik";
 	}
 #endif
+	ConVarRef developer("developer");
+	if (developer.GetFloat() == 0)
+		engine->ClientCmd_Unrestricted("gameui_preventescapetoshow\n");
 
 	// need working video services
 	if ( g_pVideo == NULL )
@@ -163,14 +167,11 @@ void VideoPanel::DoModal( void )
 //-----------------------------------------------------------------------------
 void VideoPanel::OnKeyCodeTyped( vgui::KeyCode code )
 {
-	if ( code == KEY_ESCAPE	)
-	{
+	ConVarRef developer("developer");
+	if ((code == KEY_ESCAPE) && (developer.GetFloat() >= 1.0f))
 		OnClose();
-	}
 	else
-	{
-		BaseClass::OnKeyCodeTyped( code );
-	}
+		BaseClass::OnKeyCodeTyped(code);
 }
 
 //-----------------------------------------------------------------------------
@@ -179,23 +180,27 @@ void VideoPanel::OnKeyCodeTyped( vgui::KeyCode code )
 void VideoPanel::OnKeyCodePressed( vgui::KeyCode code )
 {
 	// These keys cause the panel to shutdown
-	/*if ( code == KEY_ESCAPE || 
-		 code == KEY_BACKQUOTE || 
-		 code == KEY_SPACE || 
-		 code == KEY_ENTER ||
-		 code == KEY_XBUTTON_A || 
-		 code == KEY_XBUTTON_B ||
-		 code == KEY_XBUTTON_X || 
-		 code == KEY_XBUTTON_Y || 
-		 code == KEY_XBUTTON_START || 
-		 code == KEY_XBUTTON_BACK )
+	/*if (code == KEY_ESCAPE ||
+		 code == KEY_XBUTTON_START)
 	{
-		OnClose();
+		if (m_VideoMaterial->IsPaused())
+		{
+			m_VideoMaterial->SetPaused(false);
+		}
+		else
+		{
+			m_VideoMaterial->SetPaused(true);
+		}
 	}
 	else
-	{
+	{*/
+	ConVarRef developer("developer");
+	if ((code == KEY_ESCAPE) && (developer.GetFloat() >= 1))
+		OnClose();
+	else
 		BaseClass::OnKeyCodePressed( code );
-	}*/
+//	}
+	
 }
 
 //-----------------------------------------------------------------------------
@@ -205,7 +210,8 @@ void VideoPanel::OnClose( void )
 {
 	enginesound->NotifyEndMoviePlayback();
 	BaseClass::OnClose();
-
+	if (developer.GetFloat() == 0)
+		engine->ClientCmd_Unrestricted("gameui_allowescapetoshow\n");
 	if ( vgui::input()->GetAppModalSurface() == GetVPanel() )
 	{
 		vgui::input()->ReleaseAppModalSurface();

@@ -304,6 +304,7 @@ bool CAI_BaseNPC::IsScheduleValid()
 
 	//Any conditions set here will always be forced on the interrupt conditions
 	SetCustomInterruptCondition( COND_NPC_FREEZE );
+	SetCustomInterruptCondition(COND_NPC_UNFREEZE);
 
 	// This is like: m_CustomInterruptConditions &= m_Conditions;
 	CAI_ScheduleBits testBits;
@@ -3062,6 +3063,10 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 		m_flPlaybackRate = 0;
 		break;
 
+	case TASK_UNFREEZE:
+		m_flPlaybackRate = 1;
+		break;
+
 	case TASK_GATHER_CONDITIONS:
 		GatherConditions();
 		TaskComplete();
@@ -4133,6 +4138,12 @@ void CAI_BaseNPC::RunTask( const Task_t *pTask )
 
 	case TASK_FREEZE:
 		break;
+
+	case TASK_UNFREEZE:
+	{
+		TaskComplete();
+		break;
+	}
 
 	default:
 		{

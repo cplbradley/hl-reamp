@@ -25,14 +25,29 @@
     <Filter Include="Source Files">
       <UniqueIdentifier>{BA03E055-4FA2-FCE3-8A1C-D348547D379C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\FMOD">
+      <UniqueIdentifier>{785A4591-10EE-51E3-B434-3DAE23D84992}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source Files\game_controls">
       <UniqueIdentifier>{1E7DB91A-DC0A-B17F-617D-4C4FB3FA7A3E}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\HL2 DLL">
       <UniqueIdentifier>{3C43D38A-46AF-2183-A5E5-44383B1D2652}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\HLR">
+      <UniqueIdentifier>{259FD58E-C512-A856-BF28-485EA0DE62BA}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source Files\Precompiled Header">
       <UniqueIdentifier>{A7D26A13-21F4-C6B5-5922-8A4FB05AF07D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Shader Editor">
+      <UniqueIdentifier>{EDD5B08E-C21A-8D29-AB03-C0A368D5A4DA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Shader Editor\Header Files">
+      <UniqueIdentifier>{7C6777E8-0E77-5282-048F-BB675EBD7C2E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Shader Editor\Implementation Files">
+      <UniqueIdentifier>{429F6B8F-2AE9-806D-8D3C-EABC9174354B}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Sixense">
       <UniqueIdentifier>{5595354B-BE1B-8C7C-B3CB-72257228B6D3}</UniqueIdentifier>
@@ -46,18 +61,15 @@
     <Filter Include="VPC Scripts">
       <UniqueIdentifier>{A40EE377-781A-C6B9-0C7C-B3BE118D248E}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\HLR">
-      <UniqueIdentifier>{1751502a-0bf3-43b2-baf6-5e9df0014e7b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\sse">
-      <UniqueIdentifier>{4d6f2ba6-88b1-4f2d-8183-74f067840903}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\lib\public\bitmap.lib">
       <Filter>Link Libraries</Filter>
     </Library>
     <Library Include="..\..\lib\public\choreoobjects.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\..\lib\public\discord-rpc.lib">
       <Filter>Link Libraries</Filter>
     </Library>
     <Library Include="..\..\lib\public\dmxloader.lib">
@@ -103,12 +115,6 @@
       <Filter>Link Libraries</Filter>
     </Library>
     <Library Include="..\..\lib\public\vtf.lib">
-      <Filter>Link Libraries</Filter>
-    </Library>
-    <Library Include="..\..\lib\public\discord-rpc.lib">
-      <Filter>Link Libraries</Filter>
-    </Library>
-    <Library Include="..\..\lib\public\fmodex_vc.lib">
       <Filter>Link Libraries</Filter>
     </Library>
   </ItemGroup>
@@ -1829,6 +1835,12 @@
     <ClInclude Include="viewpostprocess.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\game\shared\fmod\fmod_dynamic_player.h">
+      <Filter>Source Files\FMOD</Filter>
+    </ClInclude>
+    <ClInclude Include="fmod\fmod_system.h">
+      <Filter>Source Files\FMOD</Filter>
+    </ClInclude>
     <ClInclude Include="game_controls\basemodel_panel.h">
       <Filter>Source Files\game_controls</Filter>
     </ClInclude>
@@ -1865,6 +1877,9 @@
     <ClInclude Include="..\..\game\shared\hl2\env_headcrabcanister_shared.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
+    <ClInclude Include="episodic\episodic_screenspaceeffects.h">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\game\shared\hl2\hl2_gamerules.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
@@ -1876,6 +1891,54 @@
     </ClInclude>
     <ClInclude Include="hl2\hud_suitpower.h">
       <Filter>Source Files\HL2 DLL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\shared\hl2\hlr\hlr_shareddefs.h">
+      <Filter>Source Files\HLR</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\hud_bluekey.h">
+      <Filter>Source Files\HLR</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\hud_deathskull.h">
+      <Filter>Source Files\HLR</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\hud_environmental_resistance.h">
+      <Filter>Source Files\HLR</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\hud_healthbar.h">
+      <Filter>Source Files\HLR</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\hud_poweruptime.h">
+      <Filter>Source Files\HLR</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\hud_purplekey.h">
+      <Filter>Source Files\HLR</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\hud_redkey.h">
+      <Filter>Source Files\HLR</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\hud_skullkey.h">
+      <Filter>Source Files\HLR</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\IBonusOptions.h">
+      <Filter>Source Files\HLR</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\mapload_background.h">
+      <Filter>Source Files\HLR</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\shared\singleplayer_animstate.h">
+      <Filter>Source Files\HLR</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderEditor\ISEdit_ModelRender.h">
+      <Filter>Source Files\Shader Editor\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderEditor\IVShaderEditor.h">
+      <Filter>Source Files\Shader Editor\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderEditor\SEdit_ModelRender.h">
+      <Filter>Source Files\Shader Editor\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderEditor\ShaderEditorSystem.h">
+      <Filter>Source Files\Shader Editor\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="sixense\in_sixense.h">
       <Filter>Source Files\Sixense</Filter>
@@ -1891,60 +1954,6 @@
     </ClInclude>
     <ClInclude Include="toolframework_client.h">
       <Filter>Tool Framework</Filter>
-    </ClInclude>
-    <ClInclude Include="hud_healthbar.h">
-      <Filter>Source Files\HLR</Filter>
-    </ClInclude>
-    <ClInclude Include="hud_bluekey.h">
-      <Filter>Source Files\HLR</Filter>
-    </ClInclude>
-    <ClInclude Include="hud_purplekey.h">
-      <Filter>Source Files\HLR</Filter>
-    </ClInclude>
-    <ClInclude Include="hud_redkey.h">
-      <Filter>Source Files\HLR</Filter>
-    </ClInclude>
-    <ClInclude Include="hud_skullkey.h">
-      <Filter>Source Files\HLR</Filter>
-    </ClInclude>
-    <ClInclude Include="mapload_background.h">
-      <Filter>Source Files\HLR</Filter>
-    </ClInclude>
-    <ClInclude Include="episodic\episodic_screenspaceeffects.h">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClInclude>
-    <ClInclude Include="hud_poweruptime.h">
-      <Filter>Source Files\HLR</Filter>
-    </ClInclude>
-    <ClInclude Include="hud_environmental_resistance.h">
-      <Filter>Source Files\HLR</Filter>
-    </ClInclude>
-    <ClInclude Include="fmod_manager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ShaderEditor\ISEdit_ModelRender.h">
-      <Filter>Header Files\sse</Filter>
-    </ClInclude>
-    <ClInclude Include="ShaderEditor\IVShaderEditor.h">
-      <Filter>Header Files\sse</Filter>
-    </ClInclude>
-    <ClInclude Include="ShaderEditor\SEdit_ModelRender.h">
-      <Filter>Header Files\sse</Filter>
-    </ClInclude>
-    <ClInclude Include="ShaderEditor\ShaderEditorSystem.h">
-      <Filter>Header Files\sse</Filter>
-    </ClInclude>
-    <ClInclude Include="IBonusOptions.h">
-      <Filter>Source Files\HLR</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\hl2\hlr\hlr_shareddefs.h">
-      <Filter>Source Files\HLR</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\singleplayer_animstate.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="hud_deathskull.h">
-      <Filter>Source Files\HLR</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -2983,6 +2992,12 @@
     <ClCompile Include="WorldDimsProxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\game\shared\fmod\fmod_dynamic_player.cpp">
+      <Filter>Source Files\FMOD</Filter>
+    </ClCompile>
+    <ClCompile Include="fmod\fmod_system.cpp">
+      <Filter>Source Files\FMOD</Filter>
+    </ClCompile>
     <ClCompile Include="game_controls\basemodel_panel.cpp">
       <Filter>Source Files\game_controls</Filter>
     </ClCompile>
@@ -3088,6 +3103,9 @@
     <ClCompile Include="hl2\c_prop_combine_ball.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
+    <ClCompile Include="episodic\c_prop_scalable.cpp">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClCompile>
     <ClCompile Include="hl2\c_rotorwash.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
@@ -3140,6 +3158,12 @@
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
     <ClCompile Include="..\..\game\shared\hl2\env_headcrabcanister_shared.cpp">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="episodic\episodic_screenspaceeffects.cpp">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="episodic\flesh_internal_material_proxy.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
     <ClCompile Include="hl2\fx_antlion.cpp">
@@ -3223,8 +3247,74 @@
     <ClCompile Include="hl2\vgui_rootpanel_hl2.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
+    <ClCompile Include="hlr\c_actual_bullet.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\c_hlr_environmental_resistance.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\c_hlr_floorsprite.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\c_hlr_keycard.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\c_hlr_powerups.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\c_hlr_skullkey.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\c_npc_antlionwarrior.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\c_npc_vortboss.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\hlr_bonusoptions.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\hud_bluekey.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\hud_deathskull.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\hud_environmental_resistance.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\hud_healthbar.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\hud_poweruptime.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\hud_purplekey.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\hud_railgun_screen.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\hud_redkey.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\hud_skullkey.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\mapload_background.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\shared\singleplayer_animstate.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files\Precompiled Header</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\client\ShaderEditor\SEdit_ModelRender.cpp">
+      <Filter>Source Files\Shader Editor\Implementation Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\client\ShaderEditor\ShaderEditorSystem.cpp">
+      <Filter>Source Files\Shader Editor\Implementation Files</Filter>
     </ClCompile>
     <ClCompile Include="sixense\in_sixense.cpp">
       <Filter>Source Files\Sixense</Filter>
@@ -3432,87 +3522,6 @@
     </ClCompile>
     <ClCompile Include="toolframework_client.cpp">
       <Filter>Tool Framework</Filter>
-    </ClCompile>
-    <ClCompile Include="hud_healthbar.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="c_npc_vortboss.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hud_bluekey.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hud_purplekey.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hud_redkey.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hud_skullkey.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="mapload_background.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="episodic\c_npc_puppet.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="episodic\c_prop_scalable.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="episodic\episodic_screenspaceeffects.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="episodic\flesh_internal_material_proxy.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_npc_antlionwarrior.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="c_hlr_floorsprite.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="c_hlr_keycard.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="c_hlr_skullkey.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hud_poweruptime.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hud_environmental_resistance.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="c_hlr_environmental_resistance.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="c_hlr_powerups.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="c_actual_bullet.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hud_railgun_screen.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="ShaderEditor\SEdit_ModelRender.cpp">
-      <Filter>Header Files\sse</Filter>
-    </ClCompile>
-    <ClCompile Include="ShaderEditor\ShaderEditorSystem.cpp">
-      <Filter>Header Files\sse</Filter>
-    </ClCompile>
-    <ClCompile Include="hlr_bonusoptions.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hlr_masochistmode.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\singleplayer_animstate.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hud_deathskull.cpp">
-      <Filter>Source Files\HLR</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

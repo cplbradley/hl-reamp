@@ -36,6 +36,7 @@
 #include "soundent.h"
 #include "ai_navigator.h"
 #include "tier1/functors.h"
+#include "particle_system.h"
 
 
 #define PLAYER_SQUADNAME "player_squad"
@@ -166,6 +167,14 @@ enum MovementClass_t{
 	MOVECLASS_SHORTRANGE,
 	MOVECLASS_ALWAYSJUMP,
 	MOVECLASS_NEVERJUMP,
+};
+
+enum EnemyClass_t {
+	ENEMYCLASS_DEFAULT = 0,
+	ENEMYCLASS_LIGHT,
+	ENEMYCLASS_MEDIUM,
+	ENEMYCLASS_HEAVY,
+	ENEMYCLASS_SUPERHEAVY
 };
 //-------------------------------------
 //
@@ -781,6 +790,8 @@ private:
 	void				DiscardScheduleState();
 
 	//---------------------------------
+
+
 
 	CAI_Schedule *		m_pSchedule;
 	int					m_IdealSchedule;
@@ -1820,6 +1831,10 @@ public:
 
 	virtual	bool		ShouldMoveAndShoot( void );
 
+	EnemyClass_t iEnemyClass;
+	EnemyClass_t GetEnemyClass() { return iEnemyClass; }
+	void SetEnemyClass(EnemyClass_t enemyclass) { iEnemyClass = enemyclass; }
+
 	//---------------------------------
 	//  Damage
 	//---------------------------------
@@ -2159,6 +2174,35 @@ public:
 	void				GetPlayerAvoidBounds( Vector *pMins, Vector *pMaxs );
 
 	void				StartPingEffect( void ) { m_flTimePingEffect = gpGlobals->curtime + 2.0f; DispatchUpdateTransmitState(); }
+
+
+
+	/// HEALING SHIT
+public:
+	void StartHealing();
+	void StopHealing();
+	void StartShielding();
+	void StopShielding();
+	void StartBuffing();
+	void StopBuffing();
+	bool AmBeingHealed() { return m_bBeingHealed; }
+	bool AmBeingShielded() { return m_bBeingShielded; }
+	bool AmBeingBuffed() { return m_bBeingBuffed; }
+
+	bool m_bBeingHealed;
+	bool m_bAmSelectedForHealing;
+	bool m_bAmSelectedForShielding;
+	bool m_bBeingShielded;
+	bool m_bBeingBuffed;
+
+	float m_fBuffPlaybackRate;
+
+
+	CNetworkVar(bool,m_bShouldDrawShieldOverlay);
+	CNetworkVar(int, m_iVortEffectType);
+
+private:
+	CHandle< CParticleSystem >	m_hHealEffect;
 };
 
 

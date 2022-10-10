@@ -66,6 +66,7 @@ public:
 
 bool IsInFreezeCam( void );
 
+
 //-----------------------------------------------------------------------------
 // Purpose: Base Player class
 //-----------------------------------------------------------------------------
@@ -219,11 +220,21 @@ public:
 	float						MaxSpeed() const		{ return m_flMaxspeed * 2; }
 
 	// Should this object cast shadows?
-	virtual ShadowType_t		ShadowCastType() { return SHADOWS_NONE; }
+	virtual ShadowType_t		ShadowCastType() {
+		ConVarRef thirdperson("g_thirdperson");
+		if (thirdperson.GetBool())
+		{
+			return SHADOWS_RENDER_TO_TEXTURE_DYNAMIC;
+		}
+		else
+		{
+			return SHADOWS_NONE;
+		}
+	}
 
 	virtual bool				ShouldReceiveProjectedTextures( int flags )
 	{
-		return false;
+		return true;
 	}
 
 
@@ -322,7 +333,7 @@ public:
 	virtual void	SetVehicleRole( int nRole );
 	void					LeaveVehicle( void );
 
-	bool					UsingStandardWeaponsInVehicle( void );
+	bool					UsingStandardWeaponsInVehicle(void);
 
 	virtual void			SetAnimation( PLAYER_ANIM playerAnim );
 

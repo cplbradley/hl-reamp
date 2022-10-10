@@ -26,6 +26,7 @@
 #include <ctype.h> // isalnum()
 #include <voice_status.h>
 #include "cam_thirdperson.h"
+#include "c_basehlplayer.h"
 
 #ifdef SIXENSE
 #include "sixense/in_sixense.h"
@@ -847,16 +848,34 @@ void CInput::ComputeSideMove( CUserCmd *cmd )
 		return;
 	}
 
-	// If strafing, check left and right keys and act like moveleft and moveright keys
-	if ( in_strafe.state & 1 )
-	{
-		cmd->sidemove += cl_sidespeed.GetFloat() * KeyState (&in_right);
-		cmd->sidemove -= cl_sidespeed.GetFloat() * KeyState (&in_left);
-	}
 
-	// Otherwise, check strafe keys
-	cmd->sidemove += cl_sidespeed.GetFloat() * KeyState (&in_moveright);
-	cmd->sidemove -= cl_sidespeed.GetFloat() * KeyState (&in_moveleft);
+	C_BaseHLPlayer* pPlayer = dynamic_cast<C_BaseHLPlayer*>(CBasePlayer::GetLocalPlayer());
+
+	if (pPlayer->m_HL2Local.m_bInvertedScreen)
+	{
+		// If strafing, check left and right keys and act like moveleft and moveright keys
+		if (in_strafe.state & 1)
+		{
+			cmd->sidemove -= cl_sidespeed.GetFloat() * KeyState(&in_right);
+			cmd->sidemove += cl_sidespeed.GetFloat() * KeyState(&in_left);
+		}
+
+		// Otherwise, check strafe keys
+		cmd->sidemove -= cl_sidespeed.GetFloat() * KeyState(&in_moveright);
+		cmd->sidemove += cl_sidespeed.GetFloat() * KeyState(&in_moveleft);
+	}
+	else
+	{
+		if (in_strafe.state & 1)
+		{
+			cmd->sidemove += cl_sidespeed.GetFloat() * KeyState(&in_right);
+			cmd->sidemove -= cl_sidespeed.GetFloat() * KeyState(&in_left);
+		}
+
+		// Otherwise, check strafe keys
+		cmd->sidemove += cl_sidespeed.GetFloat() * KeyState(&in_moveright);
+		cmd->sidemove -= cl_sidespeed.GetFloat() * KeyState(&in_moveleft);
+	}
 }
 
 /*

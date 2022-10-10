@@ -1,6 +1,10 @@
 #include "cbase.h"
 #include "filesystem.h"
 
+#ifdef GAME_DLL
+#include "hl2_player.h"
+#endif
+
 
 #ifndef HLR_SHAREDDEFS_H
 #define HLR_SHAREDDEFS_H
@@ -11,9 +15,10 @@
 
 static ConVar g_ultragibs("g_ultragibs", "0", FCVAR_REPLICATED | FCVAR_GAMEDLL | FCVAR_CLIENTDLL, "ultragibs");
 static ConVar g_guts_and_glory("g_guts_and_glory", "0", FCVAR_REPLICATED | FCVAR_GAMEDLL | FCVAR_CLIENTDLL, "Guts and Glory!");
-static ConVar g_masochist_mode("g_masochist_mode", "0", FCVAR_HIDDEN, "WARNING: Death will delete your entire save folder.");
+static ConVar g_masochist_mode("g_masochist_mode", "0", FCVAR_NONE, "WARNING: Death will delete your entire save folder.");
 static ConVar g_classic_weapon_pos("g_classic_weapon_pos", "0", FCVAR_REPLICATED | FCVAR_GAMEDLL | FCVAR_CLIENTDLL, "Classic Weapon Positions");
 static ConVar g_thirdperson("g_thirdperson", "0", FCVAR_REPLICATED | FCVAR_GAMEDLL | FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+static ConVar hud_weapon_selection_slowmo("hud_weapon_selection_slowmo", "1", FCVAR_REPLICATED | FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Slowmo during weapon selection");
 
 static void CC_TestKillSave(void)
 {
@@ -110,5 +115,21 @@ static void CC_TestKillSave(void)
 		g_pFullFileSystem->FindClose(fhhl3);
 	}
 }
+
+
+
+static void CC_StartMasochistMode(void)
+{
+#ifdef GAME_DLL
+	CHL2_Player* pPlayer = dynamic_cast<CHL2_Player*>(UTIL_GetLocalPlayer());
+	Warning("Starting Masochist Mode\n");
+	if (!pPlayer)
+		return;
+	pPlayer->m_HL2Local.m_bMasochistMode = true;
+	
+#endif
+}
+
+static ConCommand startmashochistmode("startmasochistmode", CC_StartMasochistMode, "startmasochistmode", FCVAR_REPLICATED | FCVAR_HIDDEN | FCVAR_GAMEDLL | FCVAR_CLIENTDLL | FCVAR_CLIENTCMD_CAN_EXECUTE);
 
 static ConCommand testkillsave("testkillsave", CC_TestKillSave, "testkillsave", FCVAR_REPLICATED | FCVAR_HIDDEN | FCVAR_CLIENTCMD_CAN_EXECUTE);

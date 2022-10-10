@@ -88,7 +88,11 @@ ConVar sk_vortigaunt_dmg_zap( "sk_vortigaunt_dmg_zap","0");
 ConVar sk_vortigaunt_zap_range( "sk_vortigaunt_zap_range", "100", FCVAR_NONE, "Range of vortigaunt's ranged attack (feet)" );
 ConVar sk_vortigaunt_vital_antlion_worker_dmg("sk_vortigaunt_vital_antlion_worker_dmg", "0.2", FCVAR_NONE, "Vital-ally vortigaunts scale damage taken from antlion workers by this amount." );
 
+ConVar sk_vortigaunt_flee_range("sk_vortigaunt_flee_range", "512", FCVAR_NONE, "player distance at which the vort will stop what it's doing and flee");
+ConVar sk_vortigaunt_heal_range("sk_vortigaunt_heal_range", "3192", FCVAR_NONE, "max distance at which i'll heal enemies");
+
 ConVar g_debug_vortigaunt_aim( "g_debug_vortigaunt_aim", "0" );
+ConVar sk_vortigaunt_heal_rate("sk_vortigaunt_heal_rate", "4");
 
 // FIXME: Move to shared code!
 #define VORTFX_ZAPBEAM		0	// Beam that damages the target
@@ -185,6 +189,7 @@ BEGIN_DATADESC( CNPC_Vortigaunt )
 	DEFINE_FIELD( m_flAimDelay,				FIELD_TIME ),
 	DEFINE_FIELD( m_bCarryingNPC,			FIELD_BOOLEAN ),
 	DEFINE_KEYFIELD( m_bRegenerateHealth,	FIELD_BOOLEAN, "HealthRegenerateEnabled" ),
+	DEFINE_KEYFIELD(iSpawnClass, FIELD_INTEGER, "SpawnClass"),
 
 	// m_AssaultBehavior	(auto saved by AI)
 	// m_LeadBehavior
@@ -202,6 +207,7 @@ BEGIN_DATADESC( CNPC_Vortigaunt )
 	DEFINE_INPUTFUNC( FIELD_VOID,	"Dispel",				InputDispel ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"BeginCarryNPC",		InputBeginCarryNPC ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"EndCarryNPC",			InputEndCarryNPC ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"SetVortClass",			InputSetVortClass),
 
 	DEFINE_INPUTFUNC( FIELD_BOOLEAN, "TurnBlue", InputTurnBlue ),
 	DEFINE_INPUTFUNC( FIELD_BOOLEAN, "TurnBlack", InputTurnBlack ),
@@ -219,6 +225,10 @@ IMPLEMENT_SERVERCLASS_ST( CNPC_Vortigaunt, DT_NPC_Vortigaunt )
 	SendPropTime( SENDINFO (m_flBlueEndFadeTime ) ),
 	SendPropBool( SENDINFO( m_bIsBlue )),
 	SendPropBool( SENDINFO ( m_bIsBlack ) ),
+	SendPropVector(SENDINFO(vecHealTarget)),
+	SendPropBool( SENDINFO(m_bIsHealing)),
+	SendPropInt(SENDINFO(iVortClass)),
+	SendPropEHandle(SENDINFO(m_hParticleTarget)),
 END_SEND_TABLE()
 
 // for special behavior with rollermines
@@ -349,6 +359,7 @@ void CNPC_Vortigaunt::StartTask( const Task_t *pTask )
 		// Start the layer up and give it a higher priority than normal
 		int nLayer = AddGesture( (Activity) ACT_VORTIGAUNT_HEAL );
 		SetLayerPriority( nLayer, 1.0f );
+		SetLayerPlaybackRate(nLayer, 3.0f);
 
 		m_eHealState = HEAL_STATE_WARMUP;
 		
@@ -671,6 +682,16 @@ int CNPC_Vortigaunt::RangeAttack1Conditions( float flDot, float flDist )
 	return COND_CAN_RANGE_ATTACK1;
 }
 
+
+void CNPC_Vortigaunt::SetVortClass(int vortclass)
+{
+		iVortClass = vortclass;
+		m_nSkin = vortclass;
+}
+void CNPC_Vortigaunt::InputSetVortClass(inputdata_t& inputdata)
+{
+	SetVortClass(inputdata.value.Int());
+}
 //-----------------------------------------------------------------------------
 // Purpose: Test for close-up dispel
 //-----------------------------------------------------------------------------
@@ -1155,17 +1176,17 @@ Activity CNPC_Vortigaunt::NPC_TranslateActivity( Activity eNewActivity )
 	if ( eNewActivity == ACT_RANGE_ATTACK2 )
 		return (Activity) ACT_VORTIGAUNT_DISPEL;
 
-	/*if (eNewActivity == ACT_JUMP)
+	if (eNewActivity == ACT_JUMP)
 	{
 		CAI_Navigator* pNav = GetNavigator();
-		CAI_Path *pPath = pNav->GetPath();
+		CAI_Path* pPath = pNav->GetPath();
 		//AI_Waypoint_t *pWaypoint = pPath->GetCurWaypoint();
-	
+
 		//Teleport(pPath->GetCurWaypoint()->GetPos());
 		if (pPath->GoalType() == GOALTYPE_ENEMY)
 		{
-			CBaseEntity *pEntity = (pNav->GetOuter()->GetNavTargetEntity());
-			
+			CBaseEntity* pEntity = (pNav->GetOuter()->GetNavTargetEntity());
+
 			if (pEntity)
 			{
 				string_t pString = pEntity->m_iClassname;
@@ -1173,21 +1194,21 @@ Activity CNPC_Vortigaunt::NPC_TranslateActivity( Activity eNewActivity )
 				if (pEntity->GetGroundEntity() == NULL)
 				{
 					DevMsg("WARNING: TARGET ENTITY NOT ON GROUND");
-					return (Activity) ACT_IDLE;
+					return (Activity)ACT_IDLE;
 				}
 			}
 		}
-		
+
 		AIMoveTrace_t moveTrace;
 		//CBaseEntity *pTarget = pNav->GetOuter()->GetNavTargetEntity();
 		GetMoveProbe()->MoveLimit(NAV_JUMP, GetLocalOrigin(), pPath->CurWaypointPos(), MASK_NPCSOLID, GetNavTargetEntity(), &moveTrace);
-		if (!IsMoveBlocked(moveTrace))
+		if (!IsMoveBlocked(moveTrace) && pPath->GetCurWaypoint() != nullptr)
 		{
 			Teleport(pPath->GetCurWaypoint()->GetPos());
 			return (Activity)ACT_LAND;
 		}
-		*/
 
+	}
 	return BaseClass::NPC_TranslateActivity( eNewActivity );
 }
 
@@ -1225,7 +1246,9 @@ void CNPC_Vortigaunt::Event_Killed( const CTakeDamageInfo &info )
 {
 	ClearBeams();
 	ClearHandGlow();
-
+	StopHealing();
+	if (m_hHealTarget && g_pGameRules->g_utlvec_vorteffectlist.HasElement(m_hHealTarget->entindex()))
+		g_pGameRules->g_utlvec_vorteffectlist.FindAndFastRemove(m_hHealTarget->entindex());
 	if (info.GetDamage() >= (m_iMaxHealth * 1.5f) && (info.GetDamageType() != DMG_DISSOLVE))
 	{
 		SetSolid(SOLID_NONE);
@@ -1246,7 +1269,7 @@ void CNPC_Vortigaunt::Event_Killed( const CTakeDamageInfo &info )
 void CNPC_Vortigaunt::Spawn( void )
 {
 #if !defined( HL2_EPISODIC )
-	// Disable back-away
+	// Disable back-awayq
 	AddSpawnFlags( SF_NPC_NO_PLAYER_PUSHAWAY );
 #endif // HL2_EPISODIC
 
@@ -1259,9 +1282,11 @@ void CNPC_Vortigaunt::Spawn( void )
 	}
 
 	//DrawStuff();
+	if (iSpawnClass == VORTCLASS_RANDOM)
+		SetVortClass(RandomInt(0, 3));
+	else
+		SetVortClass(iSpawnClass);
 
-
-	m_nSkin = RandomInt(0, 3);
 	BaseClass::Spawn();
 
 	m_HackedGunPos.x = 0.0f;
@@ -1270,12 +1295,13 @@ void CNPC_Vortigaunt::Spawn( void )
 
 	SetHullType( HULL_WIDE_HUMAN );
 	SetHullSizeNormal();
-
+	SetEnemyClass(ENEMYCLASS_MEDIUM);
+	SetMovementClass(MOVECLASS_ALWAYSJUMP);
 	m_bloodColor		= BLOOD_COLOR_GREEN;
 	m_iHealth			= sk_vortigaunt_health.GetFloat();
 	SetViewOffset( Vector ( 0, 0, 64 ) );// position of the eyes relative to monster's origin.
 
-	CapabilitiesAdd(bits_CAP_INNATE_MELEE_ATTACK1 | bits_CAP_INNATE_RANGE_ATTACK1 | bits_CAP_MOVE_JUMP);
+	CapabilitiesAdd(bits_CAP_MOVE_JUMP);
 	//CapabilitiesRemove(bits_CAP_MOVE_GROUND);
 	CapabilitiesRemove( bits_CAP_USE_SHOT_REGULATOR );
 
@@ -1307,7 +1333,9 @@ void CNPC_Vortigaunt::Precache()
 {
 	UTIL_PrecacheOther( "vort_charge_token" );
 	UTIL_PrecacheOther("hlr_vortprojectile");
-
+	PrecacheParticleSystem("vort_heal_beam");
+	PrecacheParticleSystem("vort_shield_beam");
+	PrecacheParticleSystem("vort_buff_beam");
 	PrecacheParticleSystem("vortigaunt_teleout");
 	PrecacheParticleSystem("vortigaunt_telein");
 	PrecacheModel( STRING( GetModelName() ) );
@@ -1547,9 +1575,9 @@ int CNPC_Vortigaunt::TranslateSchedule( int scheduleType )
 
 		break;
 		*/
-	case SCHED_RUN_FROM_ENEMY:
+	/*case SCHED_RUN_FROM_ENEMY:
 		return SCHED_MOVE_AWAY_FROM_ENEMY;
-		break;
+		break;*/
 	}
 
 
@@ -1568,7 +1596,7 @@ void CNPC_Vortigaunt::OnChangeActivity(Activity eNewActivity)
 void CNPC_Vortigaunt::SetHealTarget( CBaseEntity *pTarget, bool bPlayerRequested )
 {
 	SetCondition( COND_VORTIGAUNT_CAN_HEAL );
-	OccupyStrategySlot( SQUAD_SLOT_HEAL_PLAYER );
+	//OccupyStrategySlot( SQUAD_SLOT_HEAL_PLAYER );
 	m_hHealTarget = pTarget;
 	m_bPlayerRequestedHeal = bPlayerRequested;
 }
@@ -1593,13 +1621,172 @@ CBaseEntity *CNPC_Vortigaunt::FindHealTarget( void )
 	return NULL;
 }
 
+static int __cdecl SortCandidates(CAI_BaseNPC* const* p1, CAI_BaseNPC* const* p2)
+{
+	const EnemyClass_t cls1 = (*p1)->GetEnemyClass();
+	const EnemyClass_t cls2 = (*p2)->GetEnemyClass();
+	if (cls1 != cls2)
+		return (int)cls2 - (int)cls1;
+
+	// whatever -Zero
+	return 0;
+}
+
+CAI_BaseNPC *CNPC_Vortigaunt::FindNearestNPCToHeal()
+{
+
+	CUtlVector< CAI_BaseNPC* > candidates; //create empty list
+	CBaseEntity* pSearch = NULL; //empty pointer
+	CAI_BaseNPC* pNPC;
+
+	for (CEntitySphereQuery query(WorldSpaceCenter(), sk_vortigaunt_heal_range.GetFloat(), FL_NPC); (pSearch = query.GetCurrentEntity()) != nullptr; query.NextEntity()) //iterate through all npcs in radius
+	{
+		if (this == pSearch)
+			continue;
+
+		pNPC = pSearch->MyNPCPointer();
+
+		if (!pNPC)
+			continue;
+		if (pNPC->m_bAmSelectedForHealing)
+			continue;
+
+		float HealthFraction = (pNPC->GetHealth() / pNPC->GetMaxHealth());
+
+		if (HealthFraction >= 0.7f)
+			continue;
+		
+		if (pNPC->AmBeingHealed())
+			continue;
+
+		const EnemyClass_t enemyclass = pNPC->GetEnemyClass();
+
+		if (enemyclass == ENEMYCLASS_SUPERHEAVY || enemyclass == ENEMYCLASS_HEAVY || enemyclass == ENEMYCLASS_MEDIUM)
+		{
+			candidates.AddToTail(pNPC); //add to empty list
+		}
+	}
+
+	if (candidates.IsEmpty())
+		return NULL;
+
+	candidates.Sort(SortCandidates);
+	pNPC = candidates.Head();
+	pNPC->m_bAmSelectedForHealing = true;
+	return pNPC;
+
+	/*while ((pSearch = gEntList.FindEntityInSphere(pSearch, this->WorldSpaceCenter(), 2048.0f)) != NULL)
+	{
+		if (!pSearch)
+			continue;
+		if (!pSearch->IsNPC())
+			continue;
+		CAI_BaseNPC* pNPC = dynamic_cast<CAI_BaseNPC*>(pSearch);
+		float npchealthratio = (pNPC->GetHealth() / pNPC->GetMaxHealth());
+		if (npchealthratio >= 0.7f)
+			continue;
+		int enemyclass = pNPC->GetEnemyClass();
+		if (enemyclass == ENEMYCLASS_SUPERHEAVY || ENEMYCLASS_HEAVY)
+			return pNPC;
+	}*/
+}
+CAI_BaseNPC* CNPC_Vortigaunt::FindNearestNPCToBuff()
+{
+	CUtlVector< CAI_BaseNPC* > buffcandidates;
+	CBaseEntity* pSearch = NULL;
+	CAI_BaseNPC* pNPC;
+	for (CEntitySphereQuery query(WorldSpaceCenter(), sk_vortigaunt_heal_range.GetFloat(), FL_NPC); (pSearch = query.GetCurrentEntity()) != nullptr; query.NextEntity())
+	{
+		if (pSearch == this)
+			continue;
+
+		pNPC = pSearch->MyNPCPointer();
+
+		if (!pNPC)
+			continue;
+
+		if (pNPC->ClassMatches("npc_vortigaunt"))
+			continue;
+
+		if (g_pGameRules->g_utlvec_vorteffectlist.HasElement(pNPC->entindex()))
+		{
+			Warning("Buffer: NPC WITH INDEX %i IS CURRENTLY IN THE EFFECT LIST\n", pNPC->entindex());
+			continue;
+		}
+
+		const EnemyClass_t enemyclass = pNPC->GetEnemyClass();
+
+		if (enemyclass == ENEMYCLASS_SUPERHEAVY || enemyclass == ENEMYCLASS_HEAVY || enemyclass == ENEMYCLASS_MEDIUM)
+		{
+			buffcandidates.AddToTail(pNPC); //add to empty list
+		}
+	}
+	if (buffcandidates.IsEmpty())
+	{
+		Warning("Buffer can't find any NPC's to buff!!!\n");
+		return NULL;
+	}
+
+	buffcandidates.Sort(SortCandidates);
+	pNPC = buffcandidates.Head();
+	
+	return pNPC;
+}
+CAI_BaseNPC* CNPC_Vortigaunt::FindNearestNPCToShield()
+{
+	CUtlVector< CAI_BaseNPC* > shieldcandidates; //create empty list
+	CBaseEntity* pSearch = NULL; //empty pointer
+	CAI_BaseNPC* pNPC;
+
+	for (CEntitySphereQuery query(WorldSpaceCenter(), sk_vortigaunt_heal_range.GetFloat(), FL_NPC); (pSearch = query.GetCurrentEntity()) != nullptr; query.NextEntity()) //iterate through all npcs in radius
+	{
+		if (this == pSearch)
+			continue;
+
+		pNPC = pSearch->MyNPCPointer();
+
+		if (!pNPC)
+			continue;
+
+		if (pNPC->ClassMatches("npc_vortigaunt"))
+			continue;
+
+		if (g_pGameRules->g_utlvec_vorteffectlist.HasElement(pNPC->entindex()))
+		{
+			Warning("Shielder: NPC WITH INDEX %i IS CURRENTLY IN THE EFFECT LIST\n", pNPC->entindex());
+			continue;
+		}
+
+		const EnemyClass_t enemyclass = pNPC->GetEnemyClass();
+
+		if (enemyclass == ENEMYCLASS_SUPERHEAVY || enemyclass == ENEMYCLASS_HEAVY || enemyclass == ENEMYCLASS_MEDIUM)
+		{
+			shieldcandidates.AddToTail(pNPC); //add to empty list
+		}
+	}
+
+	if (shieldcandidates.IsEmpty())
+		return NULL;
+
+	shieldcandidates.Sort(SortCandidates);
+	pNPC = shieldcandidates.Head();
+	
+	return pNPC;
+}
 //-----------------------------------------------------------------------------
 // Purpose: Whether or not the vort is able to attempt to heal targets
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool CNPC_Vortigaunt::HealBehaviorAvailable( void )
 {
-	// Cannot already be healing
+
+	if (m_eHealState != HEAL_STATE_NONE)
+		return false;
+
+	if (HasCondition(COND_VORTIGAUNT_ENEMY_TOO_CLOSE))
+		return false;
+
+	/*// Cannot already be healing
 	if ( m_eHealState != HEAL_STATE_NONE )
 		return false;
 
@@ -1627,7 +1814,7 @@ bool CNPC_Vortigaunt::HealBehaviorAvailable( void )
 	if ( IsStrategySlotRangeOccupied( SQUAD_SLOT_HEAL_PLAYER, SQUAD_SLOT_HEAL_PLAYER ) )
 		return false;
 
-	// Heal is valid
+	// Heal is valid*/
 	return true;
 }
 
@@ -1710,11 +1897,15 @@ int CNPC_Vortigaunt::SelectHealSchedule( void )
 	// Cannot already be healing the player
 	if ( m_hHealTarget != NULL )
 	{
+
+		//CAI_BaseNPC* pTarget = m_hHealTarget->MyNPCPointer();
+		if (m_eHealState != HEAL_STATE_HEALING && m_eHealState != HEAL_STATE_WARMUP && HasCondition(COND_VORTIGAUNT_HEAL_VALID))
+			return SCHED_VORTIGAUNT_HEAL;
 		// For now, just grab the global, single player
-		CBasePlayer *pPlayer = ToBasePlayer( m_hHealTarget );
+		//CBasePlayer *pPlayer = ToBasePlayer( m_hHealTarget );
 
 		// Check for an interruption occurring
-		if ( PlayerBelowHealthPercentage( pPlayer, PLAYER_CRITICAL_HEALTH_PERC ) == false && HasCondition( COND_HEAVY_DAMAGE ) )
+		/*if (PlayerBelowHealthPercentage(pPlayer, PLAYER_CRITICAL_HEALTH_PERC) == false && HasCondition(COND_HEAVY_DAMAGE))
 		{
 			StopHealing( true );
 			return SCHED_NONE;
@@ -1731,7 +1922,7 @@ int CNPC_Vortigaunt::SelectHealSchedule( void )
 
 		// Stand and face the player
 		if ( HasCondition( COND_VORTIGAUNT_HEAL_TARGET_BEHIND_US ) || HasCondition( COND_VORTIGAUNT_HEAL_VALID ) )
-			return SCHED_VORTIGAUNT_FACE_PLAYER;
+			return SCHED_VORTIGAUNT_FACE_PLAYER;*/
 	}
 
 	return SCHED_NONE;
@@ -1797,6 +1988,8 @@ int CNPC_Vortigaunt::SelectSchedule( void )
 		ClearCondition( COND_VORTIGAUNT_DISPEL_ANTLIONS );
 		return SCHED_VORTIGAUNT_DISPEL_ANTLIONS;
 	}
+	if (HasCondition(COND_VORTIGAUNT_ENEMY_TOO_CLOSE))
+		return SCHED_TAKE_COVER_FROM_ENEMY;
 
 	// Heal a player if they can be
 	if ( HasCondition( COND_VORTIGAUNT_CAN_HEAL ) )
@@ -1867,6 +2060,30 @@ void CNPC_Vortigaunt::StartHealing( void )
 
 	// We're now in the healing loop
 	m_eHealState = HEAL_STATE_HEALING;
+	if (m_hHealTarget != nullptr)
+	{
+		CAI_BaseNPC* pNPC = m_hHealTarget->MyNPCPointer();
+		switch (GetVortClass())
+		{
+		case VORTCLASS_HEALER:
+		{
+			pNPC->StartHealing();
+			break;
+		}
+		case VORTCLASS_SHIELDER:
+		{
+			pNPC->StartShielding();
+			break;
+		}
+		case VORTCLASS_BUFFER:
+		{
+			pNPC->StartBuffing();
+			break;
+		}
+		default:
+			break;
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1877,6 +2094,32 @@ void CNPC_Vortigaunt::StopHealing( bool bInterrupt )
 	// Clear out our healing states
 	m_eHealState = HEAL_STATE_NONE;
 	m_bForceArmorRecharge = false;
+	m_bIsHealing = false;
+	if (m_hHealTarget != NULL)
+	{
+		CAI_BaseNPC* pNPC = m_hHealTarget->MyNPCPointer();
+		switch (GetVortClass())
+		{
+		case VORTCLASS_HEALER:
+		{
+			pNPC->StopHealing();
+			break;
+		}
+		case VORTCLASS_SHIELDER:
+		{
+			pNPC->StopShielding();
+			break;
+		}
+		case VORTCLASS_BUFFER:
+		{
+			pNPC->StopBuffing();
+			break;
+		}
+		default:
+			break;
+		}
+	}
+
 	m_hHealTarget = NULL;
 
 	EndHandGlow( VORTIGAUNT_BEAM_HEAL );
@@ -1894,7 +2137,7 @@ void CNPC_Vortigaunt::StopHealing( bool bInterrupt )
 		int nLayer = FindGestureLayer( (Activity) ACT_VORTIGAUNT_HEAL );
 		SetLayerPlaybackRate( nLayer, 1.0f );
 
-		m_flNextHealTime = gpGlobals->curtime + VORTIGAUNT_HEAL_RECHARGE;
+		m_flNextHealTime = gpGlobals->curtime;
 		m_OnFinishedChargingTarget.FireOutput( this, this );
 	}
 
@@ -1911,10 +2154,28 @@ void CNPC_Vortigaunt::MaintainHealSchedule( void )
 	if ( m_eHealState == HEAL_STATE_NONE )
 		return;
 
+
+	//Msg("Beginning healing schedule\n");
 	// For now, we only heal the player
-	CBasePlayer *pPlayer = AI_GetSinglePlayer();
-	if ( pPlayer == NULL )
+
+	if (m_hHealTarget == NULL)
+	{
+		StopHealing();
 		return;
+	}
+
+	CAI_BaseNPC* pNPC = m_hHealTarget->MyNPCPointer();
+
+	if (!this->IsAlive())
+		StopHealing();
+	if (!pNPC->IsAlive())
+		StopHealing();
+
+	if ((GetVortClass() == VORTCLASS_HEALER) && (pNPC->GetHealth() >= pNPC->GetMaxHealth()))
+		StopHealing(false);
+
+	if (HasCondition(COND_VORTIGAUNT_ENEMY_TOO_CLOSE))
+		StopHealing(true);
 
 	// FIXME: How can this happen?
 	if ( m_AssaultBehavior.GetOuter() != NULL )
@@ -1925,6 +2186,7 @@ void CNPC_Vortigaunt::MaintainHealSchedule( void )
 			StopHealing( true );
 			return;
 		}
+
 	}
 
 	// Don't let us shoot while we're healing
@@ -1936,9 +2198,15 @@ void CNPC_Vortigaunt::MaintainHealSchedule( void )
 		// FIXME: We need to have better logic controlling this
 		if ( HasCondition( COND_VORTIGAUNT_HEAL_VALID ) )
 		{
-			if ( m_flNextHealTokenTime < gpGlobals->curtime )
+			
+
+			vecHealTarget = pNPC->WorldSpaceCenter();
+			//pNPC->StartHealing();
+			m_bIsHealing = true;
+
+			/*if (m_flNextHealTokenTime < gpGlobals->curtime)
 			{
-				CBasePlayer *pPlayer = ToBasePlayer( m_hHealTarget );
+				
 
 				// We're done, so stop playing the animation
 				if ( m_nNumTokensToSpawn <= 0 || ( m_bForceArmorRecharge == false && ( pPlayer && pPlayer->ArmorValue() >= sk_vortigaunt_armor_charge.GetInt() ) ) )
@@ -1964,7 +2232,7 @@ void CNPC_Vortigaunt::MaintainHealSchedule( void )
 					m_nNumTokensToSpawn = 0;
 					m_flNextHealTokenTime = gpGlobals->curtime + 1.0f;
 				}
-			}
+			}*/
 		}
 		else
 		{
@@ -1980,12 +2248,6 @@ void CNPC_Vortigaunt::MaintainHealSchedule( void )
 				StopHealing();
 			}
 			*/
-
-			bool bInterrupt = false;
-			if ( HasCondition( COND_NEW_ENEMY ) )
-			{
-				bInterrupt = true;
-			}
 
 			StopHealing( true );
 		}
@@ -2631,7 +2893,8 @@ bool CNPC_Vortigaunt::HealGestureHasLOS( void )
 //-----------------------------------------------------------------------------
 void CNPC_Vortigaunt::GatherHealConditions( void )
 {
-	ClearCondition( COND_VORTIGAUNT_HEAL_TARGET_TOO_FAR );
+	SetCondition(COND_VORTIGAUNT_HEAL_VALID);
+	/*ClearCondition(COND_VORTIGAUNT_HEAL_TARGET_TOO_FAR);
 	ClearCondition( COND_VORTIGAUNT_HEAL_TARGET_BLOCKED );
 	ClearCondition( COND_VORTIGAUNT_HEAL_TARGET_BEHIND_US );
 
@@ -2687,7 +2950,7 @@ void CNPC_Vortigaunt::GatherHealConditions( void )
 	else
 	{
 		ClearCondition( COND_VORTIGAUNT_HEAL_VALID );
-	}
+	}*/
 }
 
 //-----------------------------------------------------------------------------
@@ -2698,15 +2961,47 @@ void CNPC_Vortigaunt::GatherConditions( void )
 	// Call our base
 	BaseClass::GatherConditions();
 
+	
+	CBasePlayer* pPlayer = UTIL_GetLocalPlayer();
+	float playerDist = (pPlayer->WorldSpaceCenter() - WorldSpaceCenter()).Length();
+
+	if (playerDist < sk_vortigaunt_flee_range.GetFloat())
+		SetCondition(COND_VORTIGAUNT_ENEMY_TOO_CLOSE);
+
 	// See if we're able to heal now
 	if ( HealBehaviorAvailable() && ( m_flNextHealTime < gpGlobals->curtime ) )
 	{
+		CAI_BaseNPC* pHealTarget;
 		// See if we should heal the player
-		CBaseEntity *pHealTarget = FindHealTarget();
+		switch (GetVortClass())
+		{
+		case VORTCLASS_HEALER:
+		{
+			pHealTarget = FindNearestNPCToHeal();
+			break;
+		}
+		case VORTCLASS_SHIELDER:
+		{
+			pHealTarget = FindNearestNPCToShield();
+			break;
+		}
+		case VORTCLASS_BUFFER:
+		{
+			pHealTarget = FindNearestNPCToBuff();
+			break;
+		}
+		default:
+			pHealTarget = NULL;
+			break;
+		}
 		if ( pHealTarget != NULL )
 		{
+			
 			SetHealTarget( pHealTarget, false );
+			g_pGameRules->g_utlvec_vorteffectlist.AddToTail(pHealTarget->entindex());
+			m_hParticleTarget = pHealTarget;
 		}
+		
 
 		// Don't try again for a period of time
 		m_flNextHealTime = gpGlobals->curtime + 2.0f;
@@ -3096,6 +3391,7 @@ AI_BEGIN_CUSTOM_NPC( npc_vortigaunt, CNPC_Vortigaunt )
 	DECLARE_CONDITION( COND_VORTIGAUNT_HEAL_TARGET_BEHIND_US )
 	DECLARE_CONDITION( COND_VORTIGAUNT_HEAL_VALID )
 	DECLARE_CONDITION( COND_VORTIGAUNT_DISPEL_ANTLIONS )
+	DECLARE_CONDITION( COND_VORTIGAUNT_ENEMY_TOO_CLOSE)
 
 	DECLARE_SQUADSLOT( SQUAD_SLOT_HEAL_PLAYER )
 
@@ -3157,13 +3453,14 @@ AI_BEGIN_CUSTOM_NPC( npc_vortigaunt, CNPC_Vortigaunt )
 		"		TASK_STOP_MOVING				0"
 		"		TASK_VORTIGAUNT_GET_HEAL_TARGET	0"
 		"		TASK_GET_PATH_TO_TARGET			0"
-		"		TASK_MOVE_TO_TARGET_RANGE		350"
+		"		TASK_MOVE_TO_TARGET_RANGE		1024"
 		"		TASK_STOP_MOVING				0"
-		"		TASK_FACE_PLAYER				0"
+		"		TASK_FACE_TARGET				0"
 		"		TASK_VORTIGAUNT_HEAL			0"
 		""
 		"	Interrupts"
 		"		COND_HEAVY_DAMAGE"
+		"		COND_VORTIGAUNT_ENEMY_TOO_CLOSE"
 	);
 
 	//=========================================================

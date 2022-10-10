@@ -63,6 +63,7 @@ void CNPC_CombineS::Spawn( void )
 	Precache();
 	SetModel( STRING( GetModelName() ) );
 	AddSpawnFlags(SF_NPC_NO_WEAPON_DROP);
+	SetEnemyClass(ENEMYCLASS_MEDIUM);
 	if( IsElite() )
 	{
 		// Stronger, tougher.

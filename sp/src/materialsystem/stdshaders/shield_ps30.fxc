@@ -1,0 +1,29 @@
+// Includes
+#include "common_ps_fxc.h"
+#include "common_vertexlitgeneric_dx9.h"
+#include "common_lightmappedgeneric_fxc.h"
+#include "common_flashlight_fxc.h"
+
+
+// Constants
+const float3 g_cData_shieldcolor		: register( c27 );
+const float3 g_cData_shieldalpha		: register( c26 );
+// Semantic structures
+struct PS_INPUT
+{
+};
+
+struct PS_OUTPUT
+{
+	float4 vColor_0				:	COLOR0;
+};
+
+// Entry point
+PS_OUTPUT main( const PS_INPUT In )
+{
+	PS_OUTPUT Out;
+	Out.vColor_0.rgb = g_cData_shieldcolor;
+	Out.vColor_0.a = g_cData_shieldalpha;
+
+	return Out;
+}

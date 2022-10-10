@@ -17,6 +17,7 @@
 #include "particlemgr.h"
 #include "steam/steam_api.h"
 #include "discord_rpc.h"
+#include "shaderapihack.h"
 //#include "fmod.hpp"
 #include <time.h>
 #include "initializer.h"
@@ -273,7 +274,6 @@ void ProcessCacheUsedMaterials()
         materials->CacheUsedMaterials();
 	}
 }
-
 // String tables
 INetworkStringTable *g_pStringTableParticleEffectNames = NULL;
 INetworkStringTable *g_StringTableEffectDispatch = NULL;
@@ -353,6 +353,17 @@ bool g_bTextMode = false;
 class IClientPurchaseInterfaceV2 *g_pClientPurchaseInterface = (class IClientPurchaseInterfaceV2 *)(&g_bTextMode + 156);
 
 static ConVar *g_pcv_ThreadMode = NULL;
+
+void ApplyShaderConstantHack()
+{
+	CMaterialConfigWrapper Wrapper;
+
+	Wrapper.PrintPixelConstants();
+	Wrapper.SetNumPixelConstants(225);
+	Wrapper.SetNumBooleanPixelConstants(225);
+	Wrapper.SetNumIntegerPixelConstants(225);
+	Wrapper.PrintPixelConstants();
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: interface for gameui to modify voice bans
@@ -1052,7 +1063,9 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 	IGameSystem::Add( ClientSoundscapeSystem() );
 	IGameSystem::Add( PerfVisualBenchmark() );
 	IGameSystem::Add( MumbleSystem() );
-	
+
+	ApplyShaderConstantHack(); //CLIENTSIDE SHADER HACK: Forces hardware config to allow for up to 225 shader constants -Ficool2/AnthonyPython
+
 	#if defined( TF_CLIENT_DLL )
 	IGameSystem::Add( CustomTextureToolCacheGameSystem() );
 	IGameSystem::Add( TFSharedContentManager() );
@@ -1239,7 +1252,6 @@ void CHLClient::Shutdown( void )
 	delete g_pSixenseInput;
 	g_pSixenseInput = NULL;
 #endif
-
 	C_BaseAnimating::ShutdownBoneSetupThreadPool();
 	ClientWorldFactoryShutdown();
 

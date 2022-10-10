@@ -145,7 +145,7 @@ public:
 
 	// Apply a battery
 	bool ApplyBattery( float powerMultiplier = 1.0 );
-	bool ApplyArmor(float powerMultiplier = 1.0);
+	bool ApplyArmor(float powerValue = 30.0f);
 
 	// Commander Mode for controller NPCs
 	enum CommanderCommand_t

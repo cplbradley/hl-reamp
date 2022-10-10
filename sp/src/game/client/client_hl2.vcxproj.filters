@@ -1004,6 +1004,9 @@
     <ClInclude Include="ScreenSpaceEffects.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="shaderapihack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="simple_keys.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1835,12 +1838,6 @@
     <ClInclude Include="viewpostprocess.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\game\shared\fmod\fmod_dynamic_player.h">
-      <Filter>Source Files\FMOD</Filter>
-    </ClInclude>
-    <ClInclude Include="fmod\fmod_system.h">
-      <Filter>Source Files\FMOD</Filter>
-    </ClInclude>
     <ClInclude Include="game_controls\basemodel_panel.h">
       <Filter>Source Files\game_controls</Filter>
     </ClInclude>
@@ -1891,6 +1888,9 @@
     </ClInclude>
     <ClInclude Include="hl2\hud_suitpower.h">
       <Filter>Source Files\HL2 DLL</Filter>
+    </ClInclude>
+    <ClInclude Include="c_movie_display.h">
+      <Filter>Source Files\HLR</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\hl2\hlr\hlr_shareddefs.h">
       <Filter>Source Files\HLR</Filter>
@@ -2992,12 +2992,6 @@
     <ClCompile Include="WorldDimsProxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\game\shared\fmod\fmod_dynamic_player.cpp">
-      <Filter>Source Files\FMOD</Filter>
-    </ClCompile>
-    <ClCompile Include="fmod\fmod_system.cpp">
-      <Filter>Source Files\FMOD</Filter>
-    </ClCompile>
     <ClCompile Include="game_controls\basemodel_panel.cpp">
       <Filter>Source Files\game_controls</Filter>
     </ClCompile>
@@ -3265,6 +3259,9 @@
     <ClCompile Include="hlr\c_hlr_skullkey.cpp">
       <Filter>Source Files\HLR</Filter>
     </ClCompile>
+    <ClCompile Include="c_movie_display.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
     <ClCompile Include="hlr\c_npc_antlionwarrior.cpp">
       <Filter>Source Files\HLR</Filter>
     </ClCompile>
@@ -3272,6 +3269,9 @@
       <Filter>Source Files\HLR</Filter>
     </ClCompile>
     <ClCompile Include="hlr\hlr_bonusoptions.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\hlr_masochistmode.cpp">
       <Filter>Source Files\HLR</Filter>
     </ClCompile>
     <ClCompile Include="hlr\hud_bluekey.cpp">

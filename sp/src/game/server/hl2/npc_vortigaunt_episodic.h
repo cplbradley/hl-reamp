@@ -41,6 +41,15 @@ enum VortigauntHealState_t
 	HEAL_STATE_COOLDOWN,	// in the "cooldown" phase of healing
 };
 
+
+enum
+{
+	VORTCLASS_NECROMANCER,
+	VORTCLASS_SHIELDER,
+	VORTCLASS_HEALER,
+	VORTCLASS_BUFFER,
+	VORTCLASS_RANDOM
+};
 //=========================================================
 //	>> CNPC_Vortigaunt
 //=========================================================
@@ -94,6 +103,21 @@ public:
 	virtual bool	CanBeUsedAsAFriend( void );
 	virtual bool	IsPlayerAlly( void ) { return true; }
 
+	CAI_BaseNPC *FindNearestNPCToHeal();
+	CAI_BaseNPC *FindNearestNPCToShield();
+	CAI_BaseNPC* FindNearestNPCToBuff();
+
+
+	CNetworkVar(int, iVortClass);
+	int GetVortClass() { return iVortClass; }
+	void SetVortClass(int vortclass);
+	int iSpawnClass;
+
+
+	void InputSetVortClass(inputdata_t	&inputdata);
+
+
+	CNetworkHandle(CBaseEntity, m_hParticleTarget);
 	// Override these to set behavior
 	virtual int		TranslateSchedule( int scheduleType );
 	virtual int		SelectSchedule( void );
@@ -153,6 +177,7 @@ private:
 	void	StartHealing( void );
 	void	StopHealing( bool bInterrupt = false );
 	void	MaintainHealSchedule( void );
+	void	MaintainShieldSchedule(void);
 	bool	ShouldHealTarget( CBaseEntity *pTarget );
 	int		SelectHealSchedule( void );
 
@@ -202,6 +227,7 @@ private:
 		COND_VORTIGAUNT_HEAL_TARGET_BEHIND_US,	// Not within our "forward" range
 		COND_VORTIGAUNT_HEAL_VALID,				// All conditions satisfied	
 		COND_VORTIGAUNT_DISPEL_ANTLIONS,		// Repulse all antlions around us
+		COND_VORTIGAUNT_ENEMY_TOO_CLOSE,
 	};
 
 	// ------------
@@ -282,6 +308,8 @@ private:
 
 	// used for fading to black
 	CNetworkVar( bool, m_bIsBlack );
+	CNetworkVar(bool, m_bIsHealing);
+	CNetworkVector(vecHealTarget);
 
 public:
 	DECLARE_SERVERCLASS();

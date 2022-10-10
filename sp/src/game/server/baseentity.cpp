@@ -4917,8 +4917,7 @@ int CBaseEntity::PrecacheModel( const char *name, bool bPreload )
 	{
 		if ( !engine->IsModelPrecached( name ) )
 		{
-			Assert( !"CBaseEntity::PrecacheModel:  too late" );
-			Warning( "Late precache of %s\n", name );
+			DevMsg("Late precache of %s -- not necessarily a bug now that we allow ~everything to be dynamically loaded.\n", name);
 		}
 	}
 #if defined( WATCHACCESS )

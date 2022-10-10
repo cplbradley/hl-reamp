@@ -299,6 +299,10 @@ public:
 
 	COutputEvent		m_pOutputAnimBegun;
 	COutputEvent		m_pOutputAnimOver;
+	COutputEvent		m_pOutputAnimEvent1;
+	COutputEvent		m_pOutputAnimEvent2;
+	COutputEvent		m_pOutputAnimEvent3;
+	COutputEvent		m_pOutputAnimEvent4;
 	//COutputEvent		m_pOutputOnUse;
 
 	//int	ObjectCaps(void);

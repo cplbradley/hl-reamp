@@ -206,6 +206,8 @@ public:
 	
 #else
 
+	CUtlVector<int> g_utlvec_vorteffectlist;
+
 	virtual void GetTaggedConVarList( KeyValues *pCvarTagList ) {}
 
 	// NVNT see if the client of the player entered is using a haptic device.

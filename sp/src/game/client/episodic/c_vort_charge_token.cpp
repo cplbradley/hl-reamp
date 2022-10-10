@@ -35,6 +35,8 @@ public:
 	virtual void	OnDataChanged( DataUpdateType_t updateType );
 	virtual void	ClientThink( void );
 	virtual void	ReceiveMessage( int classID, bf_read &msg );
+	void SetVortType(int vorttype);
+
 
 public:
 	bool  m_bIsBlue;           ///< wants to fade to blue
@@ -42,12 +44,26 @@ public:
 
 	bool  m_bIsBlack;    ///< wants to fade to black (networked)
 	float m_flBlackFade; ///< [0.00 .. 1.00] where 1.00 is all black. Locally interpolated.
+
+	bool m_bIsHealing;
+	int iVortClass;
+	int prevclass;
+	Vector vecHealTarget;
+	char* szParticle;
+	char* szClass;
+
+	CNewParticleEffect* m_pHealBeamFX;
+	EHANDLE m_hParticleTarget;
 };
 
 IMPLEMENT_CLIENTCLASS_DT( C_NPC_Vortigaunt, DT_NPC_Vortigaunt, CNPC_Vortigaunt )
 	RecvPropTime( RECVINFO(m_flBlueEndFadeTime ) ),
 	RecvPropBool( RECVINFO(m_bIsBlue) ),
 	RecvPropBool( RECVINFO(m_bIsBlack) ),
+	RecvPropVector(RECVINFO(vecHealTarget)),
+	RecvPropBool(RECVINFO(m_bIsHealing)),
+	RecvPropInt(RECVINFO(iVortClass)),
+	RecvPropEHandle(RECVINFO(m_hParticleTarget)),
 END_RECV_TABLE()
 
 
@@ -63,18 +79,102 @@ void C_NPC_Vortigaunt::OnDataChanged( DataUpdateType_t updateType )
 {
 	BaseClass::OnDataChanged( updateType );
 
+	if (updateType == DATA_UPDATE_CREATED)
+	{
+		SetVortType(iVortClass);
+		prevclass = iVortClass;
+	}
+
 	// start thinking if we need to fade.
-	if ( m_flBlackFade != (m_bIsBlack ? 1.0f : 0.0f) )
+	if ( m_flBlackFade != (m_bIsBlack ? 1.0f : 0.0f) || (m_bIsHealing == true))
 	{
 		SetNextClientThink( CLIENT_THINK_ALWAYS );
 	}
 }
+void C_NPC_Vortigaunt::SetVortType(int vorttype)
+{
+	switch (vorttype)
+	{
+	case 0:
+		//Q_strcpy(szClass, "Necromancer");
+		//Q_strcpy(szParticle, "vort_necro_beam");
 
+		szClass = STRING("Necromancer");
+		szParticle = STRING("vort_necro_beam");
+		break;
+	case 1:
+	{
+		//Q_strcpy(szParticle, "vort_heal_beam");
+		//Q_strcpy(szClass, "Healer");
+		szClass = STRING("Shielder");
+		szParticle = STRING("vort_shield_beam");
+		break;
+	}
+	case 2:
+	{
+		//Q_strcpy(szParticle, "vort_shield_beam");
+		//Q_strcpy(szParticle, "Shielder");
+		szClass = STRING("Healer");
+		szParticle = STRING("vort_heal_beam");
+		break;
+	}
+	case 3:
+	{
+		szClass = STRING("Buffer");
+		szParticle = STRING("vort_buff_beam");
+		//Q_strcpy(szParticle, "vort_buff_beam");
+		//Q_strcpy(szParticle, "Buffer");
+		break;
+	}
+	default:
+	{
+		szClass = STRING("NULL");
+		szParticle = STRING("NULL");
+		break;
+	}
+	
+	}
+	prevclass = iVortClass;
+	Msg("Vortigaunt spawned with class %s, setting particle to %s\n", szClass, szParticle);
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void C_NPC_Vortigaunt::ClientThink( void )
 {
+	if (szParticle == NULL)
+		SetVortType(iVortClass);
+
+	if (iVortClass != prevclass)
+		SetVortType(iVortClass);
+
+	if (m_bIsHealing)
+	{
+		if (!m_pHealBeamFX)
+		{
+			m_pHealBeamFX = ParticleProp()->Create(szParticle, PATTACH_POINT_FOLLOW, 4);
+		}
+		else
+		{
+			Vector vecArm;
+			QAngle angArm;
+			CBaseEntity* pEnt = m_hParticleTarget.Get();
+			if (!pEnt)
+				return;
+			Vector vecTarget = pEnt->WorldSpaceCenter();
+			GetAttachment(4, vecArm, angArm);
+			m_pHealBeamFX->SetControlPoint(0, vecArm);
+			m_pHealBeamFX->SetControlPoint(1, vecTarget);
+		}
+	}
+	else
+	{
+		if (m_pHealBeamFX)
+		{
+			m_pHealBeamFX->StopEmission();
+			m_pHealBeamFX = NULL;
+		}
+	}
 	// Don't update if our frame hasn't moved forward (paused)
 	if ( gpGlobals->frametime <= 0.0f )
 		return;

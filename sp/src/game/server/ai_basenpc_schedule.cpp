@@ -3156,6 +3156,9 @@ void CAI_BaseNPC::RunDieTask()
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::RunAttackTask( int task )
 {
+
+	if (AmBeingBuffed())
+		SetPlaybackRate(2.0f);
 	AutoMovement( );
 
 	Vector vecEnemyLKP = GetEnemyLKP();
@@ -3195,6 +3198,9 @@ void CAI_BaseNPC::RunAttackTask( int task )
 //=========================================================
 void CAI_BaseNPC::RunTask( const Task_t *pTask )
 {
+
+	if (AmBeingBuffed())
+		SetPlaybackRate(2.0f);
 	VPROF_BUDGET( "CAI_BaseNPC::RunTask", VPROF_BUDGETGROUP_NPCS );
 	switch ( pTask->iTask )
 	{

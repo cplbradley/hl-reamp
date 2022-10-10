@@ -7,6 +7,14 @@
 #include "cbase.h"
 #include "c_ai_basenpc.h"
 #include "engine/ivdebugoverlay.h"
+#include "fx_quad.h"
+#include "view.h"
+#include "iviewrender.h"
+#include "ivieweffects.h"
+#include "view_scene.h"
+#include "fx.h"
+#include "model_types.h"
+#include "bone_setup.h"
 
 #if defined( HL2_DLL ) || defined( HL2_EPISODIC )
 #include "c_basehlplayer.h"
@@ -32,6 +40,8 @@ IMPLEMENT_CLIENTCLASS_DT( C_AI_BaseNPC, DT_AI_BaseNPC, CAI_BaseNPC )
 	RecvPropBool( RECVINFO( m_bImportanRagdoll ) ),
 	RecvPropFloat( RECVINFO( m_flTimePingEffect ) ),
 	RecvPropBool(RECVINFO(m_bIsGibbed)),
+	RecvPropBool(RECVINFO(m_bShouldDrawShieldOverlay)),
+	RecvPropInt(RECVINFO(m_iVortEffectType)),
 END_RECV_TABLE()
 
 extern ConVar cl_npc_speedmod_intime;
@@ -50,6 +60,118 @@ C_AI_BaseNPC::C_AI_BaseNPC()
 {
 }
 
+
+bool C_AI_BaseNPC::InterpScale()
+{
+	if (!m_bShouldDrawShieldOverlay)
+		return false;
+
+	flscale = FLerp(0, 1.25, 3);
+
+	return true;
+}
+int C_AI_BaseNPC::InternalDrawModel(int flags)
+{
+
+		int ret = BaseClass::InternalDrawModel(flags);
+		if (ret != 0)
+		{
+			if (m_bShouldDrawShieldOverlay)
+			{
+				// Cyanide; So we basically need to redraw the model but scaled up slightly
+
+				UpdateBoneAttachments();
+
+				ClientModelRenderInfo_t info;
+				ClientModelRenderInfo_t* pInfo;
+
+				pInfo = &info;
+
+				pInfo->flags = flags;
+				pInfo->pRenderable = this;
+				pInfo->instance = GetModelInstance();
+				pInfo->entity_index = index;
+				pInfo->pModel = GetModel();
+				pInfo->origin = GetRenderOrigin();
+				pInfo->angles = GetRenderAngles();
+				pInfo->skin = GetSkin();
+				pInfo->body = GetBody();
+				pInfo->hitboxset = m_nHitboxSet;
+
+				Assert(!pInfo->pModelToWorld);
+				if (!pInfo->pModelToWorld)
+				{
+					pInfo->pModelToWorld = &pInfo->modelToWorld;
+
+					// Turns the origin + angles into a matrix
+					AngleMatrix(pInfo->angles, pInfo->origin, pInfo->modelToWorld);
+				}
+				;
+				// Set override material for glow color
+				IMaterial* pMatGlowColor = NULL;
+				if (m_iVortEffectType == 2)
+					pMatGlowColor = materials->FindMaterial("engine/shield", TEXTURE_GROUP_OTHER, true);
+				else
+					pMatGlowColor = materials->FindMaterial("engine/buff", TEXTURE_GROUP_OTHER, true);
+				if (pMatGlowColor)
+				{
+					pMatGlowColor->AddRef();
+					modelrender->ForcedMaterialOverride(pMatGlowColor);
+					
+				}
+
+				// Scale the base transform if we don't have a bone hierarchy
+				CStudioHdr* pHdr = GetModelPtr();
+				// Yes we do need to save how these were before
+				matrix3x4_t pBones[MAXSTUDIOBONES]; // maybe have this be global?
+	
+				if (!InterpScale())
+					InterpScale();
+				if (pHdr)
+				{
+					for (int i = 0; i < pHdr->numbones(); i++)
+					{
+						matrix3x4_t& transform = GetBoneForWrite(i);
+						// Apply client-side effects to the transformation matrix
+						
+						float scale = 1.1;
+						// Yes, we do need to copy this over to our array
+						MatrixCopy(transform, pBones[i]);
+						VectorScale(transform[0], scale, transform[0]);
+						VectorScale(transform[1], scale, transform[1]);
+						VectorScale(transform[2], scale, transform[2]);
+					}
+				}
+
+				// Now draw the model
+				DrawModelState_t state;
+				matrix3x4_t* pBoneToWorld = NULL;
+				bool bMarkAsDrawn = modelrender->DrawModelSetup(*pInfo, &state, NULL, &pBoneToWorld);
+				DoInternalDrawModel(pInfo, (bMarkAsDrawn && (pInfo->flags & STUDIO_RENDER)) ? &state : NULL, pBoneToWorld);
+				OnPostInternalDrawModel(pInfo);
+				
+				
+				if (pMatGlowColor)
+				{
+					modelrender->ForcedMaterialOverride(0);
+				}
+
+				if (pHdr)
+				{
+					// Yes we need to apply them back after we've drawn the outline
+					for (int i = 0; i < pHdr->numbones(); i++)
+					{
+						matrix3x4_t& transform = GetBoneForWrite(i);
+						MatrixCopy(pBones[i], transform);
+					}
+				}
+
+				return bMarkAsDrawn;
+			}
+		}
+
+		return ret;
+}
 //-----------------------------------------------------------------------------
 // Makes ragdolls ignore npcclip brushes
 //-----------------------------------------------------------------------------
@@ -68,6 +190,38 @@ void C_AI_BaseNPC::ClientThink( void )
 {
 	BaseClass::ClientThink();
 
+
+
+	if (m_bShouldDrawShieldOverlay)
+	{
+		CParticleProperty* pProp = ParticleProp();
+
+		if (!m_pShieldFX)
+		{
+			m_pShieldFX = pProp->Create("shield_form", PATTACH_ROOTBONE_FOLLOW);
+		}
+	}
+	else
+	{
+		if (m_pShieldFX)
+		{
+			m_pShieldFX = NULL;
+			CParticleProperty* pProp = ParticleProp();
+			shieldtimer = 0;
+			if (!m_pShieldBurstFX)
+			{
+				m_pShieldBurstFX = pProp->Create("shield_burst", PATTACH_ROOTBONE_FOLLOW);
+			}
+		}
+	}
+	
+	shieldtimer++;
+	if (shieldtimer >= 100)
+		shieldtimer = 100;
+	if (m_pShieldBurstFX && shieldtimer == 100)
+	{
+		m_pShieldBurstFX = NULL;
+	}
 #ifdef HL2_DLL
 	C_BaseHLPlayer *pPlayer = dynamic_cast<C_BaseHLPlayer*>( C_BasePlayer::GetLocalPlayer() );
 

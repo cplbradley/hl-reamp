@@ -1,4 +1,4 @@
-//========= Copyright � 1996-2005, Valve Corporation, All rights reserved. ============//
+﻿//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Single Player animation state 'handler'. This utility is used
 //            to evaluate the pose parameter value based on the direction
@@ -19,11 +19,11 @@ extern ConVar mp_facefronttime, mp_feetyawrate, mp_ik;
 
 #define MIN_TURN_ANGLE_REQUIRING_TURN_ANIMATION        15.0f
 
-CSinglePlayerAnimState *CreatePlayerAnimationState(CBasePlayer *pPlayer)
+CSinglePlayerAnimState* CreatePlayerAnimationState(CBasePlayer* pPlayer)
 {
 	MDLCACHE_CRITICAL_SECTION();
 
-	CSinglePlayerAnimState *pState = new CSinglePlayerAnimState(pPlayer);
+	CSinglePlayerAnimState* pState = new CSinglePlayerAnimState(pPlayer);
 	pState->Init(pPlayer);
 
 	return pState;
@@ -42,7 +42,7 @@ extern ConVar mp_feetyawrate;
 extern ConVar mp_facefronttime;
 extern ConVar mp_ik;
 
-CSinglePlayerAnimState::CSinglePlayerAnimState(CBasePlayer *pPlayer) : m_pPlayer(pPlayer)
+CSinglePlayerAnimState::CSinglePlayerAnimState(CBasePlayer* pPlayer) : m_pPlayer(pPlayer)
 {
 	m_flGaitYaw = 0.0f;
 	m_flGoalFeetYaw = 0.0f;
@@ -55,7 +55,7 @@ CSinglePlayerAnimState::CSinglePlayerAnimState(CBasePlayer *pPlayer) : m_pPlayer
 	m_pPlayer = NULL;
 };
 
-void CSinglePlayerAnimState::Init(CBasePlayer *pPlayer)
+void CSinglePlayerAnimState::Init(CBasePlayer* pPlayer)
 {
 	m_pPlayer = pPlayer;
 }
@@ -65,7 +65,7 @@ void CSinglePlayerAnimState::Init(CBasePlayer *pPlayer)
 //-----------------------------------------------------------------------------
 void CSinglePlayerAnimState::Update()
 {
-	m_angRender = GetBasePlayer()->GetLocalAngles();
+	m_angRender = GetBasePlayer()->GetAbsAngles();
 
 	ComputePoseParam_BodyYaw();
 	ComputePoseParam_BodyPitch(GetBasePlayer()->GetModelPtr());
@@ -115,7 +115,7 @@ void CSinglePlayerAnimState::ComputePlaybackRate()
 // Purpose:
 // Output : CBasePlayer
 //-----------------------------------------------------------------------------
-CBasePlayer *CSinglePlayerAnimState::GetBasePlayer()
+CBasePlayer* CSinglePlayerAnimState::GetBasePlayer()
 {
 	return m_pPlayer;
 }
@@ -138,11 +138,11 @@ void CSinglePlayerAnimState::EstimateYaw(void)
 
 	GetOuterAbsVelocity(est_velocity);
 
-	angles = GetBasePlayer()->GetLocalAngles();
+	angles = GetBasePlayer()->GetAbsAngles();
 
 	if (est_velocity[1] == 0 && est_velocity[0] == 0)
 	{
-		float flYawDiff = angles[YAW] - m_flGaitYaw;
+		/*float flYawDiff = angles[YAW] - m_flGaitYaw;
 		flYawDiff = flYawDiff - (int)(flYawDiff / 360) * 360;
 		if (flYawDiff > 180)
 			flYawDiff -= 360;
@@ -156,6 +156,14 @@ void CSinglePlayerAnimState::EstimateYaw(void)
 
 		m_flGaitYaw += flYawDiff;
 		m_flGaitYaw = m_flGaitYaw - (int)(m_flGaitYaw / 360) * 360;
+
+		DevMsg("Playermodel Yaw: %f\n", m_flGaitYaw);*/
+		m_flGaitYaw = (atan2(est_velocity[1], est_velocity[0]) * 180 / M_PI);
+
+		if (m_flGaitYaw > 180)
+			m_flGaitYaw = 180;
+		else if (m_flGaitYaw < -180)
+			m_flGaitYaw = -180;
 	}
 	else
 	{
@@ -175,6 +183,7 @@ void CSinglePlayerAnimState::EstimateYaw(void)
 void CSinglePlayerAnimState::ComputePoseParam_BodyYaw(void)
 {
 	int iYaw = GetBasePlayer()->LookupPoseParameter("move_yaw");
+	int iRoll = GetBasePlayer()->LookupPoseParameter("body_roll");
 	if (iYaw < 0)
 		return;
 
@@ -209,21 +218,57 @@ void CSinglePlayerAnimState::ComputePoseParam_BodyYaw(void)
 		flYaw = flYaw - 360;
 	}
 
+	///////////////////////////
+	/// BODY ROLLING///////////
+	///////////////////////////--------------------------------------------------------------------------------------------------------------------------------------------------------------
+	///
+	/// This uses the quadratic formula of parabolas to calculate the best amount of body roll to give based on the current movement yaw. this feeds into the Pose Parameter for body roll,
+	/// which has a range of -30 to 30, while the yaw has a range of -180 to 180.
+	/// 
+	/// x = yaw 
+	/// y = roll
+	///
+	/// if moving right, your 3 coordinates are (0,0); (0,180); and (90,30);  the formula is as follows: y = (x-90)^2/270 + 30;
+	/// if moving left, you have to invert the formula and your 3 coordinates are (0,0); (0,-180); (-90,-30); the formula is as follows: y = (x+90)^2/270 - 30;
+	/// 
+	/// once the formula is calculated, the output is multiplied by a ratio of currentspeed / maxspeed to smooth out the transitions.
+	/// 
+	///////////////////////////--------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	float mult;
+	if (flYaw < 0) //if moving left
+		mult = (((flYaw + 90) * (flYaw + 90)) / 270) - 30; //invert the formula
+	else if (flYaw > 0) //if moving right
+		mult = (-(((flYaw - 90) * (flYaw - 90)) / 270) + 30); //do the formula not inverted
+	else //if moving forward, backward, or not at all
+		mult = 0; //
+	float speed = GetBasePlayer()->GetAbsVelocity().Length();
+	float ratio = speed / GetBasePlayer()->GetPlayerMaxSpeed();
+	
+//	DevMsg("Testing Parabolic Formula. Yaw = %f , Parabolic ratio is %f\n", flYaw, mult);
 	GetBasePlayer()->SetPoseParameter(iYaw, flYaw);
+
+	if (GetBasePlayer()->GetActiveWeapon() && !FClassnameIs(GetBasePlayer()->GetActiveWeapon(), "weapon_ar2"))
+		GetBasePlayer()->SetPoseParameter(iRoll, ratio * mult); // *HACKHACK* - Don't apply body rolling when using the chaingun because it fucks with the animations
+	else
+		GetBasePlayer()->SetPoseParameter(iRoll, 0);
+
+
+
 
 #ifndef CLIENT_DLL
 	//Adrian: Make the model's angle match the legs so the hitboxes match on both sides.
-	GetBasePlayer()->SetLocalAngles(QAngle(GetBasePlayer()->EyeAngles().x, m_flCurrentFeetYaw, 0));
+	//GetBasePlayer()->SetLocalAngles(QAngle(GetBasePlayer()->EyeAngles().x, m_flCurrentFeetYaw, 0));
 #endif
 }
 
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CSinglePlayerAnimState::ComputePoseParam_BodyPitch(CStudioHdr *pStudioHdr)
+void CSinglePlayerAnimState::ComputePoseParam_BodyPitch(CStudioHdr* pStudioHdr)
 {
 	// Get pitch from v_angle
-	float flPitch = GetBasePlayer()->GetLocalAngles()[PITCH];
+	float flPitch = GetBasePlayer()->EyeAngles()[PITCH];
 
 	if (flPitch > 180.0f)
 	{
@@ -348,15 +393,15 @@ void CSinglePlayerAnimState::ComputePoseParam_BodyLookYaw(void)
 		float yawdelta = GetBasePlayer()->EyeAngles().y - m_flCurrentFeetYaw;
 		yawdelta = AngleNormalize(yawdelta);
 
-		bool rotated_too_far = false;
+		bool rotated_too_far = true;
 
-		float yawmagnitude = fabs(yawdelta);
+		//float yawmagnitude = fabs(yawdelta);
 
 		// If too far, then need to turn in place
-		if (yawmagnitude > 45)
+		/*if (yawmagnitude > 45)
 		{
 			rotated_too_far = true;
-		}
+		}*/
 
 		// Standing still for a while, rotate feet around to face forward
 		// Or rotated too far
@@ -368,21 +413,21 @@ void CSinglePlayerAnimState::ComputePoseParam_BodyLookYaw(void)
 			m_flLastTurnTime = gpGlobals->curtime;
 
 			/*    float yd = m_flCurrentFeetYaw - m_flGoalFeetYaw;
-			if ( yd > 0 )
-			{
-			m_nTurningInPlace = TURN_RIGHT;
-			}
-			else if ( yd < 0 )
-			{
-			m_nTurningInPlace = TURN_LEFT;
-			}
-			else
-			{
-			m_nTurningInPlace = TURN_NONE;
-			}
+				if ( yd > 0 )
+				{
+					m_nTurningInPlace = TURN_RIGHT;
+				}
+				else if ( yd < 0 )
+				{
+					m_nTurningInPlace = TURN_LEFT;
+				}
+				else
+				{
+					m_nTurningInPlace = TURN_NONE;
+				}
 
-			turning = ConvergeAngles( m_flGoalFeetYaw, turnrate, gpGlobals->frametime, m_flCurrentFeetYaw );
-			yawdelta = GetBasePlayer()->EyeAngles().y - m_flCurrentFeetYaw;*/
+				turning = ConvergeAngles( m_flGoalFeetYaw, turnrate, gpGlobals->frametime, m_flCurrentFeetYaw );
+				yawdelta = GetBasePlayer()->EyeAngles().y - m_flCurrentFeetYaw;*/
 
 		}
 
@@ -426,16 +471,17 @@ void CSinglePlayerAnimState::ComputePoseParam_BodyLookYaw(void)
 
 	if ( body_yaw >= 0 )
 	{
-	GetBasePlayer()->SetPoseParameter( body_yaw, 30 );
+		GetBasePlayer()->SetPoseParameter( body_yaw, 30 );
 	}
 	*/
+
 
 }
 
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CSinglePlayerAnimState::ComputePoseParam_HeadPitch(CStudioHdr *pStudioHdr)
+void CSinglePlayerAnimState::ComputePoseParam_HeadPitch(CStudioHdr* pStudioHdr)
 {
 	// Get pitch from v_angle
 	int iHeadPitch = GetBasePlayer()->LookupPoseParameter("head_pitch");

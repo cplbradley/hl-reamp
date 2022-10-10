@@ -1751,6 +1751,8 @@ void CNPC_Hunter::Spawn()
 	m_flGroundSpeed	= 500;
 	m_NPCState = NPC_STATE_NONE;
 
+	SetEnemyClass(ENEMYCLASS_HEAVY);
+
 	SetBloodColor( DONT_BLEED );
 	
 	m_iHealth = m_iMaxHealth = sk_hunter_health.GetInt();
@@ -3598,6 +3600,9 @@ void CNPC_Hunter::StartTask( const Task_t *pTask )
 //-----------------------------------------------------------------------------
 void CNPC_Hunter::RunTask( const Task_t *pTask )
 {
+
+	if (AmBeingBuffed())
+		SetPlaybackRate(2.0f);
 	switch ( pTask->iTask )
 	{
 		case TASK_HUNTER_PRE_RANGE_ATTACK2:

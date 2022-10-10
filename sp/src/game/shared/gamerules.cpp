@@ -27,6 +27,7 @@
 	#include "player_resource.h"
 	#include "tactical_mission.h"
 	#include "gamestats.h"
+#include "hl2_player.h"
 
 #endif
 
@@ -179,7 +180,7 @@ float CGameRules::AdjustProjectileSpeed(float projspeed)
 	{
 	case SKILL_EASY:
 		//Msg("adjusting speed to easy\n");
-		return (projspeed * 0.8f);
+		return (projspeed * 0.85f);
 		break;
 
 	case SKILL_MEDIUM:
@@ -291,8 +292,15 @@ void CGameRules::RefreshSkillData ( bool forceUpdate )
 #endif 
 
 	ConVarRef skill( "skill" );
-
-	SetSkillLevel( skill.IsValid() ? skill.GetInt() : 1 );
+	
+	CHL2_Player* pPlayer = dynamic_cast<CHL2_Player*>(UTIL_GetLocalPlayer());
+	if (pPlayer && pPlayer->m_HL2Local.m_bMasochistMode)
+	{
+		SetSkillLevel(SKILL_HARD);
+		engine->ServerCommand("skill 3");
+	}
+	else
+		SetSkillLevel( skill.IsValid() ? skill.GetInt() : 1 );
 
 #ifdef HL2_DLL
 	// HL2 current only uses one skill config file that represents MEDIUM skill level and
@@ -712,6 +720,12 @@ ConVar skill( "skill", "1" );
 void CGameRules::Think()
 {
 	GetVoiceGameMgr()->Update( gpGlobals->frametime );
+	CHL2_Player* pPlayer = dynamic_cast<CHL2_Player*>(UTIL_GetLocalPlayer());
+	if (pPlayer && pPlayer->m_HL2Local.m_bMasochistMode)
+	{
+		SetSkillLevel(SKILL_HARD);
+		engine->ServerCommand("skill 3\n");
+	}
 	SetSkillLevel( skill.GetInt() );
 
 	if ( log_verbose_enable.GetBool() )

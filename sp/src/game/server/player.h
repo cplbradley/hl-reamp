@@ -257,6 +257,8 @@ public:
 	IBotController *GetBotController() { return &m_PlayerInfo; }
 
 	virtual void			SetModel( const char *szModelName );
+
+
 	void					SetBodyPitch( float flPitch );
 
 	virtual void			UpdateOnRemove( void );
@@ -798,6 +800,7 @@ public:
 	//---------------------------------
 	// Inputs
 	//---------------------------------
+	void	InputSetModel(inputdata_t &inputdata);
 	void	InputSetHealth( inputdata_t &inputdata );
 	void	InputSetHUDVisibility( inputdata_t &inputdata );
 	void	InputHandleMapEvent( inputdata_t &inputdata );

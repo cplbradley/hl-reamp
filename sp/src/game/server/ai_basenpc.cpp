@@ -88,6 +88,7 @@
 #include "death_pose.h"
 #include "datacache/imdlcache.h"
 #include "vstdlib/jobthread.h"
+#include "particle_system.h"
 
 #ifdef HL2_EPISODIC
 #include "npc_alyx_episodic.h"
@@ -576,6 +577,50 @@ void CAI_BaseNPC::SelectDeathPose( const CTakeDamageInfo &info )
 	SetDeathPoseFrame( iDeathFrame );
 }
 
+void CAI_BaseNPC::StartHealing()
+{
+	m_bBeingHealed = true;
+}
+void CAI_BaseNPC::StopHealing()
+{
+	m_bBeingHealed = false;
+	m_bAmSelectedForHealing = false;
+	
+}
+void CAI_BaseNPC::StartShielding()
+{
+	m_bBeingShielded = true;
+	m_bShouldDrawShieldOverlay = true;
+	m_iVortEffectType = 2;
+}
+void CAI_BaseNPC::StopShielding()
+{
+	if (g_pGameRules->g_utlvec_vorteffectlist.HasElement(this->entindex()))
+	{
+		Warning("Done Shielding, Removing myself from the effect list\n");
+		g_pGameRules->g_utlvec_vorteffectlist.FindAndRemove(this->entindex());
+	}
+	m_bBeingShielded = false;
+	m_bAmSelectedForShielding = false;
+	m_bShouldDrawShieldOverlay = false;
+	m_iVortEffectType = -1;
+}
+void CAI_BaseNPC::StartBuffing()
+{
+	m_bBeingBuffed = true;
+	m_bShouldDrawShieldOverlay = true;
+	m_iVortEffectType = 3;
+	m_fBuffPlaybackRate = 2.0f;
+}
+void CAI_BaseNPC::StopBuffing()
+{
+	if (g_pGameRules->g_utlvec_vorteffectlist.HasElement(this->entindex()))
+		g_pGameRules->g_utlvec_vorteffectlist.FindAndRemove(this->entindex());
+	m_bBeingBuffed = false;
+	m_bShouldDrawShieldOverlay = false;
+	m_iVortEffectType = -1;
+	m_fBuffPlaybackRate = 1.0f;
+}
 //-----------------------------------------------------------------------------
 // Purpose:
 // Input  :
@@ -589,6 +634,9 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 	}
 
 	Wake( false );
+
+	if (g_pGameRules->g_utlvec_vorteffectlist.HasElement(entindex()))
+		g_pGameRules->g_utlvec_vorteffectlist.FindAndRemove(entindex());
 	
 	//Adrian: Select a death pose to extrapolate the ragdoll's velocity.
 	SelectDeathPose( info );
@@ -956,13 +1004,14 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 	// REVISIT: Combine soldiers shoot each other a lot and then talk about it
 	// this improves that case a bunch, but it seems kind of harsh.
+
+
 	if ( !m_pSquad || !m_pSquad->SquadIsMember( info.GetAttacker() ) )
 	{
 		PainSound( info );// "Ouch!"
 	}
 
-	if (info.GetAttacker()->IsPlayer())
-		DevMsg("Damage Recieved from player: %f", info.GetDamage());
+	
 	
 
 	if (nextdmg <= gpGlobals->curtime)
@@ -1010,6 +1059,11 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
  	// -----------------------------------
 	if ( m_flLastDamageTime != gpGlobals->curtime )
 	{
+		CTakeDamageInfo infoCopy = info;
+
+		if (AmBeingShielded())
+			infoCopy.ScaleDamage(0.1f);
+
 		// only fire once per frame
 		m_OnDamaged.FireOutput( info.GetAttacker(), this);
 
@@ -1025,7 +1079,7 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 			// See if the person that injured me is an NPC.
 			CAI_BaseNPC *pAttacker = dynamic_cast<CAI_BaseNPC *>( info.GetAttacker() );
 			CBasePlayer *pPlayer = AI_GetSinglePlayer();
-			CTakeDamageInfo infoCopy = info;
+			
 			if( pAttacker && pAttacker->IsAlive() && pPlayer )
 			{
 				if( pAttacker->GetSquad() != NULL && pAttacker->IsInPlayerSquad() )
@@ -1041,6 +1095,7 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 					this->AddEntityRelationship(pAttacker, D_HT, 99);
 				}
 			}
+			
 		}
 	}
 
@@ -1143,6 +1198,9 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	
 		NotifyFriendsOfDamage( info.GetAttacker() );
 	}
+
+	if (info.GetAttacker()->IsPlayer())
+		DevMsg("Damage Recieved from player: %f", info.GetDamage());
 
 	// ---------------------------------------------------------------
 	//  Insert a combat sound so that nearby NPCs know I've been hit
@@ -1480,6 +1538,9 @@ void CAI_BaseNPC::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir
 	{
 		subInfo.SetInflictor( info.GetAttacker() );
 	}
+
+	if (AmBeingShielded())
+		subInfo.ScaleDamage(0.5f);
 
 	AddMultiDamage( subInfo, this );
 }
@@ -4025,10 +4086,20 @@ void CAI_BaseNPC::PostNPCThink( void )
 	}
 	else
 	{
-		if (!m_afCapability & bits_CAP_MOVE_GROUND)
+		if (~m_afCapability & bits_CAP_MOVE_GROUND)
 			CapabilitiesAdd(bits_CAP_MOVE_GROUND);
 		SetPlaybackRate(1.0f);
 	}
+
+	if (AmBeingHealed() && (GetHealth() < GetMaxHealth()))
+	{
+		ConVarRef vorthealrate("sk_vortigaunt_heal_rate");
+		float healrate = g_pGameRules->AdjustProjectileSpeed(vorthealrate.GetFloat());
+		m_iHealth += healrate;
+	}
+
+
+	
 }
 
 void CAI_BaseNPC::CallNPCThink( void ) 
@@ -4367,6 +4438,11 @@ void CAI_BaseNPC::NPCThink( void )
 	else
 	{
 		m_flNextDecisionTime = 0;
+	}
+	if (AmBeingBuffed())
+	{
+		DevMsg("Am being buffed, should be multiplying my playback rate by %f\n", m_fBuffPlaybackRate);
+		m_flPlaybackRate *= 2.0f;
 	}
 }
 
@@ -11136,6 +11212,8 @@ IMPLEMENT_SERVERCLASS_ST( CAI_BaseNPC, DT_AI_BaseNPC )
 	SendPropBool( SENDINFO( m_bImportanRagdoll ) ),
 	SendPropBool(SENDINFO(m_bIsGibbed)),
 	SendPropFloat( SENDINFO( m_flTimePingEffect ) ),
+	SendPropBool(SENDINFO(m_bShouldDrawShieldOverlay)),
+	SendPropInt(SENDINFO(m_iVortEffectType)),
 END_SEND_TABLE()
 
 //-------------------------------------
@@ -11252,7 +11330,8 @@ void CAI_BaseNPC::Precache( void )
 	PrecacheModel("models/gibs/alien/agib_3.mdl");
 	PrecacheModel("models/gibs/alien/agib_4.mdl");
 	PrecacheParticleSystem("agib_sploosh");
-
+	PrecacheParticleSystem("shield_burst");
+	PrecacheParticleSystem("shield_form");
 
 	BaseClass::Precache();
 }
@@ -11667,7 +11746,7 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 	m_pSenses = NULL;
 	m_pPathfinder = NULL;
 	m_pLocalNavigator = NULL;
-
+	m_bBeingHealed = false;
 	m_pSchedule = NULL;
 	m_IdealSchedule = SCHED_NONE;
 

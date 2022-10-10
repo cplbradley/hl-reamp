@@ -1,0 +1,47 @@
+// Combos
+// DYNAMIC: "COMPRESSED_VERTS"		"0..1"
+// DYNAMIC: "SKINNING"		"0..1"
+
+// Includes
+#include "common_vs_fxc.h"
+
+
+// Constants
+const float g_cData_width		: register( c28 ); 		// Static
+
+// Semantic structures
+struct VS_INPUT
+{
+	float3 vPos					:	POSITION;
+	float4 vBoneWeights			:	BLENDWEIGHT;
+	float4 vBoneIndices			:	BLENDINDICES;
+	float4 vNormal				:	NORMAL;
+	float2 vTexCoord_0			:	TEXCOORD0;
+};
+
+struct VS_OUTPUT
+{
+	float4 vProjPos				:	POSITION;
+	float2 vTexCoord_0			:	TEXCOORD0;
+};
+
+// Entry point
+VS_OUTPUT main( const VS_INPUT In )
+{
+	VS_OUTPUT Out;
+	float3 _var0 = (float3)0;
+	DecompressVertex_Normal( In.vNormal, _var0 );
+	float3 _var1 = g_cData_width * _var0;
+	float3 _var2 = _var1;
+	_var2 = In.vPos + _var2;
+	float3 _var3 = _var2;
+	float3 _var4 = (float3)0;
+	float3 _var5 = (float3)0;
+	SkinPositionAndNormal( SKINNING, float4( _var3, 1 ), _var0,
+			In.vBoneWeights, In.vBoneIndices,
+			_var4, _var5 );
+	float4 _var6 = mul( float4(_var4.xyz,1), cViewProj );
+	Out.vProjPos = _var6;
+	Out.vTexCoord_0 = In.vTexCoord_0;
+	return Out;
+}

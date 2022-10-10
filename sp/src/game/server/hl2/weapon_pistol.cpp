@@ -145,6 +145,16 @@ acttable_t	CWeaponPistol::m_acttable[] =
 	{ ACT_GESTURE_RELOAD, ACT_GESTURE_RELOAD_PISTOL, false },
 	{ ACT_WALK, ACT_WALK_PISTOL, false },
 	{ ACT_RUN, ACT_RUN_PISTOL, false },
+
+
+	{ ACT_HL2MP_IDLE,					ACT_HL2MP_IDLE_PISTOL,					false },
+	{ ACT_HL2MP_RUN,					ACT_HL2MP_RUN_PISTOL,					false },
+	{ ACT_HL2MP_IDLE_CROUCH,			ACT_HL2MP_IDLE_CROUCH_PISTOL,			false },
+	{ ACT_HL2MP_WALK_CROUCH,			ACT_HL2MP_WALK_CROUCH_PISTOL,			false },
+	{ ACT_HL2MP_GESTURE_RANGE_ATTACK,	ACT_HL2MP_GESTURE_RANGE_ATTACK_PISTOL,	false },
+	{ ACT_HL2MP_GESTURE_RELOAD,			ACT_HL2MP_GESTURE_RELOAD_PISTOL,		false },
+	{ ACT_HL2MP_JUMP,					ACT_HL2MP_JUMP_PISTOL,					false },
+	{ ACT_RANGE_ATTACK1,				ACT_RANGE_ATTACK_PISTOL,				false },
 };
 
 
@@ -312,7 +322,11 @@ void CWeaponPistol::FireProjectile(void)
 	AngleVectors(pPlayer->EyeAngles(), &vecDir);
 	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
 	Vector vecAiming;
-	Vector vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 20.0f + vRight * 2.0f + vUp * -3.0f;
+	Vector vecSrc;
+	QAngle throwaway;
+	
+	vecSrc = pPlayer->Weapon_ShootPosition();
+
 	
 	QAngle angAiming = pPlayer->EyeAngles();
 	AngleVectors(angAiming, &vecAiming);
@@ -321,12 +335,11 @@ void CWeaponPistol::FireProjectile(void)
 	UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_SHOT, pPlayer, COLLISION_GROUP_NONE, &tr);
 	Vector vecShotDir = (tr.endpos - vecSrc).Normalized();
 	//pPlayer->FireBullets(1, vecSrc, vecShotDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false);
-	int iAttachment = LookupAttachment("muzzle");
 	//DispatchParticleEffect("pistol_core", tr.endpos, GetAbsAngles(), this);
-	DispatchParticleEffect("pistol_core", PATTACH_POINT_FOLLOW, pPlayer->GetViewModel(), iAttachment, true);
+	DispatchParticleEffect("pistol_core", PATTACH_POINT_FOLLOW, pPlayer->GetViewModel(), LookupAttachment("muzzle"), true);
 	CHLRPistolProjectile *pPew = (CHLRPistolProjectile*)CreateEntityByName("hlr_pistolprojectile");
-	pPew->Spawn();
 	UTIL_SetOrigin(pPew, vecSrc);
+	pPew->Spawn();
 	pPew->SetAbsVelocity(vecShotDir * 8000.0f);
 //	pPew->SetTargetPos(tr.endpos, 8000.0f);
 	pPew->SetOwnerEntity(pPlayer);

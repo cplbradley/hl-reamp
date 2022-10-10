@@ -1670,7 +1670,7 @@ void CBaseServerVehicle::NPC_TurnCenter( void )
 //-----------------------------------------------------------------------------
 void CBaseServerVehicle::NPC_PrimaryFire( void )
 {
-	m_nNPCButtons |= IN_ATTACK;
+	//m_nNPCButtons |= IN_ATTACK;
 }
 
 //-----------------------------------------------------------------------------
@@ -1678,7 +1678,7 @@ void CBaseServerVehicle::NPC_PrimaryFire( void )
 //-----------------------------------------------------------------------------
 void CBaseServerVehicle::NPC_SecondaryFire( void )
 {
-	m_nNPCButtons |= IN_ATTACK2;
+	//m_nNPCButtons |= IN_ATTACK2;
 }
 
 //-----------------------------------------------------------------------------

@@ -1844,6 +1844,10 @@ DEFINE_INPUTFUNC(FIELD_FLOAT, "SetPlaybackRate", InputSetPlaybackRate),
 // Outputs
 DEFINE_OUTPUT(m_pOutputAnimBegun, "OnAnimationBegun"),
 DEFINE_OUTPUT(m_pOutputAnimOver, "OnAnimationDone"),
+DEFINE_OUTPUT(m_pOutputAnimEvent1,"OnAnimEvent1"),
+DEFINE_OUTPUT(m_pOutputAnimEvent2, "OnAnimEvent2"),
+DEFINE_OUTPUT(m_pOutputAnimEvent3, "OnAnimEvent3"),
+DEFINE_OUTPUT(m_pOutputAnimEvent4, "OnAnimEvent4"),
 //DEFINE_OUTPUT(m_pOutputOnUse, "OnUse"),
 
 
@@ -2150,7 +2154,31 @@ void CDynamicProp::HandleAnimEvent( animevent_t *pEvent )
 			EmitSound( pEvent->options );
 			break;
 		}
-		
+
+		case AE_HAMMER_EVENT1:
+		{
+			m_pOutputAnimEvent1.FireOutput(NULL, this);
+			Msg("AnimEvent1 Output Fired\n");
+			break;
+		}
+		case AE_HAMMER_EVENT2:
+		{
+			m_pOutputAnimEvent2.FireOutput(NULL, this);
+			Msg("AnimEvent2 Output Fired\n");
+			break;
+		}
+		case AE_HAMMER_EVENT3:
+		{
+			m_pOutputAnimEvent3.FireOutput(NULL, this);
+			Msg("AnimEvent3 Output Fired\n");
+			break;
+		}
+		case AE_HAMMER_EVENT4:
+		{
+			m_pOutputAnimEvent4.FireOutput(NULL, this);
+			Msg("AnimEvent4 Output Fired\n");
+			break;
+		}
 		default:
 		{
 			break;

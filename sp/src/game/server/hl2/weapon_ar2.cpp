@@ -113,6 +113,16 @@ acttable_t	CWeaponAR2::m_acttable[] =
 	{ ACT_RANGE_ATTACK1_LOW,		ACT_RANGE_ATTACK_SMG1_LOW,		true },		// FIXME: hook to AR2 unique
 	{ ACT_RELOAD_LOW,				ACT_RELOAD_SMG1_LOW,			false },
 	{ ACT_GESTURE_RELOAD,			ACT_GESTURE_RELOAD_SMG1,		true },
+
+
+	{ ACT_HL2MP_IDLE, ACT_HLR_IDLE_CHAINGUN, false },
+	{ ACT_HL2MP_RUN, ACT_HLR_RUN_CHAINGUN, false },
+	{ ACT_HL2MP_IDLE_CROUCH, ACT_HL2MP_IDLE_CROUCH_SMG1, false },
+	{ ACT_HL2MP_WALK_CROUCH, ACT_HL2MP_WALK_CROUCH_SMG1, false },
+	{ ACT_HL2MP_GESTURE_RANGE_ATTACK, ACT_HL2MP_GESTURE_RANGE_ATTACK_SMG1, false },
+	{ ACT_HL2MP_GESTURE_RELOAD, ACT_GESTURE_RELOAD_SMG1, false },
+	{ ACT_HL2MP_JUMP, ACT_HLR_JUMP_CHAINGUN, false },
+	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_SMG1, false },
 //	{ ACT_RANGE_ATTACK2, ACT_RANGE_ATTACK_AR2_GRENADE, true },
 };
 
@@ -154,33 +164,17 @@ void CWeaponAR2::Precache( void )
 //-----------------------------------------------------------------------------
 // Purpose: Handle grenade detonate in-air (even when no ammo is left)
 //-----------------------------------------------------------------------------
-void CWeaponAR2::ItemPostFrame( void )
+void CWeaponAR2::ItemPostFrame(void)
 {
 	// See if we need to fire off our secondary round
-	if ( m_bShotDelayed && gpGlobals->curtime > m_flDelayedFire )
+	if (m_bShotDelayed && gpGlobals->curtime > m_flDelayedFire)
 	{
 		DelayedAttack();
 	}
 
 	// Update our pose parameter for the vents
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	CBasePlayer* pOwner = ToBasePlayer(GetOwner());
 
-	if ( pOwner )
-	{
-		CBaseViewModel *pVM = pOwner->GetViewModel();
-
-		if ( pVM )
-		{
-			if ( m_nVentPose == -1 )
-			{
-				m_nVentPose = pVM->LookupPoseParameter( "VentPoses" );
-			}
-			
-			float flVentPose = RemapValClamped( m_nShotsFired, 0, 5, 0.0f, 1.0f );
-			pVM->SetPoseParameter( m_nVentPose, flVentPose );
-		}
-	}
-	
 	if (pOwner->m_nButtons & IN_ATTACK)
 	{
 		m_flfirerate -= 0.003f;
@@ -218,6 +212,19 @@ void CWeaponAR2::ItemPostFrame( void )
 
 	
 	UpdateWeaponSoundState();
+
+
+	ConVarRef thirdperson("g_thirdperson");
+	if (thirdperson.GetBool())
+	{
+		if (!Q_strcmp(STRING(GetModelName()), GetWorldModel()))
+			SetModel(GetWorldModel());
+	}
+	else
+	{
+		if (!Q_strcmp(STRING(GetModelName()), GetViewModel()))
+			SetModel(GetViewModel());
+	}
 	BaseClass::ItemPostFrame();
 }
 void CWeaponAR2::Equip(CBaseCombatCharacter *pOwner)
@@ -289,16 +296,20 @@ void CWeaponAR2::PrimaryAttack(void)
 	if (!pPlayer)
 		return;
 	int iAttachment = LookupAttachment("muzzle");
-	DispatchParticleEffect("smg_core", PATTACH_POINT_FOLLOW, pPlayer->GetViewModel(), iAttachment, true);
+	ConVarRef g_thirdperson("g_thirdperson");
+	if (g_thirdperson.GetBool())
+		DispatchParticleEffect("smg_core", PATTACH_POINT_FOLLOW, this, iAttachment, true);
+	else
+		DispatchParticleEffect("smg_core", PATTACH_POINT_FOLLOW, pPlayer->GetViewModel(), iAttachment, true);
 
 
 	// Abort here to handle burst and auto fire modes
 	if ((UsesClipsForAmmo1() && m_iClip1 == 0) || (!UsesClipsForAmmo1() && !pPlayer->GetAmmoCount(m_iPrimaryAmmoType)))
 		return;
 
-	m_nShotsFired++;
+	//m_nShotsFired++;
 
-	pPlayer->DoMuzzleFlash();
+	//pPlayer->DoMuzzleFlash();
 	/*DevMsg("serverside muzzle R = %i\n", m_iMuzzleR);
 	DevMsg("serverside muzzle G = %i\n", m_iMuzzleG);
 	DevMsg("serverside muzzle B = %i\n", m_iMuzzleB);*/
@@ -331,18 +342,50 @@ void CWeaponAR2::PrimaryAttack(void)
 	gamestats->Event_WeaponFired(pPlayer, true, GetClassname());
 	Vector vUp, vRight, vForward;
 	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
-	Vector vecSrc = pPlayer->Weapon_ShootPosition() + vRight * 4.0f + vUp * -3.0f;
+	Vector vecThirdPersonSrc;
+	QAngle angThird;
+
+
+	Vector vecSrc, vecDirShooting;
+
+	if (g_thirdperson.GetBool())
+	{
+		Vector vecBarrelPos = pPlayer->WorldSpaceCenter() + (vForward * 16.0f) + (vRight * 6.0f);
+		trace_t tr, tr2;
+		UTIL_TraceLine(pPlayer->EyePosition(), pPlayer->EyePosition() + (vForward * MAX_TRACE_LENGTH), MASK_SHOT, pPlayer, COLLISION_GROUP_NONE, &tr);
+		UTIL_TraceLine(pPlayer->WorldSpaceCenter(), vecBarrelPos, MASK_SHOT, pPlayer, COLLISION_GROUP_NONE, &tr2);
+		if (tr2.fraction == 1.0f) //if our barrel position isn't occluded
+		{
+			vecSrc = vecBarrelPos; //shoot from barrel position
+		}
+		else //if it is occluded
+		{
+			vecSrc = pPlayer->WorldSpaceCenter(); //move our shoot position back by the difference
+		}
+
+		vecDirShooting = (tr.endpos - vecSrc).Normalized();
+
+	}
+	else
+	{
+		Vector vecSrcPoint = pPlayer->Weapon_ShootPosition() + vRight * 4.0f + vUp * -3.0f;
+		vecSrc = vecSrcPoint + RandomVector(-4, 4);
+		vecDirShooting = pPlayer->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT);
+	}
 	// Fire the bullets
 	FireBulletsInfo_t info;
 	info.m_iShots = iBulletsToFire;
-	info.m_vecSrc = vecSrc + RandomVector(-4, 4);
-	info.m_vecDirShooting = pPlayer->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT);
+	info.m_vecSrc = vecSrc;
+	info.m_vecDirShooting = vecDirShooting;
 	info.m_vecSpread = pPlayer->GetAttackSpread(this);
 	info.m_flDistance = MAX_TRACE_LENGTH;
 	info.m_iAmmoType = m_iPrimaryAmmoType;
 	info.m_iTracerFreq = 1;
 	info.m_pAttacker = pPlayer;
 	FireActualBullet(info, 8000, GetTracerType());
+
+	DoMuzzleFlashLight(vMuzzleFlashLightColor, vecSrc);
+
 	//FireBullets(info);
 
 	//Factor in the view kick

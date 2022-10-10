@@ -360,7 +360,8 @@ public:
 	virtual bool			UsesClipsForAmmo2( void ) const;
 	bool					IsMeleeWeapon() const;
 
-	CNetworkVar(Vector,vMuzzleFlashLightColor);
+	CNetworkVector(vMuzzleFlashLightColor);
+
 
 	virtual void DoMuzzleFlashLight(Vector vecColor, Vector vecSrc);
 

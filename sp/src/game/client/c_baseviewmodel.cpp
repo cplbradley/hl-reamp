@@ -18,6 +18,8 @@
 #include "tools/bonelist.h"
 #include <KeyValues.h>
 #include "hltvcamera.h"
+#include "c_basehlplayer.h"
+#include "c_baseplayer.h"
 
 #if defined( REPLAY_ENABLED )
 #include "replay/replaycamera.h"
@@ -32,9 +34,9 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#ifdef CSTRIKE_DLL
-	ConVar cl_righthand( "cl_righthand", "1", FCVAR_ARCHIVE, "Use right-handed view models." );
-#endif
+
+ConVar cl_flipviewmodel( "cl_flipviewmodel", "0", FCVAR_HIDDEN | FCVAR_ARCHIVE, "Use right-handed view models." );
+
 
 #ifdef TF_CLIENT_DLL
 	ConVar cl_flipviewmodels( "cl_flipviewmodels", "0", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_NOT_CONNECTED, "Flip view models." );
@@ -194,6 +196,11 @@ bool C_BaseViewModel::Interpolate( float currentTime )
 
 inline bool C_BaseViewModel::ShouldFlipViewModel()
 {
+
+	C_BaseHLPlayer* pPlayer = dynamic_cast<C_BaseHLPlayer*>(C_BasePlayer::GetLocalPlayer());
+	return pPlayer->m_HL2Local.m_bInvertedScreen;
+	//if (pPlayer->m_HL2Local.m_bInvertedScreen == true)
+		//return true;
 #ifdef CSTRIKE_DLL
 	// If cl_righthand is set, then we want them all right-handed.
 	CBaseCombatWeapon *pWeapon = m_hWeapon.Get();
@@ -212,7 +219,7 @@ inline bool C_BaseViewModel::ShouldFlipViewModel()
 	}
 #endif
 
-	return false;
+	//return false;
 }
 
 

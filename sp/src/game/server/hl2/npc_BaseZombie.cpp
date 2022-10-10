@@ -2078,6 +2078,10 @@ void CNPC_BaseZombie::PrescheduleThink( void )
 //---------------------------------------------------------
 void CNPC_BaseZombie::StartTask( const Task_t *pTask )
 {
+	if (AmBeingBuffed())
+	{
+		SetPlaybackRate(2.0f);
+	}
 	switch( pTask->iTask )
 	{
 	case TASK_ZOMBIE_DIE:

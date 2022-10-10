@@ -48,6 +48,8 @@ public:
 	virtual float			GetAmmoQuantityScale( int iAmmoIndex );
 	virtual void			LevelInitPreEntity();
 
+	
+
 #endif
 
 private:

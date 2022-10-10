@@ -88,6 +88,12 @@ typedef enum
 	AE_SUPERSHOTGUN_OPENBARREL,
 	AE_SUPERSHOTGUN_CLOSEBARREL,	// Play a weapon sound from the weapon script file
 
+
+	AE_HAMMER_EVENT1,
+	AE_HAMMER_EVENT2,
+	AE_HAMMER_EVENT3,
+	AE_HAMMER_EVENT4,
+
 	LAST_SHARED_ANIMEVENT,
 } Animevent;
 

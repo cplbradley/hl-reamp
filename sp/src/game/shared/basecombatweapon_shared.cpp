@@ -1790,6 +1790,7 @@ void CBaseCombatWeapon::ItemPostFrame(void)
 			WeaponIdle();
 		}
 	}
+
 }
 
 void CBaseCombatWeapon::HandleFireOnEmpty()
@@ -2777,6 +2778,7 @@ SendPropTime(SENDINFO(m_flNextPrimaryAttack)),
 SendPropTime(SENDINFO(m_flNextSecondaryAttack)),
 SendPropInt(SENDINFO(m_nNextThinkTick)),
 SendPropTime(SENDINFO(m_flTimeWeaponIdle)),
+SendPropVector(SENDINFO(vMuzzleFlashLightColor)),
 
 #if defined( TF_DLL )
 SendPropExclude("DT_AnimTimeMustBeFirst", "m_flAnimTime"),
@@ -2787,6 +2789,7 @@ RecvPropTime(RECVINFO(m_flNextPrimaryAttack)),
 RecvPropTime(RECVINFO(m_flNextSecondaryAttack)),
 RecvPropInt(RECVINFO(m_nNextThinkTick)),
 RecvPropTime(RECVINFO(m_flTimeWeaponIdle)),
+RecvPropVector(RECVINFO(vMuzzleFlashLightColor)),
 #endif
 END_NETWORK_TABLE()
 

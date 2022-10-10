@@ -1428,8 +1428,8 @@ acttable_t	CWeaponRPG::m_acttable[] =
 	{ ACT_RUN_CROUCH, ACT_RUN_CROUCH_RPG, true },
 	{ ACT_COVER_LOW, ACT_COVER_LOW_RPG, true },
 
-	{ ACT_HL2MP_IDLE, ACT_HL2MP_IDLE_RPG, false },
-	{ ACT_HL2MP_RUN, ACT_HL2MP_RUN_RPG, false },
+	{ ACT_HL2MP_IDLE, ACT_HLR_IDLE_ROCKETLAUNCHER, false },
+	{ ACT_HL2MP_RUN, ACT_HLR_RUN_ROCKETLAUNCHER, false },
 	{ ACT_HL2MP_IDLE_CROUCH, ACT_HL2MP_IDLE_CROUCH_RPG, false },
 	{ ACT_HL2MP_WALK_CROUCH, ACT_HL2MP_WALK_CROUCH_RPG, false },
 	{ ACT_HL2MP_GESTURE_RANGE_ATTACK, ACT_HL2MP_GESTURE_RANGE_ATTACK_RPG, false },
@@ -2080,6 +2080,7 @@ int CWeaponRPG::WeaponRangeAttack1Condition(float flDot, float flDist)
 		return 0;
 
 	// See if there's anyone in the way!
+
 	CAI_BaseNPC *pOwner = GetOwner()->MyNPCPointer();
 	ASSERT(pOwner != NULL);
 
@@ -2204,6 +2205,13 @@ void CWeaponRPG::UpdateLaserEffects(void)
 {
 	if (!m_bGuiding)
 		return;
+	ConVarRef thirdperson("g_thirdperson");
+	if (thirdperson.GetBool())
+	{
+		m_hLaserMuzzleSprite->SetBrightness(0,0.0f);
+		m_hLaserBeam->SetBrightness(0);
+		return;
+	}
 
 	if (m_hLaserBeam != NULL)
 	{

@@ -1056,9 +1056,13 @@ void CHudWeaponSelection::OpenSelection( void )
 	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("OpenWeaponSelectionMenu");
 	m_iSelectedBoxPosition = 0;
 	m_iSelectedSlot = -1;
-	ConVar *host_timescale = cvar->FindVar("host_timescale");
-	engine->ClientCmd_Unrestricted("sv_cheats 1");
-	host_timescale->SetValue(0.3f);
+	ConVarRef slowmo("hud_weapon_selection_slowmo");
+	if (slowmo.GetBool())
+	{
+		ConVar* host_timescale = cvar->FindVar("host_timescale");
+		engine->ClientCmd_Unrestricted("sv_cheats 1");
+		host_timescale->SetValue(0.3f);
+	}
 	CSingleUserRecipientFilter user(CBasePlayer::GetLocalPlayer());
 	//enginesound->SetPlayerDSP(user, 31, false);
 }
@@ -1071,9 +1075,13 @@ void CHudWeaponSelection::HideSelection( void )
 	CBaseHudWeaponSelection::HideSelection();
 	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("CloseWeaponSelectionMenu");
 	m_bFadingOut = false;
-	ConVar *host_timescale = cvar->FindVar("host_timescale");
-	engine->ClientCmd_Unrestricted("sv_cheats 0");
-	host_timescale->SetValue(1.0f);
+	ConVarRef slowmo("hud_weapon_selection_slowmo");
+	if (slowmo.GetBool())
+	{
+		ConVar* host_timescale = cvar->FindVar("host_timescale");
+		engine->ClientCmd_Unrestricted("sv_cheats 1");
+		host_timescale->SetValue(1);
+	}
 	CSingleUserRecipientFilter user(CBasePlayer::GetLocalPlayer());
 	//enginesound->SetPlayerDSP(user, 1, false);
 }

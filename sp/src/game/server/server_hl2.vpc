@@ -52,6 +52,7 @@ $Project "Server (HL2)"
 		$Folder "HLR"
 			{
 				$File "hl2/hlr/item_custom.cpp"
+				$File "hl2/hlr/item_armor.cpp"
 				$File "hl2/hlr/actual_bullet.cpp"
 				$File "hl2/hlr/actual_bullet.h"
 				$File "hl2/hlr/logic_difficulty.cpp"
@@ -89,11 +90,13 @@ $Project "Server (HL2)"
 				$File "$SRCDIR\game\shared\hl2\hlr\hlr_shareddefs.h"
 				$File "$SRCDIR\game\shared\singleplayer_animstate.cpp"
 				$File "$SRCDIR\game\shared\singleplayer_animstate.h"
+				$File "movie_display.cpp"
+				$File "hl2/hlr/hlr_screen_flipper.cpp"
 			}
 			$Folder "FMOD"
 			{
-				$File "$SRCDIR\game\shared\fmod\fmod_dynamic_player.cpp"
-				$File "$SRCDIR\game\shared\fmod\fmod_dynamic_player.h"
+				//$File "$SRCDIR\game\shared\fmod\fmod_dynamic_player.cpp"
+				//$File "$SRCDIR\game\shared\fmod\fmod_dynamic_player.h"
 			}
 		$Folder	"HL2 DLL"
 		{

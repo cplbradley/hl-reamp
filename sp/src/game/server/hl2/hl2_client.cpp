@@ -65,6 +65,13 @@ void ClientActive( edict_t *pEdict, bool bLoadGame )
 	if ( !bLoadGame )
 	{
 		pPlayer->Spawn();
+		ConVarRef masochist("g_masochist_mode");
+
+		if (masochist.GetBool())
+		{
+			pPlayer->m_HL2Local.m_bMasochistMode = true;
+			engine->ClientCommand(pEdict, "g_masochist_mode 0\n");
+		}
 	}
 }
 
@@ -142,8 +149,8 @@ void respawn( CBaseEntity *pEdict, bool fCopyCorpse )
 	}
 	else
 	{       // restart the entire server
-		ConVarRef masochist("g_masochist_mode");
-		if (masochist.GetBool() == true)
+		CHL2_Player* pPlayer = dynamic_cast<CHL2_Player*>(UTIL_GetLocalPlayer());
+		if (pPlayer->m_HL2Local.m_bMasochistMode == true)
 		{
 			DevMsg("Masochist mode is on so i should boot the player back to the main menu\n");
 			engine->ServerCommand("disconnect\n");

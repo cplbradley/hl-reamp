@@ -203,7 +203,7 @@ void CBasePlayer::ItemPreFrame()
 //-----------------------------------------------------------------------------
 bool CBasePlayer::UsingStandardWeaponsInVehicle( void )
 {
-	Assert( IsInAVehicle() );
+	/*Assert(IsInAVehicle());
 #if !defined( CLIENT_DLL )
 	IServerVehicle *pVehicle = GetVehicle();
 #else
@@ -220,7 +220,7 @@ bool CBasePlayer::UsingStandardWeaponsInVehicle( void )
 
 	// Fall through and check weapons, etc. if we're using them 
 	if (!bUsingStandardWeapons )
-		return false;
+		return false;*/
 
 	return true;
 }
@@ -508,6 +508,10 @@ surfacedata_t *CBasePlayer::GetLadderSurface( const Vector &origin )
 
 void CBasePlayer::UpdateStepSound( surfacedata_t *psurface, const Vector &vecOrigin, const Vector &vecVelocity )
 {
+
+	ConVarRef thirdperson("g_thirdperson");
+	if (thirdperson.GetBool())
+		return;
 	bool bWalking;
 	float fvol;
 	Vector knee;

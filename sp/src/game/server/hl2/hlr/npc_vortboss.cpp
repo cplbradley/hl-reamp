@@ -139,7 +139,7 @@ int AE_VORTBOSS_SWING_IMPACT;
 #define VORTBOSS_EYE_ATTACHMENT 1
 #define VORTBOSS_HAND_ATTACHMENT 2
 #define VORTBOSS_MAX_LASER_RANGE 3600
-
+#define VORTBOSS_MODEL "models/vortboss_test_weights.mdl"
 class CRocketTarget : public CBaseAnimating
 {
 	DECLARE_CLASS(CRocketTarget, CBaseAnimating);
@@ -317,7 +317,7 @@ END_DATADESC()
 //-----------------------------------------------------------------------------
 void CNPC_VortBoss::Precache(void)
 {
-	PrecacheModel("models/vortboss_test_weights.mdl");
+	PrecacheModel(VORTBOSS_MODEL);
 	UTIL_PrecacheOther("hlr_vortprojectile");
 	PrecacheMaterial("sprites/laser.vmt");
 	PrecacheParticleSystem("vortboss_cannon_core");
@@ -342,7 +342,7 @@ void CNPC_VortBoss::Spawn(void)
 {
 	Precache();
 
-	SetModel("models/vortboss_test_weights.mdl");
+	SetModel(VORTBOSS_MODEL);
 	SetHullType(HULL_VORTBOSS);
 
 	SetSolid(SOLID_BBOX);
@@ -350,7 +350,7 @@ void CNPC_VortBoss::Spawn(void)
 	SetMoveType(MOVETYPE_STEP);
 	SetBloodColor(BLOOD_COLOR_RED);
 	SetNavType(NAV_GROUND);
-	
+	SetEnemyClass(ENEMYCLASS_SUPERHEAVY);
 	bDrawSpinBeam = false;
 
 	RegisterThinkContext("EyeUpdateContext");
@@ -360,6 +360,7 @@ void CNPC_VortBoss::Spawn(void)
 	CapabilitiesAdd(bits_CAP_MOVE_JUMP);
 	CapabilitiesAdd(bits_CAP_SKIP_NAV_GROUND_CHECK);
 	CapabilitiesAdd(bits_CAP_MOVE_SHOOT);
+	CapabilitiesAdd(bits_CAP_INNATE_RANGE_ATTACK1);
 	//CapabilitiesAdd(bits_CAP_INNATE_RANGE_ATTACK1 | bits_CAP_INNATE_RANGE_ATTACK2 | bits_CAP_INNATE_MELEE_ATTACK1);
 	SetHealth(sk_vortboss_health.GetFloat());
 	SetMaxHealth(sk_vortboss_health.GetFloat());
@@ -831,6 +832,11 @@ int CNPC_VortBoss::TranslateSchedule(int scheduletype)
 		return TranslateSchedule(SCHED_VORTBOSS_ESTABLISH_LOF);
 		break;
 	}
+	case SCHED_RANGE_ATTACK1:
+	{
+		return SCHED_VORTBOSS_CANNON;
+		break;
+	}
 	}
 	return BaseClass::TranslateSchedule(scheduletype);
 
@@ -896,7 +902,7 @@ bool CNPC_VortBoss::ShouldCharge(const Vector &startPos, const Vector &endPos, b
 		// Don't allow it if it's too close to us
 
 		// Allow some special cases to not block us
-		/*if (moveTrace.pObstruction != NULL)
+		if (moveTrace.pObstruction != NULL)
 		{
 			// If we've hit the world, see if it's a cliff
 			if (moveTrace.pObstruction == GetContainingEntity(INDEXENT(0)))
@@ -917,7 +923,7 @@ bool CNPC_VortBoss::ShouldCharge(const Vector &startPos, const Vector &endPos, b
 			// Hit things that will move
 			if (moveTrace.pObstruction->GetMoveType() == MOVETYPE_VPHYSICS)
 				return true;
-		}*/
+		}
 
 		return false;
 	}
@@ -937,7 +943,7 @@ bool CNPC_VortBoss::ShouldSwing(CBaseEntity* pTarget)
 	float myZpos = myPos[2];
 	Vector enemyPos = pTarget->GetAbsOrigin();
 	float enemyZpos = enemyPos[2];
-	float zCompare = (myZpos - enemyZpos);
+	float zCompare = abs(myZpos - enemyZpos);
 	if (zCompare > 192.0f)
 		return false;
 	if (UTIL_IsFacingWithinTolerance(this,pTarget,0.8f))
@@ -1138,7 +1144,7 @@ bool CNPC_VortBoss::EnemyIsRightInFrontOfMe(CBaseEntity **pEntity)
 	if (!GetEnemy())
 		return false;
 
-	if ((GetEnemy()->WorldSpaceCenter() - WorldSpaceCenter()).LengthSqr() < (156 * 156))
+	if ((GetEnemy()->WorldSpaceCenter() - WorldSpaceCenter()).LengthSqr() < (64 * 64))
 	{
 		Vector vecLOS = (GetEnemy()->GetAbsOrigin() - GetAbsOrigin());
 		vecLOS.z = 0;
@@ -1494,6 +1500,7 @@ void CNPC_VortBoss::StartTask(const Task_t *pTask)
 	}
 	case TASK_VORTBOSS_EYEBLAST:
 	{
+		m_bShouldDrawShieldOverlay = true;
 		SetIdealActivity(ACT_VORTBOSS_EYEBLAST);
 		break;
 	}
@@ -1611,6 +1618,7 @@ void CNPC_VortBoss::RunTask(const Task_t *pTask)
 		UpdateAim();
 		if (IsActivityFinished())
 		{
+			m_bShouldDrawShieldOverlay = false;
 			TaskComplete();
 		}
 		break;

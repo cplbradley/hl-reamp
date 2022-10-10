@@ -994,6 +994,12 @@ void ClientModeShared::Layout()
 
 float ClientModeShared::GetViewModelFOV( void )
 {
+	C_BasePlayer* pPlayer = CBasePlayer::GetLocalPlayer();
+
+	
+	if (pPlayer && pPlayer->GetActiveWeapon() == nullptr)
+		return 54.0f;
+
 	return v_viewmodel_fov.GetFloat();
 }
 

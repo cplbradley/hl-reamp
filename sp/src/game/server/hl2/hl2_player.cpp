@@ -439,6 +439,7 @@ void CHL2_Player::Precache( void )
 	PrecacheScriptSound( "HL2Player.TrainUse" );
 	PrecacheScriptSound( "HL2Player.Use" );
 	PrecacheScriptSound( "HL2Player.BurnPain" );
+	PrecacheParticleSystem("player_burn_smoke");
 	PrecacheModel(PLAYER_MODEL);
 }
 
@@ -1245,11 +1246,11 @@ void CHL2_Player::StopSprinting( void )
 	}
 	if( IsSuitEquipped() )
 	{
-		SetMaxSpeed( HL2_NORM_SPEED );
+		SetMaxSpeed( HL2_NORM_SPEED * GetModelScale() );
 	}
 	else
 	{
-		SetMaxSpeed( HL2_WALK_SPEED );
+		SetMaxSpeed( HL2_WALK_SPEED * GetModelScale());
 	}
 	
 
@@ -1282,7 +1283,7 @@ void CHL2_Player::EnableSprint( bool bEnable )
 //-----------------------------------------------------------------------------
 void CHL2_Player::StartWalking( void )
 {
-	SetMaxSpeed( HL2_WALK_SPEED );
+	SetMaxSpeed( HL2_WALK_SPEED * GetModelScale());
 	m_fIsWalking = true;
 }
 
@@ -1290,7 +1291,7 @@ void CHL2_Player::StartWalking( void )
 //-----------------------------------------------------------------------------
 void CHL2_Player::StopWalking( void )
 {
-	SetMaxSpeed( HL2_NORM_SPEED );
+	SetMaxSpeed( HL2_NORM_SPEED * GetModelScale());
 	m_fIsWalking = false;
 }
 
@@ -1420,6 +1421,15 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 
 	Activity idealActivity = ACT_HL2MP_RUN;
 
+	if (GetGroundEntity() == NULL)
+		idealActivity = ACT_HL2MP_JUMP;
+
+	if (playerAnim == PLAYER_START_GROUNDPOUND)
+		idealActivity = ACT_HLR_GROUNDPOUND_START;
+
+	if (playerAnim == PLAYER_SLAM)
+		idealActivity = ACT_HLR_GROUNDPOUND_END;
+
 	if (playerAnim == PLAYER_JUMP)
 	{
 		if (HasWeapons())
@@ -1497,7 +1507,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 			}
 			else
 			{
-				if (speed > 0)
+				if (speed > 0 && idealActivity != ACT_HLR_GROUNDPOUND_END)
 				{
 					{
 						if (HasWeapons())
@@ -2208,7 +2218,7 @@ bool CHL2_Player::ApplyBattery( float powerMultiplier )
 	}
 	return false;
 }
-bool CHL2_Player::ApplyArmor(float powerMultiplier)
+bool CHL2_Player::ApplyArmor(float powerValue)
 {
 	const float MAX_NORMAL_BATTERY = 150;
 	if ((ArmorValue() < MAX_NORMAL_BATTERY) && IsSuitEquipped())
@@ -2216,7 +2226,7 @@ bool CHL2_Player::ApplyArmor(float powerMultiplier)
 		int pct;
 		char szcharge[64];
 
-		IncrementArmorValue(sk_armor.GetFloat() * powerMultiplier, MAX_NORMAL_BATTERY);
+		IncrementArmorValue(powerValue, MAX_NORMAL_BATTERY);
 
 		CPASAttenuationFilter filter(this, "ItemBattery.Touch");
 		EmitSound(filter, entindex(), "ItemBattery.Touch");
@@ -2612,6 +2622,7 @@ int CHL2_Player::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	if ( info.GetDamageType() & DMG_BURN )
 	{
 		EmitSound( "HL2Player.BurnPain" );
+		DispatchParticleEffect("player_burn_smoke", PATTACH_ABSORIGIN_FOLLOW, this);
 	}
 
 
@@ -2698,7 +2709,7 @@ void CHL2_Player::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo
 void CHL2_Player::Event_Killed( const CTakeDamageInfo &info )
 {
 	BaseClass::Event_Killed( info );
-	if (g_masochist_mode.GetBool() == true)
+	if (m_HL2Local.m_bMasochistMode == true)
 	{
 		DevMsg("I should delete the save folder right now/n");
 		engine->ClientCommand(UTIL_GetLocalPlayer()->edict(), "testkillsave");

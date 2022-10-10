@@ -133,6 +133,8 @@ extern ConVar *sv_maxreplay;
 
 extern CServerGameDLL g_ServerGameDLL;
 
+extern ConVar g_masochist_mode;
+
 // TIME BASED DAMAGE AMOUNT
 // tweak these values based on gameplay feedback:
 #define PARALYZE_DURATION	2		// number of 2 second intervals to take damage
@@ -466,6 +468,7 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_INPUTFUNC( FIELD_BOOLEAN, "SetHUDVisibility", InputSetHUDVisibility ),
 	DEFINE_INPUTFUNC( FIELD_STRING, "SetFogController", InputSetFogController ),
 	DEFINE_INPUTFUNC( FIELD_STRING, "HandleMapEvent", InputHandleMapEvent ),
+	DEFINE_INPUTFUNC( FIELD_STRING, "SetModel", InputSetModel),
 
 	DEFINE_FIELD( m_nNumCrouches, FIELD_INTEGER ),
 	DEFINE_FIELD( m_bDuckToggled, FIELD_BOOLEAN ),
@@ -5029,6 +5032,13 @@ void CBasePlayer::InitialSpawn( void )
 {
 	m_iConnected = PlayerConnected;
 	gamestats->Event_PlayerConnected( this );
+	//ConVarRef masochist("g_masochist_mode");
+	CHL2_Player* pPlayer = dynamic_cast<CHL2_Player*>(UTIL_GetLocalPlayer());
+	if (g_masochist_mode.GetBool())
+	{
+		pPlayer->m_HL2Local.m_bMasochistMode = true;
+		g_masochist_mode.SetValue("0");
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -5249,7 +5259,7 @@ void CBasePlayer::Precache( void )
 #endif
 
 	UTIL_PrecacheOther("hlr_floorsprite");
-	PrecacheMaterial("sprites / floorsprite.vmt");
+	PrecacheMaterial("sprites/floorsprite.vmt");
 
 	PrecacheParticleSystem("baddog_groundsmash_radialsmoke");
 	// in the event that the player JUST spawned, and the level node graph
@@ -5371,6 +5381,7 @@ void CBasePlayer::CheckFloorSprite(void)
 }
 void CBasePlayer::GroundPound(void)
 {
+	SetAnimation(PLAYER_SLAM);
 	EmitSound("BadDog.Smash");
 	UTIL_ScreenShake(WorldSpaceCenter(), 40.0, 60, 1.0, 500, SHAKE_START);
 	DispatchParticleEffect("baddog_groundsmash_radialsmoke", GetAbsOrigin(), QAngle(0,0,0), this);
@@ -5394,6 +5405,8 @@ void CBasePlayer::GroundPound(void)
 		0,		//speed
 		FBEAM_FADEOUT
 		);
+
+	SetAbsVelocity(Vector(0, 0, 0));
 }
 //-----------------------------------------------------------------------------
 // Purpose: Force this player to immediately respawn
@@ -5686,7 +5699,7 @@ bool CBasePlayer::GetInVehicle( IServerVehicle *pVehicle, int nRole )
 	Assert( pEnt );
 
 	// Try to stow weapons
-	if ( pVehicle->IsPassengerUsingStandardWeapons( nRole ) == false )
+	/*if (pVehicle->IsPassengerUsingStandardWeapons(nRole) == false)
 	{
 		CBaseCombatWeapon *pWeapon = GetActiveWeapon();
 		if ( pWeapon != NULL )
@@ -5703,7 +5716,7 @@ bool CBasePlayer::GetInVehicle( IServerVehicle *pVehicle, int nRole )
 	if ( !pVehicle->IsPassengerVisible( nRole ) )
 	{
 		AddEffects( EF_NODRAW );
-	}
+	}*/
 
 	// Put us in the vehicle
 	pVehicle->SetPassenger( nRole, this );
@@ -5750,7 +5763,7 @@ bool CBasePlayer::GetInVehicle( IServerVehicle *pVehicle, int nRole )
 	m_hVehicle = pEnt;
 
 	// Throw an event indicating that the player entered the vehicle.
-	g_pNotify->ReportNamedEvent( this, "PlayerEnteredVehicle" );
+	//g_pNotify->ReportNamedEvent( this, "PlayerEnteredVehicle" );
 
 	m_iVehicleAnalogBias = VEHICLE_ANALOG_BIAS_NONE;
 
@@ -5802,7 +5815,7 @@ void CBasePlayer::LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExi
 	m_Local.m_iHideHUD &= ~HIDEHUD_WEAPONSELECTION;
 #endif
 
-	m_Local.m_iHideHUD &= ~HIDEHUD_INVEHICLE;
+	//m_Local.m_iHideHUD &= ~HIDEHUD_INVEHICLE;
 
 	RemoveEffects( EF_NODRAW );
 
@@ -6900,7 +6913,7 @@ bool CBasePlayer::BumpWeapon( CBaseCombatWeapon *pWeapon )
 		Weapon_Equip( pWeapon );
 		if ( IsInAVehicle() )
 		{
-			pWeapon->Holster();
+			//pWeapon->Holster();
 		}
 		else
 		{
@@ -8922,7 +8935,12 @@ void CBasePlayer::DoImpactEffect( trace_t &tr, int nDamageType )
 
 	BaseClass::DoImpactEffect( tr, nDamageType );
 }
-
+void CBasePlayer::InputSetModel(inputdata_t &inputdata)
+{
+	const char* szModel = inputdata.value.String();
+	PrecacheModel(szModel);
+	SetModel(szModel);
+}
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------

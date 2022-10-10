@@ -18,12 +18,12 @@
 #include "c_baseplayer.h"
 #include "engine/ivdebugoverlay.h"
 
-ConVar cl_showanimstate("cl_showanimstate", "-1", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Show the (client) animation state for the specified entity (-1 for none).");
-ConVar showanimstate_log("cl_showanimstate_log", "0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "1 to output cl_showanimstate to Msg(). 2 to store in AnimStateClient.log. 3 for both.");
+ConVar cl_showanimstate("cl_showanimstate", "-1", FCVAR_NONE, "Show the (client) animation state for the specified entity (-1 for none).");
+ConVar showanimstate_log("cl_showanimstate_log", "0", FCVAR_NONE, "1 to output cl_showanimstate to Msg(). 2 to store in AnimStateClient.log. 3 for both.");
 #else
 #include "player.h"
-ConVar sv_showanimstate("sv_showanimstate", "-1", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Show the (server) animation state for the specified entity (-1 for none).");
-ConVar showanimstate_log("sv_showanimstate_log", "0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "1 to output sv_showanimstate to Msg(). 2 to store in AnimStateServer.log. 3 for both.");
+ConVar sv_showanimstate("sv_showanimstate", "-1", FCVAR_NONE, "Show the (server) animation state for the specified entity (-1 for none).");
+ConVar showanimstate_log("sv_showanimstate_log", "0", FCVAR_NONE, "1 to output sv_showanimstate to Msg(). 2 to store in AnimStateServer.log. 3 for both.");
 #endif
 
 
@@ -49,7 +49,7 @@ ConVar mp_facefronttime(
 	FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY,
 	"After this amount of time of standing in place but aiming to one side, go ahead and move feet to face upper body.");
 
-ConVar mp_ik("mp_ik", "1", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY, "Use IK on in-place turns.");
+ConVar mp_ik("mp_ik", "0", FCVAR_REPLICATED, "Use IK on in-place turns.");
 
 // Pose parameters stored for debugging.
 float g_flLastBodyPitch, g_flLastBodyYaw, m_flLastMoveYaw;

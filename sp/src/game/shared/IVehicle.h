@@ -32,7 +32,7 @@ public:
 	virtual void			GetVehicleViewPosition( int nRole, Vector *pOrigin, QAngle *pAngles, float *pFOV = NULL ) = 0;
 
 	// Does the player use his normal weapons while in this mode?
-	virtual bool			IsPassengerUsingStandardWeapons( int nRole = VEHICLE_ROLE_DRIVER ) = 0;
+	virtual bool			IsPassengerUsingStandardWeapons(int nRole = VEHICLE_ROLE_DRIVER) {return true;}
 
 	// Process movement
 	virtual void			SetupMove( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper *pHelper, CMoveData *move ) = 0;

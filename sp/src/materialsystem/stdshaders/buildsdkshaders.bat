@@ -26,7 +26,7 @@ set BUILD_SHADER=call buildshaders.bat
 set ARG_EXTRA=
 //%BUILD_SHADER% mymod_dx9_30			-game %GAMEDIR% -source %SOURCEDIR% -dx9_30	-force30 
 //%BUILD_SHADER% core_dx9_20b			-game %GAMEDIR% -source %SOURCEDIR% -dx9_20
-%BUILD_SHADER% pbr_dx9_30			-game %GAMEDIR% -source %SOURCEDIR% -dx9_30	-force30
+%BUILD_SHADER% shield_dx9_30			-game %GAMEDIR% -source %SOURCEDIR% -dx9_30	-force30
 
 
 

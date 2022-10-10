@@ -10,9 +10,8 @@ $collisionjoints "w_grenadelauncher_hull.smd" {
 	$concaveperjoint
 
 }
-$definebone "ValveBiped.Bip01_R_Hand" "" -1.419110 9.052380 -3.067720 9.739309 -91.390207 175.237425 0.000000 0.000000 0.000000 -0.000000 0.000000 0.000000
-$definebone "w_grenadelauncher" "ValveBiped.Bip01_R_Hand" 8.366400 -1.255060 -4.668900 4.525857 -91.374736 170.149563 0.000000 0.000000 0.000000 0.000000 -0.000000 -0.000001
-$attachment "muzzle" "w_grenadelauncher" -0.00 -16.00 -1.00
+
+$attachment "muzzle" "ValveBiped.Bip01_R_Hand" -0.00 -16.00 -1.00
 $contents "solid"
 $cdmaterials "models/weapons/grenadelauncher"
 $sequence idle "w_grenadelauncher.smd"  activity ACT_IDLE -1 loop fps 30
@@ -20,7 +19,7 @@ $sequence idle "w_grenadelauncher.smd"  activity ACT_IDLE -1 loop fps 30
 $include	"w_grenadelauncher_wwmt_custom.qci"
 
 $sequence "idle1" {
-	"w_shotgun_anims\idle1.smd"
+	"w_grenadelauncher.smd"
 	activity "ACT_VM_IDLE" 1
 	fadein 0.2
 	fadeout 0.2
@@ -29,7 +28,7 @@ $sequence "idle1" {
 }
 
 $sequence "fire" {
-	"w_shotgun_anims\fire.smd"
+	"w_grenadelauncher.smd"
 	activity "ACT_RANGE_ATTACK_SHOTGUN" 1
 	{ event AE_NPC_MUZZLEFLASH 0 "SHOTGUN MUZZLE" }
 	{ event 6001 0 "2" }
@@ -40,7 +39,7 @@ $sequence "fire" {
 }
 
 $sequence "draw" {
-	"w_shotgun_anims\draw.smd"
+	"w_grenadelauncher.smd"
 	activity "ACT_VM_DRAW" 1
 	fadein 0.2
 	fadeout 0.2
@@ -48,7 +47,7 @@ $sequence "draw" {
 }
 
 $sequence "holster" {
-	"w_shotgun_anims\holster.smd"
+	"w_grenadelauncher.smd"
 	activity "ACT_VM_HOLSTER" 1
 	fadein 0.2
 	fadeout 0.2

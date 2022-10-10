@@ -736,7 +736,11 @@ void CWeaponPlasmaRifle::PrimaryAttack(void)
 		UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_SHOT, pPlayer, COLLISION_GROUP_NONE, &tr); //create a line from our offset initial position to where my crosshair is pointing
 		Vector vecShotDir = (tr.endpos - vecSrc).Normalized();
 		//debugoverlay->AddLineOverlay(tr.startpos, tr.endpos, 0, 255, 0, false, 3.0f);
-		WeaponSound(SINGLE, m_flNextPrimaryAttack); //emit sound
+		if (m_nShotsFired < 1)
+			WeaponSound(SINGLE); //emit sound
+		else
+			WeaponSound(SPECIAL1);
+
 		if (pPlayer->HasOverdrive())
 			m_flNextPrimaryAttack = m_flNextPrimaryAttack + 0.05f;
 		else

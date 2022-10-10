@@ -1,5 +1,5 @@
 
-$modelname	"vortboss_test_weights.mdl"
+$modelname	"vortboss_test_weights2.mdl"
 $model ufo "ufo.smd"
 $model cannon "cannon.smd"
 $contents "solid"
@@ -13,7 +13,7 @@ $texturegroup skins
 {
 	{ "vortigaunt_base" "vort_eye" "vortcannon_diffuse" "vortufo" }
 	{ "vortigaunt_glow" "vort_eye" "vortcannon_glow" "vortufo_glow" }
-	[ "vortigaunt_base" "vort_eye" "vortcannon_diffuse" "vortufo_damaged" }
+	{ "vortigaunt_base" "vort_eye" "vortcannon_diffuse" "vortufo_damaged" }
 }
 
 $lod 75 
@@ -38,7 +38,7 @@ $lod 150
 	replacemodel "cannon" "cannon_lod2"
 }
 
-$include "DefineBones.qci"
+//$include "DefineBones.qci"
 
 
 $attachment "eyeball" "ValveBiped.head" 18 0 0 rotate 180 180 0
@@ -188,10 +188,12 @@ $animation "aim_center" "anims/vortboss_aim_center.smd" {
 $animation "aim_up" "anims/vortboss_aim_up.smd" {
 	fps 30
 	loop
+
 }
 $animation "aim_down" "anims/vortboss_aim_down.smd" {
 	fps 30
 	loop
+
 }
 $animation "body_center" "anims/vortboss_body_center.smd" {
 	fps 30
@@ -205,32 +207,24 @@ $animation "body_down" "anims/vortboss_body_down.smd" {
 	fps 30
 	loop
 }
-$animation "fire_up" "anims/vortboss_firecannon_up.smd" {
+$animation "fire_neutral" "anims/vortboss_firecannon.smd" {
 	fps 40
 }
+
 $animation "fire_center" "anims/vortboss_firecannon.smd" {
 	fps 40
+	subtract fire_neutral 0
+	
+}
+$animation "fire_up" "anims/vortboss_firecannon_up.smd" {
+	fps 40
+	subtract fire_neutral 0
 }
 $animation "fire_down" "anims/vortboss_firecannon_down.smd" {
 	fps 40
+	subtract fire_neutral 0
 }
-$sequence "move" {
-	"move_S"
-	"move_SE"
-	"move_E"
-	"move_NE"
-	"move_N"
-	"move_NW"
-	"move_W"
-	"move_SW"
-	"move_S"
-	blend "move_yaw" -180 180
-	blendwidth 9
-	fadein 0.2
-	fadeout 0.2
-	node "running"
-	activity "ACT_RUN" 1
-}
+
 $sequence "move2" {
 	"move_S"
 	"move_SE"
@@ -248,7 +242,25 @@ $sequence "move2" {
 	node "walking"
 	activity "ACT_WALK" 1
 }
-
+$sequence "move" {
+	"move_S"
+	"move_SE"
+	"move_E"
+	"move_NE"
+	"move_N"
+	"move_NW"
+	"move_W"
+	"move_SW"
+	"move_S"
+	weightlist "move_weight"
+	blend "move_yaw" -180 180
+	blendwidth 9
+	fadein 0.2
+	fadeout 0.2
+	//addlayer firecannon
+	node "running"
+	activity "ACT_RUN" 1
+}
 $sequence "firecannon" {
 	"fire_up"
 	"fire_center"
@@ -261,14 +273,19 @@ $sequence "firecannon" {
 	{ event AE_VORTBOSS_FIRECANNON 56 "" }
 	{ event AE_VORTBOSS_FIRECANNON 61 "" }
 	blend "aim_pitch" -80 40
+	blendref fire_neutral
+	blendcenter fire_center
 	blendwidth 3
 	node "aim"
 	fadein 0.2
 	fadeout 0.2
 	weightlist "cannon_weight"
+	delta
+	//addlayer move
 	fps 40
 	
 }
+
 $sequence "jump" {
 	"anims/vortboss_jump.smd"
 	activity ACT_JUMP 1

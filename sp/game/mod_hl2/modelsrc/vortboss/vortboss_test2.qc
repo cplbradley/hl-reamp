@@ -195,14 +195,22 @@ $animation "body_down" "anims/vortboss_body_down.smd" {
 	fps 30
 	loop
 }
-$animation "fire_up" "anims/vortboss_firecannon_up.smd" {
+
+$animation "fire_neutral" "anims/vortboss_firecannon.smd" {
 	fps 50
 }
 $animation "fire_center" "anims/vortboss_firecannon.smd" {
 	fps 50
+	subtract fire_neutral 0
+	
+}
+$animation "fire_up" "anims/vortboss_firecannon_up.smd" {
+	fps 50
+	subtract fire_neutral 0
 }
 $animation "fire_down" "anims/vortboss_firecannon_down.smd" {
 	fps 50
+	subtract fire_neutral 0
 }
 $sequence "move" {
 	"move_S"
@@ -251,8 +259,11 @@ $sequence "firecannon" {
 	{ event AE_VORTBOSS_FIRECANNON 56 "" }
 	{ event AE_VORTBOSS_FIRECANNON 61 "" }
 	blend "aim_pitch" -80 40
+	blendref "fire_neutral"
+	blendcenter "fire_center"
 	blendwidth 3
 	node "aim"
+	delta
 	fadein 0.2
 	fadeout 0.2
 	fps 50

@@ -1379,44 +1379,55 @@ void CNPC_BadDog::LeapAttack(void)
 		Vector vSpitPos = GetAbsOrigin();
 
 		Vector	vTarget;
-
-		// If our enemy is looking at us and far enough away, lead him
-		//if (HasCondition(COND_ENEMY_FACING_ME) && UTIL_DistApprox(GetAbsOrigin(), GetEnemy()->GetAbsOrigin()) > (40 * 12))
-		if (HasCondition(COND_ENEMY_FACING_ME))
-		{
-			UTIL_PredictedPosition(GetEnemy(), 0.5f, &vTarget);
-			vTarget.z = GetEnemy()->WorldSpaceCenter().z;
-		}
-		else
-		{
 			// Otherwise he can't see us and he won't be able to dodge
-			vTarget = GetEnemy()->BodyTarget(vSpitPos, true);
-		}
+		vTarget = GetEnemy()->BodyTarget(vSpitPos, true);
 
-		vTarget[2] += random->RandomFloat(0.0f, 32.0f);
-
-		// Try and spit at our target
-		Vector	vecToss;
-		if (GetJumpVector(vSpitPos, vTarget, &vecToss) == false)
-		{
-			// Now try where they were
-			if (GetJumpVector(vSpitPos, m_vSavePosition, &vecToss) == false)
-			{
-				// Failing that, just shoot with the old velocity we calculated initially!
-				vecToss = m_vecSaveSpitVelocity;
-			}
-		}
-
-		// Find what our vertical theta is to estimate the time we'll impact the ground
+		float flVelocity = g_pGameRules->AdjustProjectileSpeed(sk_baddog_jump_speed.GetFloat());
 		Vector vecToTarget = (vTarget - vSpitPos);
 		VectorNormalize(vecToTarget);
 		QAngle angToTarget;
 		VectorAngles(vecToTarget, angToTarget);
-		float flVelocity = VectorNormalize(vecToss);
+
+		Vector preCalc;
+		GetJumpVector(vSpitPos, vTarget, &preCalc);
+		VectorNormalize(preCalc);
+		float flCosTheta = DotProduct(vecToTarget, preCalc);
+		float flTime = (vSpitPos - vTarget).Length2D() / (flVelocity * flCosTheta);
+
+		Msg("Cosine Theta: %f, Time: %f, Velocity: %f\n", flCosTheta, flTime,flVelocity);
+
+		if (HasCondition(COND_ENEMY_FACING_ME))
+		{
+			UTIL_PredictedPosition(GetEnemy(), flTime, &vTarget);
+			Vector vecToPredictedTarget = (vTarget - vSpitPos);
+			VectorNormalize(vecToTarget);
+			QAngle angToTarget;
+			VectorAngles(vecToTarget, angToTarget);
+		}
+		// Try and spit at our target
+		Vector	vecToss;
+		if (!GetJumpVector(vSpitPos, vTarget, &vecToss))
+		{
+			vTarget = GetEnemy()->GetAbsOrigin();
+
+			if (!GetJumpVector(vSpitPos, vTarget, &vecToss))
+			{
+				return;
+			}
+		}
+
+
+		//VectorNormalize(vecToss);
+
+		// Find what our vertical theta is to estimate the time we'll impact the ground
+		
+		
 
 		angToTarget[PITCH] = 0;
 		angToTarget[ROLL] = 0;
-		ApplyAbsVelocityImpulse(vecToss * flVelocity);
+//		float adjustedspd = g_pGameRules->AdjustProjectileSpeed(sk_baddog_jump_speed.GetFloat());
+
+		ApplyAbsVelocityImpulse(vecToss);
 		SetAbsAngles(angToTarget);
 		/*Vector vecEnemyPos = pEnemy->GetAbsOrigin();
 

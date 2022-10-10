@@ -29,6 +29,8 @@
 #include "cam_thirdperson.h"
 #include "inputsystem/iinputsystem.h"
 #include "c_baseplayer.h"
+#include "c_hl2_playerlocaldata.h"
+#include "c_basehlplayer.h"
 #if defined( _X360 )
 #include "xbox/xbox_win32stubs.h"
 #endif
@@ -50,6 +52,8 @@ extern ConVar cl_pitchdown;
 extern ConVar cl_pitchup;
 extern const ConVar *sv_cheats;
 extern ConVar cl_flippy;
+
+extern ConVar cl_flipviewmodel;
 
 
 class ConVar_m_pitch : public ConVar_ServerBounded
@@ -456,8 +460,11 @@ void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float
 {
 	if ( !((in_strafe.state & 1) || lookstrafe.GetInt()) )
 	{
+		C_BaseHLPlayer* pHL2Player = dynamic_cast<C_BaseHLPlayer*>(C_BasePlayer::GetLocalPlayer());
+		if (!pHL2Player)
+			return;
 
-		if ( g_bUpsideDown )
+		if ( g_bUpsideDown || pHL2Player->m_HL2Local.m_bInvertedScreen == true)
 		{
 			viewangles[ YAW ] += m_yaw.GetFloat() * mouse_x;
 		}
@@ -528,9 +535,8 @@ void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float
 			// Check pitch bounds
 			if (cl_flippy.GetBool())
 			{
-				CBasePlayer *pPlayer = CBasePlayer::GetLocalPlayer();
-				if (!pPlayer)
-					return;
+				CBasePlayer* pPlayer = CBasePlayer::GetLocalPlayer();
+				
 				if (!pPlayer->GetGroundEntity() == NULL)
 				{
 					

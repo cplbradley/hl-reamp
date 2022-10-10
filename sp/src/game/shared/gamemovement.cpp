@@ -2653,6 +2653,10 @@ bool CGameMovement::CheckGroundPound(void)
 		return false;
 	}
 	player->SetGravity(5.0f);
+
+#ifdef GAME_DLL
+	player->SetAnimation(PLAYER_START_GROUNDPOUND);
+#endif
 	m_bDidGroundPound = true;
 	DevMsg("Activating Ground Pound\n");
 	return true;

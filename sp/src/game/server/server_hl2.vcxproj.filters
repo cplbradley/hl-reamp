@@ -3349,13 +3349,22 @@
     <ClCompile Include="hl2\hlr\hlr_projectile.cpp">
       <Filter>Source Files\HLR</Filter>
     </ClCompile>
+    <ClCompile Include="hl2\hlr\hlr_screen_flipper.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
     <ClCompile Include="hl2\hlr\hlr_skullkey.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\hlr\item_armor.cpp">
       <Filter>Source Files\HLR</Filter>
     </ClCompile>
     <ClCompile Include="hl2\hlr\item_custom.cpp">
       <Filter>Source Files\HLR</Filter>
     </ClCompile>
     <ClCompile Include="hl2\hlr\logic_difficulty.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="movie_display.cpp">
       <Filter>Source Files\HLR</Filter>
     </ClCompile>
     <ClCompile Include="hl2\hlr\npc_antlionwarrior.cpp">

@@ -43,6 +43,14 @@ public:
 
 	int						DrawModel(int flags);
 
+	int						InternalDrawModel(int flags);
+
+	bool m_bShouldDrawShieldOverlay;
+	int m_iVortEffectType;
+
+	bool InterpScale();
+	float flscale;
+
 private:
 	C_AI_BaseNPC( const C_AI_BaseNPC & ); // not defined, not accessible
 	float m_flTimePingEffect;
@@ -59,6 +67,12 @@ private:
 	bool m_bFadeCorpse;
 	bool m_bSpeedModActive;
 	bool m_bImportanRagdoll;
+
+	CNewParticleEffect* m_pShieldFX;
+	CNewParticleEffect* m_pShieldBurstFX;
+
+	int shieldtimer;
+
 };
 
 

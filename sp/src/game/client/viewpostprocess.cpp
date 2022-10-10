@@ -20,6 +20,7 @@
 #include "tier0/vprof.h"
 #include "hl2_shareddefs.h"
 #include "proxyentity.h"
+#include "c_basehlplayer.h"
 
 //-----------------------------------------------------------------------------
 // Globals
@@ -2631,6 +2632,7 @@ void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, b
 	}
 
 	static IMaterial *pMat = materials->FindMaterial("engine/retrographics", TEXTURE_GROUP_OTHER);
+	static IMaterial* pFlipMat = materials->FindMaterial("engine/screenflip", TEXTURE_GROUP_OTHER);
 
 	if (mat_classic_render.GetInt() == 1)
 	{
@@ -2641,8 +2643,18 @@ void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, b
 			pRenderContext->DrawScreenSpaceRectangle(pMat, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
 			
 		}
-}
+	}
+	C_BaseHLPlayer* pPlayer = dynamic_cast<C_BaseHLPlayer*>(CBasePlayer::GetLocalPlayer());
 
+	if (pPlayer->m_HL2Local.m_bInvertedScreen)
+	{
+		if (pFlipMat)
+		{
+			pFlipMat->AddRef();
+			UpdateScreenEffectTexture();
+			pRenderContext->DrawScreenSpaceRectangle(pFlipMat, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
+		}
+	}
 #if defined( _X360 )
 	pRenderContext->PopVertexShaderGPRAllocation();
 #endif

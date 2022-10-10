@@ -845,6 +845,7 @@ $Project
 		$File	"recvproxy.h"
 		$File	"rendertexture.h"
 		$File	"ScreenSpaceEffects.h"
+		$File	"shaderapihack.h"
 		$File	"simple_keys.h"
 		$File	"smoke_fog_overlay.h"
 		$File	"splinepatch.h"

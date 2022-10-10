@@ -14,6 +14,7 @@
 
 #include "cbase.h"
 #include "..\public\datacache\imdlcache.h"
+
 #ifdef CLIENT_DLL
 #include "c_baseplayer.h"
 #else

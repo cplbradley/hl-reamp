@@ -81,7 +81,7 @@ private:
 	bool	m_fDrawbackFinished;
 protected:
 	CHandle<CBaseGrenade> m_Grenada;
-	//DECLARE_ACTTABLE();
+	DECLARE_ACTTABLE();
 
 
 };
@@ -94,11 +94,11 @@ BEGIN_DATADESC( CWeaponFrag )
 	DEFINE_FIELD( m_fDrawbackFinished, FIELD_BOOLEAN ),
 END_DATADESC()
 
-/*acttable_t	CWeaponFrag::m_acttable[] = 
+acttable_t	CWeaponFrag::m_acttable[] = 
 {
 	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_SLAM, true },
-	{ ACT_HL2MP_IDLE, ACT_HL2MP_IDLE_AR2, false },
-	{ ACT_HL2MP_RUN, ACT_HL2MP_RUN_AR2, false },
+	{ ACT_HL2MP_IDLE, ACT_HLR_IDLE_GRENADELAUNCHER, false },
+	{ ACT_HL2MP_RUN, ACT_HLR_RUN_GRENADELAUNCHER, false },
 	{ ACT_HL2MP_IDLE_CROUCH, ACT_HL2MP_IDLE_CROUCH_AR2, false },
 	{ ACT_HL2MP_WALK_CROUCH, ACT_HL2MP_WALK_CROUCH_AR2, false },
 	{ ACT_HL2MP_GESTURE_RANGE_ATTACK, ACT_HL2MP_GESTURE_RANGE_ATTACK_AR2, false },
@@ -107,7 +107,7 @@ END_DATADESC()
 	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_AR2, false },
 };
 
-IMPLEMENT_ACTTABLE(CWeaponFrag);*/
+IMPLEMENT_ACTTABLE(CWeaponFrag);
 
 
 LINK_ENTITY_TO_CLASS( weapon_frag, CWeaponFrag );

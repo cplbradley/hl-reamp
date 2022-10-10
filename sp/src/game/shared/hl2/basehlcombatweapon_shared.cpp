@@ -232,7 +232,7 @@ float	g_verticalBob;
 #if defined( CLIENT_DLL ) && ( !defined( HL2MP ) && !defined( PORTAL ) )
 
 #define	HL2_BOB_CYCLE_MIN	1.0f
-#define	HL2_BOB_CYCLE_MAX	0.45f
+
 #define	HL2_BOB			0.002f
 #define	HL2_BOB_UP		0.5f
 
@@ -241,6 +241,9 @@ static ConVar	cl_bobcycle( "cl_bobcycle","0.8" );
 static ConVar	cl_bob( "cl_bob","0.002" );
 static ConVar	cl_bobup( "cl_bobup","0.5" );
 
+static ConVar	cl_maxbobspeed("cl_maxbobspeed", "320");
+static ConVar	cl_bobcycle_max("cl_bobcycle_max", "0.45");
+#define	HL2_BOB_CYCLE_MAX	cl_bobcycle_max.GetFloat()
 // Register these cvars if needed for easy tweaking
 static ConVar	v_iyaw_cycle( "v_iyaw_cycle", "2"/*, FCVAR_UNREGISTERED*/ );
 static ConVar	v_iroll_cycle( "v_iroll_cycle", "0.5"/*, FCVAR_UNREGISTERED*/ );
@@ -276,24 +279,24 @@ float CBaseHLCombatWeapon::CalcViewmodelBob( void )
 	//FIXME: This maximum speed value must come from the server.
 	//		 MaxSpeed() is not sufficient for dealing with sprinting - jdw
 
-	speed = clamp( speed, -320, 320 );
+	speed = clamp( speed, -cl_maxbobspeed.GetFloat(), cl_maxbobspeed.GetFloat());
 
-	float bob_offset = RemapVal( speed, 0, 320, 0.0f, 1.0f );
+	float bob_offset = RemapVal( speed, 0, cl_maxbobspeed.GetFloat(), 0.0f, 1.0f);
 	
 	bobtime += ( gpGlobals->curtime - lastbobtime ) * bob_offset;
 	lastbobtime = gpGlobals->curtime;
 
 	//Calculate the vertical bob
-	cycle = bobtime - (int)(bobtime/HL2_BOB_CYCLE_MAX)*HL2_BOB_CYCLE_MAX;
-	cycle /= HL2_BOB_CYCLE_MAX;
+	cycle = bobtime - (int)(bobtime/ cl_bobcycle_max.GetFloat())* cl_bobcycle_max.GetFloat();
+	cycle /= cl_bobcycle_max.GetFloat();
 
-	if ( cycle < HL2_BOB_UP )
+	if ( cycle < cl_bobup.GetFloat())
 	{
-		cycle = M_PI * cycle / HL2_BOB_UP;
+		cycle = M_PI * cycle / cl_bobup.GetFloat();
 	}
 	else
 	{
-		cycle = M_PI + M_PI*(cycle-HL2_BOB_UP)/(1.0 - HL2_BOB_UP);
+		cycle = M_PI + M_PI*(cycle- cl_bobup.GetFloat())/(1.0 - cl_bobup.GetFloat());
 	}
 	
 	g_verticalBob = speed*0.005f;
@@ -302,16 +305,16 @@ float CBaseHLCombatWeapon::CalcViewmodelBob( void )
 	g_verticalBob = clamp( g_verticalBob, -7.0f, 4.0f );
 
 	//Calculate the lateral bob
-	cycle = bobtime - (int)(bobtime/HL2_BOB_CYCLE_MAX*2)*HL2_BOB_CYCLE_MAX*2;
-	cycle /= HL2_BOB_CYCLE_MAX*2;
+	cycle = bobtime - (int)(bobtime/ cl_bobcycle_max.GetFloat() *2)* cl_bobcycle_max.GetFloat() *2;
+	cycle /= cl_bobcycle_max.GetFloat() *2;
 
-	if ( cycle < HL2_BOB_UP )
+	if ( cycle < cl_bobup.GetFloat())
 	{
-		cycle = M_PI * cycle / HL2_BOB_UP;
+		cycle = M_PI * cycle / cl_bobup.GetFloat();
 	}
 	else
 	{
-		cycle = M_PI + M_PI*(cycle-HL2_BOB_UP)/(1.0 - HL2_BOB_UP);
+		cycle = M_PI + M_PI*(cycle- cl_bobup.GetFloat())/(1.0 - cl_bobup.GetFloat());
 	}
 
 	g_lateralBob = speed*0.005f;

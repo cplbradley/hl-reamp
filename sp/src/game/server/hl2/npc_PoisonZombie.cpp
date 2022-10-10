@@ -286,6 +286,8 @@ void CNPC_PoisonZombie::Spawn( void )
 {
 	Precache();
 
+	SetEnemyClass(ENEMYCLASS_HEAVY);
+
 	m_fIsTorso = m_fIsHeadless = false;
 
 #ifdef HL2_EPISODIC
@@ -293,7 +295,8 @@ void CNPC_PoisonZombie::Spawn( void )
 #else
 	SetBloodColor( BLOOD_COLOR_YELLOW );
 #endif // HL2_EPISODIC
-
+	//m_nRenderFX = kRenderFxHologram;
+	SetRenderColor(0, 120, 255);
 	m_iHealth = sk_zombie_poison_health.GetFloat();
 	m_flFieldOfView = 0.2;
 
@@ -724,7 +727,7 @@ void CNPC_PoisonZombie::HandleAnimEvent( animevent_t *pEvent )
 			CapabilitiesRemove( bits_CAP_INNATE_RANGE_ATTACK1 | bits_CAP_INNATE_RANGE_ATTACK2 );
 		}
 		*/
-		m_flNextCrabThrowTime = gpGlobals->curtime + random->RandomInt( ZOMBIE_THROW_MIN_DELAY, ZOMBIE_THROW_MAX_DELAY );
+		m_flNextCrabThrowTime = gpGlobals->curtime;
 		return;
 	}
 

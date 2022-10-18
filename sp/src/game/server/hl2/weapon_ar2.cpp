@@ -32,9 +32,11 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-#define MINFIRERATE 0.34f
+#define MINFIRERATE 0.24f
 #define MAXFIRERATE 0.06f
 #define MAXOVERDRIVEFIRERATE 0.03f
+#define MAXFOCUSFIRERATE 0.09f
+
 ConVar sk_weapon_ar2_alt_fire_radius( "sk_weapon_ar2_alt_fire_radius", "10" );
 ConVar sk_weapon_ar2_alt_fire_duration( "sk_weapon_ar2_alt_fire_duration", "2" );
 ConVar sk_weapon_ar2_alt_fire_mass( "sk_weapon_ar2_alt_fire_mass", "150" );
@@ -152,6 +154,18 @@ CWeaponAR2::CWeaponAR2( )
 	//InitWoundSound();
 }
 
+
+float CWeaponAR2::GetMaxFirerate()
+{
+	CBasePlayer* pOwner = ToBasePlayer(GetOwner());
+	if (pOwner->HasOverdrive())
+		return MAXOVERDRIVEFIRERATE;
+	else if (AmFocusFiring())
+		return MAXFOCUSFIRERATE;
+	else
+		return MAXFIRERATE;
+}
+
 void CWeaponAR2::Precache( void )
 {
 	BaseClass::Precache();
@@ -161,6 +175,33 @@ void CWeaponAR2::Precache( void )
 	PrecacheParticleSystem("smg_core");
 }
 
+
+bool CWeaponAR2::AmFocusFiring(void)
+{
+	CBasePlayer* pOwner = ToBasePlayer(GetOwner());
+	if (pOwner->m_nButtons & IN_ATTACK2)
+		return true;
+	else
+		return false;
+}
+
+void CWeaponAR2::ToggleZoom(void)
+{
+	CBasePlayer* pPlayer = ToBasePlayer(GetOwner());
+	if (!pPlayer)
+		return;
+
+	if (!m_bNarrowfov)
+	{
+		pPlayer->SetFOV(this, pPlayer->GetDefaultFOV() - 15, 0.5f);
+		m_bNarrowfov = true;
+	}
+	else
+	{
+		pPlayer->SetFOV(this, 0, 0.5f);
+		m_bNarrowfov = false;
+	}
+}
 //-----------------------------------------------------------------------------
 // Purpose: Handle grenade detonate in-air (even when no ammo is left)
 //-----------------------------------------------------------------------------
@@ -177,19 +218,31 @@ void CWeaponAR2::ItemPostFrame(void)
 
 	if (pOwner->m_nButtons & IN_ATTACK)
 	{
+
 		m_flfirerate -= 0.003f;
 	}
-	if (pOwner->m_nButtons & IN_ATTACK2)
+
+	if (AmFocusFiring())
 	{
-		m_flfirerate -= 0.003f;
+		if (!m_bNarrowfov)
+			ToggleZoom();
+		pOwner->SetMaxSpeed(220.0f);
+		m_flfirerate = GetMaxFirerate();
 	}
+	else
+	{
+		if (m_bNarrowfov)
+			ToggleZoom();
+		pOwner->SetMaxSpeed(450.0f);
+	}
+
 	if (m_flfirerate > MINFIRERATE)
 		m_flfirerate = MINFIRERATE;
-	if (pOwner->HasOverdrive())
-	{
+	
+	/* {
 		if (m_flfirerate < MAXOVERDRIVEFIRERATE)
 			m_flfirerate = MAXOVERDRIVEFIRERATE;
-		if (m_flfirerate == MAXOVERDRIVEFIRERATE)
+		if (m_flfirerate == MAXOVERDRIVEFIRERATE && pOwner->m_nButtons & IN_ATTACK)
 			m_iWeaponState = WEAPON_STATE_FULLSPEED;
 		else
 		{
@@ -201,13 +254,25 @@ void CWeaponAR2::ItemPostFrame(void)
 	{
 		if (m_flfirerate < MAXFIRERATE)
 			m_flfirerate = MAXFIRERATE;
-		if (m_flfirerate == MAXFIRERATE)
+		if (m_flfirerate == MAXFIRERATE && pOwner->m_nButtons & IN_ATTACK)
 			m_iWeaponState = WEAPON_STATE_FULLSPEED;
 		else
 		{
 			m_iWeaponState = WEAPON_STATE_NOTFULLSPEED;
 			m_bPlayingWoundSound = false;
 		}
+	}*/
+
+
+	if (m_flfirerate < GetMaxFirerate())
+		m_flfirerate = GetMaxFirerate();
+
+	if (m_flfirerate == GetMaxFirerate() && pOwner->m_nButtons & IN_ATTACK)
+		m_iWeaponState = WEAPON_STATE_FULLSPEED;
+	else
+	{
+		m_iWeaponState = WEAPON_STATE_NOTFULLSPEED;
+		m_bPlayingWoundSound = false;
 	}
 
 	
@@ -350,7 +415,11 @@ void CWeaponAR2::PrimaryAttack(void)
 
 	if (g_thirdperson.GetBool())
 	{
-		Vector vecBarrelPos = pPlayer->WorldSpaceCenter() + (vForward * 16.0f) + (vRight * 6.0f);
+		//Vector vecBarrelPos = pPlayer->WorldSpaceCenter() + (vForward * 16.0f) + (vRight * 6.0f);
+		int iMuzzleBone = this->LookupBone("muzzle");
+		QAngle qAng;
+		Vector vecBarrelPos;
+		GetBonePosition(iMuzzleBone, vecBarrelPos, qAng);
 		trace_t tr, tr2;
 		UTIL_TraceLine(pPlayer->EyePosition(), pPlayer->EyePosition() + (vForward * MAX_TRACE_LENGTH), MASK_SHOT, pPlayer, COLLISION_GROUP_NONE, &tr);
 		UTIL_TraceLine(pPlayer->WorldSpaceCenter(), vecBarrelPos, MASK_SHOT, pPlayer, COLLISION_GROUP_NONE, &tr2);
@@ -368,8 +437,9 @@ void CWeaponAR2::PrimaryAttack(void)
 	}
 	else
 	{
-		Vector vecSrcPoint = pPlayer->Weapon_ShootPosition() + vRight * 4.0f + vUp * -3.0f;
+		Vector vecSrcPoint = pPlayer->Weapon_ShootPosition() + vRight * 4.0f + vUp * -5.0f + vForward * 8.0f;
 		vecSrc = vecSrcPoint + RandomVector(-4, 4);
+
 		vecDirShooting = pPlayer->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT);
 	}
 	// Fire the bullets
@@ -377,7 +447,7 @@ void CWeaponAR2::PrimaryAttack(void)
 	info.m_iShots = iBulletsToFire;
 	info.m_vecSrc = vecSrc;
 	info.m_vecDirShooting = vecDirShooting;
-	info.m_vecSpread = pPlayer->GetAttackSpread(this);
+	info.m_vecSpread = GetBulletSpread();
 	info.m_flDistance = MAX_TRACE_LENGTH;
 	info.m_iAmmoType = m_iPrimaryAmmoType;
 	info.m_iTracerFreq = 1;
@@ -509,28 +579,11 @@ void CWeaponAR2::DelayedAttack( void )
 //-----------------------------------------------------------------------------
 void CWeaponAR2::SecondaryAttack( void )
 {
-	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
-	if (!pPlayer)
-		return;
-
-	float fireRate = GetFireRate();
-
-	// MUST call sound before removing a round from the clip of a CHLMachineGun
-	while (m_flNextPrimaryAttack <= gpGlobals->curtime)
+	while (m_flNextSecondaryAttack <= gpGlobals->curtime)
 	{
-		//WeaponSound(SINGLE, m_flNextPrimaryAttack);
-		m_flNextPrimaryAttack = m_flNextPrimaryAttack + fireRate;
-		m_flNextSecondaryAttack = m_flNextPrimaryAttack + fireRate;
+		SendWeaponAnim(GetPrimaryAttackActivity());
+		m_flNextSecondaryAttack = gpGlobals->curtime + GetFireRate();
 	}
-
-	m_iPrimaryAttacks++;
-	gamestats->Event_WeaponFired(pPlayer, true, GetClassname());
-
-	// Fire the bullets
-	SendWeaponAnim(GetPrimaryAttackActivity());
-	pPlayer->SetAnimation(PLAYER_ATTACK1);
-
-	// Register a muzzleflash for the AI
 }
 
 //-----------------------------------------------------------------------------
@@ -680,6 +733,7 @@ void CWeaponAR2::ItemHolsterFrame(void)
 {
 	BaseClass::ItemHolsterFrame();
 	m_flfirerate = MINFIRERATE;
+	//UTIL_GetLocalPlayer()->SetMaxSpeed(450.0f);
 	ShutdownWoundSound();
 }
 //-----------------------------------------------------------------------------

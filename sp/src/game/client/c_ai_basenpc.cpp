@@ -109,10 +109,7 @@ int C_AI_BaseNPC::InternalDrawModel(int flags)
 				;
 				// Set override material for glow color
 				IMaterial* pMatGlowColor = NULL;
-				if (m_iVortEffectType == 2)
-					pMatGlowColor = materials->FindMaterial("engine/shield", TEXTURE_GROUP_OTHER, true);
-				else
-					pMatGlowColor = materials->FindMaterial("engine/buff", TEXTURE_GROUP_OTHER, true);
+				pMatGlowColor = GetShieldType(m_iVortEffectType);
 				if (pMatGlowColor)
 				{
 					pMatGlowColor->AddRef();
@@ -172,6 +169,28 @@ int C_AI_BaseNPC::InternalDrawModel(int flags)
 
 		return ret;
 }
+
+IMaterial* C_AI_BaseNPC::GetShieldType(int vorttype)
+{
+	switch (vorttype)
+	{
+	case 0:
+		return materials->FindMaterial("engine/necro", TEXTURE_GROUP_OTHER, true);
+		break;
+	case 1:
+		return materials->FindMaterial("engine/shield", TEXTURE_GROUP_OTHER, true);
+		break;
+	case 2:
+		return materials->FindMaterial("engine/buff", TEXTURE_GROUP_OTHER, true);
+		break;
+	case 3:
+		return materials->FindMaterial("engine/buff", TEXTURE_GROUP_OTHER, true);
+		break;
+	default:
+		return materials->FindMaterial("engine/shield", TEXTURE_GROUP_OTHER, true);
+		break;
+	}
+}
 //-----------------------------------------------------------------------------
 // Makes ragdolls ignore npcclip brushes
 //-----------------------------------------------------------------------------
@@ -185,6 +204,48 @@ unsigned int C_AI_BaseNPC::PhysicsSolidMaskForEntity( void ) const
 	return MASK_SOLID;
 }
 
+const char* C_AI_BaseNPC::GetStartParticle()
+{
+	switch (m_iVortEffectType)
+	{
+	case 0:
+		return "necro_form";
+		break;
+	case 1:
+		return "shield_form";
+		break;
+	case 2:
+		return "buff_form";
+		break;
+	case 3:
+		return "buff_form";
+		break;
+	default:
+		return "shield_form";
+		break;
+	}
+}
+const char* C_AI_BaseNPC::GetBurstParticle()
+{
+	switch (m_iVortEffectType)
+	{
+	case 0:
+		return "necro_burst";
+		break;
+	case 1:
+		return "shield_burst";
+		break;
+	case 2:
+		return "buff_burst";
+		break;
+	case 3:
+		return "buff_burst";
+		break;
+	default:
+		return "shield_burst";
+		break;
+	}
+}
 
 void C_AI_BaseNPC::ClientThink( void )
 {
@@ -198,7 +259,7 @@ void C_AI_BaseNPC::ClientThink( void )
 
 		if (!m_pShieldFX)
 		{
-			m_pShieldFX = pProp->Create("shield_form", PATTACH_ROOTBONE_FOLLOW);
+			m_pShieldFX = pProp->Create(GetStartParticle(), PATTACH_ROOTBONE_FOLLOW);
 		}
 	}
 	else
@@ -210,7 +271,7 @@ void C_AI_BaseNPC::ClientThink( void )
 			shieldtimer = 0;
 			if (!m_pShieldBurstFX)
 			{
-				m_pShieldBurstFX = pProp->Create("shield_burst", PATTACH_ROOTBONE_FOLLOW);
+				m_pShieldBurstFX = pProp->Create(GetBurstParticle(), PATTACH_ROOTBONE_FOLLOW);
 			}
 		}
 	}

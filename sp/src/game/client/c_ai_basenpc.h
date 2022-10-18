@@ -73,6 +73,11 @@ private:
 
 	int shieldtimer;
 
+	IMaterial* GetShieldType(int vorttype);
+
+	const char* GetStartParticle();
+	const char* GetBurstParticle();
+
 };
 
 

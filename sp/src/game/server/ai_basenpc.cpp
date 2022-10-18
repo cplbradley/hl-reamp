@@ -591,7 +591,7 @@ void CAI_BaseNPC::StartShielding()
 {
 	m_bBeingShielded = true;
 	m_bShouldDrawShieldOverlay = true;
-	m_iVortEffectType = 2;
+	m_iVortEffectType = 1;
 }
 void CAI_BaseNPC::StopShielding()
 {
@@ -609,7 +609,7 @@ void CAI_BaseNPC::StartBuffing()
 {
 	m_bBeingBuffed = true;
 	m_bShouldDrawShieldOverlay = true;
-	m_iVortEffectType = 3;
+	m_iVortEffectType = 2;
 	m_fBuffPlaybackRate = 2.0f;
 }
 void CAI_BaseNPC::StopBuffing()
@@ -4097,8 +4097,6 @@ void CAI_BaseNPC::PostNPCThink( void )
 		float healrate = g_pGameRules->AdjustProjectileSpeed(vorthealrate.GetFloat());
 		m_iHealth += healrate;
 	}
-
-
 	
 }
 
@@ -11332,6 +11330,10 @@ void CAI_BaseNPC::Precache( void )
 	PrecacheParticleSystem("agib_sploosh");
 	PrecacheParticleSystem("shield_burst");
 	PrecacheParticleSystem("shield_form");
+	PrecacheParticleSystem("buff_burst");
+	PrecacheParticleSystem("buff_form");
+	PrecacheParticleSystem("necro_burst");
+	PrecacheParticleSystem("necro_form");
 
 	BaseClass::Precache();
 }

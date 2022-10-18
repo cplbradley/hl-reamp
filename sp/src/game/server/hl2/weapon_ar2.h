@@ -67,11 +67,18 @@ public:
 	
 	void	DoImpactEffect( trace_t &tr, int nDamageType );
 
+	bool AmFocusFiring(void);
+
+	void ToggleZoom(void);
+
+
+	float GetMaxFirerate();
+
 	virtual const Vector& GetBulletSpread( void )
 	{
 		static Vector cone;
 		
-		cone = VECTOR_CONE_3DEGREES;
+		cone = AmFocusFiring() ? VECTOR_CONE_1DEGREES : VECTOR_CONE_3DEGREES;
 
 		return cone;
 	}
@@ -79,6 +86,7 @@ public:
 	const WeaponProficiencyInfo_t *GetProficiencyValues();
 
 protected:
+	bool					m_bNarrowfov;
 	float					m_flfirerate;
 	float					m_flDelayedFire;
 	bool					m_bShotDelayed;

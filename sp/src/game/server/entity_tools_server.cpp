@@ -14,6 +14,9 @@
 #include "sceneentity.h"
 #include "particles/particles.h"
 
+#include "icommandline.h"
+#include "tier0/memdbgon.h"
+
 
 //-----------------------------------------------------------------------------
 // Interface from engine to tools for manipulating entities

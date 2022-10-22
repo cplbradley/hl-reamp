@@ -4740,11 +4740,11 @@ C_BaseEntity *C_BaseEntity::Instance( int iEnt )
 	return ClientEntityList().GetBaseEntity( iEnt );
 }
 
-#ifdef WIN32
+/*#ifdef WIN32
 #pragma warning( push )
 #include <typeinfo.h>
 #pragma warning( pop )
-#endif
+#endif*/
 
 //-----------------------------------------------------------------------------
 // Purpose: 

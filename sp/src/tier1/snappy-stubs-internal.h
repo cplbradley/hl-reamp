@@ -98,73 +98,73 @@ using namespace std;
 
 namespace snappy {
 
-static const uint32 kuint32max = static_cast<uint32>(0xFFFFFFFF);
-static const int64 kint64max = static_cast<int64>(0x7FFFFFFFFFFFFFFFLL);
+    static const uint32 kuint32max = static_cast<uint32>(0xFFFFFFFF);
+    static const int64 kint64max = static_cast<int64>(0x7FFFFFFFFFFFFFFFLL);
 
-// Logging.
+    // Logging.
 
 #define LOG(level) LogMessage()
 #define VLOG(level) true ? (void)0 : \
     snappy::LogMessageVoidify() & snappy::LogMessage()
 
-class LogMessage {
- public:
-  LogMessage() { }
-  ~LogMessage() {
-	  fprintf( stderr, "\n" );
-    //cerr << endl;
-  }
+    class LogMessage {
+    public:
+        LogMessage() { }
+        ~LogMessage() {
+            fprintf(stderr, "\n");
+            //cerr << endl;
+        }
 
-  LogMessage& operator<<(const std::string& msg) {
-    //cerr << msg;
-	  fprintf( stderr, "%s", msg.c_str() );
+        LogMessage& operator<<(const std::string& msg) {
+            //cerr << msg;
+            fprintf(stderr, "%s", msg.c_str());
 
-	  return *this;
-  }
-  LogMessage& operator<<(int x) {
-	  fprintf( stderr, "%d", x );
-    //cerr << x;
-    return *this;
-  }
-};
+            return *this;
+        }
+        LogMessage& operator<<(int x) {
+            fprintf(stderr, "%d", x);
+            //cerr << x;
+            return *this;
+        }
+    };
 
-// Asserts, both versions activated in debug mode only,
-// and ones that are always active.
+    // Asserts, both versions activated in debug mode only,
+    // and ones that are always active.
 
 #define CRASH_UNLESS(condition) \
     PREDICT_TRUE(condition) ? (void)0 : \
     snappy::LogMessageVoidify() & snappy::LogMessageCrash()
 
-class LogMessageCrash : public LogMessage {
- public:
-  LogMessageCrash() { }
-#if _MSC_VER == 1700 || _MSC_VER == 1800
-// Bogus warning from VS 2012 and VS 2013:
-// warning C4722: 'snappy::LogMessageCrash::~LogMessageCrash' : destructor never returns, potential memory leak
+    class LogMessageCrash : public LogMessage {
+    public:
+        LogMessageCrash() { }
+#if _MSC_VER == 1700 || _MSC_VER == 1800 || _MSC_VER == 1929 || _MSC_VER == 1930 || _MSC_VER == 1931 || _MSC_VER == 1933
+        // Bogus warning from VS 2012 and VS 2013:
+        // warning C4722: 'snappy::LogMessageCrash::~LogMessageCrash' : destructor never returns, potential memory leak
 #pragma warning(push)
 #pragma warning(disable : 4722)
 #endif
-  ~LogMessageCrash() {
-	  fprintf( stderr, "\n" );
-//    cerr << endl;
-    abort();
-  }
-};
-#if _MSC_VER == 1700 || _MSC_VER == 1800
+        ~LogMessageCrash() {
+            fprintf(stderr, "\n");
+            //    cerr << endl;
+            abort();
+        }
+    };
+#if _MSC_VER == 1700 || _MSC_VER == 1800 || _MSC_VER == 1929 || _MSC_VER == 1930 || _MSC_VER == 1933
 #pragma warning(pop)
 #endif
 
-// This class is used to explicitly ignore values in the conditional
-// logging macros.  This avoids compiler warnings like "value computed
-// is not used" and "statement has no effect".
+    // This class is used to explicitly ignore values in the conditional
+    // logging macros.  This avoids compiler warnings like "value computed
+    // is not used" and "statement has no effect".
 
-class LogMessageVoidify {
- public:
-  LogMessageVoidify() { }
-  // This has to be an operator with a precedence lower than << but
-  // higher than ?:
-  void operator&(const LogMessage&) { }
-};
+    class LogMessageVoidify {
+    public:
+        LogMessageVoidify() { }
+        // This has to be an operator with a precedence lower than << but
+        // higher than ?:
+        void operator&(const LogMessage&) { }
+    };
 
 #define CHECK(cond) CRASH_UNLESS(cond)
 #define CHECK_LE(a, b) CRASH_UNLESS((a) <= (b))
@@ -196,7 +196,7 @@ class LogMessageVoidify {
 
 #endif
 
-// Potentially unaligned loads and stores.
+    // Potentially unaligned loads and stores.
 
 #if defined(__i386__) || defined(__x86_64__) || defined(__powerpc__)
 
@@ -213,39 +213,39 @@ class LogMessageVoidify {
 // These functions are provided for architectures that don't support
 // unaligned loads and stores.
 
-inline uint16 UNALIGNED_LOAD16(const void *p) {
-  uint16 t;
-  memcpy(&t, p, sizeof t);
-  return t;
-}
+    inline uint16 UNALIGNED_LOAD16(const void* p) {
+        uint16 t;
+        memcpy(&t, p, sizeof t);
+        return t;
+    }
 
-inline uint32 UNALIGNED_LOAD32(const void *p) {
-  uint32 t;
-  memcpy(&t, p, sizeof t);
-  return t;
-}
+    inline uint32 UNALIGNED_LOAD32(const void* p) {
+        uint32 t;
+        memcpy(&t, p, sizeof t);
+        return t;
+    }
 
-inline uint64 UNALIGNED_LOAD64(const void *p) {
-  uint64 t;
-  memcpy(&t, p, sizeof t);
-  return t;
-}
+    inline uint64 UNALIGNED_LOAD64(const void* p) {
+        uint64 t;
+        memcpy(&t, p, sizeof t);
+        return t;
+    }
 
-inline void UNALIGNED_STORE16(void *p, uint16 v) {
-  memcpy(p, &v, sizeof v);
-}
+    inline void UNALIGNED_STORE16(void* p, uint16 v) {
+        memcpy(p, &v, sizeof v);
+    }
 
-inline void UNALIGNED_STORE32(void *p, uint32 v) {
-  memcpy(p, &v, sizeof v);
-}
+    inline void UNALIGNED_STORE32(void* p, uint32 v) {
+        memcpy(p, &v, sizeof v);
+    }
 
-inline void UNALIGNED_STORE64(void *p, uint64 v) {
-  memcpy(p, &v, sizeof v);
-}
+    inline void UNALIGNED_STORE64(void* p, uint64 v) {
+        memcpy(p, &v, sizeof v);
+    }
 
 #endif
 
-// The following guarantees declaration of the byte swap functions.
+    // The following guarantees declaration of the byte swap functions.
 #ifdef WORDS_BIGENDIAN
 
 #ifdef _MSC_VER
@@ -276,220 +276,225 @@ inline void UNALIGNED_STORE64(void *p, uint64 v) {
 //
 //  Load unaligned values stored in little endian converting to host order:
 //    x = LittleEndian.Load16(p);
-class LittleEndian {
- public:
-  // Conversion functions.
+    class LittleEndian {
+    public:
+        // Conversion functions.
 #ifdef WORDS_BIGENDIAN
 
-  static uint16 FromHost16(uint16 x) { return bswap_16(x); }
-  static uint16 ToHost16(uint16 x) { return bswap_16(x); }
+        static uint16 FromHost16(uint16 x) { return bswap_16(x); }
+        static uint16 ToHost16(uint16 x) { return bswap_16(x); }
 
-  static uint32 FromHost32(uint32 x) { return bswap_32(x); }
-  static uint32 ToHost32(uint32 x) { return bswap_32(x); }
+        static uint32 FromHost32(uint32 x) { return bswap_32(x); }
+        static uint32 ToHost32(uint32 x) { return bswap_32(x); }
 
-  static bool IsLittleEndian() { return false; }
+        static bool IsLittleEndian() { return false; }
 
 #else  // !defined(WORDS_BIGENDIAN)
 
-  static uint16 FromHost16(uint16 x) { return x; }
-  static uint16 ToHost16(uint16 x) { return x; }
+        static uint16 FromHost16(uint16 x) { return x; }
+        static uint16 ToHost16(uint16 x) { return x; }
 
-  static uint32 FromHost32(uint32 x) { return x; }
-  static uint32 ToHost32(uint32 x) { return x; }
+        static uint32 FromHost32(uint32 x) { return x; }
+        static uint32 ToHost32(uint32 x) { return x; }
 
-  static bool IsLittleEndian() { return true; }
+        static bool IsLittleEndian() { return true; }
 
 #endif  // !defined(WORDS_BIGENDIAN)
 
-  // Functions to do unaligned loads and stores in little-endian order.
-  static uint16 Load16(const void *p) {
-    return ToHost16(UNALIGNED_LOAD16(p));
-  }
+        // Functions to do unaligned loads and stores in little-endian order.
+        static uint16 Load16(const void* p) {
+            return ToHost16(UNALIGNED_LOAD16(p));
+        }
 
-  static void Store16(void *p, uint16 v) {
-    UNALIGNED_STORE16(p, FromHost16(v));
-  }
+        static void Store16(void* p, uint16 v) {
+            UNALIGNED_STORE16(p, FromHost16(v));
+        }
 
-  static uint32 Load32(const void *p) {
-    return ToHost32(UNALIGNED_LOAD32(p));
-  }
+        static uint32 Load32(const void* p) {
+            return ToHost32(UNALIGNED_LOAD32(p));
+        }
 
-  static void Store32(void *p, uint32 v) {
-    UNALIGNED_STORE32(p, FromHost32(v));
-  }
-};
+        static void Store32(void* p, uint32 v) {
+            UNALIGNED_STORE32(p, FromHost32(v));
+        }
+    };
 
-// Some bit-manipulation functions.
-class Bits {
- public:
-  // Return floor(log2(n)) for positive integer n.  Returns -1 iff n == 0.
-  static int Log2Floor(uint32 n);
+    // Some bit-manipulation functions.
+    class Bits {
+    public:
+        // Return floor(log2(n)) for positive integer n.  Returns -1 iff n == 0.
+        static int Log2Floor(uint32 n);
 
-  // Return the first set least / most significant bit, 0-indexed.  Returns an
-  // undefined value if n == 0.  FindLSBSetNonZero() is similar to ffs() except
-  // that it's 0-indexed.
-  static int FindLSBSetNonZero(uint32 n);
-  static int FindLSBSetNonZero64(uint64 n);
+        // Return the first set least / most significant bit, 0-indexed.  Returns an
+        // undefined value if n == 0.  FindLSBSetNonZero() is similar to ffs() except
+        // that it's 0-indexed.
+        static int FindLSBSetNonZero(uint32 n);
+        static int FindLSBSetNonZero64(uint64 n);
 
- private:
-  SNAPPY_DISALLOW_COPY_AND_ASSIGN(Bits);
-};
+    private:
+        SNAPPY_DISALLOW_COPY_AND_ASSIGN(Bits);
+    };
 
 #ifdef HAVE_BUILTIN_CTZ
 
-inline int Bits::Log2Floor(uint32 n) {
-  return n == 0 ? -1 : 31 ^ __builtin_clz(n);
-}
+    inline int Bits::Log2Floor(uint32 n) {
+        return n == 0 ? -1 : 31 ^ __builtin_clz(n);
+    }
 
-inline int Bits::FindLSBSetNonZero(uint32 n) {
-  return __builtin_ctz(n);
-}
+    inline int Bits::FindLSBSetNonZero(uint32 n) {
+        return __builtin_ctz(n);
+    }
 
-inline int Bits::FindLSBSetNonZero64(uint64 n) {
-  return __builtin_ctzll(n);
-}
+    inline int Bits::FindLSBSetNonZero64(uint64 n) {
+        return __builtin_ctzll(n);
+    }
 
 #else  // Portable versions.
 
-inline int Bits::Log2Floor(uint32 n) {
-  if (n == 0)
-    return -1;
-  int log = 0;
-  uint32 value = n;
-  for (int i = 4; i >= 0; --i) {
-    int shift = (1 << i);
-    uint32 x = value >> shift;
-    if (x != 0) {
-      value = x;
-      log += shift;
+    inline int Bits::Log2Floor(uint32 n) {
+        if (n == 0)
+            return -1;
+        int log = 0;
+        uint32 value = n;
+        for (int i = 4; i >= 0; --i) {
+            int shift = (1 << i);
+            uint32 x = value >> shift;
+            if (x != 0) {
+                value = x;
+                log += shift;
+            }
+        }
+        assert(value == 1);
+        return log;
     }
-  }
-  assert(value == 1);
-  return log;
-}
 
-inline int Bits::FindLSBSetNonZero(uint32 n) {
-  int rc = 31;
-  for (int i = 4, shift = 1 << 4; i >= 0; --i) {
-    const uint32 x = n << shift;
-    if (x != 0) {
-      n = x;
-      rc -= shift;
+    inline int Bits::FindLSBSetNonZero(uint32 n) {
+        int rc = 31;
+        for (int i = 4, shift = 1 << 4; i >= 0; --i) {
+            const uint32 x = n << shift;
+            if (x != 0) {
+                n = x;
+                rc -= shift;
+            }
+            shift >>= 1;
+        }
+        return rc;
     }
-    shift >>= 1;
-  }
-  return rc;
-}
 
-// FindLSBSetNonZero64() is defined in terms of FindLSBSetNonZero().
-inline int Bits::FindLSBSetNonZero64(uint64 n) {
-  const uint32 bottombits = static_cast<uint32>(n);
-  if (bottombits == 0) {
-    // Bottom bits are zero, so scan in top bits
-    return 32 + FindLSBSetNonZero(static_cast<uint32>(n >> 32));
-  } else {
-    return FindLSBSetNonZero(bottombits);
-  }
-}
+    // FindLSBSetNonZero64() is defined in terms of FindLSBSetNonZero().
+    inline int Bits::FindLSBSetNonZero64(uint64 n) {
+        const uint32 bottombits = static_cast<uint32>(n);
+        if (bottombits == 0) {
+            // Bottom bits are zero, so scan in top bits
+            return 32 + FindLSBSetNonZero(static_cast<uint32>(n >> 32));
+        }
+        else {
+            return FindLSBSetNonZero(bottombits);
+        }
+    }
 
 #endif  // End portable versions.
 
-// Variable-length integer encoding.
-class Varint {
- public:
-  // Maximum lengths of varint encoding of uint32.
-  static const int kMax32 = 5;
+    // Variable-length integer encoding.
+    class Varint {
+    public:
+        // Maximum lengths of varint encoding of uint32.
+        static const int kMax32 = 5;
 
-  // Attempts to parse a varint32 from a prefix of the bytes in [ptr,limit-1].
-  // Never reads a character at or beyond limit.  If a valid/terminated varint32
-  // was found in the range, stores it in *OUTPUT and returns a pointer just
-  // past the last byte of the varint32. Else returns NULL.  On success,
-  // "result <= limit".
-  static const char* Parse32WithLimit(const char* ptr, const char* limit,
-                                      uint32* OUTPUT);
+        // Attempts to parse a varint32 from a prefix of the bytes in [ptr,limit-1].
+        // Never reads a character at or beyond limit.  If a valid/terminated varint32
+        // was found in the range, stores it in *OUTPUT and returns a pointer just
+        // past the last byte of the varint32. Else returns NULL.  On success,
+        // "result <= limit".
+        static const char* Parse32WithLimit(const char* ptr, const char* limit,
+            uint32* OUTPUT);
 
-  // REQUIRES   "ptr" points to a buffer of length sufficient to hold "v".
-  // EFFECTS    Encodes "v" into "ptr" and returns a pointer to the
-  //            byte just past the last encoded byte.
-  static char* Encode32(char* ptr, uint32 v);
+        // REQUIRES   "ptr" points to a buffer of length sufficient to hold "v".
+        // EFFECTS    Encodes "v" into "ptr" and returns a pointer to the
+        //            byte just past the last encoded byte.
+        static char* Encode32(char* ptr, uint32 v);
 
-  // EFFECTS    Appends the varint representation of "value" to "*s".
-  static void Append32(string* s, uint32 value);
-};
+        // EFFECTS    Appends the varint representation of "value" to "*s".
+        static void Append32(string* s, uint32 value);
+    };
 
-inline const char* Varint::Parse32WithLimit(const char* p,
-                                            const char* l,
-                                            uint32* OUTPUT) {
-  const unsigned char* ptr = reinterpret_cast<const unsigned char*>(p);
-  const unsigned char* limit = reinterpret_cast<const unsigned char*>(l);
-  uint32 b, result;
-  if (ptr >= limit) return NULL;
-  b = *(ptr++); result = b & 127;          if (b < 128) goto done;
-  if (ptr >= limit) return NULL;
-  b = *(ptr++); result |= (b & 127) <<  7; if (b < 128) goto done;
-  if (ptr >= limit) return NULL;
-  b = *(ptr++); result |= (b & 127) << 14; if (b < 128) goto done;
-  if (ptr >= limit) return NULL;
-  b = *(ptr++); result |= (b & 127) << 21; if (b < 128) goto done;
-  if (ptr >= limit) return NULL;
-  b = *(ptr++); result |= (b & 127) << 28; if (b < 16) goto done;
-  return NULL;       // Value is too long to be a varint32
- done:
-  *OUTPUT = result;
-  return reinterpret_cast<const char*>(ptr);
-}
+    inline const char* Varint::Parse32WithLimit(const char* p,
+        const char* l,
+        uint32* OUTPUT) {
+        const unsigned char* ptr = reinterpret_cast<const unsigned char*>(p);
+        const unsigned char* limit = reinterpret_cast<const unsigned char*>(l);
+        uint32 b, result;
+        if (ptr >= limit) return NULL;
+        b = *(ptr++); result = b & 127;          if (b < 128) goto done;
+        if (ptr >= limit) return NULL;
+        b = *(ptr++); result |= (b & 127) << 7; if (b < 128) goto done;
+        if (ptr >= limit) return NULL;
+        b = *(ptr++); result |= (b & 127) << 14; if (b < 128) goto done;
+        if (ptr >= limit) return NULL;
+        b = *(ptr++); result |= (b & 127) << 21; if (b < 128) goto done;
+        if (ptr >= limit) return NULL;
+        b = *(ptr++); result |= (b & 127) << 28; if (b < 16) goto done;
+        return NULL;       // Value is too long to be a varint32
+    done:
+        *OUTPUT = result;
+        return reinterpret_cast<const char*>(ptr);
+    }
 
-inline char* Varint::Encode32(char* sptr, uint32 v) {
-  // Operate on characters as unsigneds
-  unsigned char* ptr = reinterpret_cast<unsigned char*>(sptr);
-  static const int B = 128;
-  if (v < (1<<7)) {
-    *(ptr++) = v;
-  } else if (v < (1<<14)) {
-    *(ptr++) = v | B;
-    *(ptr++) = v>>7;
-  } else if (v < (1<<21)) {
-    *(ptr++) = v | B;
-    *(ptr++) = (v>>7) | B;
-    *(ptr++) = v>>14;
-  } else if (v < (1<<28)) {
-    *(ptr++) = v | B;
-    *(ptr++) = (v>>7) | B;
-    *(ptr++) = (v>>14) | B;
-    *(ptr++) = v>>21;
-  } else {
-    *(ptr++) = v | B;
-    *(ptr++) = (v>>7) | B;
-    *(ptr++) = (v>>14) | B;
-    *(ptr++) = (v>>21) | B;
-    *(ptr++) = v>>28;
-  }
-  return reinterpret_cast<char*>(ptr);
-}
+    inline char* Varint::Encode32(char* sptr, uint32 v) {
+        // Operate on characters as unsigneds
+        unsigned char* ptr = reinterpret_cast<unsigned char*>(sptr);
+        static const int B = 128;
+        if (v < (1 << 7)) {
+            *(ptr++) = v;
+        }
+        else if (v < (1 << 14)) {
+            *(ptr++) = v | B;
+            *(ptr++) = v >> 7;
+        }
+        else if (v < (1 << 21)) {
+            *(ptr++) = v | B;
+            *(ptr++) = (v >> 7) | B;
+            *(ptr++) = v >> 14;
+        }
+        else if (v < (1 << 28)) {
+            *(ptr++) = v | B;
+            *(ptr++) = (v >> 7) | B;
+            *(ptr++) = (v >> 14) | B;
+            *(ptr++) = v >> 21;
+        }
+        else {
+            *(ptr++) = v | B;
+            *(ptr++) = (v >> 7) | B;
+            *(ptr++) = (v >> 14) | B;
+            *(ptr++) = (v >> 21) | B;
+            *(ptr++) = v >> 28;
+        }
+        return reinterpret_cast<char*>(ptr);
+    }
 
-// If you know the internal layout of the std::string in use, you can
-// replace this function with one that resizes the string without
-// filling the new space with zeros (if applicable) --
-// it will be non-portable but faster.
-inline void STLStringResizeUninitialized(string* s, size_t new_size) {
-  s->resize(new_size);
-}
+    // If you know the internal layout of the std::string in use, you can
+    // replace this function with one that resizes the string without
+    // filling the new space with zeros (if applicable) --  
+    // it will be non-portable but faster.
+    inline void STLStringResizeUninitialized(string* s, size_t new_size) {
+        s->resize(new_size);
+    }
 
-// Return a mutable char* pointing to a string's internal buffer,
-// which may not be null-terminated. Writing through this pointer will
-// modify the string.
-//
-// string_as_array(&str)[i] is valid for 0 <= i < str.size() until the
-// next call to a string method that invalidates iterators.
-//
-// As of 2006-04, there is no standard-blessed way of getting a
-// mutable reference to a string's internal buffer. However, issue 530
-// (http://www.open-std.org/JTC1/SC22/WG21/docs/lwg-defects.html#530)
-// proposes this as the method. It will officially be part of the standard
-// for C++0x. This should already work on all current implementations.
-inline char* string_as_array(string* str) {
-  return str->empty() ? NULL : &*str->begin();
-}
+    // Return a mutable char* pointing to a string's internal buffer,
+    // which may not be null-terminated. Writing through this pointer will
+    // modify the string.
+    //
+    // string_as_array(&str)[i] is valid for 0 <= i < str.size() until the
+    // next call to a string method that invalidates iterators.
+    //
+    // As of 2006-04, there is no standard-blessed way of getting a
+    // mutable reference to a string's internal buffer. However, issue 530
+    // (http://www.open-std.org/JTC1/SC22/WG21/docs/lwg-defects.html#530)
+    // proposes this as the method. It will officially be part of the standard
+    // for C++0x. This should already work on all current implementations.
+    inline char* string_as_array(string* str) {
+        return str->empty() ? NULL : &*str->begin();
+    }
 
 }  // namespace snappy
 

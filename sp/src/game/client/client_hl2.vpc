@@ -171,8 +171,6 @@ $Project "Client (HL2)"
 			$File "c_movie_display.h"
 			$File "c_movie_display.cpp"
 			$File "hlr/hlr_masochistmode.cpp"
-			$File "hlr/fx_shield.cpp"
-			$File "hlr/fx_shield.h"
 		}
 		$Folder "FMOD"
 		{

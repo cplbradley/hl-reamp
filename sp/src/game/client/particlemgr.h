@@ -113,14 +113,14 @@ entities. Each one is useful under different conditions.
 #include "materialsystem/imaterialsystem.h"
 #include "mathlib/vector.h"
 #include "mathlib/vmatrix.h"
-#include "mathlib/mathlib.h"
+//#include "mathlib/mathlib.h"
 #include "iclientrenderable.h"
 #include "clientleafsystem.h"
 #include "tier0/fasttimer.h"
 #include "utllinkedlist.h"
 #include "utldict.h"
 #ifdef WIN32
-#include <typeinfo.h>
+#include <typeinfo>
 #else
 #include <typeinfo>
 #endif

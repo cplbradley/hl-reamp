@@ -91,17 +91,8 @@
     <ClCompile Include="pbr_dx9.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="shield_dx9.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shield_ps30.fxc">
-      <Filter>Shader Source\fxc</Filter>
-    </None>
-    <None Include="shield_vs30.fxc">
-      <Filter>Shader Source\fxc</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\..\public\tier0\pointeroverride.asm">
@@ -113,12 +104,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="buildsdkshaders.bat">
-      <Filter>
-      </Filter>
+      <Filter></Filter>
     </None>
     <None Include="buildshaders.bat">
-      <Filter>
-      </Filter>
+      <Filter></Filter>
     </None>
     <None Include="coreball_ps2x.fxc">
       <Filter>Shader Source\fxc</Filter>

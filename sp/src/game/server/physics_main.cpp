@@ -942,8 +942,8 @@ void CBaseEntity::PhysicsDispatchThink( BASEPTR thinkFunc )
 	if ( thinkLimit )
 	{
 		// calculate running time of the AI in milliseconds
-		float time = ( engine->Time() - startTime ) * 1000.0f;
-		if ( time > thinkLimit )
+		float ftime = ( engine->Time() - startTime ) * 1000.0f;
+		if ( ftime > thinkLimit )
 		{
 #if defined( _XBOX ) && !defined( _RETAIL )
 			if ( vprof_think_limit.GetBool() )
@@ -956,14 +956,14 @@ void CBaseEntity::PhysicsDispatchThink( BASEPTR thinkFunc )
 			CAI_BaseNPC *pNPC = MyNPCPointer();
 			if (pNPC && pNPC->GetCurSchedule())
 			{
-				pNPC->ReportOverThinkLimit( time );
+				pNPC->ReportOverThinkLimit( ftime );
 			}
 			else
 			{
 #ifdef _WIN32
-				Msg( "%s(%s) thinking for %.02f ms!!!\n", GetClassname(), typeid(this).raw_name(), time );
+				Msg( "%s(%s) thinking for %.02f ms!!!\n", GetClassname(), typeid(this).raw_name(), ftime );
 #elif POSIX
-				Msg( "%s(%s) thinking for %.02f ms!!!\n", GetClassname(), typeid(this).name(), time );
+				Msg( "%s(%s) thinking for %.02f ms!!!\n", GetClassname(), typeid(this).name(), ftime );
 #else
 #error "typeinfo"
 #endif

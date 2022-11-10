@@ -1632,6 +1632,19 @@ static int __cdecl SortCandidates(CAI_BaseNPC* const* p1, CAI_BaseNPC* const* p2
 	return 0;
 }
 
+
+
+static bool VerifyNPC(CBaseEntity *pEnt)
+{
+	CAI_BaseNPC* pNPC = pEnt->MyNPCPointer();
+	if (!pEnt)
+		return false;
+	if (!pNPC->AmBeingShielded() && !pNPC->AmBeingBuffed())
+		return false;
+	else
+		return true;
+}
+
 CAI_BaseNPC *CNPC_Vortigaunt::FindNearestNPCToHeal()
 {
 
@@ -1710,8 +1723,17 @@ CAI_BaseNPC* CNPC_Vortigaunt::FindNearestNPCToBuff()
 
 		if (g_pGameRules->g_utlvec_vorteffectlist.HasElement(pNPC->entindex()))
 		{
-			Warning("Buffer: NPC WITH INDEX %i IS CURRENTLY IN THE EFFECT LIST\n", pNPC->entindex());
-			continue;
+			Warning("Shielder: NPC WITH INDEX %i IS CURRENTLY IN THE EFFECT LIST, VERIFYING\n", pNPC->entindex());
+			if (!VerifyNPC(pNPC))
+			{
+				Warning("Shielder: NPC FAILED TO VERIFY EFFECT\n");
+				continue;
+			}
+			else
+			{
+				Warning("Shielder: NPC VERIFIED EFFECT, IGNORING\n");
+				continue;
+			}
 		}
 
 		const EnemyClass_t enemyclass = pNPC->GetEnemyClass();
@@ -1753,8 +1775,17 @@ CAI_BaseNPC* CNPC_Vortigaunt::FindNearestNPCToShield()
 
 		if (g_pGameRules->g_utlvec_vorteffectlist.HasElement(pNPC->entindex()))
 		{
-			Warning("Shielder: NPC WITH INDEX %i IS CURRENTLY IN THE EFFECT LIST\n", pNPC->entindex());
-			continue;
+			Warning("Shielder: NPC WITH INDEX %i IS CURRENTLY IN THE EFFECT LIST, VERIFYING\n", pNPC->entindex());
+			if (!VerifyNPC(pNPC))
+			{
+				Warning("Shielder: NPC FAILED TO VERIFY EFFECT\n");
+				continue;
+			}
+			else
+			{
+				Warning("Shielder: NPC VERIFIED EFFECT, IGNORING\n");
+				continue;
+			}
 		}
 
 		const EnemyClass_t enemyclass = pNPC->GetEnemyClass();
@@ -2173,9 +2204,6 @@ void CNPC_Vortigaunt::MaintainHealSchedule( void )
 
 	if ((GetVortClass() == VORTCLASS_HEALER) && (pNPC->GetHealth() >= pNPC->GetMaxHealth()))
 		StopHealing(false);
-
-	if (HasCondition(COND_VORTIGAUNT_ENEMY_TOO_CLOSE))
-		StopHealing(true);
 
 	// FIXME: How can this happen?
 	if ( m_AssaultBehavior.GetOuter() != NULL )

@@ -11,6 +11,8 @@ $collisionjoints "w_grenadelauncher_hull.smd" {
 
 }
 
+$animation "a_fire" "w_grenadelauncher.smd" frame 0 0
+
 $attachment "muzzle" "ValveBiped.Bip01_R_Hand" -0.00 -16.00 -1.00
 $contents "solid"
 $cdmaterials "models/weapons/grenadelauncher"
@@ -28,7 +30,7 @@ $sequence "idle1" {
 }
 
 $sequence "fire" {
-	"w_grenadelauncher.smd"
+	"w_grenadelauncher_fire.smd"
 	activity "ACT_RANGE_ATTACK_SHOTGUN" 1
 	{ event AE_NPC_MUZZLEFLASH 0 "SHOTGUN MUZZLE" }
 	{ event 6001 0 "2" }

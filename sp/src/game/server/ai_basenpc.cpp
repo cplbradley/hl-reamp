@@ -627,6 +627,9 @@ void CAI_BaseNPC::StopBuffing()
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 {
+	if (g_pGameRules->g_utlvec_vorteffectlist.HasElement(entindex()))
+		g_pGameRules->g_utlvec_vorteffectlist.FindAndRemove(entindex());
+
 	if (IsCurSchedule(SCHED_NPC_FREEZE))
 	{
 		// We're frozen; don't die.
@@ -634,9 +637,6 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 	}
 
 	Wake( false );
-
-	if (g_pGameRules->g_utlvec_vorteffectlist.HasElement(entindex()))
-		g_pGameRules->g_utlvec_vorteffectlist.FindAndRemove(entindex());
 	
 	//Adrian: Select a death pose to extrapolate the ragdoll's velocity.
 	SelectDeathPose( info );
@@ -994,6 +994,12 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 	if ( !BaseClass::OnTakeDamage_Alive( info ) )
 		return 0;
+
+	if (GetHealth() / GetMaxHealth() < 0.1f)
+	{
+		if (g_pGameRules->g_utlvec_vorteffectlist.HasElement(entindex()))
+			g_pGameRules->g_utlvec_vorteffectlist.FindAndRemove(entindex());
+	}
 
 	if ( GetSleepState() == AISS_WAITING_FOR_THREAT )
 		Wake();

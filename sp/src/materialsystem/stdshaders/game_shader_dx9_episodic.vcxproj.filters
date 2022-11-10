@@ -47,25 +47,10 @@
     <ClInclude Include="BaseVSShader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="common_flashlight_fxc.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="common_fxc.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="common_hlsl_cpp_consts.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="common_lightmappedgeneric_fxc.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="common_ps_fxc.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="common_vertexlitgeneric_dx9.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="common_vs_fxc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="example_model_dx9_helper.h">
@@ -101,10 +86,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="buildsdkshaders.bat">
-      <Filter></Filter>
+      <Filter>
+      </Filter>
     </None>
     <None Include="buildshaders.bat">
-      <Filter></Filter>
+      <Filter>
+      </Filter>
     </None>
     <None Include="pbr_ps30.fxc">
       <Filter>Shader Source\fxc</Filter>

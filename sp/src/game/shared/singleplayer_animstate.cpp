@@ -8,6 +8,9 @@
 
 #include "cbase.h"
 #include "singleplayer_animstate.h"
+#ifdef CLIENT_DLL
+#include "c_baseplayer.h"
+#endif
 #include "tier0/vprof.h"
 #include "animation.h"
 #include "studio.h"
@@ -15,9 +18,13 @@
 #include "utldict.h"
 #include "filesystem.h"
 
+#include "in_buttons.h"
+
 extern ConVar mp_facefronttime, mp_feetyawrate, mp_ik;
 
 #define MIN_TURN_ANGLE_REQUIRING_TURN_ANIMATION        15.0f
+
+ConVar cl_showbodyroll("cl_showbodyroll", "0");
 
 CSinglePlayerAnimState* CreatePlayerAnimationState(CBasePlayer* pPlayer)
 {
@@ -222,14 +229,14 @@ void CSinglePlayerAnimState::ComputePoseParam_BodyYaw(void)
 	/// BODY ROLLING///////////
 	///////////////////////////--------------------------------------------------------------------------------------------------------------------------------------------------------------
 	///
-	/// This uses the quadratic formula of parabolas to calculate the best amount of body roll to give based on the current movement yaw. this feeds into the Pose Parameter for body roll,
-	/// which has a range of -30 to 30, while the yaw has a range of -180 to 180.
+	/// This uses the quadratic formula to calculate the best amount of body roll to give based on the current movement yaw. this feeds into the Pose Parameter for body roll,
+	/// which has a range of -30 to 30, while the yaw has a range of -180 to 180. The difficulty comes from the fact that your goal is as follows:
 	/// 
 	/// x = yaw 
 	/// y = roll
 	///
-	/// if moving right, your 3 coordinates are (0,0); (0,180); and (90,30);  the formula is as follows: y = (x-90)^2/270 + 30;
-	/// if moving left, you have to invert the formula and your 3 coordinates are (0,0); (0,-180); (-90,-30); the formula is as follows: y = (x+90)^2/270 - 30;
+	/// if moving right, your 3 coordinates are (0,0); (0,180); and (90,30);  the formula is as follows: y = (x-90)^2/270 + 30.
+	/// if moving left, you have to invert the formula and your 3 coordinates are (0,0); (0,-180); (-90,-30); the formula is as follows: y = (x+90)^2/270 - 30.
 	/// 
 	/// once the formula is calculated, the output is multiplied by a ratio of currentspeed / maxspeed to smooth out the transitions.
 	/// 
@@ -237,21 +244,25 @@ void CSinglePlayerAnimState::ComputePoseParam_BodyYaw(void)
 
 	float mult;
 	if (flYaw < 0) //if moving left
-		mult = (((flYaw + 90) * (flYaw + 90)) / 270) - 30; //invert the formula
+		mult = (((flYaw + 90) * (flYaw + 90)) * 0.0037037f) - 30; //invert the formula
 	else if (flYaw > 0) //if moving right
-		mult = (-(((flYaw - 90) * (flYaw - 90)) / 270) + 30); //do the formula not inverted
+		mult = (-(((flYaw - 90) * (flYaw - 90)) * 0.0037037f) + 30); //do the formula not inverted
 	else //if moving forward, backward, or not at all
 		mult = 0; //
 	float speed = GetBasePlayer()->GetAbsVelocity().Length();
 	float ratio = speed / GetBasePlayer()->GetPlayerMaxSpeed();
+
 	
 //	DevMsg("Testing Parabolic Formula. Yaw = %f , Parabolic ratio is %f\n", flYaw, mult);
 	GetBasePlayer()->SetPoseParameter(iYaw, flYaw);
 
 	if (GetBasePlayer()->GetActiveWeapon() && !FClassnameIs(GetBasePlayer()->GetActiveWeapon(), "weapon_ar2"))
-		GetBasePlayer()->SetPoseParameter(iRoll, ratio * mult); // *HACKHACK* - Don't apply body rolling when using the chaingun because it fucks with the animations
+		GetBasePlayer()->SetPoseParameter(iRoll, ratio * mult); // HACKHACK - Don't apply body rolling when using the chaingun because it fucks with the animations
 	else
 		GetBasePlayer()->SetPoseParameter(iRoll, 0);
+
+	if (cl_showbodyroll.GetBool())
+		engine->Con_NPrintf(0, "Body Yaw: %f Body Roll: %f\n", flYaw, ratio * mult);
 
 
 

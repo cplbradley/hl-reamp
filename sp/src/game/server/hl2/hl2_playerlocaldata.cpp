@@ -30,6 +30,7 @@ BEGIN_SEND_TABLE_NOBASE( CHL2PlayerLocalData, DT_HL2Local )
 	SendPropBool( SENDINFO(m_bAutoAimTarget) ),
 	SendPropBool( SENDINFO(m_bInvertedScreen)),
 	SendPropBool(SENDINFO(m_bMasochistMode)),
+	SendPropBool(SENDINFO(m_bIsFurious)),
 #ifdef HL2_EPISODIC
 	SendPropFloat( SENDINFO(m_flFlashBattery) ),
 	SendPropVector( SENDINFO(m_vecLocatorOrigin) ),

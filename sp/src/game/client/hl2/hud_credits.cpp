@@ -437,7 +437,7 @@ void CHudCredits::DrawLogo( void )
 	}
 	else
 	{
-		Q_snprintf( szLogoFont, sizeof( szLogoFont ), "WeaponIcons" );
+		Q_snprintf( szLogoFont, sizeof( szLogoFont ), "CreditsOutroLogos" );
 	}
 
 	vgui::HScheme scheme = vgui::scheme()->GetScheme( "ClientScheme" );

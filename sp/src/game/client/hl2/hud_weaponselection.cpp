@@ -154,8 +154,11 @@ private:
 	CPanelAnimationVar( float, m_flAlphaOverride, "Alpha", "0" );
 	CPanelAnimationVar( float, m_flSelectionAlphaOverride, "SelectionAlpha", "0" );
 
-	CPanelAnimationVar( Color, m_TextColor, "TextColor", "SelectionTextFg" );
-	CPanelAnimationVar( Color, m_NumberColor, "NumberColor", "SelectionNumberFg" );
+	//CPanelAnimationVar( Color, m_TextColor, "TextColor", "SelectionTextFg" );
+	//CPanelAnimationVar( Color, m_NumberColor, "NumberColor", "SelectionNumberFg" );
+
+	Color m_NumberColor;
+	Color m_TextColor;
 	CPanelAnimationVar( Color, m_EmptyBoxColor, "EmptyBoxColor", "SelectionEmptyBoxBg" );
 	CPanelAnimationVar( Color, m_BoxColor, "BoxColor", "SelectionBoxBg" );
 	CPanelAnimationVar( Color, m_SelectedBoxColor, "SelectedBoxColor", "SelectionSelectedBoxBg" );
@@ -203,11 +206,11 @@ CHudWeaponSelection::CHudWeaponSelection( const char *pElementName ) : CBaseHudW
 void CHudWeaponSelection::OnWeaponPickup( C_BaseCombatWeapon *pWeapon )
 {
 	// add to pickup history
-	CHudHistoryResource *pHudHR = GET_HUDELEMENT( CHudHistoryResource );
+	/*CHudHistoryResource* pHudHR = GET_HUDELEMENT(CHudHistoryResource);
 	if ( pHudHR )
 	{
 		pHudHR->AddToHistory( pWeapon );
-	}
+	}*/
 }
 
 //-----------------------------------------------------------------------------
@@ -430,6 +433,9 @@ void CHudWeaponSelection::Paint()
 	int width;
 	int xpos;
 	int ypos;
+	ConVarRef rainbow("hud_rainbow");
+	m_NumberColor = rainbow.GetBool() ? gHUD.GetRainbowColor() : gHUD.GetDefaultColor();
+	m_TextColor = m_NumberColor;
 
 	if (!ShouldDraw())
 		return;
@@ -753,8 +759,13 @@ void CHudWeaponSelection::Paint()
 //-----------------------------------------------------------------------------
 void CHudWeaponSelection::DrawLargeWeaponBox( C_BaseCombatWeapon *pWeapon, bool bSelected, int xpos, int ypos, int boxWide, int boxTall, Color selectedColor, float alpha, int number )
 {
-	Color col = bSelected ? m_SelectedFgColor : GetFgColor();
-	
+	ConVarRef rainbow("hud_rainbow");
+	Color col;
+	if (rainbow.GetBool())
+		col = bSelected ? gHUD.GetRainbowColor() : gHUD.GetRainbowBGColor();
+	else
+		col = bSelected ? gHUD.GetDefaultColor() : gHUD.GetDefaultBGColor();
+
 	switch ( hud_fastswitch.GetInt() )
 	{
 	case HUDTYPE_BUCKETS:

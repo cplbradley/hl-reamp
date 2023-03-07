@@ -2,7 +2,6 @@
 // ($PIXELFOGTYPE == 0) && ($WRITEWATERFOGTODESTALPHA != 0)
 // ( $FLASHLIGHT == 0 ) && ( $FLASHLIGHTSHADOWS == 1 )
 // ( $FLASHLIGHT == 0 ) && ( $FLASHLIGHTDEPTHFILTERMODE != 0 )
-// ($DETAILTEXTURE == 0 ) && ( $DETAIL_BLEND_MODE != 0 )
 // defined $HDRTYPE && defined $HDRENABLED && !$HDRTYPE && $HDRENABLED
 // defined $PIXELFOGTYPE && defined $WRITEWATERFOGTODESTALPHA && ( $PIXELFOGTYPE != 1 ) && $WRITEWATERFOGTODESTALPHA
 // defined $LIGHTING_PREVIEW && defined $HDRTYPE && $LIGHTING_PREVIEW && $HDRTYPE != 0
@@ -35,22 +34,18 @@
 class pbr_ps30_Static_Index
 {
 	unsigned int m_nDETAILTEXTURE : 2;
-	unsigned int m_nDETAIL_BLEND_MODE : 4;
 	unsigned int m_nFLASHLIGHT : 2;
 	unsigned int m_nFLASHLIGHTDEPTHFILTERMODE : 2;
 	unsigned int m_nLIGHTMAPPED : 2;
 	unsigned int m_nEMISSIVE : 2;
 	unsigned int m_nPARALLAXOCCLUSION : 2;
-	unsigned int m_nSEAMLESS : 2;
 #ifdef _DEBUG
 	bool m_bDETAILTEXTURE : 1;
-	bool m_bDETAIL_BLEND_MODE : 1;
 	bool m_bFLASHLIGHT : 1;
 	bool m_bFLASHLIGHTDEPTHFILTERMODE : 1;
 	bool m_bLIGHTMAPPED : 1;
 	bool m_bEMISSIVE : 1;
 	bool m_bPARALLAXOCCLUSION : 1;
-	bool m_bSEAMLESS : 1;
 #endif	// _DEBUG
 public:
 	void SetDETAILTEXTURE( int i )
@@ -59,15 +54,6 @@ public:
 		m_nDETAILTEXTURE = i;
 #ifdef _DEBUG
 		m_bDETAILTEXTURE = true;
-#endif	// _DEBUG
-	}
-
-	void SetDETAIL_BLEND_MODE( int i )
-	{
-		Assert( i >= 0 && i <= 9 );
-		m_nDETAIL_BLEND_MODE = i;
-#ifdef _DEBUG
-		m_bDETAIL_BLEND_MODE = true;
 #endif	// _DEBUG
 	}
 
@@ -116,45 +102,32 @@ public:
 #endif	// _DEBUG
 	}
 
-	void SetSEAMLESS( int i )
-	{
-		Assert( i >= 0 && i <= 1 );
-		m_nSEAMLESS = i;
-#ifdef _DEBUG
-		m_bSEAMLESS = true;
-#endif	// _DEBUG
-	}
-
 	pbr_ps30_Static_Index( IShaderShadow* pShaderShadow, IMaterialVar** params )
 	{
 		m_nDETAILTEXTURE = 0;
-		m_nDETAIL_BLEND_MODE = 0;
 		m_nFLASHLIGHT = 0;
 		m_nFLASHLIGHTDEPTHFILTERMODE = 0;
 		m_nLIGHTMAPPED = 0;
 		m_nEMISSIVE = 0;
 		m_nPARALLAXOCCLUSION = 0;
-		m_nSEAMLESS = 0;
 #ifdef _DEBUG
 		m_bDETAILTEXTURE = false;
-		m_bDETAIL_BLEND_MODE = false;
 		m_bFLASHLIGHT = false;
 		m_bFLASHLIGHTDEPTHFILTERMODE = false;
 		m_bLIGHTMAPPED = false;
 		m_bEMISSIVE = false;
 		m_bPARALLAXOCCLUSION = false;
-		m_bSEAMLESS = false;
 #endif	// _DEBUG
 	}
 
 	int GetIndex() const
 	{
-		Assert( m_bDETAILTEXTURE && m_bDETAIL_BLEND_MODE && m_bFLASHLIGHT && m_bFLASHLIGHTDEPTHFILTERMODE && m_bLIGHTMAPPED && m_bEMISSIVE && m_bPARALLAXOCCLUSION && m_bSEAMLESS );
-		return ( 160 * m_nDETAILTEXTURE ) + ( 320 * m_nDETAIL_BLEND_MODE ) + ( 3200 * m_nFLASHLIGHT ) + ( 6400 * m_nFLASHLIGHTDEPTHFILTERMODE ) + ( 19200 * m_nLIGHTMAPPED ) + ( 38400 * m_nEMISSIVE ) + ( 76800 * m_nPARALLAXOCCLUSION ) + ( 153600 * m_nSEAMLESS ) + 0;
+		Assert( m_bDETAILTEXTURE && m_bFLASHLIGHT && m_bFLASHLIGHTDEPTHFILTERMODE && m_bLIGHTMAPPED && m_bEMISSIVE && m_bPARALLAXOCCLUSION );
+		return ( 800 * m_nDETAILTEXTURE ) + ( 1600 * m_nFLASHLIGHT ) + ( 3200 * m_nFLASHLIGHTDEPTHFILTERMODE ) + ( 9600 * m_nLIGHTMAPPED ) + ( 19200 * m_nEMISSIVE ) + ( 38400 * m_nPARALLAXOCCLUSION ) + 0;
 	}
 };
 
-#define shaderStaticTest_pbr_ps30 psh_forgot_to_set_static_DETAILTEXTURE + psh_forgot_to_set_static_DETAIL_BLEND_MODE + psh_forgot_to_set_static_FLASHLIGHT + psh_forgot_to_set_static_FLASHLIGHTDEPTHFILTERMODE + psh_forgot_to_set_static_LIGHTMAPPED + psh_forgot_to_set_static_EMISSIVE + psh_forgot_to_set_static_PARALLAXOCCLUSION + psh_forgot_to_set_static_SEAMLESS
+#define shaderStaticTest_pbr_ps30 psh_forgot_to_set_static_DETAILTEXTURE + psh_forgot_to_set_static_FLASHLIGHT + psh_forgot_to_set_static_FLASHLIGHTDEPTHFILTERMODE + psh_forgot_to_set_static_LIGHTMAPPED + psh_forgot_to_set_static_EMISSIVE + psh_forgot_to_set_static_PARALLAXOCCLUSION
 
 
 class pbr_ps30_Dynamic_Index
@@ -165,6 +138,7 @@ class pbr_ps30_Dynamic_Index
 	unsigned int m_nWRITE_DEPTH_TO_DESTALPHA : 2;
 	unsigned int m_nFLASHLIGHTSHADOWS : 2;
 	unsigned int m_nLIGHTMAPPED_MODEL : 2;
+	unsigned int m_nMRAO_DEBUG : 3;
 #ifdef _DEBUG
 	bool m_bWRITEWATERFOGTODESTALPHA : 1;
 	bool m_bPIXELFOGTYPE : 1;
@@ -172,6 +146,7 @@ class pbr_ps30_Dynamic_Index
 	bool m_bWRITE_DEPTH_TO_DESTALPHA : 1;
 	bool m_bFLASHLIGHTSHADOWS : 1;
 	bool m_bLIGHTMAPPED_MODEL : 1;
+	bool m_bMRAO_DEBUG : 1;
 #endif	// _DEBUG
 public:
 	void SetWRITEWATERFOGTODESTALPHA( int i )
@@ -228,6 +203,15 @@ public:
 #endif	// _DEBUG
 	}
 
+	void SetMRAO_DEBUG( int i )
+	{
+		Assert( i >= 0 && i <= 4 );
+		m_nMRAO_DEBUG = i;
+#ifdef _DEBUG
+		m_bMRAO_DEBUG = true;
+#endif	// _DEBUG
+	}
+
 	pbr_ps30_Dynamic_Index( IShaderDynamicAPI* pShaderAPI )
 	{
 		m_nWRITEWATERFOGTODESTALPHA = 0;
@@ -236,6 +220,7 @@ public:
 		m_nWRITE_DEPTH_TO_DESTALPHA = 0;
 		m_nFLASHLIGHTSHADOWS = 0;
 		m_nLIGHTMAPPED_MODEL = 0;
+		m_nMRAO_DEBUG = 0;
 #ifdef _DEBUG
 		m_bWRITEWATERFOGTODESTALPHA = false;
 		m_bPIXELFOGTYPE = false;
@@ -243,17 +228,18 @@ public:
 		m_bWRITE_DEPTH_TO_DESTALPHA = false;
 		m_bFLASHLIGHTSHADOWS = false;
 		m_bLIGHTMAPPED_MODEL = false;
+		m_bMRAO_DEBUG = false;
 #endif	// _DEBUG
 	}
 
 	int GetIndex() const
 	{
-		Assert( m_bWRITEWATERFOGTODESTALPHA && m_bPIXELFOGTYPE && m_bNUM_LIGHTS && m_bWRITE_DEPTH_TO_DESTALPHA && m_bFLASHLIGHTSHADOWS && m_bLIGHTMAPPED_MODEL );
-		return ( 1 * m_nWRITEWATERFOGTODESTALPHA ) + ( 2 * m_nPIXELFOGTYPE ) + ( 4 * m_nNUM_LIGHTS ) + ( 20 * m_nWRITE_DEPTH_TO_DESTALPHA ) + ( 40 * m_nFLASHLIGHTSHADOWS ) + ( 80 * m_nLIGHTMAPPED_MODEL ) + 0;
+		Assert( m_bWRITEWATERFOGTODESTALPHA && m_bPIXELFOGTYPE && m_bNUM_LIGHTS && m_bWRITE_DEPTH_TO_DESTALPHA && m_bFLASHLIGHTSHADOWS && m_bLIGHTMAPPED_MODEL && m_bMRAO_DEBUG );
+		return ( 1 * m_nWRITEWATERFOGTODESTALPHA ) + ( 2 * m_nPIXELFOGTYPE ) + ( 4 * m_nNUM_LIGHTS ) + ( 20 * m_nWRITE_DEPTH_TO_DESTALPHA ) + ( 40 * m_nFLASHLIGHTSHADOWS ) + ( 80 * m_nLIGHTMAPPED_MODEL ) + ( 160 * m_nMRAO_DEBUG ) + 0;
 	}
 };
 
-#define shaderDynamicTest_pbr_ps30 psh_forgot_to_set_dynamic_WRITEWATERFOGTODESTALPHA + psh_forgot_to_set_dynamic_PIXELFOGTYPE + psh_forgot_to_set_dynamic_NUM_LIGHTS + psh_forgot_to_set_dynamic_WRITE_DEPTH_TO_DESTALPHA + psh_forgot_to_set_dynamic_FLASHLIGHTSHADOWS + psh_forgot_to_set_dynamic_LIGHTMAPPED_MODEL
+#define shaderDynamicTest_pbr_ps30 psh_forgot_to_set_dynamic_WRITEWATERFOGTODESTALPHA + psh_forgot_to_set_dynamic_PIXELFOGTYPE + psh_forgot_to_set_dynamic_NUM_LIGHTS + psh_forgot_to_set_dynamic_WRITE_DEPTH_TO_DESTALPHA + psh_forgot_to_set_dynamic_FLASHLIGHTSHADOWS + psh_forgot_to_set_dynamic_LIGHTMAPPED_MODEL + psh_forgot_to_set_dynamic_MRAO_DEBUG
 
 
 #endif	// PBR_PS30_H

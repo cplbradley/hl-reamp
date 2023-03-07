@@ -176,6 +176,14 @@ public:
 	Color						m_clrCaution;
 	Color						m_clrYellowish;
 
+	Color						HSVtoRGBColor(Vector HSV);
+
+	Color GetDefaultColor();
+	Color GetDefaultBGColor();
+	Color GetRainbowColor();
+	Color GetRainbowBGColor();
+
+	float fRainbowH;
 	CUtlVector< CHudElement * >	m_HudList;
 
 private:

@@ -1272,6 +1272,7 @@ public:
 
 	// NOTE: The world space center *may* move when the entity rotates.
 	virtual const Vector&	WorldSpaceCenter( ) const;
+	virtual const Vector& WorldChestPosition() const;
  	const Vector&			WorldAlignSize( ) const;
 
 	// Returns a radius of a sphere 

@@ -66,6 +66,7 @@ private:
 };
 
 LINK_ENTITY_TO_CLASS(weapon_357, CWeapon357);
+LINK_ENTITY_TO_CLASS(weapon_railgun, CWeapon357);
 
 PRECACHE_WEAPON_REGISTER(weapon_357);
 

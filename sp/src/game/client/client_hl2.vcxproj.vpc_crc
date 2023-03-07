@@ -1,8 +1,8 @@
 [vpc crc file version 2]
 8209bbc3 D:\Steam\steamapps\common\sourcesdk_content\sdk\hl-reamp\sp\src\devtools\bin\vpc.exe
-_Nc_VS2013/vpcgame:hl2_
-08636f7c client_hl2.vpc
-ad98c69b ..\..\game\client\client_base.vpc
+_Nc_VS2013/vpcgame:valve_
+5543022e client_hl2.vpc
+5659afb2 ..\..\game\client\client_base.vpc
 4832e67a ..\..\vpc_scripts\source_dll_base.vpc
 d752cf80 ..\..\vpc_scripts\platform_dirs.vpc
 6c4a5ff1 ..\..\vpc_scripts\source_base.vpc

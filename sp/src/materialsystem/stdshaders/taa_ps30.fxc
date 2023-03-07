@@ -1,0 +1,97 @@
+// DYNAMIC: "DRAWPREVFRAME" 	"0..1"
+// DYNAMIC: "DRAWDEPTHBUFFER"	"0..1"
+// DYNAMIC: "DRAWVELOCITYBUFFER"	"0..1"
+// DYNAMIC: "DRAWFRAMEBUFFER"	"0..1"
+
+#include "common_ps_fxc.h"
+
+sampler FBSampler : register(s0);
+sampler PrevFBSampler : register(s1);
+sampler DepthBuffer : register(s2);
+
+
+float4x4 curViewProj : register(c1);
+float4x4 invViewProj : register(c10);
+float4x4 prevViewProj : register(c20);
+float4 inSamples : register(c27);
+
+float2 jitter;
+
+#define MAX_SAMPLES 8
+
+struct PS_INPUT
+{
+	float2 texCoord : TEXCOORD0;
+};
+
+
+float4 main(PS_INPUT i) : COLOR
+{
+	float4x4 prevproj = prevViewProj;
+	float2 texCoord = i.texCoord;
+	float4 curframe = tex2D(FBSampler,texCoord);
+	float4 prevframe = tex2D(PrevFBSampler,texCoord);
+	float4 tex = float4(texCoord.x,texCoord.y,1,1);
+    tex.xy = mul(tex, curViewProj);
+    tex.xy = tex.xy / tex.w;
+
+    float4 prevTex = float4(texCoord.x,texCoord.y,1,1);
+    prevTex.xy = mul(prevTex, prevproj);
+    prevTex.xy = prevTex.xy / prevTex.w;
+
+    // Calculate the velocity of the pixel
+    float2 velocity = (curframe - prevframe).rg;
+    velocity *= (tex.xy - prevTex.xy);
+
+    // Add jitter to the current screen-space position
+    tex.xy += jitter;
+
+    // Sample the current frame and the previous frame
+    float4 color = tex2D(FBSampler, tex.xy);
+    float4 prevColor = tex2D(PrevFBSampler, tex.xy);
+
+    // Blend the two samples based on their difference in velocity
+    float2 difference = abs(velocity) / texCoord.xy;
+    float weight = saturate(dot(difference, difference));
+    color = lerp(color, prevColor, weight);
+
+    return color;
+	
+};
+
+
+/* prevstuff
+float2 resolution = inSamples.yz;
+	float time = inSamples.w;
+	float zOverW = tex2D(DepthBuffer, i.texCoord);
+	#if DRAWDEPTHBUFFER
+	float4 depth = tex2D(DepthBuffer, i.texCoord);
+	return depth;
+	#endif
+	
+	float4 curcolor = tex2D(FBSampler, i.texCoord);
+	#if DRAWFRAMEBUFFER
+	return curcolor;
+	#endif
+	float4 previousColor = tex2D(PrevFBSampler,i.texCoord);
+	#if DRAWPREVFRAME
+	return curcolor - previousColor;
+	#endif
+	float2 velocity = (curcolor - previousColor).rg;
+	float4 velocity4 = curcolor - previousColor;
+	
+	#if DRAWVELOCITYBUFFER
+	return velocity4;
+	#endif
+	
+	
+	float2 predictedTexCoord = i.texCoord + velocity / resolution;
+	float4 colorDifference = curcolor - previousColor;
+	
+	float timeDelta = time - velocity4.w;
+	
+	float4 color = lerp(previousColor, curcolor, 0.5);
+	
+
+    return color;
+*/

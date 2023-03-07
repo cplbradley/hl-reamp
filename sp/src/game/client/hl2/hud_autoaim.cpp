@@ -378,7 +378,7 @@ void CHUDAutoAim::OnThink()
 				engine->GetViewAngles( viewangles );
 				Vector vecResult, vecAngles;
 				QAngle fuckidk, fuckthis;
-				Vector vecDir = pLocalPlayer->m_HL2Local.m_vecAutoAimPoint - pLocalPlayer->EyePosition();
+				Vector vecDir = pLocalPlayer->m_HL2Local.m_hAutoAimTarget->WorldChestPosition() - pLocalPlayer->EyePosition();
 				VectorAngles(vecDir, fuckidk);
 				AngleVectors(viewangles, &vecAngles);
 				//InterpolateVector(0.1, vecAngles, vecDir, vecResult);

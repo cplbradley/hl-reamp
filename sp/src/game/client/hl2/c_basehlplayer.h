@@ -16,6 +16,9 @@
 #include "c_baseplayer.h"
 #include "c_hl2_playerlocaldata.h"
 
+
+
+
 class C_BaseHLPlayer : public C_BasePlayer
 {
 public:
@@ -51,6 +54,10 @@ public:
 	void			PerformClientSideNPCSpeedModifiers( float flFrameTime, CUserCmd *pCmd );
 
 	bool				IsWeaponLowered( void ) { return m_HL2Local.m_bWeaponLowered; }
+
+
+
+	void SetArmorPieces(ArmorPieces_t armorpieces);
 
 public:
 

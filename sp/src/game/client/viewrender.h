@@ -15,7 +15,7 @@
 #include "iviewrender.h"
 #include "view_shared.h"
 #include "replay/ireplayscreenshotsystem.h"
-
+#include <materialsystem\imaterialsystem.h>
 
 //-----------------------------------------------------------------------------
 // Forward declarations
@@ -32,6 +32,8 @@ struct ClientWorldListInfo_t;
 class C_BaseEntity;
 struct WriteReplayScreenshotParams_t;
 class CReplayScreenshotTaker;
+
+static ClientRender_Globals_t g_pRenderGlobals;
 
 #ifdef HL2_EPISODIC
 	class CStunEffect;
@@ -439,9 +441,10 @@ private:
 						int x, int y, int width, int height );
 
 	// Drawing primitives
+	public:
 	bool			ShouldDrawViewModel( bool drawViewmodel );
 	void			DrawViewModels( const CViewSetup &view, bool drawViewmodel );
-
+	private:
 	void			PerformScreenSpaceEffects( int x, int y, int w, int h );
 
 	// Overlays
@@ -471,6 +474,9 @@ private:
 	// Sets up, cleans up the main 3D view
 	void			SetupMain3DView( const CViewSetup &view, int &nClearFlags );
 	void			CleanupMain3DView( const CViewSetup &view );
+
+	void			PushGlobals(ClientRender_Globals_t globals);
+	void			SetupGlobals(const CViewSetup& view);
 
 
 	// This stores the current view
@@ -522,6 +528,11 @@ private:
 	bool			m_rbTakeFreezeFrame[ STEREO_EYE_MAX ];
 	float			m_flFreezeFrameUntil;
 
+
+
+	VMatrix m_ViewProjectionMatrix;
+	VMatrix m_LastViewProjectionMatrix;
+	VMatrix m_InverseViewProjectionMatrix;
 #if defined( REPLAY_ENABLED )
 	CReplayScreenshotTaker	*m_pReplayScreenshotTaker;
 #endif

@@ -2,40 +2,15 @@
 #include "fmod/fmod_system.h"
 #include "fmod/fmod_dynamic_player.h"
 
-
 /*using namespace FMOD;
 
-System			*pSystem;
-Sound			*pSound;
-SoundGroup		*pSoundGroup;
-Channel			*pChannel;
-ChannelGroup	*pChannelGroup;
+System* pSystem;
+Sound* pSound;
+Channel* pChannel = 0;
 FMOD_RESULT	result;
-
-CFMODSystem gFMODsys;
-CFMODSystem* FMODSystem()
-{
-	return &gFMODsys;
-}
-
 
 CFMODSystem::CFMODSystem()
 {
-	unsigned int *audioPosition = 0;
-	unsigned int *syncPoint = 0;
-	pChannel->getPosition(audioPosition, FMOD_TIMEUNIT_MS);
-	FMOD_SYNCPOINT *sync;
-	pSound->getSyncPoint(1, &sync);
-	pSound->getSyncPointInfo(sync, 0, 0, syncPoint, FMOD_TIMEUNIT_MS);
-
-	if (audioPosition == syncPoint)
-	{
-		result = pSystem->createStream(FMODPlayer()->GetPathToMusic(), FMOD_DEFAULT, 0, &pSound);
-		if (result != FMOD_OK)
-			return;
-
-		pSystem->playSound(FMOD_CHANNEL_FREE, pSound, false, &pChannel);
-	}
 }
 void CFMODSystem::InitFMOD()
 {
@@ -49,4 +24,25 @@ void CFMODSystem::InitFMOD()
 void CFMODSystem::ExitFMOD()
 {
 	pSystem->release();
+}
+
+int CFMODSystem::DynamicLoop()
+{
+	unsigned int* audioPosition = 0;
+	unsigned int* syncPoint = 0;
+	pChannel->getPosition(audioPosition, FMOD_TIMEUNIT_MS);
+	FMOD_SYNCPOINT* sync;
+	pSound->getSyncPoint(1, &sync);
+	pSound->getSyncPointInfo(sync, 0, 0, syncPoint, FMOD_TIMEUNIT_MS);
+
+	if (audioPosition == syncPoint)
+	{
+		result = pSystem->createStream(FMODPlayer()->GetPathToMusic(), FMOD_DEFAULT, 0, &pSound);
+		if (result != FMOD_OK)
+			return 0;
+
+		pSystem->playSound(FMOD_CHANNEL_FREE, pSound, false, &pChannel);
+	}
+
+	return 1;
 }*/

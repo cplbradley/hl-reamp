@@ -311,7 +311,7 @@ bool CWeaponFrag::Reload( void )
 }
 
 
-
+ConVar g_overdrive_frag_mode("g_overdrive_frag_mode", "0");
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -332,13 +332,20 @@ void CWeaponFrag::PrimaryAttack(void)
 	Vector vecThrow = vecAng * sk_plr_grenade_launch_speed.GetFloat() + Vector(0, 0, vertfactor);
 	Fraggrenade_Create(muzzlePoint, vec3_angle, vecThrow, AngularImpulse(random->RandomInt(-600, 600), random->RandomInt(-600, 600),0), pPlayer, 3.0f, false);
 	
+
+
+	
 	if (pPlayer->HasOverdrive())
 	{
 		for (int i = 0; i < 2; i++)
 		{
 			if (i == 0)
 			{
-				QAngle qAng = QAngle(qEyeAng[0] + 10, qEyeAng[1] + 10, qEyeAng[2]);
+				QAngle qAng;
+				if (!g_overdrive_frag_mode.GetBool())
+					qAng = QAngle(qEyeAng[0] + 8, qEyeAng[1], qEyeAng[2]);
+				else
+					qAng = QAngle(qEyeAng[0], qEyeAng[1] + 8, qEyeAng[2]);
 				Vector vecAimAng;
 				AngleVectors(qAng, &vecAimAng);
 				Vector vecThrow = vecAimAng * sk_plr_grenade_launch_speed.GetFloat() + Vector(0, 0, vertfactor);
@@ -346,7 +353,11 @@ void CWeaponFrag::PrimaryAttack(void)
 			}
 			if (i == 1)
 			{
-				QAngle qAng2 = QAngle(qEyeAng[0] + 10, qEyeAng[1] - 10, qEyeAng[2]);
+				QAngle qAng2;
+				if (!g_overdrive_frag_mode.GetBool())
+					qAng2 = QAngle(qEyeAng[0] - 8, qEyeAng[1], qEyeAng[2]);
+				else
+					qAng2 = QAngle(qEyeAng[0], qEyeAng[1] - 8, qEyeAng[2]);
 				Vector vecAimAng;
 				AngleVectors(qAng2, &vecAimAng);
 				Vector vecThrow = vecAimAng * sk_plr_grenade_launch_speed.GetFloat() + Vector(0, 0, vertfactor);

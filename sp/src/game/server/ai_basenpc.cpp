@@ -994,11 +994,15 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 	if ( !BaseClass::OnTakeDamage_Alive( info ) )
 		return 0;
-
-	if (GetHealth() / GetMaxHealth() < 0.1f)
+	if (GetMaxHealth())
 	{
-		if (g_pGameRules->g_utlvec_vorteffectlist.HasElement(entindex()))
-			g_pGameRules->g_utlvec_vorteffectlist.FindAndRemove(entindex());
+		float healthfrac = GetHealth() / GetMaxHealth();
+
+		if (healthfrac < 0.1f)
+		{
+			if (g_pGameRules->g_utlvec_vorteffectlist.HasElement(entindex()))
+				g_pGameRules->g_utlvec_vorteffectlist.FindAndRemove(entindex());
+		}
 	}
 
 	if ( GetSleepState() == AISS_WAITING_FOR_THREAT )

@@ -581,7 +581,7 @@ void CNPC_MetroPolice::Precache( void )
 	}
 	else
 	{
-		SetModelName( AllocPooledString("models/police.mdl") );
+		SetModelName( AllocPooledString("models/robodude.mdl") );
 	}
 
 	PrecacheModel( STRING( GetModelName() ) );

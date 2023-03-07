@@ -1,18 +1,17 @@
 #include "cbase.h"
 #include "fmod/fmod_dynamic_player.h"
-#ifdef CLIENT_DLL
-#include "fmod/fmod_system.h"
-#endif
 #include "filesystem.h"
 #include "KeyValues.h"
-#include "string_t.h"
+//#include "string_t.h"
+#ifdef CLIENT_DLL
+#include "c_baseentity.h"
+#else
+#include "baseentity.h"
+#endif
+
 
 #include "memdbgon.h"
 
-CFMODDynamicPlayer fmodPlayer;
-CFMODDynamicPlayer* FMODPlayer() {
-	return &fmodPlayer;
-}
 IMPLEMENT_NETWORKCLASS_ALIASED(FMODDynamicPlayer, DT_FMODDynamicPlayer)
 
 BEGIN_NETWORK_TABLE(CFMODDynamicPlayer, DT_FMODDynamicPlayer)
@@ -27,19 +26,18 @@ END_NETWORK_TABLE()
 
 LINK_ENTITY_TO_CLASS(fmod_dynamic_player, CFMODDynamicPlayer);
 
-#ifdef GAME_DLL
+#ifndef CLIENT_DLL
 BEGIN_DATADESC(CFMODDynamicPlayer)
 DEFINE_KEYFIELD(scriptpath,FIELD_STRING,"ScriptPath"),
 DEFINE_INPUTFUNC(FIELD_VOID,"PrintToConsole",PrintToConsole),
 DEFINE_INPUTFUNC(FIELD_VOID,"ParseScript",ParseScript),
+DEFINE_INPUTFUNC(FIELD_VOID,"TransitionToHeavyMusic", InputTransitionToHeavyMusic),
 END_DATADESC()
+
 #endif
-
-
 
 void CFMODDynamicPlayer::Spawn(void)
 {
-	m_iMusicType = MUSICTYPE_MEDIUM;
 #ifdef GAME_DLL
 	Warning("SERVERSIDE SCRIPT PATH = %s\n", scriptpath.Get());
 #endif
@@ -83,6 +81,26 @@ void CFMODDynamicPlayer::PickRandomMusicStem()
 }
 
 #ifdef CLIENT_DLL
+
+const char* CFMODDynamicPlayer::GetMusicTypeForScriptParse()
+{
+	switch (m_iMusicType)
+	{
+	case MUSICTYPE_LIGHT:
+		return "LightMusic";
+		break;
+	case MUSICTYPE_MEDIUM:
+		return "MediumMusic";
+		break;
+	case MUSICTYPE_HEAVY:
+		return "HeavyMusic";
+		break;
+
+	default:
+		return "0";
+		break;
+	}
+}
 void CFMODDynamicPlayer::PostDataUpdate(DataUpdateType_t updateType)
 {
 	BaseClass::PostDataUpdate(updateType);
@@ -90,7 +108,7 @@ void CFMODDynamicPlayer::PostDataUpdate(DataUpdateType_t updateType)
 	if (updateType == DATA_UPDATE_CREATED)
 	{
 		SetNextClientThink(CLIENT_THINK_ALWAYS);
-		ParseMusicScript("MediumMusic");
+		//ParseMusicScript("HeavyMusic");
 		Warning("CLIENTSIDE SCRIPTPATH = %s\n", scriptpath.Get());
 	}
 }
@@ -124,7 +142,6 @@ void CFMODDynamicPlayer::ReadMusicDirectory(KeyValues* KeyValue)
 	}
 
 	KeyValues* pKVScript = KeyValue->GetFirstSubKey();
-
 	while (pKVScript)
 	{
 		musicscript_t musicscript;
@@ -132,9 +149,9 @@ void CFMODDynamicPlayer::ReadMusicDirectory(KeyValues* KeyValue)
 		Q_strcpy(musicscript.szMusicType, pKVScript->GetName());
 		Q_strcpy(musicscript.szMusicPath, pKVScript->GetString());
 		pKVScript = pKVScript->GetNextKey();
-		
-		Msg("%s\n", musicscript.szMusicPath);
-		Msg("Fixed path %s\n", GetFixedPathToMusic(musicscript.szMusicPath));
+		//Msg("%s\n", musicscript.szMusicType);
+		//Msg("%s\n", musicscript.szMusicPath);
+		//Msg("Fixed path %s\n", GetFixedPathToMusic(musicscript.szMusicPath));
 	}
 
 }
@@ -169,6 +186,7 @@ void CFMODDynamicPlayer::PrintScriptToConsole()
 #ifdef CLIENT_DLL
 	for (int i = 0; i < m_musiclist.Count(), i++;)
 	{
+		
 		Msg("%s\n", m_musiclist[i].szMusicPath);
 	}
 #endif
@@ -176,7 +194,7 @@ void CFMODDynamicPlayer::PrintScriptToConsole()
 void CFMODDynamicPlayer::ParseScript(inputdata_t &inputdata)
 {
 #ifdef CLIENT_DLL
-	ParseMusicScript("MediumMusic");
+	ParseMusicScript("HeavyMusic");
 #endif
 }
 #ifdef GAME_DLL
@@ -186,3 +204,15 @@ int CFMODDynamicPlayer::UpdateTransmitState()
 }
 #endif
 
+
+void CFMODDynamicPlayer::CheckMusicFile(void)
+{
+#ifdef CLIENT_DLL
+	if (m_iMusicType != m_iPrevMusicType)
+	{
+		m_musiclist.RemoveAll();
+		ParseMusicScript(GetMusicTypeForScriptParse());
+	}
+	Msg("%s\n", GetPathToMusic());
+#endif
+}

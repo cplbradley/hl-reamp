@@ -19,6 +19,7 @@
 #include "client_virtualreality.h"
 #include "sourcevr/isourcevirtualreality.h"
 
+
 #ifdef SIXENSE
 #include "sixense/in_sixense.h"
 #endif
@@ -56,7 +57,7 @@ CHudCrosshair::CHudCrosshair( const char *pElementName ) :
 
 	m_vecCrossHairOffsetAngle.Init();
 
-	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_CROSSHAIR );
+	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_CROSSHAIR | HIDEHUD_CINEMATIC_CAMERA | HIDEHUD_NEEDSUIT);
 }
 
 CHudCrosshair::~CHudCrosshair()

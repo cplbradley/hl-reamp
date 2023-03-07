@@ -40,8 +40,8 @@ protected:
 
 private:
 	CPanelAnimationVar(vgui::HFont, m_hFont, "Font", "WeaponIconsSmall");
-	CPanelAnimationVarAliasType(float, m_IconX, "icon_xpos", "12", "proportional_float");
-	CPanelAnimationVarAliasType(float, m_IconY, "icon_ypos", "8", "proportional_float");
+	CPanelAnimationVarAliasType(float, m_IconX, "icon_xpos", "0", "proportional_float");
+	CPanelAnimationVarAliasType(float, m_IconY, "icon_ypos", "0", "proportional_float");
 };
 
 //-------------------------------------------------------------------------------------------------//
@@ -76,6 +76,35 @@ protected:
 	CHudTexture *m_icon_background;
 	CHudTexture *m_icon_glow;
 	CHudTexture *m_empty;
+
+private:
+
+	CPanelAnimationVarAliasType(float, m_IconX, "icon_xpos", "0", "proportional_float");
+	CPanelAnimationVarAliasType(float, m_IconY, "icon_ypos", "0", "proportional_float");
+};
+
+class CHudProgressQJ : public CHudElement, public vgui::Panel
+{
+
+	DECLARE_CLASS_SIMPLE(CHudProgressQJ, Panel);
+
+public:
+	CHudProgressQJ(const char* pElementName);
+
+	void TogglePrint(void);
+	void OnThink(void);
+	void LevelInit(void);
+	void VidInit(void);
+	void Init(void);
+	bool bShowIcon;
+	int m_iTimeLeft;
+
+protected:
+	virtual void Paint();
+	CHudTexture* m_icon_powerup;
+	CHudTexture* m_icon_background;
+	CHudTexture* m_icon_glow;
+	CHudTexture* m_empty;
 
 private:
 

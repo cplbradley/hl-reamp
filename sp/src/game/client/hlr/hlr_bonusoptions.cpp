@@ -15,6 +15,11 @@
 #include <vgui_controls/cvartogglecheckbutton.h>
 #include <vgui_controls/Label.h>
 #include <vgui_controls/Slider.h>
+#include <vgui_controls/ImagePanel.h>
+#include <vgui_controls/ComboBox.h>
+#include "basemodelpanel.h"
+#include "basemodel_panel.h"
+#include "animation.h"
 
 #include "tier0/memdbgon.h"
 
@@ -25,7 +30,6 @@ using namespace vgui;
 ////////// BONUS OPTIONS GRAPHICS PAGE //////////////////
 //////////////////////////////////////////////////////
 ///////////////////////////////////////////////
-
 
 class CHLRSubBonusOptionsGraphics : public vgui::PropertyPage
 {
@@ -40,12 +44,13 @@ public:
 private:
 	vgui::Slider* m_pRainSlider;
 	vgui::CheckButton* m_pParallax;
+	vgui::CheckButton* m_pFuryEffects;
 };
 
 CHLRSubBonusOptionsGraphics::CHLRSubBonusOptionsGraphics(vgui::Panel* parent) : BaseClass(parent, NULL)
 {
 	m_pParallax = new CheckButton(this, "Parallax", "Parallax Occlusion Mapping");
-
+	m_pFuryEffects = new CheckButton(this, "FuryFX", "Fury Effects");
 	m_pRainSlider = new Slider(this, "RainDensity");
 	m_pRainSlider->SetRange(0, 100);
 	LoadControlSettings("resource/ui/bonusoptionsgraphics.res");
@@ -55,22 +60,22 @@ void CHLRSubBonusOptionsGraphics::OnResetData()
 {
 	ConVarRef parallax("mat_pbr_parallaxmap");
 	ConVarRef raindensity("r_RainSplashPercentage");
+	ConVarRef furyFX("g_draw_fury_effects");
 	m_pRainSlider->SetValue(raindensity.GetFloat());
-	if (parallax.GetBool())
-		m_pParallax->SetSelected(true);
-	else
-		m_pParallax->SetSelected(false);
+
+	m_pParallax->SetSelected(parallax.GetBool());
+
+	m_pFuryEffects->SetSelected(furyFX.GetBool());
 }
 
 void CHLRSubBonusOptionsGraphics::OnApplyChanges()
 {
 	ConVarRef parallax("mat_pbr_parallaxmap");
 	ConVarRef raindensity("r_RainSplashPercentage");
+	ConVarRef furyFX("g_draw_fury_effects");
 	raindensity.SetValue(m_pRainSlider->GetValue());
-	if (m_pParallax->IsSelected())
-		parallax.SetValue(1);
-	else
-		parallax.SetValue(0);
+	m_pParallax->IsSelected() ? parallax.SetValue(1) : parallax.SetValue(0);
+	m_pFuryEffects->IsSelected() ? furyFX.SetValue(1) : furyFX.SetValue(0);
 }
 
 void CHLRSubBonusOptionsGraphics::OnCheckButtonChecked()
@@ -95,9 +100,14 @@ public:
 
 	MESSAGE_FUNC(OnCheckButtonChecked, "CheckButtonChecked");
 private:
-	vgui::CheckButton* m_pGibs;
-	vgui::CheckButton* m_pClassic;
-	vgui::CheckButton* m_pGuts;
+	CheckButton* m_pGibs;
+	CheckButton* m_pClassic;
+	CheckButton* m_pGuts;
+	CheckButton* m_pRocket;
+	CheckButton* m_prainbow;
+
+
+	Slider* m_pRainbowRate;
 
 };
 
@@ -110,6 +120,13 @@ CHLRSubBonusOptions::CHLRSubBonusOptions(vgui::Panel *parent) : BaseClass(parent
 
 	m_pGuts = new CheckButton(this, "GutsButton", "Guts and Glory");
 
+	m_pRocket = new CheckButton(this, "RocketButton", "Rocket Jump Mania");
+
+	m_prainbow = new CheckButton(this, "RainbowHudButton", "Rainbow HUD");
+
+	m_pRainbowRate = new Slider(this, "RainbowRateSlider");
+	m_pRainbowRate->SetRange(1, 10);
+
 	LoadControlSettings("resource/ui/bonusoptions.res");
 }
 
@@ -118,42 +135,33 @@ void CHLRSubBonusOptions::OnResetData()
 	ConVarRef gibs("g_ultragibs");
 	ConVarRef classic("mat_classic_render");
 	ConVarRef guts("g_guts_and_glory");
+	ConVarRef rocket("g_rocket_jump_mania");
+	ConVarRef rainbow("hud_rainbow");
+	ConVarRef rainbowrate("hud_rainbow_rate");
 
-	if (gibs.GetBool() == true)
-		m_pGibs->SetSelected(true);
-	else
-		m_pGibs->SetSelected(false);
-
-	if (classic.GetBool() == true)
-		m_pClassic->SetSelected(true);
-	else
-		m_pClassic->SetSelected(false);
-
-	if (guts.GetBool() == true)
-		m_pGuts->SetSelected(true);
-	else
-		m_pGuts->SetSelected(false);
+	m_pGuts->SetSelected(guts.GetBool());
+	m_pGibs->SetSelected(gibs.GetBool());
+	m_pClassic->SetSelected(classic.GetBool());
+	m_pRocket->SetSelected(rocket.GetBool());
+	m_prainbow->SetSelected(rainbow.GetBool());
+	m_pRainbowRate->SetValue(rainbowrate.GetFloat());
 }
 void CHLRSubBonusOptions::OnApplyChanges()
 {
 	ConVarRef gibs("g_ultragibs");
 	ConVarRef classic("mat_classic_render");
 	ConVarRef guts("g_guts_and_glory");
+	ConVarRef rocket("g_rocket_jump_mania");
+	ConVarRef rainbow("hud_rainbow");
+	ConVarRef rainbowrate("hud_rainbow_rate");
 
-	if (m_pGibs->IsSelected())
-		gibs.SetValue(1);
-	else
-		gibs.SetValue(0);
+	m_pGibs->IsSelected() ? gibs.SetValue(1) : gibs.SetValue(0);
+	m_pClassic->IsSelected() ? classic.SetValue(1) : classic.SetValue(0);
+	m_pGuts->IsSelected() ? guts.SetValue(1) : guts.SetValue(0);
+	m_pRocket->IsSelected() ? rocket.SetValue(1) : rocket.SetValue(0);
+	m_prainbow->IsSelected() ? rainbow.SetValue(1) : rainbow.SetValue(0);
 
-	if (m_pClassic->IsSelected())
-		classic.SetValue(1);
-	else
-		classic.SetValue(0);
-
-	if (m_pGuts->IsSelected())
-		guts.SetValue(1);
-	else
-		guts.SetValue(0);
+	rainbowrate.SetValue(m_pRainbowRate->GetValue());
 
 	DevMsg("changing bonus option data\n");
 
@@ -169,7 +177,6 @@ void CHLRSubBonusOptions::OnCheckButtonChecked()
 //////////////////////////////////////////////////////
 /////////////////////////////////////////////////
 
-
 class CHLRSubBonusOptionsGameplay : public vgui::PropertyPage
 {
 	DECLARE_CLASS_SIMPLE(CHLRSubBonusOptionsGameplay, vgui::PropertyPage);
@@ -178,6 +185,7 @@ public:
 
 	virtual void OnResetData();
 	virtual void OnApplyChanges();
+	virtual void Paint();
 
 	MESSAGE_FUNC(OnCheckButtonChecked, "CheckButtonChecked");
 
@@ -186,15 +194,33 @@ private:
 	vgui::CheckButton* m_pautoaim;
 	vgui::CheckButton* m_pthirdperson;
 	vgui::CheckButton* m_pslowmo;
+	vgui::Slider* m_sHudR;
+	vgui::Slider* m_sHudG;
+	vgui::Slider* m_sHudB;
+	vgui::Panel* m_pCrosshair;
+	vgui::CheckButton* m_poverride;
 	int iautoaimscale;
 
 };
+
 
 CHLRSubBonusOptionsGameplay::CHLRSubBonusOptionsGameplay(vgui::Panel* parent) : BaseClass(parent, NULL)
 {
 	m_pautoaim = new CheckButton(this, "Autoaim", "Aim Assist");
 
 	m_pslowmo = new CheckButton(this, "Slowmo", "Weapon Selection SlowMo");
+	
+	m_sHudR = new Slider(this, "HudRed");
+	m_sHudG = new Slider(this, "HudGreen");
+	m_sHudB = new Slider(this, "HudBlue");
+	m_pCrosshair = new Panel(this, "CrosshairPanel");
+	m_pCrosshair->SetPaintBackgroundEnabled(false);
+
+	m_sHudR->SetRange(0, 255);
+	m_sHudG->SetRange(0, 255);
+	m_sHudB->SetRange(0, 255);
+
+	m_poverride = new CheckButton(this, "haoverride", "Override Health/Armor Colors");
 
 
 	m_pautoaimscale = new Slider(this, "AutoaimScale");
@@ -212,25 +238,26 @@ void CHLRSubBonusOptionsGameplay::OnResetData()
 	ConVarRef autoaimscale("hud_autoaim_scale");
 	ConVarRef autoaim("hud_draw_active_reticle");
 	ConVarRef thirdperson("g_thirdperson");
+	ConVarRef thirdpersoncrosshair("cl_thirdperson_crosshair");
 	ConVarRef slowmo("hud_weapon_selection_slowmo");
+	ConVarRef hudr("hud_color_r");
+	ConVarRef hudg("hud_color_g");
+	ConVarRef hudb("hud_color_b");
+	ConVarRef haoverride("hud_override_healtharmor_color");
+
 	iautoaimscale = autoaimscale.GetFloat() * 10;
 
 	m_pautoaimscale->SetValue(iautoaimscale);
 
-	if (autoaim.GetBool())
-		m_pautoaim->SetSelected(true);
-	else
-		m_pautoaim->SetSelected(false);
+	m_pautoaim->SetSelected(autoaim.GetBool());
+	m_pthirdperson->SetSelected(thirdperson.GetBool());
+	m_pslowmo->SetSelected(slowmo.GetBool());
 
-	if (thirdperson.GetBool())
-		m_pthirdperson->SetSelected(true);
-	else
-		m_pthirdperson->SetSelected(false);
+	m_sHudR->SetValue(hudr.GetFloat());
+	m_sHudG->SetValue(hudg.GetFloat());
+	m_sHudB->SetValue(hudb.GetFloat());
 
-	if (slowmo.GetBool())
-		m_pslowmo->SetSelected(true);
-	else
-		m_pslowmo->SetSelected(false);
+	m_poverride->SetSelected(haoverride.GetBool());
 }
 void CHLRSubBonusOptionsGameplay::OnApplyChanges()
 {
@@ -239,6 +266,10 @@ void CHLRSubBonusOptionsGameplay::OnApplyChanges()
 	ConVarRef thirdperson("g_thirdperson");
 	ConVarRef thirdpersoncrosshair("cl_thirdperson_crosshair");
 	ConVarRef slowmo("hud_weapon_selection_slowmo");
+	ConVarRef hudr("hud_color_r");
+	ConVarRef hudg("hud_color_g");
+	ConVarRef hudb("hud_color_b");
+	ConVarRef haoverride("hud_override_healtharmor_color");
 
 	iautoaimscale = m_pautoaimscale->GetValue();
 
@@ -246,15 +277,10 @@ void CHLRSubBonusOptionsGameplay::OnApplyChanges()
 
 	autoaimscale.SetValue(scale);
 
-	if (m_pslowmo->IsSelected())
-		slowmo.SetValue(1);
-	else
-		slowmo.SetValue(0);
+	m_poverride->IsSelected() ? haoverride.SetValue(1) : haoverride.SetValue(0);
 
-	if (m_pautoaim->IsSelected())
-		autoaim.SetValue(1);
-	else
-		autoaim.SetValue(0);
+	m_pslowmo->IsSelected() ? slowmo.SetValue(1) : slowmo.SetValue(0);
+	m_pautoaim->IsSelected() ? autoaim.SetValue(1) : autoaim.SetValue(0);
 
 	int thirdpersonsetting;
 	if (m_pthirdperson->IsSelected())
@@ -271,12 +297,189 @@ void CHLRSubBonusOptionsGameplay::OnApplyChanges()
 	thirdperson.SetValue(thirdpersonsetting);
 	thirdpersoncrosshair.SetValue(thirdpersonsetting);
 
+	hudr.SetValue(m_sHudR->GetValue());
+	hudg.SetValue(m_sHudG->GetValue());
+	hudb.SetValue(m_sHudB->GetValue());
+
 	DevMsg("changing bonus option data\n");
 
 }
 void CHLRSubBonusOptionsGameplay::OnCheckButtonChecked()
 {
 	PostActionSignal(new KeyValues("ApplyButtonEnable"));
+}
+
+void CHLRSubBonusOptionsGameplay::Paint()
+{
+	BaseClass::Paint();
+
+	Color clr;
+	clr[0] = m_sHudR->GetValue();
+	clr[1] = m_sHudG->GetValue();
+	clr[2] = m_sHudB->GetValue();
+	clr[3] = 255;
+	int xpos, ypos;
+	m_pCrosshair->GetPos(xpos, ypos);
+	vgui::surface()->DrawSetColor(clr);
+	vgui::surface()->DrawFilledRect(xpos, ypos, xpos + m_pCrosshair->GetWide(), ypos + m_pCrosshair->GetTall());
+
+
+}
+
+class CHLRArmorPanel : public vgui::Panel
+{
+	DECLARE_CLASS_SIMPLE(CHLRArmorPanel, Panel);
+public:
+	CHLRArmorPanel(vgui::Panel* parent);
+	virtual void Paint();
+	void SetArmorGroup(const char* szGroupName, int nValue);
+
+	MDLHandle_t handle;
+	CStudioHdr* studio;
+
+	int m_nRotation;
+
+
+private:
+	CBaseModelPanel* armorPanel;
+	
+};
+
+CHLRArmorPanel::CHLRArmorPanel(vgui::Panel* parent) : BaseClass(parent, NULL)
+{
+	SetWide(512);
+	SetTall(512);
+	SetVisible(true);
+	SetEnabled(true);
+	armorPanel = new CBaseModelPanel(this, "ArmorPanel");
+	studio = new CStudioHdr;
+
+	m_nRotation = 0;
+	handle = mdlcache->FindMDL("models/player/mark6.mdl");
+	
+
+
+	armorPanel->SetMDL(handle);
+	armorPanel->SetMouseInputEnabled(true);
+	armorPanel->SetEnabled(true);
+	armorPanel->SetVisible(true);
+	armorPanel->SetWide(GetWide());
+	armorPanel->SetTall(GetTall());
+
+	
+
+}
+
+void CHLRArmorPanel::Paint()
+{
+	BaseClass::Paint();
+	studio->Init(armorPanel->GetStudioHdr(), mdlcache);
+	int anim = LookupSequence(studio, "armor_custom_idle");
+	armorPanel->SetSequence(anim);
+	//armorPanel->SetCameraPositionAndAngles(vecPos, vec3_angle);
+	armorPanel->SetModelAnglesAndPosition(QAngle(0,m_nRotation - 180,0), vec3_origin);
+	armorPanel->SetCameraPositionAndAngles(Vector(-350, 0, 8), vec3_angle);
+//	armorPanel->SetCameraPositionAndAngles(vec3_origin, vec3_angle);
+	//armorPanel->SetLookAtCamera(true);
+
+
+}
+
+void CHLRArmorPanel::SetArmorGroup(const char* szGroupName, int nValue)
+{
+	if (!studio->IsValid())
+		return;
+	int bodygroup = ::FindBodygroupByName(studio, szGroupName);
+	if (!handle)
+		return;
+	armorPanel->SetBodygroup(handle, bodygroup, nValue);
+}
+
+class CHLRArmorCustomization : public vgui::PropertyPage
+{
+	DECLARE_CLASS_SIMPLE(CHLRArmorCustomization, PropertyPage);
+
+public:
+	CHLRArmorCustomization(vgui::Panel* parent);
+	virtual void Paint();
+	virtual void OnApplyChanges();
+	virtual void OnDataChanged();
+	virtual void OnResetData();
+	void UpdateEditorBodygroups();
+	void UpdatePlayerBodygroups();
+	
+	virtual void OnPageShow();
+
+	CHLRArmorPanel* armorPanel;
+	ComboBox* helmetCombo;
+	Slider* modelSlider;
+};
+
+
+CHLRArmorCustomization::CHLRArmorCustomization(vgui::Panel* parent) : BaseClass(parent, NULL)
+{
+	armorPanel = new CHLRArmorPanel(this);
+	armorPanel->SetVisible(true);
+	armorPanel->SetEnabled(true);
+
+	helmetCombo = new ComboBox(this, "HelmetCombo", 3, false);
+	helmetCombo->AddItem("#HLR_Mark6", NULL);
+
+	helmetCombo->AddItem("#HLR_CQB", NULL);
+	helmetCombo->AddItem("#HLR_Cosmoneer", NULL);
+
+
+	modelSlider = new Slider(this, "ModelRotationSlider");
+	modelSlider->SetRange(0, 360);
+
+	LoadControlSettings("resource/ui/bonusoptionsarmor.res");
+}
+
+
+void CHLRArmorCustomization::OnPageShow()
+{
+	UpdateEditorBodygroups();
+}
+
+
+void CHLRArmorCustomization::OnResetData()
+{
+	//C_BasePlayer* pPlayer = CBasePlayer::GetLocalPlayer();
+	ConVarRef helmet("cl_armor_helmet");
+	helmetCombo->ActivateItem(helmet.GetInt());
+}
+void CHLRArmorCustomization::OnApplyChanges()
+{
+	UpdatePlayerBodygroups();
+}
+
+void CHLRArmorCustomization::UpdateEditorBodygroups()
+{
+	armorPanel->SetArmorGroup("helmet", helmetCombo->GetActiveItem());	
+}
+
+void CHLRArmorCustomization::UpdatePlayerBodygroups()
+{
+	armorPanel->SetArmorGroup("helmet", helmetCombo->GetActiveItem());
+	ConVarRef helmet("cl_armor_helmet");
+	helmet.SetValue(helmetCombo->GetActiveItem());
+	C_BasePlayer* pPlayer = CBasePlayer::GetLocalPlayer();
+	pPlayer->SetArmorPieces();
+}
+void CHLRArmorCustomization::OnDataChanged()
+{
+	PostActionSignal(new KeyValues("ApplyButtonEnable"));
+	UpdateEditorBodygroups();
+}
+
+void CHLRArmorCustomization::Paint()
+{
+	BaseClass::Paint();
+	UpdateEditorBodygroups();
+	armorPanel->m_nRotation = modelSlider->GetValue();
+
+	if (helmetCombo->IsDropdownVisible())
+		OnDataChanged();
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -313,9 +516,10 @@ CHLRBonusOptions::CHLRBonusOptions(VPANEL parent) : BaseClass(nullptr, "BonusOpt
 
 	vgui::ivgui()->AddTickSignal(GetVPanel(), 100);
 
-	AddPage(new CHLRSubBonusOptionsGameplay(this), "Gameplay");
-	AddPage(new CHLRSubBonusOptionsGraphics(this), "Graphics");
-	AddPage(new CHLRSubBonusOptions(this), "Extras");
+	AddPage(new CHLRSubBonusOptionsGameplay(this), "#HLR_BonusOptions_Gameplay");
+	AddPage(new CHLRSubBonusOptionsGraphics(this), "#HLR_BonusOptions_Graphics");
+	AddPage(new CHLRSubBonusOptions(this), "#HLR_BonusOptions_Extras");
+	AddPage(new CHLRArmorCustomization(this), "#HLR_BonusOptions_Armor");
 }
 CHLRBonusOptions::~CHLRBonusOptions()
 {

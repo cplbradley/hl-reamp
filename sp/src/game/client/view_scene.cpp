@@ -116,40 +116,40 @@ int HudTransform( const Vector& point, Vector& screen )
 
 void UpdateFullScreenDepthTexture( void )
 {
-	if( !g_pMaterialSystemHardwareConfig->SupportsPixelShaders_2_b() )
+	if (!g_pMaterialSystemHardwareConfig->SupportsPixelShaders_2_b())
 		return;
 
-	ITexture *pDepthTex = GetFullFrameDepthTexture();
-	CMatRenderContextPtr pRenderContext( materials );
+	ITexture* pDepthTex = GetFullFrameDepthTexture();
+	CMatRenderContextPtr pRenderContext(materials);
 
-	if( IsX360() )
-	{	
-		pRenderContext->CopyRenderTargetToTextureEx( pDepthTex, -1, NULL, NULL );
+	if (IsX360())
+	{
+		pRenderContext->CopyRenderTargetToTextureEx(pDepthTex, -1, NULL, NULL);
 	}
 	else
 	{
-		pRenderContext->CopyRenderTargetToTextureEx( pDepthTex, 0, NULL, NULL );
+		pRenderContext->CopyRenderTargetToTextureEx(pDepthTex, 0, NULL, NULL);
 	}
 
-	pRenderContext->SetFullScreenDepthTextureValidityFlag( true );
+	pRenderContext->SetFullScreenDepthTextureValidityFlag(true);
 
-	if( r_depthoverlay.GetBool() )
+	if (r_depthoverlay.GetBool())
 	{
-		IMaterial *pMaterial = materials->FindMaterial( "debug/showz", TEXTURE_GROUP_OTHER, true );
+		IMaterial* pMaterial = materials->FindMaterial("debug/showz", TEXTURE_GROUP_OTHER, true);
 		pMaterial->IncrementReferenceCount();
-		IMaterialVar *BaseTextureVar = pMaterial->FindVar( "$basetexture", NULL, false );
-		IMaterialVar *pDepthInAlpha = NULL;
-		if( IsPC() )
+		IMaterialVar* BaseTextureVar = pMaterial->FindVar("$basetexture", NULL, false);
+		IMaterialVar* pDepthInAlpha = NULL;
+		if (IsPC())
 		{
-			pDepthInAlpha = pMaterial->FindVar( "$ALPHADEPTH", NULL, false );
-			pDepthInAlpha->SetIntValue( 1 );
+			pDepthInAlpha = pMaterial->FindVar("$ALPHADEPTH", NULL, false);
+			pDepthInAlpha->SetIntValue(1);
 		}
-		
-		BaseTextureVar->SetTextureValue( pDepthTex );
 
-		pRenderContext->OverrideDepthEnable( true, false ); //don't write to depth, or else we'll never see translucents
-		pRenderContext->DrawScreenSpaceQuad( pMaterial );
-		pRenderContext->OverrideDepthEnable( false, true );
+		BaseTextureVar->SetTextureValue(pDepthTex);
+
+		pRenderContext->OverrideDepthEnable(true, false); //don't write to depth, or else we'll never see translucents
+		pRenderContext->DrawScreenSpaceQuad(pMaterial);
+		pRenderContext->OverrideDepthEnable(false, true);
 		pMaterial->DecrementReferenceCount();
 	}
 }

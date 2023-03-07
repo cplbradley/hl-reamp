@@ -66,6 +66,15 @@ public:
 
 bool IsInFreezeCam( void );
 
+struct ArmorPieces_t
+{
+	int nHelmet;
+	int nChest;
+	int nArms;
+	int nThighs;
+	int nBoots;
+};
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Base Player class
@@ -175,6 +184,17 @@ public:
 	void ResetObserverMode();
 	bool IsBot( void ) const { return false; }
 
+	bool IsThirdPerson()
+	{
+		ConVarRef thirdperson("g_thirdperson");
+		return thirdperson.GetBool();
+	}
+
+	ArmorPieces_t armorpieces;
+
+
+	void SetArmorPieces();
+
 	// Eye position..
 	virtual Vector		 EyePosition();
 	virtual const QAngle &EyeAngles();		// Direction of eyes
@@ -221,8 +241,7 @@ public:
 
 	// Should this object cast shadows?
 	virtual ShadowType_t		ShadowCastType() {
-		ConVarRef thirdperson("g_thirdperson");
-		if (thirdperson.GetBool())
+		if (IsThirdPerson())
 		{
 			return SHADOWS_RENDER_TO_TEXTURE_DYNAMIC;
 		}
@@ -407,6 +426,8 @@ public:
 	void					UpdateFogBlend( void );
 
 	float					GetFOVTime( void ){ return m_flFOVTime; }
+
+	virtual void        CalcThirdPersonDeathView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov);
 
 	virtual void			OnAchievementAchieved( int iAchievement ) {}
 	

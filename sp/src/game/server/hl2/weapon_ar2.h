@@ -60,7 +60,16 @@ public:
 	bool	CanHolster( void );
 	bool	Reload( void );
 	CSoundPatch *m_pWoundSound;
+	CSoundPatch* m_pChaingun;
+	CSoundPatch* m_pFocus;
+	CSoundPatch* m_pOverdrive;
+
+	void ShutdownAllSounds();
+	void ShutdownChaingunSound();
+	void ShutdownFocusSound();
+	void ShutdownOverdriveSound();
 	bool m_bPlayingWoundSound;
+	bool bShooting;
 	int		CapabilitiesGet( void ) { return bits_CAP_WEAPON_RANGE_ATTACK1; }
 
 	Activity	GetPrimaryAttackActivity( void );
@@ -70,6 +79,8 @@ public:
 	bool AmFocusFiring(void);
 
 	void ToggleZoom(void);
+
+	float m_fPitch;
 
 
 	float GetMaxFirerate();

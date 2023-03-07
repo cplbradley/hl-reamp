@@ -34,7 +34,7 @@ int ITEM_GiveAmmo( CBasePlayer *pPlayer, float flCount, const char *pszAmmoName,
 	// Don't give out less than 1 of anything.
 	flCount = MAX( 1.0f, flCount );
 
-	return pPlayer->GiveAmmo( flCount, iAmmoType, bSuppressSound );
+	return pPlayer->GiveAmmo( flCount, iAmmoType, bSuppressSound, pszAmmoName);
 }
 
 // ========================================================================

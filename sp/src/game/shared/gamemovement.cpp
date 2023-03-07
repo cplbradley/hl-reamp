@@ -3762,6 +3762,7 @@ void CGameMovement::SetGroundEntity( trace_t *pm )
 
 		mv->m_vecVelocity.z = 0.0f;
 		m_iJumpCount = 0;
+		
 
 		m_bBlockingAirControl = false;
 		m_bBlockDistanceFromOrigin = false;
@@ -4107,8 +4108,10 @@ void CGameMovement::CheckFalling( void )
 	//
 	// Clear the fall velocity so the impact doesn't happen again.
 	//
+	player->ViewPunch(QAngle(player->m_Local.m_flFallVelocity/100.0f, 0, 0));
 	player->m_Local.m_flFallVelocity = 0;
 	m_iJumpCount = 0;
+	
 
 	if (m_bDidGroundPound)
 	{

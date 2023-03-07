@@ -4,21 +4,22 @@
 // http://dev.wallworm.com 
 
 $scale 1.0
-$modelname	"weapons/v_grenadelauncher.mdl"
-$body v_grenadelauncher "v_grenadelauncher.smd"
-$origin 0 0 64
+$modelname	"weapons/v_grenadelauncher_hands.mdl"
+$body v_grenadelauncher "v_grenadelauncherv2.smd"
+$body hands "v_hands_mark6.smd"
+$origin 0 5 65
 $contents "solid"
-$cdmaterials "models/weapons/v_hand"
+$cdmaterials "models/weapons/v_hands"	
 $cdmaterials "models/weapons/grenadelauncher"
 //$sequence idle "v_grenadelauncher.smd"  activity ACT_IDLE -1 loop fps 30
-$sequence fire1 "v_grenadelauncher_sequence_fire1" fps 30.0 activity ACT_VM_GRENADELAUNCHER_FIRE1 -1.0 fadein 0.0 fadeout 0.2 
-$sequence fire2 "v_grenadelauncher_sequence_fire2" fps 30.0 activity ACT_VM_GRENADELAUNCHER_FIRE2 -1.0 fadein 0.0 fadeout 0.2 
-$sequence fire3 "v_grenadelauncher_sequence_fire3" fps 30.0 activity ACT_VM_GRENADELAUNCHER_FIRE3 -1.0 fadein 0.0 fadeout 0.2 
-$sequence fire4 "v_grenadelauncher_sequence_fire4" fps 30.0 activity ACT_VM_GRENADELAUNCHER_FIRE4 -1.0 fadein 0.0 fadeout 0.2 
-$sequence idle0 "v_grenadelauncher_sequence_idle0" fps 30.0 loop  activity ACT_VM_GRENADELAUNCHER_IDLE0 -1.0 fadein 0.2 fadeout 0.0 
-$sequence idle1 "v_grenadelauncher_sequence_idle1" fps 30.0 loop  activity ACT_VM_GRENADELAUNCHER_IDLE1 -1.0 fadein 0.2 fadeout 0.0 
-$sequence idle2 "v_grenadelauncher_sequence_idle2" fps 30.0 loop  activity ACT_VM_GRENADELAUNCHER_IDLE2 -1.0 fadein 0.2 fadeout 0.0 
-$sequence idle3 "v_grenadelauncher_sequence_idle3" fps 30.0 loop  activity ACT_VM_GRENADELAUNCHER_IDLE3 -1.0 fadein 0.2 fadeout 0.0 
-$sequence draw "v_grenadelauncher_sequence_draw" fps 30.0 activity ACT_VM_DRAW -1.0 fadein 0.2 fadeout 0.2 
+$sequence fire1 "v_grenadelauncherv2_sequence_fire1" fps 30.0 activity ACT_VM_GRENADELAUNCHER_FIRE1 -1.0 fadein 0.0 fadeout 0.2 snap
+$sequence fire2 "v_grenadelauncherv2_sequence_fire2" fps 30.0 activity ACT_VM_GRENADELAUNCHER_FIRE2 -1.0 fadein 0.0 fadeout 0.2 snap
+$sequence fire3 "v_grenadelauncherv2_sequence_fire3" fps 30.0 activity ACT_VM_GRENADELAUNCHER_FIRE3 -1.0 fadein 0.0 fadeout 0.2 snap
+$sequence fire4 "v_grenadelauncherv2_sequence_fire4" fps 30.0 activity ACT_VM_GRENADELAUNCHER_FIRE4 -1.0 fadein 0.0 fadeout 0.2 snap
+$sequence idle0 "v_grenadelauncherv2_sequence_idle0" fps 30.0 loop  activity ACT_VM_GRENADELAUNCHER_IDLE0 -1.0 fadein 0.2 fadeout 0.0 snap
+$sequence idle1 "v_grenadelauncherv2_sequence_idle1" fps 30.0 loop  activity ACT_VM_GRENADELAUNCHER_IDLE1 -1.0 fadein 0.2 fadeout 0.0 snap
+$sequence idle2 "v_grenadelauncherv2_sequence_idle2" fps 30.0 loop  activity ACT_VM_GRENADELAUNCHER_IDLE2 -1.0 fadein 0.2 fadeout 0.0 snap
+$sequence idle3 "v_grenadelauncherv2_sequence_idle3" fps 30.0 loop  activity ACT_VM_GRENADELAUNCHER_IDLE3 -1.0 fadein 0.2 fadeout 0.0 snap
+$sequence draw "v_grenadelauncherv2_sequence_draw" fps 30.0 activity ACT_VM_DRAW -1.0 fadein 0.2 fadeout 0.2 
 
 $include	"v_grenadelauncher_wwmt_custom.qci"

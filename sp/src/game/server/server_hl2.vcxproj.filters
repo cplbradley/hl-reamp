@@ -13,6 +13,9 @@
     <Filter Include="Source Files">
       <UniqueIdentifier>{BA03E055-4FA2-FCE3-8A1C-D348547D379C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Experimental">
+      <UniqueIdentifier>{8BF4BF43-53D3-8FFB-3089-3005C0FD31CE}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source Files\FMOD">
       <UniqueIdentifier>{785A4591-10EE-51E3-B434-3DAE23D84992}</UniqueIdentifier>
     </Filter>
@@ -1523,6 +1526,12 @@
     <ClInclude Include="world.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="experimental\climbable_rope.h">
+      <Filter>Source Files\Experimental</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\shared\fmod\fmod_dynamic_player.h">
+      <Filter>Source Files\FMOD</Filter>
+    </ClInclude>
     <ClInclude Include="hl2\ai_behavior_actbusy.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
@@ -2911,6 +2920,12 @@
     <ClCompile Include="world.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="experimental\climbable_rope.cpp">
+      <Filter>Source Files\Experimental</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\shared\fmod\fmod_dynamic_player.cpp">
+      <Filter>Source Files\FMOD</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\game\shared\hl2\achievements_hl2.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
@@ -3355,6 +3370,9 @@
     <ClCompile Include="hl2\hlr\hlr_skullkey.cpp">
       <Filter>Source Files\HLR</Filter>
     </ClCompile>
+    <ClCompile Include="hl2\hlr\hlr_speedmod.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
     <ClCompile Include="hl2\hlr\item_armor.cpp">
       <Filter>Source Files\HLR</Filter>
     </ClCompile>
@@ -3380,6 +3398,9 @@
       <Filter>Source Files\HLR</Filter>
     </ClCompile>
     <ClCompile Include="hl2\hlr\npc_legs.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\hlr\npc_memory_manager.cpp">
       <Filter>Source Files\HLR</Filter>
     </ClCompile>
     <ClCompile Include="hl2\hlr\npc_vortboss.cpp">

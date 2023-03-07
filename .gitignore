@@ -63,3 +63,6 @@ sp/src/game/client/Release_mod_hl2/vc120.pdb
 *.opendb
 *.db-shm
 *.bin
+*.pdb
+*.pdb
+*.dll

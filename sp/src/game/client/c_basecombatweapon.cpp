@@ -5,7 +5,7 @@
 // $NoKeywords: $
 //=============================================================================//
 #include "cbase.h"
-#include "history_resource.h"
+//#include "history_resource.h"
 #include "iclientmode.h"
 #include "iinput.h"
 #include "weapon_selection.h"
@@ -229,7 +229,8 @@ void C_BaseCombatWeapon::DrawCrosshair()
 	if ( !player )
 		return;
 
-	Color clr = gHUD.m_clrNormal;
+	ConVarRef rainbow("hud_rainbow");
+	Color clr = rainbow.GetBool() ? gHUD.GetRainbowColor() : gHUD.GetDefaultColor();
 /*
 
 	// TEST: if the thing under your crosshair is on a different team, light the crosshair with a different color.

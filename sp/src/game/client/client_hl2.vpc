@@ -15,7 +15,7 @@ $Configuration
 {
 	$Compiler
 	{
-		$AdditionalIncludeDirectories	".\hl2;./ShaderEditor;.\hl2\elements;.\hlr;$SRCDIR\game\shared\hl2;$BASE"
+		$AdditionalIncludeDirectories	".\hl2;./ShaderEditor;.\hl2\elements;.\hlr;$SRCDIR\game\shared\hl2;$BASE;$SRCDIR\fmod\inc"
 		$PreprocessorDefinitions		"$BASE;HL2_CLIENT_DLL;SOURCE_2013;"
 	}
 }
@@ -169,15 +169,19 @@ $Project "Client (HL2)"
 			$File "$SRCDIR\game\shared\singleplayer_animstate.h"
 			$File "$SRCDIR\game\shared\hl2\hlr\hlr_shareddefs.h"
 			$File "c_movie_display.h"
-			$File "c_movie_display.cpp"
+			$File "c_movie_display.cpp"	
 			$File "hlr/hlr_masochistmode.cpp"
+			$File "hlr/ISM30panel.h"
+			$File "hlr/vgui_sm30error.cpp"
+			$File "hlr/hud_itempickup.h"
+			$File "hlr/hud_itempickup.cpp"
 		}
 		$Folder "FMOD"
 		{
-			//$File "fmod/fmod_system.cpp"
-			//$File "fmod/fmod_system.h"
-			//$File "$SRCDIR\game\shared\fmod\fmod_dynamic_player.cpp"
-			//$File "$SRCDIR\game\shared\fmod\fmod_dynamic_player.h"
+			$File "fmod/fmod_system.cpp"
+			$File "fmod/fmod_system.h"
+			$File "$SRCDIR\game\shared\fmod\fmod_dynamic_player.cpp"
+			$File "$SRCDIR\game\shared\fmod\fmod_dynamic_player.h"
 		}
 	}
 }

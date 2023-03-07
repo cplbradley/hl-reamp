@@ -52,6 +52,8 @@ private:
 	float gMaxHealth1;
 
 	int m_nHullLow;
+	bool drawanim;
+	float animbar;
 
 };
 class CHudHealthBar2 : public CHudElement, public vgui::Panel
@@ -94,6 +96,8 @@ private:
 	float gMaxHealth2;
 
 	int m_nHullLow;
+
+
 
 };
 class CHudHealthBar3 : public CHudElement, public vgui::Panel

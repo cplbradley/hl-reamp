@@ -43,7 +43,7 @@ const bool g_bHighQualityShadows : register( b0 );
 
 // NOTE: w == 1.0f / (Dest alpha compressed depth range).
 const float4 g_LinearFogColor : register( c29 );
-#define OO_DESTALPHA_DEPTH_RANGE (g_LinearFogColor.w)
+#define OO_DESTALPHA_DEPTH_RANGE (1/4096)
 
 // Linear and gamma light scale values
 const float4 cLightScale : register( c30 );

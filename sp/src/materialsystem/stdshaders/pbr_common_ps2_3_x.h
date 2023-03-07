@@ -14,7 +14,10 @@ float3 fresnelSchlick(float3 F0, float cosTheta)
 {
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
-
+float3 fresnelSchlickRoughness(float3 F0, float cosTheta, float roughness)
+{
+    return F0 + max(0.0, (1.0 - roughness) - F0) * pow(1.0 - cosTheta, 5.0);
+}
 // GGX/Towbridge-Reitz normal distribution function
 // Uses Disney's reparametrization of alpha = roughness^2
 float ndfGGX(float cosLh, float roughness)
@@ -96,9 +99,7 @@ float3 calculateLight(float3 lightIn, float3 lightIntensity, float3 lightOut, fl
     float cosHalfAngle = max(0.0, dot(normal, HalfAngle));
 
     // F - Calculate Fresnel term for direct lighting
-    float3 F = fresnelSchlick(fresnelReflectance, max(0.0, dot(HalfAngle, lightOut)));
-    float3 F2 = fresnelSchlick(fresnelReflectance, max(0.0, dot(normal, lightOut)));
-    float3 F3 = fresnelSchlick(fresnelReflectance, max(0.0, dot(normal, lightIn)));
+    float3 F = lerp(fresnelSchlick(fresnelReflectance, max(0.0, dot(HalfAngle, lightOut))), fresnelSchlickRoughness(fresnelReflectance, max(0.0,dot(HalfAngle, lightOut)), roughness), 0.5f);
 
     // D - Calculate normal distribution for specular BRDF
     float D = ndfGGX(cosHalfAngle, roughness);
@@ -106,24 +107,26 @@ float3 calculateLight(float3 lightIn, float3 lightIntensity, float3 lightOut, fl
     // Calculate geometric attenuation for specular BRDF
     float G = gaSchlickGGX(cosLightIn, lightDirectionAngle, roughness);
 
-    // Cook-Torrance specular microfacet BRDF
-    float3 specularBRDF = (F * D * G) / max(EPSILON, 4.0 * cosLightIn * lightDirectionAngle);
-
-#if LIGHTMAPPED && !FLASHLIGHT
-
-    // Ambient light from static lights is already precomputed in the lightmap. Don't add it again
-    return specularBRDF * lightIntensity * cosLightIn;
-
-#else
-
     // Diffuse scattering happens due to light being refracted multiple times by a dielectric medium
     // Metals on the other hand either reflect or absorb energso diffuse contribution is always, zero
     // To be energy conserving we must scale diffuse BRDF contribution based on Fresnel factor & metalness
-    float3 kd = lerp((float3(1, 1, 1) - F2 ) * (float3(1, 1, 1) - F3 ), float3(0, 0, 0), metalness);
-    float3 diffuseBRDF = kd * albedo;
-    return (diffuseBRDF + specularBRDF) * lightIntensity * cosLightIn;
+#if SPECULAR
+    // Metalness is not used if F0 map is available
+    float3 kd = float3(1, 1, 1) - F;
+#else
+    float3 kd = lerp(float3(1, 1, 1) - F, float3(0, 0, 0), metalness);
+#endif
 
-#endif // LIGHTMAPPED && !FLASHLIGHT
+    float3 diffuseBRDF = kd * albedo;
+
+    // Cook-Torrance specular microfacet BRDF
+    float3 specularBRDF = (F * D * G) / max(EPSILON, 4.0 * cosLightIn * lightDirectionAngle);
+#if LIGHTMAPPED && !FLASHLIGHT
+    // Ambient light from static lights is already precomputed in the lightmap. Don't add it again
+    return specularBRDF * lightIntensity * cosLightIn;
+#else
+    return (diffuseBRDF + specularBRDF) * lightIntensity * cosLightIn;
+#endif
 }
 
 // Get diffuse ambient light

@@ -26,7 +26,7 @@ CHudBlueKey::CHudBlueKey(const char *pElementName) : CHudElement(pElementName), 
 	/*m_nBlueKey = surface()->CreateNewTextureID();
 	surface()->DrawSetTextureFile(m_nBlueKey, "HUD/BlueKey", true, true);*/
 
-	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT);
+	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_CINEMATIC_CAMERA);
 }
 void CHudBlueKey::VidInit(void)
 {

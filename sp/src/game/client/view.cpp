@@ -291,21 +291,34 @@ extern ConVar default_fov;
 //-----------------------------------------------------------------------------
 // Purpose: Initializes all view systems
 //-----------------------------------------------------------------------------
-void CViewRender::Init( void )
+void CViewRender::Init(void)
 {
-	memset( &m_PitchDrift, 0, sizeof( m_PitchDrift ) );
+	memset(&m_PitchDrift, 0, sizeof(m_PitchDrift));
 
 	m_bDrawOverlay = false;
 
-	m_pDrawEntities		= cvar->FindVar( "r_drawentities" );
-	m_pDrawBrushModels	= cvar->FindVar( "r_drawbrushmodels" );
+	m_pDrawEntities = cvar->FindVar("r_drawentities");
+	m_pDrawBrushModels = cvar->FindVar("r_drawbrushmodels");
 
 	beams->InitBeams();
 	tempents->Init();
 
-	m_TranslucentSingleColor.Init( "debug/debugtranslucentsinglecolor", TEXTURE_GROUP_OTHER );
-	m_ModulateSingleColor.Init( "engine/modulatesinglecolor", TEXTURE_GROUP_OTHER );
+	m_TranslucentSingleColor.Init("debug/debugtranslucentsinglecolor", TEXTURE_GROUP_OTHER);
+	m_ModulateSingleColor.Init("engine/modulatesinglecolor", TEXTURE_GROUP_OTHER);
+	static int flags = TEXTUREFLAGS_NOMIP | TEXTUREFLAGS_NOLOD | TEXTUREFLAGS_RENDERTARGET;
+
+	int iW, iH;
+	materials->GetBackBufferDimensions(iW, iH);
+	//materials->BeginRenderTargetAllocation();
 	
+
+	materials->CreateNamedRenderTargetTextureEx("_rt_PrevFrameFB", iW, iH, RT_SIZE_NO_CHANGE, materials->GetBackBufferFormat(), MATERIAL_RT_DEPTH_NONE, flags, 0);
+	materials->CreateNamedRenderTargetTextureEx("_rt_TrueDepth", iW, iH, RT_SIZE_NO_CHANGE, materials->GetBackBufferFormat(), MATERIAL_RT_DEPTH_NONE, TEXTUREFLAGS_CLAMPS | TEXTUREFLAGS_CLAMPT | TEXTUREFLAGS_POINTSAMPLE, 0);
+
+	//materials->EndRenderTargetAllocation();
+
+	
+
 	extern CMaterialReference g_material_WriteZ;
 	g_material_WriteZ.Init( "engine/writez", TEXTURE_GROUP_OTHER );
 
@@ -367,6 +380,7 @@ void CViewRender::Shutdown( void )
 	m_UnderWaterOverlayMaterial.Shutdown();
 	beams->ShutdownBeams();
 	tempents->Shutdown();
+
 }
 
 

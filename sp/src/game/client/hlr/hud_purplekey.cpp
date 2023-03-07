@@ -22,7 +22,7 @@ CHudPurpleKey::CHudPurpleKey(const char *pElementName) : CHudElement(pElementNam
 	SetVisible(false);
 	SetAlpha(255);
 
-	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT);
+	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_CINEMATIC_CAMERA);
 }
 void CHudPurpleKey::Init(void)
 {
@@ -72,7 +72,7 @@ CHudKeyPanel::CHudKeyPanel(const char *pElementName) : CHudElement(pElementName)
 
 	//SetVisible(false);
 	//SetAlpha(255);
-	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT);
+	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_CINEMATIC_CAMERA);
 
 }
 

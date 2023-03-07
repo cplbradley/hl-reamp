@@ -84,12 +84,12 @@ ITexture *GetCameraTexture( void )
 // Full Frame Depth Texture
 //=============================================================================
 static CTextureReference s_pFullFrameDepthTexture;
-ITexture *GetFullFrameDepthTexture( void )
+ITexture* GetFullFrameDepthTexture(void)
 {
-	if ( !s_pFullFrameDepthTexture )
+	if (!s_pFullFrameDepthTexture)
 	{
-		s_pFullFrameDepthTexture.Init( materials->FindTexture( "_rt_FullFrameDepth", TEXTURE_GROUP_RENDER_TARGET ) );
-		Assert( !IsErrorTexture( s_pFullFrameDepthTexture ) );
+		s_pFullFrameDepthTexture.Init(materials->FindTexture("_rt_FullFrameDepth", TEXTURE_GROUP_RENDER_TARGET));
+		Assert(!IsErrorTexture(s_pFullFrameDepthTexture));
 		AddReleaseFunc();
 	}
 
@@ -120,8 +120,6 @@ ITexture *GetFullFrameFrameBufferTexture( int textureIndex )
 	
 	return s_pFullFrameFrameBufferTexture[textureIndex];
 }
-
-
 //=============================================================================
 // Water reflection
 //=============================================================================
@@ -218,6 +216,16 @@ ITexture *GetSmallBuffer1( void )
 	return s_pQuarterSizedFB1;
 }
 
+static CTextureReference g_rt_prevframe;
+ITexture* GetPrevFrameBufferTexture(void)
+{
+	if (!g_rt_prevframe)
+	{
+		g_rt_prevframe.Init(materials->FindTexture("_rt_PrevFrameFB", TEXTURE_GROUP_RENDER_TARGET));
+		AddReleaseFunc();
+	}
+	return g_rt_prevframe;
+}
 //=============================================================================
 // Teeny Textures
 //=============================================================================

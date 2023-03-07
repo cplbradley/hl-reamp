@@ -30,6 +30,7 @@ public:
 	void InputEnable(inputdata_t &inputdata);
 	void TransmitData(void);
 	void ClearHud(void);
+	void OnRestore();
 	const char* targetent1;
 	CBaseEntity *Ent;
 
@@ -369,6 +370,11 @@ void CHLRHudHealthbar::TransmitData(void)
 void CHLRHudHealthbar::ClearHud(void)
 {
 	return;
+}
+
+void CHLRHudHealthbar::OnRestore()
+{
+	TransmitData();
 }
 
 ////////////////////////

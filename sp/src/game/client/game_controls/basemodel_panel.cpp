@@ -299,6 +299,19 @@ void CBaseModelPanel::SetMDL( MDLHandle_t handle, void *pProxyData )
 	InvalidateLayout();
 }
 
+
+void CBaseModelPanel::SetBodygroup(MDLHandle_t handle, int nGroup, int nValue)
+{
+	MDLCACHE_CRITICAL_SECTION();
+
+	studiohdr_t* pHdr = g_pMDLCache->GetStudioHdr(handle);
+	CStudioHdr* studio = new CStudioHdr;
+
+	studio->Init(pHdr, g_pMDLCache);
+
+	::SetBodygroup(studio, m_RootMDL.m_MDL.m_nBody, nGroup, nValue);
+
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------

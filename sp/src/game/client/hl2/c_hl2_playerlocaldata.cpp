@@ -27,6 +27,7 @@ BEGIN_RECV_TABLE_NOBASE( C_HL2PlayerLocalData, DT_HL2Local )
 	RecvPropBool( RECVINFO(m_bAutoAimTarget) ),
 	RecvPropBool( RECVINFO(m_bInvertedScreen)),
 	RecvPropBool(RECVINFO(m_bMasochistMode)),
+	RecvPropBool(RECVINFO(m_bIsFurious)),
 #ifdef HL2_EPISODIC
 	RecvPropFloat( RECVINFO(m_flFlashBattery) ),
 	RecvPropVector( RECVINFO(m_vecLocatorOrigin) ),

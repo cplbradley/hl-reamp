@@ -12,6 +12,7 @@
 // Includes for PS30
 #include "include/pbr_vs30.inc"
 #include "include/pbr_ps30.inc"
+#include "view_shared.h"
 
 
 
@@ -32,6 +33,8 @@ static ConVar mat_fullbright("mat_fullbright", "0", FCVAR_CHEAT);
 static ConVar mat_specular("mat_specular", "1", FCVAR_CHEAT);
 static ConVar mat_pbr_force_20b("mat_pbr_force_20b", "0", FCVAR_CHEAT);
 static ConVar mat_pbr_parallaxmap("mat_pbr_parallaxmap", "1");
+static ConVar mat_pbr_show_mrao("mat_pbr_show_mrao", "0", FCVAR_CHEAT);
+static ConVar mat_pbr_force_enabled("mat_pbr_force_enabled", "0");
 
 // Variables for this shader
 struct PBR_Vars_t
@@ -61,7 +64,7 @@ struct PBR_Vars_t
     int m_nDetail;
     int m_nDetailFrame;
     int m_nDetailScale;
-    int m_nDetailTextureCombineMode;
+    //int m_nDetailTextureCombineMode;
     int m_nDetailTextureBlendFactor;
 };
 
@@ -86,9 +89,8 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
         SHADER_PARAM(DETAILFRAME, SHADER_PARAM_TYPE_INTEGER, "0", "frame number for $detail")
         SHADER_PARAM(DETAILSCALE, SHADER_PARAM_TYPE_FLOAT, "4", "scale of the detail texture")
 
-        SHADER_PARAM(DETAILBLENDMODE, SHADER_PARAM_TYPE_INTEGER, "0", "mode for combining detail texture with base. 0=normal, 1= additive, 2=alpha blend detail over base, 3=crossfade")
+       // SHADER_PARAM(DETAILBLENDMODE, SHADER_PARAM_TYPE_INTEGER, "0", "mode for combining detail texture with base. 0=normal, 1= additive, 2=alpha blend detail over base, 3=crossfade")
         SHADER_PARAM(DETAILBLENDFACTOR, SHADER_PARAM_TYPE_FLOAT, "1", "blend amount for detail texture.")
-        SHADER_PARAM(SEAMLESS_SCALE, SHADER_PARAM_TYPE_FLOAT, "0", "Scale factor for 'seamless' texture mapping. 0 means to use ordinary mapping")
     END_SHADER_PARAMS;
 
     // Setting up variables for this shader
@@ -110,15 +112,15 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
         info.parallaxDepth = PARALLAXDEPTH;
         info.parallaxCenter = PARALLAXCENTER;
         info.lightmapTexture = LIGHTMAP;
+		
 
 
         info.m_nDetail = DETAIL;
         info.m_nDetailFrame = DETAILFRAME;
         info.m_nDetailScale = DETAILSCALE;
-        info.m_nDetailTextureCombineMode = DETAILBLENDMODE;
+        //info.m_nDetailTextureCombineMode = 0;
         info.m_nDetailTextureBlendFactor = DETAILBLENDFACTOR;
     };
-
     // Initializing parameters
     SHADER_INIT_PARAMS()
     {
@@ -151,13 +153,43 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
         {
             params[FLASHLIGHTTEXTURE]->SetStringValue("effects/flashlight001");
         }
-
+		
+		
+		if (IS_FLAG_SET(MATERIAL_VAR_DECAL))
+		{
+			SET_FLAGS(MATERIAL_VAR_NO_DEBUG_OVERRIDE);
+		}
 
     };
 
     // Define shader fallback
     SHADER_FALLBACK
     {
+        ConVarRef sm30error("g_hide_sm30error");
+        ConVarRef dxerror("g_hide_dxerror");
+        if (mat_pbr_force_enabled.GetBool() == true)
+         return 0;
+        
+        if (g_pHardwareConfig->GetDXSupportLevel() < 95)
+        {
+            
+            dxerror.SetValue(0);
+            if (IS_FLAG_SET(MATERIAL_VAR_MODEL))
+                return "VertexLitGeneric";
+            else
+                return "LightmappedGeneric";
+        }
+        if (!g_pHardwareConfig->SupportsShaderModel_3_0() || mat_pbr_force_20b.GetBool() == true)
+        {
+            
+            sm30error.SetValue(0);
+            if (IS_FLAG_SET(MATERIAL_VAR_MODEL))
+                return "VertexLitGeneric";
+            else
+                return "LightmappedGeneric";
+        }
+        sm30error.SetValue(1);
+        dxerror.SetValue(1);
         return 0;
     };
 
@@ -200,11 +232,11 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
 
         if (info.m_nDetail != -1 && params[info.m_nDetail]->IsDefined())
         {
-            int nDetailBlendMode = (info.m_nDetailTextureCombineMode == -1) ? 0 : params[info.m_nDetailTextureCombineMode]->GetIntValue();
-            if (nDetailBlendMode == 0) //Mod2X
+            /*int nDetailBlendMode = (info.m_nDetailTextureCombineMode == -1) ? 0 : params[info.m_nDetailTextureCombineMode]->GetIntValue();
+            if (nDetailBlendMode == 0) //Mod2X*/
                 LoadTexture(info.m_nDetail);
-            else
-                LoadTexture(info.m_nDetail, TEXTUREFLAGS_SRGB);
+           // else
+                //LoadTexture(info.m_nDetail, TEXTUREFLAGS_SRGB);
         }
 
         if (IS_FLAG_SET(MATERIAL_VAR_MODEL)) // Set material var2 flags specific to models
@@ -243,22 +275,26 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
         bool bHasColor = (info.baseColor != -1) && params[info.baseColor]->IsDefined();
         bool bLightMapped = !IS_FLAG_SET(MATERIAL_VAR_MODEL);
         bool bLightMappedModel = info.lightmapTexture != -1 && params[info.lightmapTexture]->IsDefined();
-        bool bSeamlessMapping = params[SEAMLESS_SCALE]->GetFloatValue() != 0.0;
+
+
+        
+
         // Determining whether we're dealing with a fully opaque material
         BlendType_t nBlendType = EvaluateBlendRequirements(info.baseTexture, true);
         bool bFullyOpaque = (nBlendType != BT_BLENDADD) && (nBlendType != BT_BLEND) && !bIsAlphaTested;
+		
 
 
         //float fBlendFactor = GetFloatParam(info.m_nDetailTextureBlendFactor, params, 1.0);
         bool bHasDetailTexture = IsTextureSet(info.m_nDetail, params);
-        int nDetailBlendMode = bHasDetailTexture ? GetIntParam(info.m_nDetailTextureCombineMode, params) : 0;
-        int nDetailTranslucencyTexture = -1;
+        //int nDetailBlendMode = bHasDetailTexture ? GetIntParam(info.m_nDetailTextureCombineMode, params) : 0;
+        //int nDetailTranslucencyTexture = -1;
 
-        if (bHasDetailTexture)
+        /*if (bHasDetailTexture)
         {
             if ((nDetailBlendMode == 3) || (nDetailBlendMode == 8) || (nDetailBlendMode == 9))
                 nDetailTranslucencyTexture = info.m_nDetail;
-        }
+        }*/
 
 
         if (IsSnapshotting())
@@ -299,8 +335,8 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
             if (bHasDetailTexture)
             {
                 pShaderShadow->EnableTexture(SAMPLER_DETAIL, true);
-                if (nDetailBlendMode != 0) //Not Mod2X
-                    pShaderShadow->EnableSRGBRead(SAMPLER_DETAIL, true);
+                /*if (nDetailBlendMode != 0) //Not Mod2X
+                    pShaderShadow->EnableSRGBRead(SAMPLER_DETAIL, true);*/
             }
 
 
@@ -354,7 +390,6 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
             }
                 // Setting up static vertex shader
                 DECLARE_STATIC_VERTEX_SHADER(pbr_vs30);
-                SET_STATIC_VERTEX_SHADER_COMBO(SEAMLESS, bSeamlessMapping);
                 SET_STATIC_VERTEX_SHADER(pbr_vs30);
 
                 // Setting up static pixel shader
@@ -365,8 +400,6 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
                 SET_STATIC_PIXEL_SHADER_COMBO(EMISSIVE, bHasEmissionTexture);
                 SET_STATIC_PIXEL_SHADER_COMBO(PARALLAXOCCLUSION, useParallax);
                 SET_STATIC_PIXEL_SHADER_COMBO(DETAILTEXTURE, bHasDetailTexture);
-                SET_STATIC_PIXEL_SHADER_COMBO(DETAIL_BLEND_MODE, nDetailBlendMode);
-                SET_STATIC_PIXEL_SHADER_COMBO(SEAMLESS, bSeamlessMapping);
                 SET_STATIC_PIXEL_SHADER(pbr_ps30);
 
             // Setting up fog
@@ -378,9 +411,11 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
         else // Not snapshotting -- begin dynamic state
         {
             bool bLightingOnly = mat_fullbright.GetInt() == 2 && !IS_FLAG_SET(MATERIAL_VAR_NO_DEBUG_OVERRIDE);
-
-            // Setting up albedo texture
-            if (bHasBaseTexture)
+            int iMraoDebug = mat_pbr_show_mrao.GetInt();
+            if (iMraoDebug > 4)
+                iMraoDebug = 4;
+			
+			if (bHasBaseTexture)
             {
                 BindTexture(SAMPLER_BASETEXTURE, info.baseTexture, info.baseTextureFrame);
             }
@@ -412,7 +447,6 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
             {
                 pShaderAPI->BindStandardTexture(SAMPLER_ENVMAP, TEXTURE_BLACK);
             }
-
             // Setting up emissive texture
             if (bHasEmissionTexture)
             {
@@ -512,11 +546,11 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
             }
 
             // Dealing with very high and low resolution cubemaps
-            if (iEnvMapLOD > 12)
+            /*if (iEnvMapLOD > 12)
                 iEnvMapLOD = 12;
-            if (iEnvMapLOD < 4)
-                iEnvMapLOD = 4;
-
+            if (iEnvMapLOD < 2)
+                iEnvMapLOD = 2;
+			*/
             // This has some spare space
             vEyePos_SpecExponent[3] = iEnvMapLOD;
             pShaderAPI->SetPixelShaderConstant(PSREG_EYEPOS_SPEC_EXPONENT, vEyePos_SpecExponent, 1);
@@ -543,17 +577,13 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
                 SET_DYNAMIC_PIXEL_SHADER_COMBO(PIXELFOGTYPE, pShaderAPI->GetPixelFogCombo());
                 SET_DYNAMIC_PIXEL_SHADER_COMBO(FLASHLIGHTSHADOWS, bFlashlightShadows);
                 SET_DYNAMIC_PIXEL_SHADER_COMBO(LIGHTMAPPED_MODEL, bLightMappedModel);
+                SET_DYNAMIC_PIXEL_SHADER_COMBO(MRAO_DEBUG, iMraoDebug);
                 SET_DYNAMIC_PIXEL_SHADER(pbr_ps30);
 
             // Setting up base texture transform
             SetVertexShaderTextureTransform(VERTEX_SHADER_SHADER_SPECIFIC_CONST_0, info.baseTextureTransform);
             SetVertexShaderTextureScaledTransform(VERTEX_SHADER_SHADER_SPECIFIC_CONST_6, info.baseTextureTransform, info.m_nDetailScale);
 
-            if (bSeamlessMapping)
-            {
-                float map_scale[4] = { params[SEAMLESS_SCALE]->GetFloatValue(),0,0,0 };
-                pShaderAPI->SetVertexShaderConstant(VERTEX_SHADER_SHADER_SPECIFIC_CONST_0, map_scale);
-            }
            
 
             // This is probably important
@@ -576,6 +606,7 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
             {
                 pShaderAPI->BindStandardTexture(SAMPLER_ENVMAP, TEXTURE_BLACK); // Envmap
             }
+
 
             // Sending fog info to the pixel shader
             pShaderAPI->SetPixelShaderFogParams(PSREG_FOG_PARAMS);

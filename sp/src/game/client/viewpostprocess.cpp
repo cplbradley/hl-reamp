@@ -21,6 +21,7 @@
 #include "hl2_shareddefs.h"
 #include "proxyentity.h"
 #include "c_basehlplayer.h"
+#include "hlr/hlr_shareddefs.h"
 
 //-----------------------------------------------------------------------------
 // Globals
@@ -87,6 +88,7 @@ ConVar mat_tonemap_min_avglum( "mat_tonemap_min_avglum", "3.0", FCVAR_CHEAT );
 ConVar mat_fullbright( "mat_fullbright", "0", FCVAR_CHEAT );
 
 extern ConVar localplayer_visionflags;
+
 
 enum PostProcessingCondition {
 	PPP_ALWAYS,
@@ -2633,7 +2635,30 @@ void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, b
 
 	static IMaterial *pMat = materials->FindMaterial("engine/retrographics", TEXTURE_GROUP_OTHER);
 	static IMaterial* pFlipMat = materials->FindMaterial("engine/screenflip", TEXTURE_GROUP_OTHER);
+	static IMaterial* pFurious = materials->FindMaterial("engine/fury", TEXTURE_GROUP_OTHER);
+	static IMaterial* pTAA = materials->FindMaterial("engine/taa", TEXTURE_GROUP_OTHER);
+	static IMaterial* pSMB = materials->FindMaterial("engine/smb", TEXTURE_GROUP_OTHER);
 
+	ConVarRef smb("mat_simplemotionblur");
+
+	if (smb.GetBool())
+	{
+		if (pSMB)
+		{
+			pSMB->AddRef();
+			UpdateScreenEffectTexture();
+			pRenderContext->DrawScreenSpaceRectangle(pSMB, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
+		}
+	}
+	if (mat_taa.GetBool())
+	{
+		if (pTAA)
+		{
+			pTAA->AddRef();
+			UpdateScreenEffectTexture();
+			pRenderContext->DrawScreenSpaceRectangle(pTAA, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
+		}
+	}
 	if (mat_classic_render.GetInt() == 1)
 	{
 		if (pMat)
@@ -2653,6 +2678,16 @@ void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, b
 			pFlipMat->AddRef();
 			UpdateScreenEffectTexture();
 			pRenderContext->DrawScreenSpaceRectangle(pFlipMat, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
+		}
+	}
+	ConVarRef furyfx("g_draw_fury_effects");
+	if (pPlayer->m_HL2Local.m_bIsFurious && furyfx.GetBool())
+	{
+		if (pFurious)
+		{
+			pFurious->AddRef();
+			UpdateScreenEffectTexture();
+			pRenderContext->DrawScreenSpaceRectangle(pFurious, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
 		}
 	}
 #if defined( _X360 )

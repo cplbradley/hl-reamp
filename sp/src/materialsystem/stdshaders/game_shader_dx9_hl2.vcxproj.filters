@@ -47,7 +47,25 @@
     <ClInclude Include="BaseVSShader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="common_flashlight_fxc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common_fxc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="common_hlsl_cpp_consts.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common_lightmappedgeneric_fxc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common_ps_fxc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common_vertexlitgeneric_dx9.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common_vs_fxc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="example_model_dx9_helper.h">
@@ -59,8 +77,14 @@
     <ClInclude Include="pbr_common_ps2_3_x.h">
       <Filter>Shader Source\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="wiggly_water_helper.h">
+      <Filter>Shader Source\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="alphacable_dx9.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="BaseVSShader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -73,6 +97,23 @@
     <ClCompile Include="pbr_dx9.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="shield_dx9.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="simplemotionblur_dx9.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="taa_dx9.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="unlitwiggly_dx9.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wigglywater.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\..\public\tier0\pointeroverride.asm">
@@ -84,12 +125,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="buildsdkshaders.bat">
-      <Filter>
-      </Filter>
+      <Filter></Filter>
     </None>
     <None Include="buildshaders.bat">
-      <Filter>
-      </Filter>
+      <Filter></Filter>
+    </None>
+    <None Include="AlphaCable_ps2x.fxc">
+      <Filter>Shader Source\fxc</Filter>
+    </None>
+    <None Include="AlphaCable_vs20.fxc">
+      <Filter>Shader Source\fxc</Filter>
     </None>
     <None Include="coreball_ps2x.fxc">
       <Filter>Shader Source\fxc</Filter>
@@ -101,6 +146,36 @@
       <Filter>Shader Source\fxc</Filter>
     </None>
     <None Include="pbr_vs30.fxc">
+      <Filter>Shader Source\fxc</Filter>
+    </None>
+    <None Include="shield_ps30.fxc">
+      <Filter>Shader Source\fxc</Filter>
+    </None>
+    <None Include="shield_vs30.fxc">
+      <Filter>Shader Source\fxc</Filter>
+    </None>
+    <None Include="smb_ps30.fxc">
+      <Filter>Shader Source\fxc</Filter>
+    </None>
+    <None Include="smb_vs30.fxc">
+      <Filter>Shader Source\fxc</Filter>
+    </None>
+    <None Include="taa_ps30.fxc">
+      <Filter>Shader Source\fxc</Filter>
+    </None>
+    <None Include="taa_vs30.fxc">
+      <Filter>Shader Source\fxc</Filter>
+    </None>
+    <None Include="unlitwiggly_ps2x.fxc">
+      <Filter>Shader Source\fxc</Filter>
+    </None>
+    <None Include="unlitwiggly_vs20.fxc">
+      <Filter>Shader Source\fxc</Filter>
+    </None>
+    <None Include="wigglywater_ps2x.fxc">
+      <Filter>Shader Source\fxc</Filter>
+    </None>
+    <None Include="wigglywater_vs20.fxc">
       <Filter>Shader Source\fxc</Filter>
     </None>
     <None Include="..\..\materialsystem\stdshaders\game_shader_dx9_base.vpc">

@@ -182,12 +182,7 @@ protected:
 	{
 		if ( pPlayer->TakeHealth( sk_healthvial.GetFloat(), DMG_GENERIC ) )
 		{
-			CSingleUserRecipientFilter user( pPlayer );
-			user.MakeReliable();
-
-			UserMessageBegin( user, "ItemPickup" );
-				WRITE_STRING( GetClassname() );
-			MessageEnd();
+	
 
 			CPASAttenuationFilter filter( pPlayer, "HealthVial.Touch" );
 			EmitSound( filter, pPlayer->entindex(), "HealthVial.Touch" );

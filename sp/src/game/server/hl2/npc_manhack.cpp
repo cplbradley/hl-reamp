@@ -370,7 +370,8 @@ bool CNPC_Manhack::ShouldGib(const CTakeDamageInfo &info)
 void CNPC_Manhack::Event_Killed(const CTakeDamageInfo &info)
 {
 	DispatchParticleEffect("hlr_base_explosion2", GetAbsOrigin(), GetAbsAngles(), this);
-
+	SetModelName(NULL_STRING);
+	UTIL_Remove(this);
 	// turn off the blur!
 	//SetBodygroup(MANHACK_BODYGROUP_BLUR, MANHACK_BODYGROUP_OFF);
 
@@ -384,9 +385,7 @@ void CNPC_Manhack::Event_Killed(const CTakeDamageInfo &info)
 		g_pEffects->Sparks(sparkPos, 2);
 	}
 	*/
-	// Light
-	CBroadcastRecipientFilter filter;
-	te->DynamicLight(filter, 0.0, &GetAbsOrigin(), 255, 180, 100, 0, 100, 0.1, 0);
+	// Ligh
 
 	if (m_nEnginePitch1 < 0)
 	{
@@ -411,9 +410,8 @@ void CNPC_Manhack::Event_Killed(const CTakeDamageInfo &info)
 		RemoveDeferred();
 	}
 	*/
-	BaseClass::Event_Killed(info);
-	SetModelName(NULL_STRING);
-	RemoveDeferred();
+	//BaseClass::Event_Killed(info);
+	
 }
 void CNPC_Manhack::Kill(void)
 {

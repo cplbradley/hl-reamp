@@ -75,6 +75,9 @@
     <Library Include="..\..\lib\public\dmxloader.lib">
       <Filter>Link Libraries</Filter>
     </Library>
+    <Library Include="..\..\fmod\lib\x64\fmod_vc.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
     <Library Include="..\..\lib\common\libcurl.lib">
       <Filter>Link Libraries</Filter>
     </Library>
@@ -1838,6 +1841,12 @@
     <ClInclude Include="viewpostprocess.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\game\shared\fmod\fmod_dynamic_player.h">
+      <Filter>Source Files\FMOD</Filter>
+    </ClInclude>
+    <ClInclude Include="fmod\fmod_system.h">
+      <Filter>Source Files\FMOD</Filter>
+    </ClInclude>
     <ClInclude Include="game_controls\basemodel_panel.h">
       <Filter>Source Files\game_controls</Filter>
     </ClInclude>
@@ -1907,6 +1916,9 @@
     <ClInclude Include="hlr\hud_healthbar.h">
       <Filter>Source Files\HLR</Filter>
     </ClInclude>
+    <ClInclude Include="hlr\hud_itempickup.h">
+      <Filter>Source Files\HLR</Filter>
+    </ClInclude>
     <ClInclude Include="hlr\hud_poweruptime.h">
       <Filter>Source Files\HLR</Filter>
     </ClInclude>
@@ -1920,6 +1932,9 @@
       <Filter>Source Files\HLR</Filter>
     </ClInclude>
     <ClInclude Include="hlr\IBonusOptions.h">
+      <Filter>Source Files\HLR</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\ISM30panel.h">
       <Filter>Source Files\HLR</Filter>
     </ClInclude>
     <ClInclude Include="hlr\mapload_background.h">
@@ -2992,6 +3007,12 @@
     <ClCompile Include="WorldDimsProxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\game\shared\fmod\fmod_dynamic_player.cpp">
+      <Filter>Source Files\FMOD</Filter>
+    </ClCompile>
+    <ClCompile Include="fmod\fmod_system.cpp">
+      <Filter>Source Files\FMOD</Filter>
+    </ClCompile>
     <ClCompile Include="game_controls\basemodel_panel.cpp">
       <Filter>Source Files\game_controls</Filter>
     </ClCompile>
@@ -3286,6 +3307,9 @@
     <ClCompile Include="hlr\hud_healthbar.cpp">
       <Filter>Source Files\HLR</Filter>
     </ClCompile>
+    <ClCompile Include="hlr\hud_itempickup.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
     <ClCompile Include="hlr\hud_poweruptime.cpp">
       <Filter>Source Files\HLR</Filter>
     </ClCompile>
@@ -3305,6 +3329,9 @@
       <Filter>Source Files\HLR</Filter>
     </ClCompile>
     <ClCompile Include="..\..\game\shared\singleplayer_animstate.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\vgui_sm30error.cpp">
       <Filter>Source Files\HLR</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">

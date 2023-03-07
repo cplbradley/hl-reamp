@@ -505,6 +505,8 @@ public:
 	// NOTE: These use the collision OBB to compute a reasonable center point for the entity
 	virtual const Vector&			WorldSpaceCenter( ) const;
 
+	virtual const Vector& WorldChestPosition() const;
+
 	// FIXME: Do we want this?
 	const Vector&					WorldAlignSize( ) const;
 	bool							IsPointSized() const;

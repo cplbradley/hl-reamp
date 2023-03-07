@@ -1,0 +1,1 @@
+D:\Steam\steamapps\common\sourcesdk_content\sdk\hl-reamp\sp\src\materialsystem\stdshaders\Debug_dx9_mod_hl2\game_shader_dx9.dll

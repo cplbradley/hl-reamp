@@ -145,3 +145,71 @@ int C_HLROverdrive::DrawModel(int flags)
 		return 0;
 	return BaseClass::DrawModel(flags);
 }
+
+
+class C_HLRQuadJump : public C_BaseAnimating
+{
+
+	DECLARE_CLASS(C_HLRQuadJump, C_BaseAnimating)
+	DECLARE_CLIENTCLASS();
+	DECLARE_DATADESC();
+
+public:
+	C_HLRQuadJump() {};
+	virtual void OnDataChanged(DataUpdateType_t type);
+	virtual void CheckHudElement();
+	virtual void InitHud();
+	virtual void ClientThink();
+	virtual int DrawModel(int flags);
+	bool m_bDrawHud;
+	int m_iTimeLeft;
+
+	CHudProgressQJ* hud;
+private:
+	C_HLRQuadJump(const C_HLRQuadJump&);
+};
+
+BEGIN_DATADESC(C_HLRQuadJump)
+END_DATADESC()
+IMPLEMENT_CLIENTCLASS_DT(C_HLRQuadJump, DT_QuadJump, CHLRQuadJump)
+RecvPropBool(RECVINFO(m_bDrawHud)),
+RecvPropInt(RECVINFO(m_iTimeLeft)),
+END_RECV_TABLE()
+
+void C_HLRQuadJump::OnDataChanged(DataUpdateType_t type)
+{
+	if (type == DATA_UPDATE_CREATED)
+		InitHud();
+	if (type == DATA_UPDATE_DATATABLE_CHANGED)
+	{
+		CheckHudElement();
+		if (m_bDrawHud)
+		{
+			DevMsg("clientside bool is true\n");
+			DevMsg("clientside timeleft = %i", m_iTimeLeft);
+		}
+	}
+}
+
+void C_HLRQuadJump::InitHud()
+{
+	hud = (CHudProgressQJ*)GET_HUDELEMENT(CHudProgressQJ);
+	m_iTimeLeft = 30;
+	CheckHudElement();
+}
+void C_HLRQuadJump::CheckHudElement()
+{
+	hud->bShowIcon = m_bDrawHud;
+	hud->m_iTimeLeft = m_iTimeLeft - 1;
+}
+void C_HLRQuadJump::ClientThink()
+{
+	BaseClass::ClientThink();
+
+}
+int C_HLRQuadJump::DrawModel(int flags)
+{
+	if (m_bDrawHud)
+		return 0;
+	return BaseClass::DrawModel(flags);
+}

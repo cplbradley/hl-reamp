@@ -68,8 +68,9 @@ $Configuration
 		$SystemFrameworks				"Carbon" [$OSXALL]
 		$SystemLibraries				"rt" [$LINUXALL]
 		$IgnoreImportLibrary			"TRUE"
-		$AdditionalDependencies			"$BASE winmm.lib"	[$WIN32]
+		$AdditionalDependencies			"$BASE winmm.lib"	[$WIN32]	
 		$AdditionalDependencies			"$BASE wsock32.lib Ws2_32.lib" [$BUILD_REPLAY]
+		$AdditionalLibraryDirectories 	"$BASE; $SRCDIR\fmod\lib\x64"
 	}
 }
 
@@ -1265,6 +1266,7 @@ $Project
 		$Libexternal "$LIBCOMMON/libcurl" [$LINUXALL]
 		$Libexternal "$LIBCOMMON/libcurlssl" [$LINUXALL]
 		$Libexternal "$LIBCOMMON/libssl" [$LINUXALL]
+		$Lib	"$SRCDIR\fmod\lib\x64\fmod_vc"
  	}
 
 }

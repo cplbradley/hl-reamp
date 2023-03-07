@@ -867,6 +867,60 @@ void CTriggerHurt::Touch( CBaseEntity *pOther )
 }
 
 
+LINK_ENTITY_TO_CLASS(trigger_heal, CTriggerHeal);
+
+
+BEGIN_DATADESC(CTriggerHeal)
+	DEFINE_KEYFIELD(bHealShields,FIELD_BOOLEAN,"HealShields"),
+	DEFINE_KEYFIELD(m_iHealAmount,FIELD_INTEGER,"HealAmount"),
+	DEFINE_KEYFIELD(m_fHealFrequency,FIELD_FLOAT,"HealFrequency"),
+
+	DEFINE_FUNCTION(HealThink),
+END_DATADESC()
+
+
+void CTriggerHeal::Spawn(void)
+{
+	BaseClass::Spawn();
+
+	InitTrigger();
+
+
+	SetThink(NULL);
+	SetTouch(&CTriggerHeal::Touch);
+}
+
+void CTriggerHeal::HealThink(void)
+{
+	CBasePlayer* pPlayer = UTIL_GetLocalPlayer();
+	pPlayer->TakeHealth(m_iHealAmount, DMG_GENERIC);
+
+	if (bHealShields)
+	{
+		CHL2_Player* pHL2 = dynamic_cast<CHL2_Player*>(pPlayer);
+		pHL2->ApplyArmor(m_iHealAmount);
+	}
+
+	SetNextThink(gpGlobals->curtime + m_fHealFrequency);
+}
+
+void CTriggerHeal::Touch(CBaseEntity* pOther)
+{
+	if (pOther->IsPlayer() && !bAmHealing)
+	{
+		SetThink(&CTriggerHeal::HealThink);
+		SetNextThink(gpGlobals->curtime);
+		Msg("HealTrigger touched\n");
+		bAmHealing = true;
+	}
+}
+
+void CTriggerHeal::EndTouch(CBaseEntity* pOther)
+{
+	BaseClass::EndTouch(pOther);
+	bAmHealing = false;
+	SetThink(NULL);
+}
 // ##################################################################################
 //	>> TriggerMultiple
 // ##################################################################################

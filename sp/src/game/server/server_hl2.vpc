@@ -92,11 +92,18 @@ $Project "Server (HL2)"
 				$File "$SRCDIR\game\shared\singleplayer_animstate.h"
 				$File "movie_display.cpp"
 				$File "hl2/hlr/hlr_screen_flipper.cpp"
+				$File "hl2/hlr/hlr_speedmod.cpp"
+				$File "hl2/hlr/npc_memory_manager.cpp"
 			}
 			$Folder "FMOD"
 			{
-				//$File "$SRCDIR\game\shared\fmod\fmod_dynamic_player.cpp"
-				//$File "$SRCDIR\game\shared\fmod\fmod_dynamic_player.h"
+				$File "$SRCDIR\game\shared\fmod\fmod_dynamic_player.cpp"
+				$File "$SRCDIR\game\shared\fmod\fmod_dynamic_player.h"
+			}
+			$Folder "Experimental"
+			{
+				$File "experimental\climbable_rope.cpp"
+				$File "experimental\climbable_rope.h"
 			}
 		$Folder	"HL2 DLL"
 		{

@@ -161,10 +161,13 @@ void CHudNumericDisplay::PaintLabel( void )
 //-----------------------------------------------------------------------------
 void CHudNumericDisplay::Paint()
 {
+	ConVarRef rainbow("hud_rainbow");
+	Color clr = rainbow.GetBool() ? gHUD.GetRainbowColor() : gHUD.GetDefaultColor();
 	if (m_bDisplayValue)
 	{
+		
 		// draw our numbers
-		surface()->DrawSetTextColor(GetFgColor());
+		surface()->DrawSetTextColor(clr);
 		PaintNumbers(m_hNumberFont, digit_xpos, digit_ypos, m_iValue);
 
 		// draw the overbright blur
@@ -177,7 +180,7 @@ void CHudNumericDisplay::Paint()
 			else
 			{
 				// draw a percentage of the last one
-				Color col = GetFgColor();
+				Color col = clr;
 				col[3] *= fl;
 				surface()->DrawSetTextColor(col);
 				PaintNumbers(m_hNumberGlowFont, digit_xpos, digit_ypos, m_iValue);
@@ -188,7 +191,7 @@ void CHudNumericDisplay::Paint()
 	// total ammo
 	if (m_bDisplaySecondaryValue)
 	{
-		surface()->DrawSetTextColor(GetFgColor());
+		surface()->DrawSetTextColor(clr);
 		PaintNumbers(m_hSmallNumberFont, digit2_xpos, digit2_ypos, m_iSecondaryValue);
 	}
 

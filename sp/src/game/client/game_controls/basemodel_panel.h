@@ -162,6 +162,8 @@ public:
 	virtual void SetMDL( const char *pMDLName, void *pProxyData = NULL );
 	virtual void SetModelAnglesAndPosition( const QAngle &angRot, const Vector &vecPos );
 
+	virtual void SetBodygroup(MDLHandle_t handle, int nGroup, int nValue);
+
 	// Overridden methods of vgui::Panel
 	virtual void ApplySettings( KeyValues *inResourceData );
 	virtual void PerformLayout();
@@ -181,6 +183,7 @@ public:
 
 	studiohdr_t* GetStudioHdr( void ) { return m_RootMDL.m_MDL.GetStudioHdr(); }
 	void SetBody( unsigned int nBody ) { m_RootMDL.m_MDL.m_nBody = nBody; }
+	int GetBody() { return m_RootMDL.m_MDL.m_nBody; }
 
 	void		 RotateYaw( float flDelta );
 

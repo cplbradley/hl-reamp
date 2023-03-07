@@ -333,6 +333,10 @@ void CGrenadeFrag::NadeTouch(CBaseEntity *pOther)
 	RadiusDamage(CTakeDamageInfo(this, GetThrower(), 75, DMG_BLAST), GetAbsOrigin(), 128, CLASS_NONE, NULL);
 	SetThink(&CBaseGrenade::SUB_Remove);
 }*/
+
+ConVar sk_grenade_force_range("sk_grenade_force_range", "64");
+ConVar sk_grenade_force_base("sk_grenade_force_base", "175");
+
 void CGrenadeFrag::Explode(trace_t *pTrace, int bitsDamageType)
 {
 #if !defined( CLIENT_DLL )
@@ -408,6 +412,20 @@ void CGrenadeFrag::Explode(trace_t *pTrace, int bitsDamageType)
 
 	AddEffects(EF_NODRAW);
 	SetAbsVelocity(vec3_origin);
+	
+	if (GetOwnerEntity() && GetOwnerEntity()->IsPlayer())
+	{
+		Vector vecToOwner = GetOwnerEntity()->WorldSpaceCenter() - GetAbsOrigin();
+		float dist = vecToOwner.Length();
+
+		if (dist <= sk_grenade_force_range.GetFloat())
+		{
+			Vector vecDir = vecToOwner.Normalized();
+			float ratio = dist / sk_grenade_force_range.GetFloat();
+			float force = MIN(sk_grenade_force_base.GetFloat() / ratio, 800.0f);
+			GetOwnerEntity()->VelocityPunch(vecDir * force);
+		}
+	}
 
 #if HL2_EPISODIC
 	// Because the grenade is zipped out of the world instantly, the EXPLOSION sound that it makes for

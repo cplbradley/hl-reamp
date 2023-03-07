@@ -1360,10 +1360,28 @@ int CBaseEntity::TakeHealth( float flHealth, int bitsDamageType )
 
 	const int oldHealth = m_iHealth;
 
+	int iAdd = MIN(flHealth, iMax - m_iHealth);
+
+	if (IsPlayer())
+	{
+		CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+		user.MakeReliable();
+
+		UserMessageBegin(user, "ItemPickup");
+		WRITE_STRING("Health");
+		WRITE_SHORT(iAdd);
+		MessageEnd();
+	}
+
 	m_iHealth += flHealth;
+
+	
 
 	if (m_iHealth > iMax)
 		m_iHealth = iMax;
+
+
+	
 
 	return m_iHealth - oldHealth;
 }

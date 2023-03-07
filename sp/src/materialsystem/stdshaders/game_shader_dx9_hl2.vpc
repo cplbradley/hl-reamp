@@ -25,11 +25,24 @@ $Project "Shaders"
 			$File	"pbr_vs30.fxc"
 			$File	"coreball_ps2x.fxc"
 			$File	"coreball_vs20.fxc"
+			$File	"AlphaCable_ps2x.fxc"
+			$File	"AlphaCable_vs20.fxc"
+			$File	"shield_ps30.fxc"
+			$File	"shield_vs30.fxc"
+			$File	"wigglywater_ps2x.fxc"
+			$File	"wigglywater_vs20.fxc"
+			$File	"taa_ps30.fxc"
+			$File 	"taa_vs30.fxc"
+			$File	"smb_ps30.fxc"
+			$File	"smb_vs30.fxc"
+			$File 	"unlitwiggly_ps2x.fxc"
+			$File	"unlitwiggly_vs20.fxc"
 		}
 
 		$Folder "Headers"
 		{
 			$File	"pbr_common_ps2_3_x.h"
+			$File	"wiggly_water_helper.h"
 		}
 
 	}
@@ -38,5 +51,11 @@ $Project "Shaders"
 	{
 		$File	"pbr_dx9.cpp"
 		$File	"coreball_dx9.cpp"
+		$File	"alphacable_dx9.cpp"
+		$File	"shield_dx9.cpp"
+		$File	"wigglywater.cpp"
+		$File	"taa_dx9.cpp"
+		$File	"simplemotionblur_dx9.cpp"
+		$File	"unlitwiggly_dx9.cpp"
 	}
 }

@@ -32,10 +32,15 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-#define MINFIRERATE 0.24f
-#define MAXFIRERATE 0.06f
-#define MAXOVERDRIVEFIRERATE 0.03f
-#define MAXFOCUSFIRERATE 0.09f
+#define MINFIRERATE 0.2f //5hz
+#define MAXFIRERATE 0.0625f //16hz
+#define MAXOVERDRIVEFIRERATE 0.03571f //28hz
+#define MAXFOCUSFIRERATE 0.09091f //11hz
+
+#define CHAINGUN_FULLSPEED_STANDARD "Chaingun.Fullspeed"
+#define CHAINGUN_FULLSPEED_OVERDRIVE "Chaingun.Overdrive"
+#define CHAINGUN_FULLSPEED_FOCUS "Chaingun.Focus"
+#define CHAINGUN_SINGLE "Chaingun.Single"
 
 ConVar sk_weapon_ar2_alt_fire_radius( "sk_weapon_ar2_alt_fire_radius", "10" );
 ConVar sk_weapon_ar2_alt_fire_duration( "sk_weapon_ar2_alt_fire_duration", "2" );
@@ -54,6 +59,9 @@ BEGIN_DATADESC( CWeaponAR2 )
 	DEFINE_FIELD( m_flDelayedFire,	FIELD_TIME ),
 	DEFINE_FIELD( m_bShotDelayed,	FIELD_BOOLEAN ),
 	DEFINE_SOUNDPATCH(m_pWoundSound),
+	DEFINE_SOUNDPATCH(m_pChaingun),
+	DEFINE_SOUNDPATCH(m_pOverdrive),
+	DEFINE_SOUNDPATCH(m_pFocus),
 	DEFINE_FIELD(m_iWeaponState, FIELD_INTEGER),
 	//DEFINE_FIELD( m_nVentPose, FIELD_INTEGER ),
 
@@ -64,7 +72,9 @@ IMPLEMENT_SERVERCLASS_ST(CWeaponAR2, DT_WeaponAR2)
 END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS( weapon_ar2, CWeaponAR2 );
+LINK_ENTITY_TO_CLASS(weapon_chaingun, CWeaponAR2);
 PRECACHE_WEAPON_REGISTER(weapon_ar2);
+PRECACHE_WEAPON_REGISTER(weapon_chaingun);
 
 acttable_t	CWeaponAR2::m_acttable[] = 
 {
@@ -142,6 +152,8 @@ CWeaponAR2::CWeaponAR2( )
 	m_nVentPose		= -1;
 	m_flfirerate = MINFIRERATE;
 
+	m_fPitch = 100.0f;
+
 	m_iMuzzleR = 0;
 	m_iMuzzleG = 128;
 	m_iMuzzleB = 250;
@@ -170,6 +182,11 @@ void CWeaponAR2::Precache( void )
 {
 	BaseClass::Precache();
 	PrecacheScriptSound("Chaingun.Wine");
+	PrecacheScriptSound("Chaingun.Blip");
+	PrecacheScriptSound("Chaingun.Fullspeed");
+	PrecacheScriptSound("Chaingun.Focus");
+	PrecacheScriptSound("Chaingun.Overdrive");
+	PrecacheScriptSound(CHAINGUN_SINGLE);
 	UTIL_PrecacheOther( "prop_combine_ball" );
 	UTIL_PrecacheOther( "env_entity_dissolver" );
 	PrecacheParticleSystem("smg_core");
@@ -220,6 +237,12 @@ void CWeaponAR2::ItemPostFrame(void)
 	{
 
 		m_flfirerate -= 0.003f;
+	}
+
+	if (~pOwner->m_nButtons & IN_ATTACK && bShooting)
+	{
+		WeaponSound(SINGLE, m_flNextPrimaryAttack);
+		bShooting = false;
 	}
 
 	if (AmFocusFiring())
@@ -303,11 +326,35 @@ void CWeaponAR2::UpdateWeaponSoundState(void)
 	{
 	case WEAPON_STATE_NOTFULLSPEED:
 		{
-			ShutdownWoundSound();
+		ShutdownAllSounds();
 			break;
 		}
 	case WEAPON_STATE_FULLSPEED:
 	{
+		CBasePlayer* pPlayer = ToBasePlayer(GetOwner());
+		if (!pPlayer)
+			return;
+
+		//InitWoundSound();
+
+		if (pPlayer->HasOverdrive())
+		{
+			CSoundEnvelopeController::GetController().Play(m_pOverdrive, 1.0f, 100.0f);
+			ShutdownChaingunSound();
+			ShutdownFocusSound();
+		}
+		else if (AmFocusFiring())
+		{
+			CSoundEnvelopeController::GetController().Play(m_pFocus, 1.0f, 100.0f);
+			ShutdownOverdriveSound();
+			ShutdownChaingunSound();
+		}
+		else
+		{
+			CSoundEnvelopeController::GetController().Play(m_pChaingun, 1.0f, 100.0f);
+			ShutdownFocusSound();
+			ShutdownOverdriveSound();
+		}
 		if (m_bPlayingWoundSound)
 		{
 			DevMsg("already playing woundsound\n");
@@ -332,15 +379,36 @@ void CWeaponAR2::InitWoundSound(void)
 		m_pWoundSound = CSoundEnvelopeController::GetController().SoundCreate(filter, entindex(), "Chaingun.Wine");
 		CSoundEnvelopeController::GetController().Play(m_pWoundSound, 0.0f, 100);
 	}
+	if (!m_pChaingun)
+		m_pChaingun = CSoundEnvelopeController::GetController().SoundCreate(filter, entindex(), "Chaingun.Fullspeed");
+	if (!m_pFocus)
+		m_pFocus = CSoundEnvelopeController::GetController().SoundCreate(filter, entindex(), "Chaingun.Focus");
+	if (!m_pOverdrive)
+		m_pOverdrive = CSoundEnvelopeController::GetController().SoundCreate(filter, entindex(), "Chaingun.Overdrive");
 }
 void CWeaponAR2::ShutdownWoundSound(void)
 {
 	if (m_pWoundSound)
 	{
+		CSoundEnvelopeController::GetController().SoundChangePitch(m_pWoundSound, 100, 0.0f);
 		CSoundEnvelopeController::GetController().SoundChangeVolume(m_pWoundSound, 0.0f, 0.0f);
-		CSoundEnvelopeController::GetController().SoundChangePitch(m_pWoundSound, 100, 0.01f);
-		
 	}
+}
+
+void CWeaponAR2::ShutdownChaingunSound()
+{
+	if (m_pChaingun)
+		CSoundEnvelopeController::GetController().Shutdown(m_pChaingun);
+}
+void CWeaponAR2::ShutdownFocusSound()
+{
+	if (m_pFocus)
+		CSoundEnvelopeController::GetController().Shutdown(m_pFocus);
+}
+void CWeaponAR2::ShutdownOverdriveSound()
+{
+	if (m_pOverdrive)
+		CSoundEnvelopeController::GetController().Shutdown(m_pOverdrive);
 }
 void CWeaponAR2::DestroyWeaponSound(void)
 {
@@ -349,6 +417,14 @@ void CWeaponAR2::DestroyWeaponSound(void)
 		CSoundEnvelopeController::GetController().SoundDestroy(m_pWoundSound);
 		m_pWoundSound = NULL;
 	}
+}
+
+void CWeaponAR2::ShutdownAllSounds()
+{
+	ShutdownChaingunSound();
+	ShutdownFocusSound();
+	ShutdownOverdriveSound();
+	ShutdownWoundSound();
 }
 void CWeaponAR2::WeaponIdle(void)
 {
@@ -387,9 +463,11 @@ void CWeaponAR2::PrimaryAttack(void)
 	// MUST call sound before removing a round from the clip of a CHLMachineGun
 	while (m_flNextPrimaryAttack <= gpGlobals->curtime)
 	{
-		WeaponSound(SINGLE, m_flNextPrimaryAttack);
+		if (m_iWeaponState != WEAPON_STATE_FULLSPEED)
+			WeaponSound(SINGLE, m_flNextPrimaryAttack);
 		m_flNextPrimaryAttack = m_flNextPrimaryAttack + fireRate;
 		iBulletsToFire++;
+		bShooting = true;
 	}
 
 	// Make sure we don't fire more than the amount in the clip, if this weapon uses clips
@@ -734,7 +812,7 @@ void CWeaponAR2::ItemHolsterFrame(void)
 	BaseClass::ItemHolsterFrame();
 	m_flfirerate = MINFIRERATE;
 	//UTIL_GetLocalPlayer()->SetMaxSpeed(450.0f);
-	ShutdownWoundSound();
+	ShutdownAllSounds();
 }
 //-----------------------------------------------------------------------------
 // Purpose: 

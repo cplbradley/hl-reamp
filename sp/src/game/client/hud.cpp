@@ -26,11 +26,15 @@
 #include <vgui_controls/AnimationController.h>
 #include <vgui/ISurface.h>
 #include "hud_lcd.h"
+#include "basetypes.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 static 	CClassMemoryPool< CHudTexture >	 g_HudTextureMemoryPool( 128 );
+
+
+static ConVar hud_showrainbowvalues("hud_showrainbowvalues", "0");
 
 //-----------------------------------------------------------------------------
 // Purpose: Parses the weapon txt files to get the sprites needed.
@@ -387,6 +391,7 @@ CHud::CHud()
 	SetDefLessFunc( m_RenderGroups );
 
 	m_flScreenShotTime = -1;
+
 }
 
 //-----------------------------------------------------------------------------
@@ -394,6 +399,7 @@ CHud::CHud()
 //-----------------------------------------------------------------------------
 void CHud::Init( void )
 {
+
 	HOOK_HUD_MESSAGE( gHUD, ResetHUD );
 	
 #ifdef CSTRIKE_DLL
@@ -471,17 +477,114 @@ void CHud::Init( void )
 	FreeHudTextureList( textureList );
 }
 
+ConVar hud_rainbow("hud_rainbow", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+ConVar hud_rainbow_rate("hud_rainbow_rate", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+ConVar hud_color_r("hud_color_r", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+ConVar hud_color_g("hud_color_g", "255", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+ConVar hud_color_b("hud_color_b", "208", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+ConVar hud_color_a("hud_color_a", "100", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
 //-----------------------------------------------------------------------------
 // Purpose: Init Hud global colors
 // Input  : *scheme - 
 //-----------------------------------------------------------------------------
 void CHud::InitColors( vgui::IScheme *scheme )
 {
-	m_clrNormal = scheme->GetColor( "Normal", Color( 255, 208, 64 ,255 ) );
+	m_clrNormal = hud_rainbow.GetBool() ? GetRainbowColor() : GetDefaultColor();
 	m_clrCaution = scheme->GetColor( "Caution", Color( 255, 48, 0, 255 ) );
 	m_clrYellowish = scheme->GetColor( "Yellowish", Color( 255, 160, 0, 255 ) );
 }
 
+
+Color CHud::HSVtoRGBColor(Vector HSV)
+{
+	float s = HSV.y / 100;
+	float v = HSV.z / 100;
+	float H = HSV.x;
+	float C = s * v;
+	float X = C * (1 - abs(fmod(H / 60.0, 2) - 1));
+	float m = v - C;
+	float r, g, b;
+	
+	if (H >= 0 && H < 60) {
+		r = C, g = X, b = 0;
+	}
+	else if (H >= 60 && H < 120) {
+		r = X, g = C, b = 0;
+	}
+	else if (H >= 120 && H < 180) {
+		r = 0, g = C, b = X;
+	}
+	else if (H >= 180 && H < 240) {
+		r = 0, g = X, b = C;
+	}
+	else if (H >= 240 && H < 300) {
+		r = X, g = 0, b = C;
+	}
+	else {
+		r = C, g = 0, b = X;
+	}
+	int R = (r + m) * 255;
+	int G = (g + m) * 255;
+	int B = (b + m) * 255;
+
+	return Color(R, G, B, 255);
+}
+
+Color CHud::GetDefaultColor()
+{
+	int clrR = MIN(hud_color_r.GetFloat(), 255);
+	int clrG = MIN(hud_color_g.GetFloat(), 255);
+	int clrB = MIN(hud_color_b.GetFloat(), 255);
+	int clrA = MIN(hud_color_a.GetFloat(), 255);
+	m_clrNormal = Color(clrR, clrG, clrB, clrA);
+	return m_clrNormal;
+}
+
+Color CHud::GetDefaultBGColor()
+{
+	int clrR = MIN(hud_color_r.GetFloat() * 0.6f, 200);
+	int clrG = MIN(hud_color_g.GetFloat() * 0.6f, 200);
+	int clrB = MIN(hud_color_b.GetFloat() * 0.6f, 200);
+	int clrA = MIN(hud_color_a.GetFloat() * 0.6f, 200);
+	return Color(clrR, clrG, clrB, clrA);
+}
+
+
+Color CHud::GetRainbowColor()
+{
+	if (!hud_rainbow.GetBool())
+		return Color(0, 0, 0, 0);
+
+	fRainbowH += 0.01f * hud_rainbow_rate.GetFloat();
+
+	if (fRainbowH >= 360.0f)
+		fRainbowH = 0.0f;
+
+	int iRainbowH = floor(fRainbowH);
+
+	Vector vColor = Vector(iRainbowH, 100.0f, 100.0f);
+	Color cColor = HSVtoRGBColor(vColor);
+	
+	Color clr = cColor;
+
+	if (hud_showrainbowvalues.GetBool())
+	{
+		engine->Con_NPrintf(2, "Red: %d Green: %d Blue: %d\n", clr[0], clr[1], clr[2]);
+	}
+	return clr;
+
+	
+
+}
+
+Color CHud::GetRainbowBGColor()
+{
+	int iRainbowH = floor(fRainbowH);
+
+	Vector vColor = Vector(iRainbowH, 50.0f, 50.0f);
+	Color cColor = HSVtoRGBColor(vColor);
+	return cColor;
+}
 //-----------------------------------------------------------------------------
 // Initializes fonts
 //-----------------------------------------------------------------------------

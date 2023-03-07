@@ -24,6 +24,7 @@ CHudHealthBar1::CHudHealthBar1(const char * pElementName) : CHudElement(pElement
 {
 	vgui::Panel * pParent = g_pClientMode->GetViewport();
 	SetParent(pParent);
+	SetProportional(true);
 
 	SetHiddenBits(HIDEHUD_HEALTH | HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT);
 }
@@ -39,7 +40,7 @@ void CHudHealthBar1::Init()
 	m_flHull = HULL_INIT;
 	m_flMaxHull = MAX_INIT;
 	bIsAlive1 = 0;
-
+	drawanim = false;
 	Reset();
 }
 
@@ -59,6 +60,7 @@ void CHudHealthBar1::MsgFunc_EnemyHealth1(bf_read &msg)
 	gHealth1 = msg.ReadFloat();
 	gMaxHealth1 = msg.ReadFloat();
 	bIsAlive1 = msg.ReadByte();
+	animbar = 0.0f;
 }
 
 //------------------------------------------------------------------------
@@ -90,17 +92,31 @@ void CHudHealthBar1::OnThink(void)
 		SetVisible(false);
 	}
 	
+	if (animbar >= maxHull)
+		animbar = maxHull;
+
 	float colormult = 255 * (gHealth1 / gMaxHealth1);
 	m_HullColor[0] = 255 - colormult;
 	m_HullColor[1] = colormult;
 
 	// DevMsg("Sheild at is at: %f\n",newShield);
-	// Only update the fade if we've changed health
-	if (newHull == m_flHull)
-		return;
+	// Only update the fade if we've changed heal
 
-	m_flHull = newHull;
+	if (newHull == maxHull)
+	{
+		m_flHull = animbar;
+		drawanim = true;
+	}
+	else
+	{
+		m_flHull = newHull;
+		drawanim = false;
+	}
+
 	m_flMaxHull = maxHull;
+
+	animbar += gMaxHealth1 * 0.006f;
+
 }
 
 
@@ -130,13 +146,14 @@ void CHudHealthBar1::Paint()
 
 	// Draw the exhausted portion of the bar.
 	surface()->DrawSetColor(Color(m_HullColor [0], m_HullColor [1], m_HullColor [2], m_iHullDisabledAlpha));
-
-	for (int i = enabledChunks; i < chunkCount; i++)
+	if (!drawanim)
 	{
-		surface()->DrawFilledRect(xpos, ypos, xpos + m_flBarChunkWidth, ypos + m_flBarHeight);
-		xpos += (m_flBarChunkWidth + m_flBarChunkGap);
+		for (int i = enabledChunks; i < chunkCount; i++)
+		{
+			surface()->DrawFilledRect(xpos, ypos, xpos + m_flBarChunkWidth, ypos + m_flBarHeight);
+			xpos += (m_flBarChunkWidth + m_flBarChunkGap);
+		}
 	}
-
 	// Draw our name
 
 	surface()->DrawSetTextFont(m_hTextFont);

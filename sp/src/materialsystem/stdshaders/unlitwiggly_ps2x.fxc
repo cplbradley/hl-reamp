@@ -1,0 +1,30 @@
+#include "common_ps_fxc.h"
+
+sampler TextureSampler	: register( s0 );
+
+const float3 c_WiggleParams : register(c27);
+
+struct PS_INPUT
+{
+	float4 vColor0		: COLOR0;
+	float2 vTexCoord0	: TEXCOORD0;
+};
+
+
+float4 main( PS_INPUT i ) : COLOR
+{
+
+	float2 uv = i.vTexCoord0;
+	
+	float inTime = c_WiggleParams.x;
+	float Scale = c_WiggleParams.y;
+	float Res = c_WiggleParams.z;
+	float Time = inTime * c_WiggleParams.w; 
+
+	uv.x += ((sin(((Time * 0.25 + uv.y)) * 10)/10) * 0.5) * Scale;
+	uv.y -= ((sin(((Time * 0.25 - uv.x)) * 10)/10) * 0.5) * Scale;
+	
+	float4 result = i.vColor0 * tex2D( TextureSampler, uv * Res);
+	
+	return FinalOutput( result, 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_NONE );
+}

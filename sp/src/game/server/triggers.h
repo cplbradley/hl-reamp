@@ -207,4 +207,25 @@ public:
 	CUtlVector<EHANDLE>	m_hurtEntities;
 };
 
+
+class CTriggerHeal : public CBaseTrigger
+{
+public: 
+	CTriggerHeal() {};
+
+	DECLARE_CLASS(CTriggerHeal, CBaseTrigger);
+	void Spawn(void);
+	void Touch(CBaseEntity* pOther);
+	void EndTouch(CBaseEntity* pOther);
+	
+	bool bHealShields;
+	int m_iHealAmount;
+	float m_fHealFrequency;
+	bool bAmHealing;
+
+	void HealThink(void);
+
+
+	DECLARE_DATADESC();
+};
 #endif // TRIGGERS_H

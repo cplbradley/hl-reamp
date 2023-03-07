@@ -2257,19 +2257,6 @@ void CBaseCombatWeapon::UpdateAutoFire(void)
 }
 void CBaseCombatWeapon::DoMuzzleFlashLight(Vector vecColor, Vector vecSrc)
 {
-#ifdef CLIENT_DLL
-	DevMsg("Muzzle Client\n");
-		dlight_t* dl = effects->CL_AllocDlight(index);
-		dl->origin = vecSrc;
-		dl->color.r = vecColor[0];
-		dl->color.g = vecColor[1];
-		dl->color.b = vecColor[2];
-		dl->die = gpGlobals->curtime + 0.02f;
-		dl->radius = random->RandomFloat(128.0f, 768.0f);
-		dl->decay = 256.0f;
-#else
-	DevMsg("Muzzle Server\n");
-#endif
 }
 //-----------------------------------------------------------------------------
 // Purpose: Primary fire button attack

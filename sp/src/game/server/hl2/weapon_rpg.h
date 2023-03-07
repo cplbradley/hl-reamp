@@ -16,11 +16,28 @@
 #include "Sprite.h"
 #include "npcevent.h"
 #include "beam_shared.h"
+#include "SpriteTrail.h"
 
 
 class CWeaponRPG;
 class CLaserDot;
 class RocketTrail;
+
+
+class CMissileTrail : public CBaseAnimating
+{
+	DECLARE_CLASS(CMissileTrail, CBaseAnimating);
+public:
+	void Precache(void);
+	void Spawn(void);
+	bool CreateTrail(void);
+	void TimeOut(void);
+	void Kill(void);
+
+private:
+	CHandle<CSpriteTrail> m_hRocketSpriteTrail;
+	DECLARE_DATADESC();
+};
  
 //###########################################################################
 //	>> CMissile		(missile launcher class is below this one!)
@@ -83,9 +100,11 @@ protected:
 	void GetShootPosition( CLaserDot *pLaserDot, Vector *pShootPosition );
 
 	CHandle<RocketTrail>	m_hRocketTrail;
+	CHandle<CMissileTrail> m_hMissileTrail;
 	float					m_flAugerTime;		// Amount of time to auger before blowing up anyway
 	float					m_flMarkDeadTime;
 	float					m_flDamage;
+	
 
 	struct CustomDetonator_t
 	{
@@ -162,6 +181,7 @@ private:
 	string_t m_strHint;
 };
 
+static CUtlVector<CMissile*> m_vMissileList;
 
 //-----------------------------------------------------------------------------
 // Finds apc missiles in cone
@@ -260,6 +280,8 @@ protected:
 	CHandle<CMissile>	m_hMissile;
 	CHandle<CSprite>	m_hLaserMuzzleSprite;
 	CHandle<CBeam>		m_hLaserBeam;
+
+	
 };
 
 #endif // WEAPON_RPG_H

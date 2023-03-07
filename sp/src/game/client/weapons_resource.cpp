@@ -153,9 +153,9 @@ void WeaponsResource::LoadWeaponSprites( WEAPON_FILE_INFO_HANDLE hWeaponFileInfo
 		pWeaponInfo->iconZoomedAutoaim = pWeaponInfo->iconZoomedCrosshair;  //default to zoomed crosshair
 	}
 
-	CHudHistoryResource *pHudHR = GET_HUDELEMENT( CHudHistoryResource );	
-	if( pHudHR )
-	{
+	//CHudHistoryResource* pHudHR = GET_HUDELEMENT(CHudHistoryResource);
+	//if( pHudHR )
+	//{
 		p = FindHudTextureInDict( tempList, "weapon" );
 		if ( p )
 		{
@@ -163,7 +163,7 @@ void WeaponsResource::LoadWeaponSprites( WEAPON_FILE_INFO_HANDLE hWeaponFileInfo
 			if ( pWeaponInfo->iconInactive )
 			{
 				pWeaponInfo->iconInactive->Precache();
-				pHudHR->SetHistoryGap( pWeaponInfo->iconInactive->Height() );
+				//pHudHR->SetHistoryGap( pWeaponInfo->iconInactive->Height() );
 			}
 		}
 
@@ -194,7 +194,7 @@ void WeaponsResource::LoadWeaponSprites( WEAPON_FILE_INFO_HANDLE hWeaponFileInfo
 			if ( pWeaponInfo->iconAmmo )
 			{
 				pWeaponInfo->iconAmmo->Precache();
-				pHudHR->SetHistoryGap( pWeaponInfo->iconAmmo->Height() );
+				//pHudHR->SetHistoryGap( pWeaponInfo->iconAmmo->Height() );
 			}
 		}
 
@@ -215,12 +215,12 @@ void WeaponsResource::LoadWeaponSprites( WEAPON_FILE_INFO_HANDLE hWeaponFileInfo
 			if ( pWeaponInfo->iconAmmo2 )
 			{
 				pWeaponInfo->iconAmmo2->Precache();
-				pHudHR->SetHistoryGap( pWeaponInfo->iconAmmo2->Height() );
+				//pHudHR->SetHistoryGap( pWeaponInfo->iconAmmo2->Height() );
 			}
 		}
-	}
+	//}
 
-	FreeHudTextureList( tempList );
+	//FreeHudTextureList( tempList );
 }
 
 //-----------------------------------------------------------------------------

@@ -33,6 +33,7 @@
 #include "rumble_shared.h"
 #include "gamestats.h"
 #include "physobj.h"
+#include "SpriteTrail.h"
 
 #ifdef PORTAL
 #include "portal_util_shared.h"
@@ -105,8 +106,62 @@ CLaserDot *GetLaserDotList()
 	return g_LaserDotList.m_pClassList;
 }
 
+
+BEGIN_DATADESC(CMissileTrail)
+
+DEFINE_FIELD(m_hRocketSpriteTrail, FIELD_EHANDLE),
+
+DEFINE_FUNCTION(TimeOut),
+END_DATADESC()
+LINK_ENTITY_TO_CLASS(missile_trail, CMissileTrail);
+
+
+
+void CMissileTrail::Spawn(void)
+{
+	Precache();
+	CreateTrail();
+
+}
+void CMissileTrail::Precache(void)
+{
+	PrecacheMaterial("sprites/rockettrail.vmt");
+
+}
+
+bool CMissileTrail::CreateTrail(void)
+{
+	if (!m_hRocketSpriteTrail)
+	{
+		if (!m_hRocketSpriteTrail)
+		{
+			m_hRocketSpriteTrail = CSpriteTrail::SpriteTrailCreate("sprites/rockettrail.vmt", GetAbsOrigin(), true);
+			m_hRocketSpriteTrail->FollowEntity(this);
+			m_hRocketSpriteTrail->SetTransparency(kRenderTransAdd, 175, 175, 175, 200, kRenderFxNone);
+			m_hRocketSpriteTrail->SetStartWidth(16.0f);
+			m_hRocketSpriteTrail->SetEndWidth(0.0f);
+			m_hRocketSpriteTrail->SetLifeTime(0.6f);
+			m_hRocketSpriteTrail->SetTextureResolution(0.006f);
+		}
+	}
+	return true;
+}
+void CMissileTrail::TimeOut(void)
+{
+	SetThink(&CMissileTrail::Kill);
+	SetNextThink(gpGlobals->curtime + 1.0f);
+}
+
+void CMissileTrail::Kill(void)
+{
+	m_hRocketSpriteTrail = NULL;
+	UTIL_Remove(this);
+}
+
 BEGIN_DATADESC(CMissile)
 
+
+DEFINE_FIELD(m_hMissileTrail,FIELD_EHANDLE),
 DEFINE_FIELD(m_hRocketTrail, FIELD_EHANDLE),
 DEFINE_FIELD(m_flAugerTime, FIELD_TIME),
 DEFINE_FIELD(m_flMarkDeadTime, FIELD_TIME),
@@ -152,6 +207,8 @@ void CMissile::Precache(void)
 	PrecacheModel("models/weapons/w_missile.mdl");
 	PrecacheModel("models/weapons/w_missile_launch.mdl");
 	PrecacheModel("models/weapons/w_missile_closed.mdl");
+	PrecacheMaterial("sprites/rockettrail.vmt");
+	UTIL_PrecacheOther("missile_trail");
 }
 
 
@@ -172,6 +229,7 @@ void CMissile::Spawn(void)
 
 	SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE);
 	SetThink(&CMissile::IgniteThink);
+	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 
 	SetNextThink(gpGlobals->curtime);
 	SetDamage(125.0f);
@@ -241,7 +299,7 @@ void CMissile::DumbFire(void)
 	SetThink(NULL);
 	SetMoveType(MOVETYPE_FLY);
 
-	SetModel("models/weapons/w_missile.mdl");
+	//SetModel("models/weapons/w_missile.mdl");
 	UTIL_SetSize(this, vec3_origin, vec3_origin);
 
 	EmitSound("Missile.Ignite");
@@ -346,7 +404,7 @@ void CMissile::DoExplosion(void)
 {
 	// Explode
 	if (GetOwnerEntity() && GetOwnerEntity()->IsNPC())
-		ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), GetDamage(), CMissile::EXPLOSION_RADIUS/2, SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS | SF_ENVEXPLOSION_NOSMOKE, 0.0f, this,-1,0, GetOwnerEntity()->Classify());
+		ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), GetDamage(), CMissile::EXPLOSION_RADIUS*0.4, SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS | SF_ENVEXPLOSION_NOSMOKE, 0.0f, this,-1,0, GetOwnerEntity()->Classify());
 	else
 	{
 		ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), GetDamage(), CMissile::EXPLOSION_RADIUS, SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS | SF_ENVEXPLOSION_NOSMOKE, 0.0f,GetOwnerEntity());
@@ -360,7 +418,8 @@ void CMissile::DoExplosion(void)
 			DevMsg("player found, rocketjumping\n");
 			Vector vecDir = vecToPlayer.Normalized();
 			float ratio = dist / 128.0f;
-			pPlayer->VelocityPunch(vecDir * (300/ratio));
+			float force = MIN(300.0f / ratio, 950.0f);
+			pPlayer->VelocityPunch(vecDir * force);
 		}
 	}
 }
@@ -392,8 +451,19 @@ void CMissile::Explode(void)
 		m_hRocketTrail->SetLifetime(0.1f);
 		m_hRocketTrail = NULL;
 	}
+
+	if (m_hMissileTrail)
+	{
+		m_hMissileTrail->TimeOut();
+		m_hMissileTrail = NULL;
+	}
 	SetTouch(NULL);
 	StopSound("Missile.Ignite");
+
+	if (m_vMissileList.HasElement(this))
+	{
+		m_vMissileList.FindAndRemove(this);
+	}
 	UTIL_Remove(this);
 }
 
@@ -404,6 +474,11 @@ void CMissile::Explode(void)
 void CMissile::MissileTouch(CBaseEntity *pOther)
 {
 	Assert(pOther);
+
+	if (!pOther)
+		return;
+
+	DevMsg("Missile hit entity: %s\n", pOther->m_iClassname);
 
 	if (pOther->ClassMatches("hlr_launchpad"))
 	{
@@ -426,15 +501,30 @@ void CMissile::MissileTouch(CBaseEntity *pOther)
 //-----------------------------------------------------------------------------
 void CMissile::CreateSmokeTrail(void)
 {
-	if (m_hRocketTrail)
-		return;
+	/*if (m_hRocketTrail)
+		return;*/
+
+
+	CMissileTrail* pTrail = (CMissileTrail *)CreateEntityByName("missile_trail");
+	m_hMissileTrail = pTrail;
+
+	if (m_hMissileTrail)
+	{
+		Vector vecattachment;
+		QAngle angattachment;
+		GetAttachment(LookupAttachment("booster"), vecattachment, angattachment);
+		UTIL_SetOrigin(m_hMissileTrail, vecattachment);
+		m_hMissileTrail->Spawn();
+		m_hMissileTrail->FollowEntity(this);
+	}
+
 
 	// Smoke trail.
 	if ((m_hRocketTrail = RocketTrail::CreateRocketTrail()) != NULL)
 	{
 		m_hRocketTrail->m_Opacity = 0.2f;
-		m_hRocketTrail->m_SpawnRate = 100;
-		m_hRocketTrail->m_ParticleLifetime = 0.3f;
+		m_hRocketTrail->m_SpawnRate = 1;
+		m_hRocketTrail->m_ParticleLifetime = 0.0f;
 		m_hRocketTrail->m_StartColor.Init(0.65f, 0.65f, 0.65f);
 		m_hRocketTrail->m_EndColor.Init(0.0, 0.0, 0.0);
 		m_hRocketTrail->m_StartSize = 8;
@@ -444,8 +534,11 @@ void CMissile::CreateSmokeTrail(void)
 		m_hRocketTrail->m_MaxSpeed = 16;
 
 		m_hRocketTrail->SetLifetime(999);
-		m_hRocketTrail->FollowEntity(this, "0");
+		m_hRocketTrail->FollowEntity(this, "booster");
 	}
+
+
+
 }
 
 
@@ -455,7 +548,7 @@ void CMissile::CreateSmokeTrail(void)
 void CMissile::IgniteThink(void)
 {
 	SetMoveType(MOVETYPE_FLY);
-	SetModel("models/weapons/w_missile.mdl");
+	//SetModel("models/weapons/w_missile.mdl");
 	UTIL_SetSize(this, vec3_origin, vec3_origin);
 	RemoveSolidFlags(FSOLID_NOT_SOLID);
 
@@ -1653,6 +1746,7 @@ void CWeaponRPG::LaunchRocket(void)
 	m_hMissile = CMissile::Create(muzzlePoint, vecAngles, GetOwner()->edict());
 	m_hMissile->SetOwnerEntity(pPlayer);
 	m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
+	m_vMissileList.AddToTail(m_hMissile);
 	SuppressGuiding();
 	if (mat_classic_render.GetInt() == 0)
 		WeaponSound(SINGLE);
@@ -1666,10 +1760,17 @@ void CWeaponRPG::LaunchRocket(void)
 }
 void CWeaponRPG::SecondaryAttack(void)
 {
-	if (m_hMissile != NULL)
+	/*if (m_hMissile != NULL)
 	{
 		m_hMissile->Explode();
+	}*/
+
+	for (int i = 0; i < m_vMissileList.Count(); i++)
+	{
+		dynamic_cast<CMissile*>(m_vMissileList.Element(i))->Explode();
+		
 	}
+	//m_flNextSecondaryAttack = gpGlobals->curtime + 0.5f;
 }
 //-----------------------------------------------------------------------------
 // Purpose: 

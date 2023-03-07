@@ -19,6 +19,10 @@ static ConVar g_masochist_mode("g_masochist_mode", "0", FCVAR_NONE, "WARNING: De
 static ConVar g_classic_weapon_pos("g_classic_weapon_pos", "0", FCVAR_REPLICATED | FCVAR_GAMEDLL | FCVAR_CLIENTDLL, "Classic Weapon Positions");
 static ConVar g_thirdperson("g_thirdperson", "0", FCVAR_REPLICATED | FCVAR_GAMEDLL | FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
 static ConVar hud_weapon_selection_slowmo("hud_weapon_selection_slowmo", "1", FCVAR_REPLICATED | FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Slowmo during weapon selection");
+static ConVar g_draw_fury_effects("g_draw_fury_effects", "1", FCVAR_REPLICATED | FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Draws fury screen effects");
+static ConVar g_rocket_jump_mania("g_rocket_jump_mania", "0", FCVAR_REPLICATED | FCVAR_GAMEDLL | FCVAR_ARCHIVE, "No explosive self-damage. Rocket-jump away!");
+
+static ConVar mat_taa("mat_taa", "0", FCVAR_REPLICATED | FCVAR_CLIENTDLL, "");
 
 static void CC_TestKillSave(void)
 {

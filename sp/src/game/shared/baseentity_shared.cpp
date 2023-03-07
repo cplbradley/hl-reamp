@@ -169,6 +169,14 @@ const Vector &CBaseEntity::WorldSpaceCenter( ) const
 	return CollisionProp()->WorldSpaceCenter();
 }
 
+const Vector& CBaseEntity::WorldChestPosition() const
+{
+	Vector& vecChest = AllocTempVector();
+	float CenterHeight = WorldSpaceCenter().z - GetAbsOrigin().z;
+	vecChest = WorldSpaceCenter() + Vector(0, 0, CenterHeight * 0.5f);
+	return vecChest;
+}
+
 #if !defined( CLIENT_DLL )
 #define CHANGE_FLAGS(flags,newFlags) { unsigned int old = flags; flags = (newFlags); gEntList.ReportEntityFlagsChanged( this, old, flags ); }
 #else
@@ -668,6 +676,9 @@ void CBaseEntity::ImpactTrace( trace_t *pTrace, int iDamageType, const char *pCu
 	Assert( pTrace->m_pEnt );
 
 	CBaseEntity *pEntity = pTrace->m_pEnt;
+
+	if (!pEntity)
+		return;
  
 	// Build the impact data
 	CEffectData data;

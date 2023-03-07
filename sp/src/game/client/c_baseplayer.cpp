@@ -116,6 +116,9 @@ static ConVar	cl_first_person_uses_world_model ( "cl_first_person_uses_world_mod
 
 ConVar demo_fov_override( "demo_fov_override", "0", FCVAR_CLIENTDLL | FCVAR_DONTRECORD, "If nonzero, this value will be used to override FOV during demo playback." );
 
+
+ConVar cl_armor_helmet("cl_armor_helmet", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+
 // This only needs to be approximate - it just controls the distance to the pivot-point of the head ("the neck") of the in-game character, not the player's real-world neck length.
 // Ideally we would find this vector by subtracting the neutral-pose difference between the head bone (the pivot point) and the "eyes" attachment point.
 // However, some characters don't have this attachment point, and finding the neutral pose is a pain.
@@ -487,7 +490,10 @@ void C_BasePlayer::Spawn( void )
 
 	m_iFOV	= 0;	// init field of view.
 
+	armorpieces.nHelmet = cl_armor_helmet.GetInt();
+
     SetModel( "models/player/mark6.mdl" );
+	SetArmorPieces();
 
 	Precache();
 
@@ -495,9 +501,13 @@ void C_BasePlayer::Spawn( void )
 
 	SharedSpawn();
 
+	IsThirdPerson() ? engine->ClientCmd_Unrestricted("thirdperson\n") : engine->ClientCmd_Unrestricted("firstperson\n");
+
 	m_bWasFreezeFraming = false;
 
 	m_bFiredWeapon = false;
+
+	
 }
 
 
@@ -1020,7 +1030,7 @@ void C_BasePlayer::OnDataChanged( DataUpdateType_t updateType )
 		render->SetAreaState( m_Local.m_chAreaBits, m_Local.m_chAreaPortalBits );
 
 		// Check for Ammo pickups.
-		for ( int i = 0; i < MAX_AMMO_TYPES; i++ )
+		/*for (int i = 0; i < MAX_AMMO_TYPES; i++)
 		{
 			if ( GetAmmoCount(i) > m_iOldAmmo[i] )
 			{
@@ -1037,7 +1047,7 @@ void C_BasePlayer::OnDataChanged( DataUpdateType_t updateType )
 					}
 				}
 			}
-		}
+		}*/
 
 		Soundscape_Update( m_Local.m_audio );
 
@@ -1443,6 +1453,8 @@ int C_BasePlayer::DrawModel( int flags )
 	{
 		return 0;
 	}
+
+	SetArmorPieces();
 #endif
 	return BaseClass::DrawModel( flags );
 }
@@ -1783,6 +1795,84 @@ float C_BasePlayer::GetDeathCamInterpolationTime()
 	return DEATH_ANIMATION_TIME;
 }
 
+
+void C_BasePlayer::SetArmorPieces()
+{
+	int headgroup = FindBodygroupByName("helmet");
+	SetBodygroup(headgroup, cl_armor_helmet.GetInt());
+}
+void C_BasePlayer::CalcThirdPersonDeathView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
+{
+	if (m_lifeState != LIFE_ALIVE)
+	{
+		C_BasePlayer* pPlayer = C_BasePlayer::GetLocalPlayer();
+
+		if (!pPlayer)
+			return;
+
+		// Keep a copy of the actual player model.
+		pPlayer->SnatchModelInstance(this);
+
+		// Creates the ragdoll asset from the player's model.
+		m_nRenderFX = kRenderFxRagdoll;
+
+		matrix3x4_t boneDelta0[MAXSTUDIOBONES];
+		matrix3x4_t boneDelta1[MAXSTUDIOBONES];
+		matrix3x4_t currentBones[MAXSTUDIOBONES];
+		const float boneDt = 0.05f;
+
+		if (pPlayer && !pPlayer->IsDormant())
+		{
+			pPlayer->GetRagdollInitBoneArrays(boneDelta0, boneDelta1, currentBones, boneDt);
+		}
+		else
+		{
+			GetRagdollInitBoneArrays(boneDelta0, boneDelta1, currentBones, boneDt);
+		}
+
+		// Sets the ragdoll.
+		InitAsClientRagdoll(boneDelta0, boneDelta1, currentBones, boneDt);
+
+		
+
+		// Calculate origin of the ragdoll.
+		Vector origin = EyePosition();
+
+		IRagdoll* pRagdoll = GetRepresentativeRagdoll();
+
+		if (pRagdoll)
+		{
+			origin = pRagdoll->GetRagdollOrigin();
+			origin.z += VEC_DEAD_VIEWHEIGHT.z; // look over ragdoll, not through
+			
+		}
+
+		eyeOrigin = origin;
+
+		Vector vForward;
+		AngleVectors(eyeAngles, &vForward);
+
+		VectorNormalize(vForward);
+		VectorMA(origin, -96.0f, vForward, eyeOrigin);
+
+		Vector WALL_MIN(-WALL_OFFSET, -WALL_OFFSET, -WALL_OFFSET);
+		Vector WALL_MAX(WALL_OFFSET, WALL_OFFSET, WALL_OFFSET);
+
+		trace_t trace; // clip against world
+		C_BaseEntity::PushEnableAbsRecomputations(false); // HACK don't recompute positions while doing RayTrace
+		UTIL_TraceHull(origin, eyeOrigin, WALL_MIN, WALL_MAX, MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &trace);
+		C_BaseEntity::PopEnableAbsRecomputations();
+
+		if (trace.fraction < 1.0)
+		{
+			eyeOrigin = trace.endpos;
+		}
+
+		fov = GetFOV();
+
+		return;
+	}
+}
 
 void C_BasePlayer::CalcDeathCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 {

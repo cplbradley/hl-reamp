@@ -129,7 +129,16 @@ public:
 	// This does NOT override the Z range - that will be set up as normal (i.e. the values in this matrix will be ignored).
     bool        m_bViewToProjectionOverride;
     VMatrix     m_ViewToProjection;
+
 };
+
+struct ClientRender_Globals_t
+{
+	VMatrix lastViewProjection;
+	VMatrix curViewProjection;
+	VMatrix inverseViewProjection;
+};
+
 
 
 

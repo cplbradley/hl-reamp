@@ -60,6 +60,9 @@
     <Library Include="..\..\lib\public\dmxloader.lib">
       <Filter>Link Libraries</Filter>
     </Library>
+    <Library Include="..\..\fmod\lib\x64\fmod_vc.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
     <Library Include="..\..\lib\common\libcurl.lib">
       <Filter>Link Libraries</Filter>
     </Library>

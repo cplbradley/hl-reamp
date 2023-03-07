@@ -15,7 +15,7 @@
 #include <vgui/ILocalize.h>
 #include <vgui/ISurface.h>
 #include "ihudlcd.h"
-
+#include "view_scene.h"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -63,7 +63,7 @@ DECLARE_HUDELEMENT( CHudAmmo );
 //-----------------------------------------------------------------------------
 CHudAmmo::CHudAmmo( const char *pElementName ) : BaseClass(NULL, "HudAmmo"), CHudElement( pElementName )
 {
-	SetHiddenBits( HIDEHUD_HEALTH | HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION );
+	SetHiddenBits( HIDEHUD_HEALTH | HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION | HIDEHUD_CINEMATIC_CAMERA);
 
 	hudlcd->SetGlobalStat( "(ammo_primary)", "0" );
 	hudlcd->SetGlobalStat( "(ammo_secondary)", "0" );
@@ -179,7 +179,7 @@ void CHudAmmo::UpdatePlayerAmmo( C_BasePlayer *player )
 			SetShouldDisplaySecondaryValue(false);
 		}
 
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("WeaponChanged");
+		//g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("WeaponChanged");
 		m_hCurrentActiveWeapon = wpn;
 	}
 }
@@ -332,10 +332,19 @@ void CHudAmmo::Paint( void )
 {
 	BaseClass::Paint();
 
+	ConVarRef rainbow("hud_rainbow");
+	C_BasePlayer* pPlayer = C_BasePlayer::GetLocalPlayer();
+	if (!pPlayer)
+		return;
+
+
+	Color hudclr = rainbow.GetBool() ? gHUD.GetRainbowColor() : gHUD.GetDefaultColor();
+
+	hudclr[3] = 255;
 	
 	if (iconbg)
 	{
-		iconbg->DrawSelf(0, 0, GetWide(), GetTall(), bgcolor);
+		iconbg->DrawSelf(0, 0, GetWide(), GetTall(), hudclr);
 	}
 	else
 	{
@@ -352,7 +361,7 @@ void CHudAmmo::Paint( void )
 		int x = text_xpos + ( nLabelWidth - m_iconPrimaryAmmo->Width() ) / 2;
 		int y = text_ypos - ( nLabelHeight + ( m_iconPrimaryAmmo->Height() / 2 ) );*/
 		
-		m_iconPrimaryAmmo->DrawSelf(0, 0, GetWide(), GetTall(), bgcolor);
+		m_iconPrimaryAmmo->DrawSelf(0, 0, GetWide(), GetTall(), hudclr);
 	}
 #endif // HL2MP
 }

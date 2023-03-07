@@ -30,7 +30,7 @@ CHudRedSkullKey::CHudRedSkullKey(const char *pElementName) : CHudElement(pElemen
 
 	//AW Create Texture for Looking around
 
-	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT);
+	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_CINEMATIC_CAMERA);
 }
 void CHudRedSkullKey::Init(void)
 {
@@ -82,7 +82,7 @@ CHudBlueSkullKey::CHudBlueSkullKey(const char *pElementName) : CHudElement(pElem
 
 	//AW Create Texture for Looking around
 
-	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT);
+	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_CINEMATIC_CAMERA);
 }
 void CHudBlueSkullKey::Init(void)
 {
@@ -133,7 +133,7 @@ CHudPurpleSkullKey::CHudPurpleSkullKey(const char *pElementName) : CHudElement(p
 
 	//AW Create Texture for Looking around
 
-	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT);
+	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_CINEMATIC_CAMERA);
 }
 void CHudPurpleSkullKey::Init(void)
 {

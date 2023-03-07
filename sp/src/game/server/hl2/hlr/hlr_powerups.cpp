@@ -1,5 +1,6 @@
 #include "cbase.h"
 #include "npcevent.h"
+#include "hl2_player.h"
 #include "basehlcombatweapon_shared.h"
 #include "basecombatcharacter.h"
 #include "ai_basenpc.h"
@@ -32,6 +33,7 @@
 extern IGameMovement *g_pGameMovement;
 #define POWERUP_MODEL "models/items/powerup.mdl"
 #define OVERDRIVE_MODEL "models/items/powerup_od.mdl"
+#define QUADJUMP_MODEL "models/items/powerup_quadjump.mdl"
 #define FF_MODEL "models/items/powerup_fury.mdl"
 #define POWERUP_TIMER_SOUND "Powerup.Timer"
 #define POWERUP_IDLE_SOUND "Powerup.Idle"
@@ -141,6 +143,8 @@ void CHLRFreemanFury::Touch(CBaseEntity *pOther)
 		SetSolid(SOLID_NONE);
 		m_iTimeLeft = 30;
 		SetNextThink(gpGlobals->curtime + 30.0f);
+		dynamic_cast<CHL2_Player*>(pPlayer)->m_HL2Local.m_bIsFurious = true;
+	
 		m_bDrawHud = true;
 		if (m_hSpitEffect)
 			m_hSpitEffect->StopParticleSystem();
@@ -151,6 +155,7 @@ void CHLRFreemanFury::Touch(CBaseEntity *pOther)
 }
 void CHLRFreemanFury::Kill(void)
 {
+	dynamic_cast<CHL2_Player*>(UTIL_GetLocalPlayer())->m_HL2Local.m_bIsFurious = false;
 	m_bDrawHud = false;
 	RemoveDeferred();
 }
@@ -160,6 +165,7 @@ void CHLRFreemanFury::Kill(void)
 class CHLRQuadJump : public CBaseAnimating
 {
 	DECLARE_CLASS(CHLRQuadJump, CBaseAnimating);
+	DECLARE_SERVERCLASS();
 public:
 	void	Spawn(void);
 	void	Precache(void);
@@ -167,6 +173,8 @@ public:
 	void	ActivateEffects(void);
 	void	Touch(CBaseEntity *pOther);
 	void	Kill(void);
+	CNetworkVar(bool,m_bDrawHud);
+	CNetworkVar(int,m_iTimeLeft)
 
 	float	m_fTimerDelay;
 	CHandle< CParticleSystem >	m_hSpitEffect;
@@ -175,18 +183,29 @@ public:
 	DECLARE_DATADESC();
 };
 
+
+
 LINK_ENTITY_TO_CLASS(hlr_quadjump, CHLRQuadJump); //ooh i'm being assigned a class
 BEGIN_DATADESC(CHLRQuadJump) //let's store some data
 // Function Pointers
 DEFINE_FUNCTION(Touch),
 DEFINE_THINKFUNC(TimerThink),
 DEFINE_THINKFUNC(Kill),//i can touch stuff, i need outputs
+DEFINE_FIELD(m_bDrawHud,FIELD_BOOLEAN),
+DEFINE_FIELD(m_iTimeLeft,FIELD_INTEGER),
 END_DATADESC() //all done!
+
+
+IMPLEMENT_SERVERCLASS_ST(CHLRQuadJump, DT_QuadJump)
+SendPropBool(SENDINFO(m_bDrawHud)),
+SendPropInt(SENDINFO(m_iTimeLeft)),
+END_SEND_TABLE()
+
 
 void CHLRQuadJump::Spawn(void)
 {
 	Precache();
-	SetModel(POWERUP_MODEL);
+	SetModel(QUADJUMP_MODEL);
 	UTIL_SetSize(this, -Vector(64.0f, 64.0f, 64.0f), Vector(64.0f, 64.0f, 64.0f));
 	SetSolid(SOLID_BBOX);
 	AddSolidFlags(FSOLID_NOT_SOLID | FSOLID_TRIGGER);
@@ -216,7 +235,7 @@ void CHLRQuadJump::ActivateEffects(void)
 }
 void CHLRQuadJump::Precache(void)
 {
-	PrecacheModel(POWERUP_MODEL);
+	PrecacheModel(QUADJUMP_MODEL);
 	PrecacheParticleSystem("powerup_qj");
 	PrecacheScriptSound("Powerup.Pickup");
 }
@@ -234,17 +253,19 @@ void CHLRQuadJump::Touch(CBaseEntity *pOther)
 		//gm->m_iMaxJumps = 4;
 		if (m_hSpitEffect)
 			m_hSpitEffect->StopParticleSystem();
+		m_bDrawHud = true;
+		m_iTimeLeft = 30;
 		pPlayer->m_bQuadJump = true;
-		m_fTimerDelay = gpGlobals->curtime + 30.0f;
 		SetThink(&CHLRQuadJump::TimerThink);
-		SetNextThink(gpGlobals->curtime);
+		SetNextThink(gpGlobals->curtime + 1.0f);
 	}
 }
 void CHLRQuadJump::TimerThink(void)
 {
 	//CGameMovement *gm = dynamic_cast<CGameMovement *>(g_pGameMovement);
-	if (gpGlobals->curtime >= m_fTimerDelay)
+	if (m_iTimeLeft <= 0)
 	{
+		m_bDrawHud = false;
 		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 		pPlayer->m_bQuadJump = false;
 		RemoveDeferred();
@@ -252,7 +273,8 @@ void CHLRQuadJump::TimerThink(void)
 	}
 	else
 	{
-		SetNextThink(gpGlobals->curtime + 0.1f);
+		m_iTimeLeft--;
+		SetNextThink(gpGlobals->curtime + 1.0f);
 	}
 }
 void CHLRQuadJump::Kill(void)

@@ -42,6 +42,7 @@ struct commandgoal_t
 	CBaseEntity	*m_pGoalEntity;
 };
 
+
 // Time between checks to determine whether NPCs are illuminated by the flashlight
 #define FLASHLIGHT_NPC_CHECK_INTERVAL	0.4
 
@@ -218,7 +219,7 @@ public:
 
 	void				SetLocatorTargetEntity( CBaseEntity *pEntity ) { m_hLocatorTargetEntity.Set( pEntity ); }
 
-	virtual int			GiveAmmo( int nCount, int nAmmoIndex, bool bSuppressSound);
+	virtual int			GiveAmmo( int nCount, int nAmmoIndex, bool bSuppressSound, const char* pszAmmoName);
 	virtual bool		BumpWeapon( CBaseCombatWeapon *pWeapon );
 	
 	virtual bool		Weapon_CanUse( CBaseCombatWeapon *pWeapon );

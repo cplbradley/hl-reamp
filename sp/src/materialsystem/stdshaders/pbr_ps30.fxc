@@ -5,13 +5,11 @@
 //==================================================================================================
 
 // STATIC: "DETAILTEXTURE"				"0..1"
-// STATIC: "DETAIL_BLEND_MODE"          "0..9"
 // STATIC: "FLASHLIGHT"                 "0..1"
 // STATIC: "FLASHLIGHTDEPTHFILTERMODE"  "0..2"
 // STATIC: "LIGHTMAPPED"                "0..1"
 // STATIC: "EMISSIVE"                   "0..1"
 // STATIC: "PARALLAXOCCLUSION"          "0..1"
-// STATIC: "SEAMLESS"					"0..1"
 
 // DYNAMIC: "WRITEWATERFOGTODESTALPHA"  "0..1"
 // DYNAMIC: "PIXELFOGTYPE"              "0..1"
@@ -19,6 +17,7 @@
 // DYNAMIC: "WRITE_DEPTH_TO_DESTALPHA"  "0..1"
 // DYNAMIC: "FLASHLIGHTSHADOWS"         "0..1"
 // DYNAMIC: "LIGHTMAPPED_MODEL"         "0..1"
+// DYNAMIC: "MRAO_DEBUG"				"0..4"
 
 // Can't write fog to alpha if there is no fog
 // SKIP: ($PIXELFOGTYPE == 0) && ($WRITEWATERFOGTODESTALPHA != 0)
@@ -26,7 +25,6 @@
 // SKIP: ( $FLASHLIGHT == 0 ) && ( $FLASHLIGHTSHADOWS == 1 )
 // Flashlight shadow filter mode is irrelevant if there is no flashlight
 // SKIP: ( $FLASHLIGHT == 0 ) && ( $FLASHLIGHTDEPTHFILTERMODE != 0 )
-// SKIP: ($DETAILTEXTURE == 0 ) && ( $DETAIL_BLEND_MODE != 0 )
 
 
 #include "common_ps_fxc.h"
@@ -44,6 +42,7 @@ const float4 g_FogParams                        : register(PSREG_FOG_PARAMS);
 const float4 g_FlashlightAttenuationFactors     : register(PSREG_FLASHLIGHT_ATTENUATION);
 const float4 g_FlashlightPos                    : register(PSREG_FLASHLIGHT_POSITION_RIM_BOOST);
 const float4x4 g_FlashlightWorldToTexture       : register(PSREG_FLASHLIGHT_TO_WORLD_TEXTURE);
+
 PixelShaderLightInfo cLightInfo[3]              : register(PSREG_LIGHT_INFO_ARRAY);         // 2 registers each - 6 registers total (4th light spread across w's)
 
 #if PARALLAXOCCLUSION
@@ -71,11 +70,7 @@ sampler DetailSampler			: register( s12 );
 
 struct PS_INPUT
 {
-#if SEAMLESS
-	float3 SeamlessTexCoord         : TEXCOORD0;
-#else
     float2 baseTexCoord             : TEXCOORD0;
-#endif
     float4 lightAtten               : TEXCOORD1;
     float3 worldNormal              : TEXCOORD2;
     float3 worldPos                 : TEXCOORD3;
@@ -90,35 +85,38 @@ struct PS_INPUT
 float4 main(PS_INPUT i) : COLOR
 {
 	bool bDetailTexture = DETAILTEXTURE ? true : false;
-	float4 detailColor = tex2D( DetailSampler, i.detailTexCoord.xy );
-#define EnvAmbientCube cAmbientCube
+	
+	
+    #define EnvAmbientCube cAmbientCube
+	
     float3 surfNormal = normalize(i.worldNormal);
     float3 surfTangent;
     float3 surfBase; 
     float flipSign;
 	
-#if SEAMLESS
-	float3 baseTexCoord = i.SeamlessTexCoord.xyz;
-#else
 	float2 baseTexCoord = i.baseTexCoord;
-#endif
+	float2 detailTexCoord = i.detailTexCoord;
+
     float3x3 normalBasis = compute_tangent_frame(surfNormal, i.worldPos, baseTexCoord.xy, surfTangent, surfBase, flipSign);
 
 #if PARALLAXOCCLUSION
     float3 outgoingLightRay = g_EyePos.xyz - i.worldPos;
     float3 outgoingLightDirectionTS = worldToRelative( outgoingLightRay, surfTangent, surfBase, surfNormal);
     float2 correctedTexCoord = parallaxCorrect(baseTexCoord.xy, outgoingLightDirectionTS, NormalTextureSampler, PARALLAX_DEPTH, PARALLAX_CENTER);
+	float2 correctedDetailTexCoord = parallaxCorrect(detailTexCoord.xy, outgoingLightDirectionTS, NormalTextureSampler, PARALLAX_DEPTH, PARALLAX_CENTER);
 #else
 	float2 correctedTexCoord = baseTexCoord.xy;
+	float2 correctedDetailTexCoord = detailTexCoord.xy;
 #endif
 
     float3 textureNormal = normalize((tex2D( NormalTextureSampler,  correctedTexCoord.xy).xyz - float3(0.5, 0.5, 0.5)) * 2);
     float3 normal = normalize(mul(textureNormal, normalBasis)); // World Normal
+	float4 detailColor = tex2D( DetailSampler, correctedDetailTexCoord.xy );
+	float4 basetexture = tex2D(BaseTextureSampler, correctedTexCoord.xy);
 #if DETAILTEXTURE
-    float4 basetexture = tex2D(BaseTextureSampler, correctedTexCoord.xy);
-	float4 albedo = TextureCombine( basetexture, detailColor, DETAIL_BLEND_MODE, g_BlendFactor.x );
+	float4 albedo = TextureCombine( basetexture, detailColor, 0, g_BlendFactor.x );
 #else
-	float4 albedo = tex2D(BaseTextureSampler, correctedTexCoord.xy);
+	float4 albedo = basetexture;
 #endif
 
 
@@ -152,7 +150,10 @@ float4 main(PS_INPUT i) : COLOR
         float3 diffuseIrradiance = ambientLookup(normal, EnvAmbientCube, textureNormal, i.lightmapTexCoord1And2, i.lightmapTexCoord3, LightmapSampler, g_DiffuseModulation);
 #endif
         // return float4(diffuseIrradiance, 1); // testing diffuse irraciance
-        float3 ambientLightingFresnelTerm = fresnelSchlick(fresnelReflectance, lightDirectionAngle); // F
+		//float3 ambientLightingFresnelTerm = fresnelSchlick(fresnelReflectance, lightDirectionAngle);
+
+        float3 ambientLightingFresnelTerm = lerp(fresnelSchlickRoughness(fresnelReflectance, lightDirectionAngle, roughness),fresnelSchlick(fresnelReflectance, lightDirectionAngle), 0.5f); // F
+
 #if SPECULAR
         float3 diffuseContributionFactor = 1 - ambientLightingFresnelTerm; // kd
 #else
@@ -240,5 +241,20 @@ float4 main(PS_INPUT i) : COLOR
 #endif
 
     alpha *= g_DiffuseModulation.a;
-    return FinalOutput(float4(combinedLighting, alpha), fogFactor, PIXELFOGTYPE, TONEMAP_SCALE_LINEAR, bWriteDepthToAlpha, i.projPos.z);
+	
+	float4 finalColor = float4(combinedLighting, alpha);
+	
+#if MRAO_DEBUG == 1
+	finalColor = mrao.rgba;
+#endif
+#if MRAO_DEBUG == 2
+	finalColor = mrao.rrra;
+#endif
+#if MRAO_DEBUG == 3
+	finalColor = mrao.ggga;
+#endif
+#if MRAO_DEBUG == 4
+	finalColor = mrao.bbba;
+#endif
+    return FinalOutput(finalColor, fogFactor, PIXELFOGTYPE, TONEMAP_SCALE_LINEAR, bWriteDepthToAlpha, i.projPos.z);
 }

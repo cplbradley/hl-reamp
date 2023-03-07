@@ -10,36 +10,18 @@
 
 class pbr_vs30_Static_Index
 {
-	unsigned int m_nSEAMLESS : 2;
-#ifdef _DEBUG
-	bool m_bSEAMLESS : 1;
-#endif	// _DEBUG
 public:
-	void SetSEAMLESS( int i )
-	{
-		Assert( i >= 0 && i <= 1 );
-		m_nSEAMLESS = i;
-#ifdef _DEBUG
-		m_bSEAMLESS = true;
-#endif	// _DEBUG
-	}
-
 	pbr_vs30_Static_Index( IShaderShadow* pShaderShadow, IMaterialVar** params )
 	{
-		m_nSEAMLESS = 0;
-#ifdef _DEBUG
-		m_bSEAMLESS = false;
-#endif	// _DEBUG
 	}
 
 	int GetIndex() const
 	{
-		Assert( m_bSEAMLESS );
-		return ( 80 * m_nSEAMLESS ) + 0;
+		return 0;
 	}
 };
 
-#define shaderStaticTest_pbr_vs30 vsh_forgot_to_set_static_SEAMLESS
+#define shaderStaticTest_pbr_vs30 1
 
 
 class pbr_vs30_Dynamic_Index

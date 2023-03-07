@@ -43,6 +43,7 @@ public:
 	bool	m_bAutoAimTarget;
 	bool	m_bInvertedScreen;
 	bool	m_bMasochistMode;
+	bool	m_bIsFurious;
 #ifdef HL2_EPISODIC
 	float	m_flFlashBattery;
 	Vector	m_vecLocatorOrigin;

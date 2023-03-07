@@ -2190,19 +2190,23 @@ bool CHL2_Player::ApplyBattery( float powerMultiplier )
 		int pct;
 		char szcharge[64];
 
-		IncrementArmorValue( sk_battery.GetFloat() * powerMultiplier, MAX_NORMAL_BATTERY );
+		
 
 		CPASAttenuationFilter filter( this, "ItemBattery.Touch" );
 		EmitSound( filter, entindex(), "ItemBattery.Touch" );
+
+		int imax = (int)MAX_NORMAL_BATTERY;
+		int iAdd = MIN((int)sk_battery.GetFloat() * powerMultiplier, imax - ArmorValue());
 
 		CSingleUserRecipientFilter user( this );
 		user.MakeReliable();
 
 		UserMessageBegin( user, "ItemPickup" );
-			WRITE_STRING( "item_battery" );
+			WRITE_STRING( "Armor" );
+			WRITE_SHORT(iAdd);
 		MessageEnd();
 
-		
+		IncrementArmorValue(sk_battery.GetFloat() * powerMultiplier, MAX_NORMAL_BATTERY);
 		// Suit reports new power level
 		// For some reason this wasn't working in release build -- round it.
 		pct = (int)( (float)(ArmorValue() * 100.0) * (1.0/MAX_NORMAL_BATTERY) + 0.5);
@@ -2226,18 +2230,26 @@ bool CHL2_Player::ApplyArmor(float powerValue)
 		int pct;
 		char szcharge[64];
 
-		IncrementArmorValue(powerValue, MAX_NORMAL_BATTERY);
+		
 
 		CPASAttenuationFilter filter(this, "ItemBattery.Touch");
 		EmitSound(filter, entindex(), "ItemBattery.Touch");
+
+
+		int imax = (int)MAX_NORMAL_BATTERY;
+		int iAdd = MIN((int)powerValue, imax - ArmorValue());
+
 
 		CSingleUserRecipientFilter user(this);
 		user.MakeReliable();
 
 		UserMessageBegin(user, "ItemPickup");
-		WRITE_STRING("item_battery");
+		WRITE_STRING("Armor");
+		WRITE_SHORT(iAdd);
 		MessageEnd();
 
+
+		IncrementArmorValue(powerValue, MAX_NORMAL_BATTERY);
 
 		// Suit reports new power level
 		// For some reason this wasn't working in release build -- round it.
@@ -2835,7 +2847,7 @@ bool CHL2_Player::ShouldKeepLockedAutoaimTarget( EHANDLE hLockedTarget )
 //			bSuppressSound - 
 // Output : int
 //-----------------------------------------------------------------------------
-int CHL2_Player::GiveAmmo( int nCount, int nAmmoIndex, bool bSuppressSound)
+int CHL2_Player::GiveAmmo( int nCount, int nAmmoIndex, bool bSuppressSound, const char* pszAmmoName)
 {
 	// Don't try to give the player invalid ammo indices.
 	if (nAmmoIndex < 0)
@@ -2849,15 +2861,14 @@ int CHL2_Player::GiveAmmo( int nCount, int nAmmoIndex, bool bSuppressSound)
 
 	int nAdd = BaseClass::GiveAmmo(nCount, nAmmoIndex, bSuppressSound);
 
-	if ( nCount > 0 && nAdd == 0 )
-	{
-		// we've been denied the pickup, display a hud icon to show that
-		CSingleUserRecipientFilter user( this );
-		user.MakeReliable();
-		UserMessageBegin( user, "AmmoDenied" );
-			WRITE_SHORT( nAmmoIndex );
-		MessageEnd();
-	}
+	// we've been denied the pickup, display a hud icon to show that
+	CSingleUserRecipientFilter user( this );
+	user.MakeReliable();
+	UserMessageBegin( user, "ItemPickup" );
+			WRITE_STRING(pszAmmoName);
+			WRITE_SHORT( nCount );
+	MessageEnd();
+
 
 	//
 	// If I was dry on ammo for my best weapon and justed picked up ammo for it,

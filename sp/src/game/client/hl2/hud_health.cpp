@@ -36,6 +36,9 @@ using namespace vgui;
 
 #define INIT_HEALTH -1
 
+
+ConVar hud_override_healtharmor_color("hud_override_healtharmor_color", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+
 //-----------------------------------------------------------------------------
 // Purpose: Health panel
 //-----------------------------------------------------------------------------
@@ -54,6 +57,8 @@ public:
 			void MsgFunc_SuitPickup(bf_read &msg);
 	virtual void PaintValue(vgui::HFont font, int xpos, int ypos, int value, Color &color);
 
+
+	void GetIcons();
 	virtual void Paint(void);
 
 private:
@@ -62,20 +67,13 @@ private:
 	int		m_iArmor;
 	int		iNewArmor;
 	CHudTexture *m_iconHealth;
-	CHudTexture *m_healthbar;
-	CHudTexture *blank;
 	CHudTexture *m_iconArmor;
-	CHudTexture *m_backgroundframe;
 	CHudTexture *m_background;
-	CHudTexture *m_skull;
 	int		m_bitsDamage;
 	Color healthbarcolor;
 	Color armorcolor;
 	Color bgcolor;
 	CHudNumericDisplay *nHealth;
-
-	int m_iRes;
-	char* tex[4];
 
 
 	CPanelAnimationVar(vgui::HFont, m_hNumberFont, "NumberFont", "HealthBarValues");
@@ -106,13 +104,7 @@ CHudHealth::CHudHealth( const char *pElementName ) : CHudElement( pElementName )
 {
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent(pParent);
-	SetHiddenBits( HIDEHUD_HEALTH | HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT );
-
-	tex[0] = "hud_healthbar_background4x3";
-	tex[1] = "hud_healthbar_background16x9";
-	tex[2] = "hud_healthbar_background16x10";
-	tex[3] = "hud_healthbar_background5x4";
-	
+	SetHiddenBits( HIDEHUD_HEALTH | HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_CINEMATIC_CAMERA);
 }
 
 //-----------------------------------------------------------------------------
@@ -136,12 +128,8 @@ void CHudHealth::Reset()
 	m_bitsDamage	= 0;
 	m_iArmor = INIT_HEALTH;;
 
-	m_iconHealth = gHUD.GetIcon("hud_healthbar_health_icon");
-	m_healthbar = gHUD.GetIcon("hud_healthbar");
-	m_iconArmor = gHUD.GetIcon("hud_healthbar_armor_icon");
-	blank = gHUD.GetIcon("empty");
 	SetPaintBackgroundEnabled(false);
-
+	GetIcons();
 	/*wchar_t *tempString = g_pVGuiLocalize->Find("#Valve_Hud_HEALTH");
 
 	if (tempString)
@@ -162,18 +150,29 @@ void CHudHealth::VidInit()
 {
 	Reset();
 	SetPaintEnabled(true);
-	m_iconHealth = gHUD.GetIcon("hud_health_icon");
-	m_healthbar = gHUD.GetIcon("hud_healthbar");
-	m_background = gHUD.GetIcon("hud_health_background");
+
 	SetVisible(true);
+	
 
 }
 
+
+void CHudHealth::GetIcons()
+{
+	ConVarRef rainbow("hud_rainbow");
+	m_iconArmor = gHUD.GetIcon("hud_healthbar_armor_icon");
+	m_iconHealth = gHUD.GetIcon("hud_healthbar_health_icon");
+	m_background = gHUD.GetIcon("hud_health_background");
+
+	if (rainbow.GetBool() || hud_override_healtharmor_color.GetBool())
+		m_background = gHUD.GetIcon("hud_health_background_mono");
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CHudHealth::OnThink()
 {
+	GetIcons();
 	int newHealth = 0;
 	C_BasePlayer *local = C_BasePlayer::GetLocalPlayer();
 	if ( local )
@@ -182,7 +181,27 @@ void CHudHealth::OnThink()
 		newHealth = MAX(local->GetHealth(), 0);
 	}
 
+
+	ConVarRef rainbow("hud_rainbow");
+	Color rainbowclr = gHUD.GetRainbowColor();
+	Color defaultcolor = gHUD.GetDefaultColor();
+	Color green = Color(120, 255, 0, 200);
+	Color blue = Color(0, 210, 255, 200);
+
+	Color armorIn, healthIn;
 	
+	if (rainbow.GetBool() || hud_override_healtharmor_color.GetBool())
+	{
+		bgcolor = rainbow.GetBool() ? rainbowclr : defaultcolor;
+		armorIn = bgcolor;
+		healthIn = bgcolor;
+	}
+	else
+	{
+		bgcolor = Color(255, 255, 255, 255);
+		armorIn = blue;
+		healthIn = green;
+	}
 	// Only update the fade if we've changed health
 /*	if ( newHealth == m_iHealth && newArmor == m_iArmor)
 	{
@@ -193,13 +212,11 @@ void CHudHealth::OnThink()
 	if (m_iHealth > 100)
 	{
 		healthbarcolor = Color(255, 220, 0, 200);
-		bgcolor = Color(255, 255, 255, 255);
 	}
 	else if ( m_iHealth >= 30 )
 	{
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("HealthIncreasedAbove20");
-		healthbarcolor = Color(120, 255, 0, 200);
-		bgcolor = Color(255, 255, 255, 255);
+		healthbarcolor = healthIn;
 	}
 	else if (m_iHealth > 0)
 	{
@@ -212,7 +229,7 @@ void CHudHealth::OnThink()
 	if (m_iArmor > 100)
 		armorcolor = Color(255, 220, 0, 200);
 	else if (m_iHealth >= 30)
-		armorcolor = Color(0, 210, 255, 200);
+		armorcolor = armorIn;
 	else
 		armorcolor = healthbarcolor;
 }
@@ -252,55 +269,18 @@ void CHudHealth::Paint(void)
 {
 	BaseClass::Paint();
 
-	if (m_healthbar)
-	{
-		float perc = (float)m_iHealth / 100;
-		float armorperc = (float)m_iArmor / 100;
-		float offs = ((m_IconY + (m_IconY / 2)) + (m_barheight / 2));
-		//gHUD.DrawIconProgressBarExt(m_IconX + 32, m_IconY, 96,32, m_healthbar, blank, 1.0f - perc, healthbarcolor, CHud::HUDPB_HORIZONTAL);
+	float perc = (float)m_iHealth / 100;
+	float armorperc = (float)m_iArmor / 100;
+	float offs = ((m_IconY + (m_IconY / 2)) + (m_barheight / 2));
 
-		//int xres = XRES(128);
-		//int yres = YRES(64);
-
-		/*vgui::Panel *pParent = g_pClientMode->GetViewport();
-		int screenWide = pParent->GetWide();
-		int screenTall = pParent->GetTall();
-
-		float ratio = ((float)screenWide) / ((float)screenTall);
-		if (ratio == 1.25)
-			m_iRes = 3;
-		else if (ratio >= 1.5 &&  ratio <= 1.7)
-		{
-			m_iRes = 2;
-		}
-		else if (ratio >= 1.75 && ratio <= 1.8)
-		{
-			m_iRes = 1;
-		}
-		else
-		{
-			m_iRes = 0;
-		}
-
-		m_backgroundframe = gHUD.GetIcon(tex[m_iRes]);*/
-
-		//m_backgroundframe->DrawSelf(0, 0, xres, yres, bgcolor);
-		m_background->DrawSelf(0, 0, GetWide(), GetTall(), bgcolor);
-		gHUD.DrawProgressBar(m_bar1xpos, offs, m_barwidth, m_barheight, perc, healthbarcolor, CHud::HUDPB_HORIZONTAL_INV);
-		PaintValue(m_hNumberFont, m_textX, m_textY, m_iHealth, healthbarcolor);
-		gHUD.DrawProgressBar(m_bar2xpos, offs + (m_Icon2Y - (m_barheight/4)), m_barwidth, m_barheight, armorperc, armorcolor, CHud::HUDPB_HORIZONTAL_INV);
-		PaintValue(m_hNumberFont, m_textX, offs + (m_Icon2Y - (m_barheight / 4)), m_iArmor,armorcolor);
-		m_iconHealth->DrawSelf(m_IconX, m_IconY, healthbarcolor);
-		m_iconArmor->DrawSelf(m_Icon2X, m_Icon2Y, armorcolor);
-
-
+	m_background->DrawSelf(0, 0, GetWide(), GetTall(), bgcolor);
+	gHUD.DrawProgressBar(m_bar1xpos, offs, m_barwidth, m_barheight, perc, healthbarcolor, CHud::HUDPB_HORIZONTAL_INV);
+	PaintValue(m_hNumberFont, m_textX, m_textY, m_iHealth, healthbarcolor);
+	gHUD.DrawProgressBar(m_bar2xpos, offs + (m_Icon2Y - (m_barheight/4)), m_barwidth, m_barheight, armorperc, armorcolor, CHud::HUDPB_HORIZONTAL_INV);
+	PaintValue(m_hNumberFont, m_textX, offs + (m_Icon2Y - (m_barheight / 4)), m_iArmor,armorcolor);
+	m_iconHealth->DrawSelf(m_IconX, m_IconY, healthbarcolor);
+	m_iconArmor->DrawSelf(m_Icon2X, m_Icon2Y, armorcolor);
 		
-		//m_backgroundframe->DrawSelfCropped(0, 0, 0, 0, m_backgroundframe->Width(), m_backgroundframe->Height(), Color(255, 0, 0, 200));
-		
-	}
-	else
-		DevMsg("healthbar doesn't exist what the shit is happening\n");
-	
 }
 
 void CHudHealth::PaintValue(vgui::HFont font, int xpos, int ypos, int value, Color &color)

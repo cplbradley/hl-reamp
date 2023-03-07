@@ -4,6 +4,7 @@
 
 
 #include "fmod.hpp"
+#include "cbase.h"
 
 class CFMODSystem
 {
@@ -13,6 +14,7 @@ public:
 
 	void InitFMOD();
 	void ExitFMOD();
+	int DynamicLoop();
 
 };
 

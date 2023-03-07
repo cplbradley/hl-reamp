@@ -23,7 +23,7 @@ CHudRedKey::CHudRedKey(const char *pElementName) : CHudElement(pElementName), Ba
 	SetAlpha(255);
 
 
-	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT);
+	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_CINEMATIC_CAMERA);
 }
 void CHudRedKey::VidInit(void)
 {

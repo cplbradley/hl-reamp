@@ -2995,6 +2995,44 @@ int CBaseCombatCharacter::GiveAmmo(int iCount, int iAmmoIndex, bool bSuppressSou
 	return iAdd;
 }
 
+int CBaseCombatCharacter::GiveAmmo(int iCount, int iAmmoIndex, bool bSuppressSound, const char* pszAmmoName)
+{
+	if (iCount <= 0)
+		return 0;
+
+	if (!g_pGameRules->CanHaveAmmo(this, iAmmoIndex))
+	{
+		// game rules say I can't have any more of this ammo type.
+		return 0;
+	}
+
+	if (iAmmoIndex < 0 || iAmmoIndex >= MAX_AMMO_SLOTS)
+		return 0;
+
+	int iMax = GetAmmoDef()->MaxCarry(iAmmoIndex);
+	int iAdd = MIN(iCount, iMax - m_iAmmo[iAmmoIndex]);
+	if (iAdd < 1)
+		return 0;
+
+	// Ammo pickup sound
+	if (!bSuppressSound)
+	{
+		EmitSound("BaseCombatCharacter.AmmoPickup");
+	}
+
+	if (IsPlayer())
+	{
+		CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+		user.MakeReliable();
+		UserMessageBegin(user, "ItemPickup");
+		WRITE_STRING(pszAmmoName);
+		WRITE_SHORT(iAdd);
+		MessageEnd();
+	}
+	m_iAmmo.Set(iAmmoIndex, m_iAmmo[iAmmoIndex] + iAdd);
+
+	return iAdd;
+}
 //-----------------------------------------------------------------------------
 // Purpose: Give the player some ammo.
 //-----------------------------------------------------------------------------

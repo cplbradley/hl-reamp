@@ -356,6 +356,11 @@ static ConVar *g_pcv_ThreadMode = NULL;
 
 void ApplyShaderConstantHack()
 {
+	//CommandLine()->AppendParm("-forceallmips", "1");
+
+
+	CommandLine()->AppendParm("+mat_hdr_level", "2");
+
 	CMaterialConfigWrapper Wrapper;
 
 	Wrapper.PrintPixelConstants();
@@ -2027,6 +2032,10 @@ void CHLClient::PrecacheMaterial( const char *pMaterialName )
 	{
 		*pFound = 0;
 	}
+	//int wide, tall;
+	//engine->GetScreenSize(wide, tall);
+	//materials->CreateNamedRenderTargetTexture("_rt_PrevFrameFB", wide, tall, RT_SIZE_FULL_FRAME_BUFFER, IMAGE_FORMAT_BGRA8888);
+
 		
 	IMaterial *pMaterial = materials->FindMaterial( pTempBuf, TEXTURE_GROUP_PRECACHED );
 	if ( !IsErrorMaterial( pMaterial ) )

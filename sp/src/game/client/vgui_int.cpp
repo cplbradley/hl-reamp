@@ -11,6 +11,7 @@
 #include "vguicenterprint.h"
 #include "iloadingdisc.h"
 #include "ifpspanel.h"
+#include "ism30panel.h"
 #include "imessagechars.h"
 #include "inetgraphpanel.h"
 #include "idebugoverlaypanel.h"
@@ -129,6 +130,7 @@ static void VGui_VideoMode_AdjustForModeChange( void )
 	fps->Destroy();
 	messagechars->Destroy();
 	loadingdisc->Destroy();
+	sm30p->Destroy();
 
 	// Recreate our panels.
 	VPANEL gameToolParent = enginevgui->GetPanel( PANEL_CLIENTDLL_TOOLS );
@@ -142,6 +144,7 @@ static void VGui_VideoMode_AdjustForModeChange( void )
 
 	// Debugging or related tool
 	fps->Create( toolParent );
+	sm30p->Create(enginevgui->GetPanel(PANEL_ROOT));
 #if defined( TRACK_BLOCKING_IO )
 	iopanel->Create( gameDLLPanel );
 #endif
@@ -207,6 +210,8 @@ void VGui_CreateGlobalPanels( void )
 
 	// Debugging or related tool
 	fps->Create( toolParent );
+	sm30p->Create(enginevgui->GetPanel(PANEL_ROOT));
+
 #if defined( TRACK_BLOCKING_IO )
 	iopanel->Create( gameDLLPanel );
 #endif
@@ -236,6 +241,7 @@ void VGui_Shutdown()
 	iopanel->Destroy();
 #endif
 	fps->Destroy();
+	sm30p->Destroy();
 
 	messagechars->Destroy();
 	loadingdisc->Destroy();

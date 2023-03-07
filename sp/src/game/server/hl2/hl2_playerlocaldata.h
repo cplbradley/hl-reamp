@@ -42,6 +42,7 @@ public:
 	CNetworkVar( bool,	m_bAutoAimTarget );
 	CNetworkVar(bool, m_bInvertedScreen);
 	CNetworkVar(bool, m_bMasochistMode);
+	CNetworkVar(bool, m_bIsFurious);
 #ifdef HL2_EPISODIC
 	CNetworkVar( float, m_flFlashBattery );
 	CNetworkVar( Vector, m_vecLocatorOrigin );

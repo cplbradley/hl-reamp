@@ -458,6 +458,12 @@ Vector CNPC_VortBoss::GetRocketTrajectory(void)
 
 	Vector vecShootDir = VecCheckThrow(this, vecCannonPos, vecTarget, adjustedspd, 1.5f); //get our launch trajectory (the calculated arc to fire the rocket at to reach the designated target)
 
+	if (vecShootDir == vec3_origin)
+	{
+		DevWarning("TRAJECTORY CALCULATION FAILED, ATTEMPING ADJUSTMENTS\n");
+		vecShootDir = VecCheckThrow(this, vecCannonPos, GetEnemy()->WorldSpaceCenter(), adjustedspd, 1.5f);
+	}
+
 	return vecShootDir; //return that vector
 }
 void CNPC_VortBoss::FirePrecalculatedRocket(void)
@@ -487,6 +493,12 @@ void CNPC_VortBoss::FirePrecalculatedRocket(void)
 	GetAttachment(nAttachment, vecCannonPos); //get the world position of the attachment
 
 	Vector vecShootDir = GetRocketTrajectory(); //get the calculated rocket trajectory
+
+	if (vecShootDir == vec3_origin)
+	{
+		DevWarning("***ADJUSTMENTS FAILED, CANCELLING ROCKET***\n");
+		return;
+	}
 
 	CMissile *pMissile = (CMissile*)CreateEntityByName("rpg_missile"); //create a rocket
 	UTIL_SetOrigin(pMissile, vecCannonPos); //set it's position to the cannon attachment

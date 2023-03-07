@@ -1152,8 +1152,12 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 	if ((info.GetDamageType() & DMG_BLAST) && (info.GetInflictor()->IsPlayer()))
 	{
-		float scale = g_pGameRules->AdjustProjectileSpeed(0.5f);
-		info.ScaleDamage(scale);
+
+		float scale = g_pGameRules->AdjustProjectileSpeed(0.4f);
+		float expscale;
+		ConVarRef mania("g_rocket_jump_mania");
+		mania.GetBool() ? expscale = 0.0f : expscale = scale;
+		info.ScaleDamage(expscale);
 	}
 	IServerVehicle *pVehicle = GetVehicle();
 	if ( pVehicle )
@@ -4653,13 +4657,13 @@ void CBasePlayer::PostThink()
 		{
 			if (m_bInCinematicCamera)
 			{
-				if (!(m_Local.m_iHideHUD & HIDEHUD_ALL))
-					m_Local.m_iHideHUD |= HIDEHUD_ALL;
+				if (!(m_Local.m_iHideHUD & HIDEHUD_CINEMATIC_CAMERA))
+					m_Local.m_iHideHUD |= HIDEHUD_CINEMATIC_CAMERA;
 			}
 			else
 			{
-				if (m_Local.m_iHideHUD & HIDEHUD_ALL)
-					m_Local.m_iHideHUD &= ~HIDEHUD_ALL;
+				if (m_Local.m_iHideHUD & HIDEHUD_CINEMATIC_CAMERA)
+					m_Local.m_iHideHUD &= ~HIDEHUD_CINEMATIC_CAMERA;
 			}
 
 			// set correct collision bounds (may have changed in player movement code)

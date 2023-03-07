@@ -25,6 +25,7 @@
 	#include "sourcevr/isourcevirtualreality.h"
 	#include "c_basehlplayer.h"
 	#define CHL2_Player C_BaseHLPlayer
+	#include "input.h"
 
 #else
 	#include "hl2_player.h"
@@ -1558,10 +1559,18 @@ void CBasePlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, 
 		{
 			CalcObserverView( eyeOrigin, eyeAngles, fov );
 		}
+#ifdef CLIENT_DLL
+		else if (!this->IsAlive())
+		{
+			engine->ClientCmd_Unrestricted("thirdperson\n");
+			CalcThirdPersonDeathView(eyeOrigin, eyeAngles, fov);
+		}
+#endif
 		else
 		{
 			CalcPlayerView( eyeOrigin, eyeAngles, fov );
 		}
+
 	}
 	else
 	{
@@ -1860,6 +1869,7 @@ void CBasePlayer::SharedSpawn()
 #ifdef CLIENT_DLL
 	if(IsLocalPlayer() &&haptics)
 		haptics->LocalPlayerReset();
+
 #endif
 }
 

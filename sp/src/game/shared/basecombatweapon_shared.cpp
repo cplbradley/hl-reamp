@@ -344,6 +344,15 @@ const char *CBaseCombatWeapon::GetPrintName(void) const
 	return GetWpnData().szPrintName;
 }
 
+const char* CBaseCombatWeapon::GetWheelName(void) const
+{
+	return GetWpnData().szWheelName;
+}
+
+const char* CBaseCombatWeapon::GetWheelSubName(void) const
+{
+	return GetWpnData().szWheelSubName;
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -446,6 +455,10 @@ int CBaseCombatWeapon::GetSlot(void) const
 	return GetWpnData().iSlot;
 }
 
+int CBaseCombatWeapon::GetWheelPosition(void) const
+{
+	return GetWpnData().iWeaponWheelPos;
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------

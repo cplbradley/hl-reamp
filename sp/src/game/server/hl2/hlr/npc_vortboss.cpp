@@ -45,13 +45,13 @@ enum SquadSlot_t
 {
 	SQUAD_SLOT_VORTBOSS_SPINBEAM = LAST_SHARED_SQUADSLOT,
 };
-enum
+enum //Body states
 {
 	BODYSTATE_NORMAL,
 	BODYSTATE_DAMAGED,
 	BODYSTATE_BADLYDAMAGED
 };
-enum
+enum //Schedules
 {
 	SCHED_VORTBOSS_CANNON = LAST_SHARED_SCHEDULE,
 	SCHED_VORTBOSS_EYEBLAST,
@@ -66,10 +66,7 @@ enum
 	SCHED_VORTBOSS_ESTABLISH_LOF
 };
 
-//=========================================================
-// Custom tasks
-//=========================================================
-enum
+enum //Tasks
 {
 	TASK_VORTBOSS_CANNON = LAST_SHARED_TASK,
 	TASK_VORTBOSS_EYEBLAST,
@@ -81,11 +78,7 @@ enum
 	TASK_VORTBOSS_BARAGE
 };
 
-
-//=========================================================
-// Custom Conditions
-//=========================================================
-enum
+enum //Conditions
 {
 	COND_CAN_FIRE_CANNON = LAST_SHARED_CONDITION,
 	COND_CAN_DO_EYEBLAST,
@@ -440,7 +433,7 @@ Vector CNPC_VortBoss::GetPredictedRocketPosition(void)
 	Vector enemyDelta = GetEnemy()->WorldSpaceCenter() - WorldSpaceCenter(); //get the vector from me to my target
 	float flDist = enemyDelta.Length(); //get the length of the vector in float form
 	float basespd = sk_vortboss_rocket_speed.GetFloat(); //get our base rocket speed
-	float adjustedspd = g_pGameRules->AdjustProjectileSpeed(basespd); //scale it based on difficulty 
+	float adjustedspd = g_pGameRules->SkillAdjustValue(basespd); //scale it based on difficulty 
 	float timeDelta = flDist / adjustedspd; //get the amount of time it would take to reach our target
 	UTIL_PredictedPosition(GetEnemy(), timeDelta, &vecPredPos); //use the above to estimate where our target will be after the given amount of time
 
@@ -454,7 +447,7 @@ Vector CNPC_VortBoss::GetRocketTrajectory(void)
 	Vector vecTarget = GetPredictedRocketPosition(); //get our predicted player position estimate
 	
 	float basespd = sk_vortboss_rocket_speed.GetFloat(); //get the base rocket speed
-	float adjustedspd = g_pGameRules->AdjustProjectileSpeed(basespd); //get the scaled rocket speed
+	float adjustedspd = g_pGameRules->SkillAdjustValue(basespd); //get the scaled rocket speed
 
 	Vector vecShootDir = VecCheckThrow(this, vecCannonPos, vecTarget, adjustedspd, 1.5f); //get our launch trajectory (the calculated arc to fire the rocket at to reach the designated target)
 
@@ -479,7 +472,6 @@ void CNPC_VortBoss::FirePrecalculatedRocket(void)
 	Vector enemyDelta = GetEnemy()->WorldSpaceCenter() - WorldSpaceCenter();
 	float flDist = enemyDelta.Length();
 	float basespd = sk_vortboss_rocket_speed.GetFloat();
-	float adjustedspd = g_pGameRules->AdjustProjectileSpeed(basespd);
 	float timeDelta = flDist / adjustedspd;
 	UTIL_PredictedPosition(GetEnemy(), timeDelta, &vecPredPos);
 	
@@ -707,7 +699,7 @@ void CNPC_VortBoss::CreateTargetBeam(void) //setup the target beam
 
 	GetAttachment(VORTBOSS_EYE_ATTACHMENT, vecEyePos, angHandAng); //store the angle and eye position
 	float preAdjustedTimeDelta = 1; //preadjusted time delta
-	float postAdjustedTimeDelta = g_pGameRules->AdjustProjectileSpeed(preAdjustedTimeDelta); //adjust based on difficulty
+	float postAdjustedTimeDelta = g_pGameRules->SkillAdjustValue(preAdjustedTimeDelta); //adjust based on difficulty
 	timeDelta = 1 / postAdjustedTimeDelta; //this doesn't work, but it doesn't matter, because this is just the creation, the actual prediction happens in the update function
 
 	UTIL_PredictedPosition(GetEnemy(), timeDelta, &m_vTargetPos);
@@ -734,7 +726,7 @@ void CNPC_VortBoss::EyeBeamThink(void) //update our target beam
 
 	GetAttachment(VORTBOSS_EYE_ATTACHMENT, vecEyePos, angHandAng);
 	float preAdjustedTimeDelta = 0.25; //our pre adjusted time delta is 0.25
-	float postAdjustedTimeDelta = g_pGameRules->AdjustProjectileSpeed(preAdjustedTimeDelta); //adjust based on difficulty level
+	float postAdjustedTimeDelta = g_pGameRules->SkillAdjustValue(preAdjustedTimeDelta); //adjust based on difficulty level
 	timeDelta = 0.5 - postAdjustedTimeDelta; 
 
 	//so this happens because like i said before, our adjustment 
@@ -979,7 +971,7 @@ void CNPC_VortBoss::HandleAnimEvent(animevent_t *pEvent)
 		Vector enemyDelta = GetEnemy()->WorldSpaceCenter() - WorldSpaceCenter(); //get the vector from me to the enemy
 		float flDist = enemyDelta.Length();							//get the length of the vector
 		float fBaseSpeed = sk_vortboss_projectile_speed.GetFloat(); //get the base projectile speed
-		float fAdjustedSpeed = g_pGameRules->AdjustProjectileSpeed(fBaseSpeed); //scale the projectile speed based on difficulty
+		float fAdjustedSpeed = g_pGameRules->SkillAdjustValue(fBaseSpeed); //scale the projectile speed based on difficulty
 		float timeDelta = flDist / fAdjustedSpeed;						//calculate the time it'll take to reach the target
 
 		Vector vecTargetPos;
@@ -1125,7 +1117,6 @@ void CNPC_VortBoss::SpinAttackThink(void)
 	Vector vecAiming;
 	//float fNextShot;
 	float fBaseSpeed = sk_vortboss_projectile_speed.GetFloat();
-	float fAdjustedSpeed = g_pGameRules->AdjustProjectileSpeed(fBaseSpeed);
 	GetAttachment(nAttachment, vecHandPos, vecHandAng);
 	AngleVectors(vecHandAng, &vecAiming);
 	CHLRVortProjectile *pVort = (CHLRVortProjectile*)CreateEntityByName("hlr_vortprojectile");

@@ -1,5 +1,6 @@
 
 $modelname	"vortboss_test_weights.mdl"
+$scale 1.1
 $model ufo "new_ufo.smd"
 $model cannon "new_cannon.smd"
 $contents "solid"
@@ -110,7 +111,7 @@ $collisionjoints "vortboss_phy.smd"
 }
 
 $weightlist cannon_weight {
-	"ValveBiped.hips"	0.0
+	"ValveBiped.hips"	1.0
 	"ValveBiped.spine1"	0.4
 	"ValveBiped.spine2"	0.8
 	"ValveBiped.spine3" 1.0

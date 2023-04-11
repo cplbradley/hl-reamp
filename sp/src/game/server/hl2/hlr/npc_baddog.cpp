@@ -1331,7 +1331,7 @@ bool CNPC_BadDog::GetJumpVector(const Vector &vecStartPos, const Vector &vecTarg
 	//float speedfactor = distance / sk_fastzombie_jump_speed.GetFloat();
 	//float jumpspeed = sk_fastzombie_jump_speed.GetFloat() * speedfactor;
 	// antlion workers exist only in episodic.
-	float adjustedspd = g_pGameRules->AdjustProjectileSpeed(sk_baddog_jump_speed.GetFloat());
+	float adjustedspd = g_pGameRules->SkillAdjustValue(sk_baddog_jump_speed.GetFloat());
 	//#if HL2_EPISODIC
 	// Try the most direct route
 	Vector vecToss = CheckJumpTolerance(this, vecStartPos, vecTarget, adjustedspd, (10.0f*12.0f));
@@ -1382,7 +1382,7 @@ void CNPC_BadDog::LeapAttack(void)
 			// Otherwise he can't see us and he won't be able to dodge
 		vTarget = GetEnemy()->BodyTarget(vSpitPos, true);
 
-		float flVelocity = g_pGameRules->AdjustProjectileSpeed(sk_baddog_jump_speed.GetFloat());
+		float flVelocity = g_pGameRules->SkillAdjustValue(sk_baddog_jump_speed.GetFloat());
 		Vector vecToTarget = (vTarget - vSpitPos);
 		VectorNormalize(vecToTarget);
 		QAngle angToTarget;
@@ -1425,7 +1425,6 @@ void CNPC_BadDog::LeapAttack(void)
 
 		angToTarget[PITCH] = 0;
 		angToTarget[ROLL] = 0;
-//		float adjustedspd = g_pGameRules->AdjustProjectileSpeed(sk_baddog_jump_speed.GetFloat());
 
 		ApplyAbsVelocityImpulse(vecToss);
 		SetAbsAngles(angToTarget);

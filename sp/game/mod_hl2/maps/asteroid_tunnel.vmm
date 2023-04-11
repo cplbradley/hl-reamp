@@ -1,0 +1,14 @@
+Info
+{
+	"NextInternalID" "2"
+}
+Maps
+{
+	VMF
+	{
+		"Name" "unnamed"
+		"File" "asteroid_tunnel.vmf"
+		"InternalID" "1"
+		"TopLevel" "1"
+	}
+}

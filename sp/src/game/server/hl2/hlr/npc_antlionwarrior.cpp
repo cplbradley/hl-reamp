@@ -1467,7 +1467,7 @@ float CNPC_AntlionWarrior::MaxYawSpeed(void)
 		//FIXME: Alter by skill level
 		float yawSpeed = RemapVal(dist, 0, 512, 1.0f, 3.0f);
 		yawSpeed = clamp(yawSpeed, 1.0f, 3.0f);
-		float adjustedyaw = g_pGameRules->AdjustProjectileSpeed(yawSpeed);
+		float adjustedyaw = g_pGameRules->SkillAdjustValue(yawSpeed);
 
 		return adjustedyaw;
 	}
@@ -1959,7 +1959,7 @@ void CNPC_AntlionWarrior::GetPhysicsShoveDir(CBaseEntity *pObject, float flMass,
 bool CNPC_AntlionWarrior::GetSpitVector(const Vector &vecStartPos, const Vector &vecTarget, Vector *vecOut)
 {
 	// antlion workers exist only in episodic.
-	float adjustedspd = g_pGameRules->AdjustProjectileSpeed(sk_antlion_warrior_spit_speed.GetFloat());
+	float adjustedspd = g_pGameRules->SkillAdjustValue(sk_antlion_warrior_spit_speed.GetFloat());
 	//#if HL2_EPISODIC
 	// Try the most direct route
 	Vector vecToss = CheckThrowTolerance(this, vecStartPos, vecTarget, adjustedspd, (10.0f*12.0f));
@@ -1986,7 +1986,7 @@ bool CNPC_AntlionWarrior::GetSpitVector(const Vector &vecStartPos, const Vector 
 bool CNPC_AntlionWarrior::GetMissileVector(const Vector &vecStartPos, const Vector &vecTarget, Vector *vecOut)
 {
 	// antlion workers exist only in episodic.
-	float adjustedspd = g_pGameRules->AdjustProjectileSpeed(sk_antlion_warrior_spit_speed.GetFloat());
+	float adjustedspd = g_pGameRules->SkillAdjustValue(sk_antlion_warrior_spit_speed.GetFloat());
 	//#if HL2_EPISODIC
 	// Try the most direct route
 	Vector vecToss = CheckMissileTolerance(this, vecStartPos, vecTarget, adjustedspd, (10.0f*12.0f));

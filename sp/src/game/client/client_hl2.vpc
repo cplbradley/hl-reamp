@@ -175,6 +175,7 @@ $Project "Client (HL2)"
 			$File "hlr/vgui_sm30error.cpp"
 			$File "hlr/hud_itempickup.h"
 			$File "hlr/hud_itempickup.cpp"
+			$File "hlr/hud_weaponwheel.cpp"
 		}
 		$Folder "FMOD"
 		{

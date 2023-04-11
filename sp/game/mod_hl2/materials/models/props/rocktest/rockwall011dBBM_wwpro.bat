@@ -1,0 +1,2 @@
+cd /D "C:/Program Files/Wall Worm/Wall Worm Pro Pack/WallWorm.com/VTFLib/bin/x64"
+.\VTFCmd.exe -file "D:\Steam\steamapps\common\sourcesdk_content\sdk\source-sdk-2013\sp\game\mod_hl2\materials\models\props\rocktest\rockwall011dBBM.tga" -output "D:\Steam\steamapps\sourcemods\hlr\materials\models\props\rocktest"  -version "7.4" -format "dxt1"  -alphaformat "dxt1" -mfilter "BOX" -msharpen "NONE" -bumpscale 1.0

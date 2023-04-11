@@ -33,8 +33,10 @@ CHudDeathSkull::CHudDeathSkull(const char *pElementName) : CHudElement(pElementN
 void CHudDeathSkull::VidInit(void)
 {
 	C_BasePlayer *local = C_BasePlayer::GetLocalPlayer();
+
 	if (local)
 		m_health = local->GetHealth();
+
 	m_icon = gHUD.GetIcon("deathskull");
 
 }
@@ -43,14 +45,10 @@ void CHudDeathSkull::OnThink()
 	C_BasePlayer *local = C_BasePlayer::GetLocalPlayer();
 	if (local)
 	{
-		// Never below zero
 		m_health = local->GetHealth();
 	}
 
-	if (m_health <= 0)
-		SetVisible(true);
-	else
-		SetVisible(false);
+	(m_health <= 0) ? SetVisible(true) : SetVisible(false); 
 }
 void CHudDeathSkull::Paint()
 {

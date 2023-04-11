@@ -1688,6 +1688,9 @@ public:
 	virtual float		CoverRadius( void ) { return 1024; } // Default cover radius
 	virtual float		GetMaxTacticalLateralMovement( void ) { return MAXTACLAT_IGNORE; }
 
+
+	Vector		FindBestTeleportPosition(float flMinDistance, float flMaxDistance);
+
 protected:
 	virtual void		OnChangeHintGroup( string_t oldGroup, string_t newGroup ) {}
 

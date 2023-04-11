@@ -403,7 +403,7 @@ void CHudWeaponSelection::ActivateWeaponHighlight( C_BaseCombatWeapon *pSelected
 	if ( !pWeapon )
 		return;
 
-	// start the highlight after the scroll completes
+	// start the highlight after the scroll complete
 	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "WeaponHighlight" );
 }
 
@@ -1314,7 +1314,7 @@ int CHudWeaponSelection::GetLastPosInSlot( int iSlot ) const
 //-----------------------------------------------------------------------------
 // Purpose: returns the weapon in the specified slot
 //-----------------------------------------------------------------------------
-C_BaseCombatWeapon *CHudWeaponSelection::GetWeaponInSlot( int iSlot, int iSlotPos )
+C_BaseCombatWeapon *CHudWeaponSelection:: GetWeaponInSlot( int iSlot, int iSlotPos )
 {
 	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
 	if ( !player )

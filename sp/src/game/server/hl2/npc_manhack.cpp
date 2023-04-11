@@ -1714,6 +1714,8 @@ void CNPC_Manhack::CheckCollisions(float flInterval)
 	// Trace forward to see if I hit anything. But trace forward along the
 	// owner's view direction if you're being carried.
 	Vector vecTraceDir, vecCheckPos;
+	if (!VPhysicsGetObject())
+		return;
 	VPhysicsGetObject()->GetVelocity(&vecTraceDir, NULL);
 	vecTraceDir *= flInterval;
 	if (IsHeldByPhyscannon())

@@ -3406,6 +3406,9 @@
     <ClCompile Include="hl2\hlr\npc_vortboss.cpp">
       <Filter>Source Files\HLR</Filter>
     </ClCompile>
+    <ClCompile Include="hl2\hlr\npc_vortbrute.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\game\shared\singleplayer_animstate.cpp">
       <Filter>Source Files\HLR</Filter>
     </ClCompile>

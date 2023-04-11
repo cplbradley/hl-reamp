@@ -969,3 +969,12 @@ int GetHitboxSetCount( CStudioHdr *pstudiohdr )
 
 	return pstudiohdr->numhitboxsets();
 }
+
+
+void GetAttachmentWorldSpace(CStudioHdr* pstudiohdr, int attachIndex, Vector& vecPos, QAngle& angAng)
+{
+	matrix3x4_t matLocalToWorld;
+	GetAttachmentLocalSpace(pstudiohdr, attachIndex, matLocalToWorld);
+
+
+}

@@ -15,6 +15,7 @@
 #include <vgui_controls/Label.h>
 #include <vgui_controls/Slider.h>
 #include <vgui_controls/QueryBox.h>
+#include <vgui/ILocalize.h>
 
 #include "tier0/memdbgon.h"
 
@@ -28,16 +29,17 @@ public:
 
 	CMasochistModeQBox(vgui::Panel* parent);
 	virtual void OnCommand(const char* command);
+
 	
 };
 
-CMasochistModeQBox::CMasochistModeQBox(vgui::Panel* parent) : BaseClass("MASOCHIST MODE", "The game is locked on the hardest difficulty. If you die, your save folder is deleted. Are you sure?", parent)
+CMasochistModeQBox::CMasochistModeQBox(vgui::Panel* parent) : BaseClass("#HLR_MASOCHIST_MODE", "#HLR_MASOCHIST_DESCRIPTION", parent)
 {
 	
 	SetScheme(vgui::scheme()->LoadSchemeFromFile("resource/SourceScheme.res", "SourceScheme"));
 	LoadControlSettings("resource/ui/MasochistModeDialog.res");
-	SetOKButtonText("Let's Go!");
-	SetCancelButtonText("No Way!");
+	SetOKButtonText("#HLR_LETS_GO");
+	SetCancelButtonText("#HLR_NO_WAY");
 	SetBounds(0, 0, 256, 128);
 }
 /*void CMasochistModeQBox::OnCancelButtonPressed()

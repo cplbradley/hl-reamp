@@ -215,7 +215,7 @@ void CWeaponPistol::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCha
 		CHLRPistolProjectile *pPew = (CHLRPistolProjectile*)CreateEntityByName("hlr_pistolprojectile");
 		UTIL_SetOrigin(pPew, vecShootOrigin);
 		float basespd = 2000.0f;
-		float adjustedspeed = g_pGameRules->AdjustProjectileSpeed(basespd);
+		float adjustedspeed = g_pGameRules->SkillAdjustValue(basespd);
 		Vector vecVelocity = vecShootDir * adjustedspeed;
 
 		

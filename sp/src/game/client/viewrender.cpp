@@ -5776,7 +5776,12 @@ void CSimpleWorldView::Draw()
 
 bool CDepthView::Setup(const CViewSetup& view, ITexture* pDepthTexture, ITexture* pRenderTarget)
 {
-	BaseClass::Setup(view);
+
+	CViewSetup newView = view;
+	newView.zNear = 2.0f;
+	newView.zFar = 10000.0f;
+
+	BaseClass::Setup(newView);
 
 	// At this point, we've cleared everything we need to clear
 	// The next path will need to clear depth, though.
@@ -5784,8 +5789,8 @@ bool CDepthView::Setup(const CViewSetup& view, ITexture* pDepthTexture, ITexture
 
 	m_DrawFlags = DF_RENDER_UNDERWATER | DF_RENDER_ABOVEWATER | DF_RENDER_WATER | DF_RENDER_REFRACTION;
 
-	zNear = view.zNear;
-	zFar = view.zFar;
+	zNear = 2.0;
+	zFar = 4096;
 
 	m_pDepthTexture = pDepthTexture;
 	m_pColorTexture = pRenderTarget;
@@ -5795,7 +5800,7 @@ bool CDepthView::Setup(const CViewSetup& view, ITexture* pDepthTexture, ITexture
 
 void CDepthView::Draw()
 {
-	VPROF_BUDGET("CViewRender::Draw3dSkyboxworld", "3D Skybox");
+	VPROF_BUDGET("CViewRender::DepthPass", "Depth Pass");
 
 	DrawInternal(CurrentViewID());
 }
@@ -5803,6 +5808,8 @@ void CDepthView::Draw()
 void CDepthView::DrawInternal(view_id_t iSkyBoxViewID)
 {
 	ITexture* DepthBufferTexture = materials->FindTexture("_rt_TrueDepth", TEXTURE_GROUP_RENDER_TARGET);
+
+	render->ViewSetupVis(false, 1, &origin);
 
 	if (m_pDepthTexture == NULL && m_pColorTexture == NULL)
 	{
@@ -5812,6 +5819,7 @@ void CDepthView::DrawInternal(view_id_t iSkyBoxViewID)
 	{
 		render->Push3DView((*this), m_ClearFlags, m_pDepthTexture, GetFrustum(), m_pColorTexture);
 	}
+
 	render->BeginUpdateLightmaps();
 	BuildWorldRenderLists(true, true, -1);
 	BuildRenderableRenderLists(iSkyBoxViewID);

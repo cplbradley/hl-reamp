@@ -1005,7 +1005,7 @@ bool CNPC_Antlion::GetSpitVector( const Vector &vecStartPos, const Vector &vecTa
 	// antlion workers exist only in episodic.
 //#if HL2_EPISODIC
 	// Try the most direct route
-	float adjustedspd = g_pGameRules->AdjustProjectileSpeed(sk_antlion_worker_spit_speed.GetFloat());
+	float adjustedspd = g_pGameRules->SkillAdjustValue(sk_antlion_worker_spit_speed.GetFloat());
 	Vector vecToss = VecCheckThrowTolerance( this, vecStartPos, vecTarget, adjustedspd, (10.0f*12.0f) );
 
 	// If this failed then try a little faster (flattens the arc)
@@ -1059,7 +1059,7 @@ void CNPC_Antlion::HandleAnimEvent( animevent_t *pEvent )
 
 				Vector	vTarget;
 
-				float adjustedspd = g_pGameRules->AdjustProjectileSpeed(sk_antlion_worker_spit_speed.GetFloat());
+				float adjustedspd = g_pGameRules->SkillAdjustValue(sk_antlion_worker_spit_speed.GetFloat());
 				float dist = (GetEnemy()->GetAbsOrigin() - GetAbsOrigin()).Length();
 				float traveltime = dist / adjustedspd;
 				

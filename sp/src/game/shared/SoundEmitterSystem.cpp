@@ -497,6 +497,14 @@ public:
 		{
 			params.volume = ep.m_flVolume;
 		}
+		
+		float pitchmod = GetTimeScale();
+
+		if (params.soundlevel == SNDLVL_NONE || params.soundname[0] == '#')
+		{
+			pitchmod = 1.0f;
+		}
+		int pitch = params.pitch * pitchmod;
 
 #if !defined( CLIENT_DLL )
 		bool bSwallowed = CEnvMicrophone::OnSoundPlayed(
@@ -505,7 +513,7 @@ public:
 			params.soundlevel,
 			params.volume,
 			ep.m_nFlags | SND_SHOULDPAUSE,
-			Clamp(int(params.pitch * GetTimeScale()), 0, 255),
+			pitch,
 			ep.m_pOrigin,
 			ep.m_flSoundTime / GetTimeScale(),
 			ep.m_UtlVecSoundOrigin);
@@ -535,7 +543,7 @@ public:
 			params.volume,
 			(soundlevel_t)params.soundlevel,
 			ep.m_nFlags | SND_SHOULDPAUSE,
-			Clamp(int(params.pitch * GetTimeScale()), 0, 255),
+			pitch,
 			ep.m_nSpecialDSP,
 			ep.m_pOrigin,
 			NULL,
@@ -574,6 +582,14 @@ public:
 		}
 #endif // STAGING_ONLY
 
+		float pitchmod = GetTimeScale();
+
+		if (ep.m_SoundLevel == SNDLVL_NONE || ep.m_pSoundName[0] == '#')
+		{
+			pitchmod = 1.0f;
+		}
+
+		int pitch = ep.m_nPitch * pitchmod;
 		if (ep.m_pSoundName &&
 			(Q_stristr(ep.m_pSoundName, ".wav") ||
 			Q_stristr(ep.m_pSoundName, ".mp3") ||
@@ -586,7 +602,7 @@ public:
 				ep.m_SoundLevel,
 				ep.m_flVolume,
 				ep.m_nFlags | SND_SHOULDPAUSE,
-				Clamp(int(ep.m_nPitch * GetTimeScale()), 0, 255),
+				pitch,
 				ep.m_pOrigin,
 				ep.m_flSoundTime / GetTimeScale(),
 				ep.m_UtlVecSoundOrigin);
@@ -614,7 +630,7 @@ public:
 				ep.m_flVolume,
 				ep.m_SoundLevel,
 				ep.m_nFlags | SND_SHOULDPAUSE,
-				Clamp(int(ep.m_nPitch * GetTimeScale()), 0, 255),
+				pitch,
 				ep.m_nSpecialDSP,
 				ep.m_pOrigin,
 				NULL,
@@ -836,10 +852,17 @@ public:
 			params.volume = flVolume;
 		}
 
+		int pitch = params.pitch;
+		if (params.soundlevel != SNDLVL_NONE || params.soundname[0] != '#')
+		{
+			pitch *= GetTimeScale();
+		}
+
+
 #if defined( CLIENT_DLL )
-		enginesound->EmitAmbientSound(params.soundname, params.volume, Clamp(int(params.pitch * GetTimeScale()), 0, 255), iFlags | SND_SHOULDPAUSE, soundtime / GetTimeScale());
+		enginesound->EmitAmbientSound(params.soundname, params.volume, pitch, iFlags | SND_SHOULDPAUSE, soundtime / GetTimeScale());
 #else
-		engine->EmitAmbientSound(entindex, origin, params.soundname, params.volume, params.soundlevel, iFlags | SND_SHOULDPAUSE, Clamp(int(params.pitch * GetTimeScale()), 0, 255), soundtime / GetTimeScale());
+		engine->EmitAmbientSound(entindex, origin, params.soundname, params.volume, params.soundlevel, iFlags | SND_SHOULDPAUSE, pitch, soundtime / GetTimeScale());
 #endif
 
 		bool needsCC = !(iFlags & (SND_STOP | SND_CHANGE_VOL | SND_CHANGE_PITCH));
@@ -942,6 +965,11 @@ public:
 			return;
 		}
 #endif // STAGING_ONLY
+		float pitchmod = GetTimeScale();
+		if (soundlevel == SNDLVL_NONE || pSample[0] == '#')
+			pitchmod = 1.0f;
+
+		int newpitch = pitch * pitchmod;
 
 #if !defined( CLIENT_DLL )
 		CUtlVector< Vector > dummyorigins;
@@ -954,7 +982,7 @@ public:
 			soundlevel,
 			volume,
 			flags | SND_SHOULDPAUSE,
-			Clamp(int(pitch * GetTimeScale()), 0, 255),
+			newpitch,
 			&origin,
 			soundtime / GetTimeScale(),
 			dummyorigins);
@@ -965,9 +993,9 @@ public:
 		if (pSample && (Q_stristr(pSample, ".wav") || Q_stristr(pSample, ".mp3")))
 		{
 #if defined( CLIENT_DLL )
-			enginesound->EmitAmbientSound(pSample, volume, Clamp(int(pitch * GetTimeScale()), 0, 255), flags | SND_SHOULDPAUSE, soundtime / GetTimeScale());
+			enginesound->EmitAmbientSound(pSample, volume, newpitch, flags | SND_SHOULDPAUSE, soundtime / GetTimeScale());
 #else
-			engine->EmitAmbientSound(entindex, origin, pSample, volume, soundlevel, flags | SND_SHOULDPAUSE, Clamp(int(pitch * GetTimeScale()), 0, 255), soundtime / GetTimeScale());
+			engine->EmitAmbientSound(entindex, origin, pSample, volume, soundlevel, flags | SND_SHOULDPAUSE, newpitch, soundtime / GetTimeScale());
 #endif
 
 			if (duration)
@@ -1385,6 +1413,13 @@ void UTIL_EmitAmbientSound(int entindex, const Vector &vecOrigin, const char *sa
 	}
 #endif // STAGING_ONLY
 
+	
+	float pitchmod = GetTimeScale();
+
+	if (soundlevel == SNDLVL_NONE || samp[0] == '#')
+		pitchmod = 1.0f;
+
+	int newpitch = pitch * pitchmod;
 	if (samp && *samp == '!')
 	{
 		int sentenceIndex = SENTENCEG_Lookup(samp);
@@ -1393,9 +1428,9 @@ void UTIL_EmitAmbientSound(int entindex, const Vector &vecOrigin, const char *sa
 			char name[32];
 			Q_snprintf(name, sizeof(name), "!%d", sentenceIndex);
 #if !defined( CLIENT_DLL )
-			engine->EmitAmbientSound(entindex, vecOrigin, name, vol, soundlevel, fFlags | SND_SHOULDPAUSE, Clamp(int(pitch * GetTimeScale()), 0, 255), soundtime / GetTimeScale());
+			engine->EmitAmbientSound(entindex, vecOrigin, name, vol, soundlevel, fFlags | SND_SHOULDPAUSE, newpitch, soundtime / GetTimeScale());
 #else
-			enginesound->EmitAmbientSound(name, vol, Clamp(int(pitch * GetTimeScale()), 0, 255), fFlags | SND_SHOULDPAUSE, soundtime / GetTimeScale());
+			enginesound->EmitAmbientSound(name, vol, newpitch, fFlags | SND_SHOULDPAUSE, soundtime / GetTimeScale());
 #endif
 			if (duration)
 			{

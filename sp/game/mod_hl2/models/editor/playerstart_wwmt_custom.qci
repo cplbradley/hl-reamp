@@ -1,0 +1,3 @@
+//File for injecting custom rules. Safe to edit. Do not delete.
+
+$bbox -16 -16 0 16 16 72

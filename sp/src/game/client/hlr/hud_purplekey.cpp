@@ -22,7 +22,7 @@ CHudPurpleKey::CHudPurpleKey(const char *pElementName) : CHudElement(pElementNam
 	SetVisible(false);
 	SetAlpha(255);
 
-	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_CINEMATIC_CAMERA);
+	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_CINEMATIC_CAMERA | HIDEHUD_WEAPON_WHEEL);
 }
 void CHudPurpleKey::Init(void)
 {

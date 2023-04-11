@@ -210,12 +210,14 @@ struct CallbackData_t
 
 		player_speed.Init();
 		player_pos.Init();
+		view_distance.Init();
 	};
 	Vector4D sun_data;
 	Vector sun_dir;
 
 	Vector4D player_speed;
 	Vector player_pos;
+	Vector view_distance;
 };
 
 static CallbackData_t clCallback_data;
@@ -269,10 +271,16 @@ void ShaderEditorHandler::PrepareCallbackData()
 	if ( pPlayer )
 	{
 		Vector velo = pPlayer->GetLocalVelocity();
+		trace_t tr;
+		Vector viewDir;
+		AngleVectors(pPlayer->EyeAngles(), &viewDir);
+		UTIL_TraceLine(pPlayer->EyePosition(), pPlayer->EyePosition() + (viewDir * MAX_TRACE_LENGTH), MASK_SOLID, pPlayer, COLLISION_GROUP_NONE, &tr);
+		float viewdist = (tr.endpos - tr.startpos).Length();
 		clCallback_data.player_speed[ 3 ] = velo.NormalizeInPlace();
 		Q_memcpy( clCallback_data.player_speed.Base(), velo.Base(), sizeof(float) * 3 );
-
+		clCallback_data.view_distance.x = viewdist;
 		clCallback_data.player_pos = pPlayer->GetLocalOrigin();
+
 	}
 }
 
@@ -304,6 +312,12 @@ pFnClCallback_Declare( ClCallback_PlayerPos )
 	m_Lock.Unlock();
 }
 
+pFnClCallback_Declare(ClCallback_PlayerViewDist)
+{
+	m_Lock.Lock();
+	Q_memcpy(pfl4, clCallback_data.view_distance.Base(), sizeof(float) * 3);
+}
+
 void ShaderEditorHandler::RegisterCallbacks()
 {
 	if ( !IsReady() )
@@ -314,6 +328,7 @@ void ShaderEditorHandler::RegisterCallbacks()
 	shaderEdit->RegisterClientCallback( "sun dir", ClCallback_SunDirection, 3 );
 	shaderEdit->RegisterClientCallback( "local player velocity", ClCallback_PlayerVelocity, 4 );
 	shaderEdit->RegisterClientCallback( "local player position", ClCallback_PlayerPos, 3 );
+	shaderEdit->RegisterClientCallback("player view distance", ClCallback_PlayerViewDist, 3);
 
 	shaderEdit->LockClientCallbacks();
 }

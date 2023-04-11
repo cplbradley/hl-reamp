@@ -126,7 +126,7 @@ void CWeaponNPCFrag::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bool 
 	
 
 	float basespd = sk_npc_grenadelauncher_speed.GetFloat();
-	float adjustedspd = g_pGameRules->AdjustProjectileSpeed(basespd);
+	float adjustedspd = g_pGameRules->SkillAdjustValue(basespd);
 
 	Vector vecTarget;
 	

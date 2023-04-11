@@ -679,7 +679,7 @@ void CNPC_PoisonZombie::HandleAnimEvent( animevent_t *pEvent )
 	{
 		SetBodygroup( ZOMBIE_BODYGROUP_THROW, 0 );
 		CBaseEntity *pEnemy = GetEnemy();
-		float adjustspd = g_pGameRules->AdjustProjectileSpeed(2000.0f);
+		float adjustspd = g_pGameRules->SkillAdjustValue(2000.0f);
 		if (pEnemy)
 		{
 			Vector vecSrc;

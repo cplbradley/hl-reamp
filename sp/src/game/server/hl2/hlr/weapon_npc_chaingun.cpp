@@ -208,34 +208,29 @@ bool CWeaponChaingun::Reload(void)
 //-----------------------------------------------------------------------------
 void CWeaponChaingun::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bool bUseWeaponAngles)
 {
-	/*Vector vecShootOrigin, vecShootDir;
+	Vector vecShootOrigin, vecShootDir;
+	vecShootOrigin = pOperator->Weapon_ShootPosition();
 
-	CAI_BaseNPC *npc = pOperator->MyNPCPointer();
+	CAI_BaseNPC* npc = pOperator->MyNPCPointer();
 	ASSERT(npc != NULL);
 
-	if (bUseWeaponAngles)
-	{
-		QAngle	angShootDir;
-		GetAttachment(LookupAttachment("muzzle"), vecShootOrigin, angShootDir);
-		AngleVectors(angShootDir, &vecShootDir);
-	}
-	else
-	{
-		vecShootOrigin = pOperator->Weapon_ShootPosition();
-		vecShootDir = npc->GetActualShootTrajectory(vecShootOrigin);
-	}
+	vecShootDir = npc->GetActualShootTrajectory(vecShootOrigin);
 
+	CSoundEnt::InsertSound(SOUND_COMBAT | SOUND_CONTEXT_GUNFIRE, pOperator->GetAbsOrigin(), SOUNDENT_VOLUME_PISTOL, 0.2, pOperator, SOUNDENT_CHANNEL_WEAPON, pOperator->GetEnemy());
+	QAngle angAiming;
 	WeaponSoundRealtime(SINGLE_NPC);
-
-	CSoundEnt::InsertSound(SOUND_COMBAT | SOUND_CONTEXT_GUNFIRE, pOperator->GetAbsOrigin(), SOUNDENT_VOLUME_MACHINEGUN, 0.2, pOperator, SOUNDENT_CHANNEL_WEAPON, pOperator->GetEnemy());
-
-	pOperator->FireBullets(1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2);*/
-	
-
-	// NOTENOTE: This is overriden on the client-side
-	// pOperator->DoMuzzleFlash();
-
-	//m_iClip1 = m_iClip1 - 1;
+	GetAttachment(LookupAttachment("muzzle"), vecShootOrigin, angAiming);
+	VectorAngles(vecShootDir, angAiming);
+	CHLRPistolProjectile* pPew = (CHLRPistolProjectile*)CreateEntityByName("hlr_pistolprojectile");
+	UTIL_SetOrigin(pPew, vecShootOrigin);
+	float basespd = 2000.0f;
+	float adjustedspeed = g_pGameRules->SkillAdjustValue(basespd);
+	Vector vecVelocity = vecShootDir * adjustedspeed;
+	pPew->Spawn();
+	pPew->SetAbsVelocity(vecVelocity);
+	//DispatchParticleEffect("pistol_npc_core", vecShootOrigin, angAiming, pOperator);
+	//pOperator->FireBullets(0, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2);
+	pOperator->DoMuzzleFlash();
 }
 
 //-----------------------------------------------------------------------------
@@ -262,30 +257,7 @@ void CWeaponChaingun::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatC
 	{
 	case EVENT_WEAPON_SMG1:
 	{
-		//FireNPCPrimaryAttack(pOperator, false);
-		Vector vecShootOrigin, vecShootDir;
-		vecShootOrigin = pOperator->Weapon_ShootPosition();
-
-		CAI_BaseNPC *npc = pOperator->MyNPCPointer();
-		ASSERT(npc != NULL);
-
-		vecShootDir = npc->GetActualShootTrajectory(vecShootOrigin);
-
-		CSoundEnt::InsertSound(SOUND_COMBAT | SOUND_CONTEXT_GUNFIRE, pOperator->GetAbsOrigin(), SOUNDENT_VOLUME_PISTOL, 0.2, pOperator, SOUNDENT_CHANNEL_WEAPON, pOperator->GetEnemy());
-		QAngle angAiming;
-		WeaponSoundRealtime(SINGLE_NPC);
-		GetAttachment(LookupAttachment("muzzle"), vecShootOrigin, angAiming);
-		VectorAngles(vecShootDir, angAiming);
-		CHLRPistolProjectile *pPew = (CHLRPistolProjectile*)CreateEntityByName("hlr_pistolprojectile");
-		UTIL_SetOrigin(pPew, vecShootOrigin);
-		float basespd = 2000.0f;
-		float adjustedspeed = g_pGameRules->AdjustProjectileSpeed(basespd);
-		Vector vecVelocity = vecShootDir * adjustedspeed;
-		pPew->Spawn();
-		pPew->SetAbsVelocity(vecVelocity);
-		//DispatchParticleEffect("pistol_npc_core", vecShootOrigin, angAiming, pOperator);
-		//pOperator->FireBullets(0, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2);
-		pOperator->DoMuzzleFlash();
+		FireNPCPrimaryAttack(pOperator, false);
 	}
 	break;
 

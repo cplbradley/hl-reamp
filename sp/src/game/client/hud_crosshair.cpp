@@ -57,7 +57,7 @@ CHudCrosshair::CHudCrosshair( const char *pElementName ) :
 
 	m_vecCrossHairOffsetAngle.Init();
 
-	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_CROSSHAIR | HIDEHUD_CINEMATIC_CAMERA | HIDEHUD_NEEDSUIT);
+	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_CROSSHAIR | HIDEHUD_CINEMATIC_CAMERA | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPON_WHEEL);
 }
 
 CHudCrosshair::~CHudCrosshair()

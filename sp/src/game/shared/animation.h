@@ -62,4 +62,6 @@ int FindHitboxSetByName( CStudioHdr *pstudiohdr, const char *name );
 const char *GetHitboxSetName( CStudioHdr *pstudiohdr, int setnumber );
 int GetHitboxSetCount( CStudioHdr *pstudiohdr );
 
+
+void GetAttachmentWorldSpace(CStudioHdr* pstudiohdr, int attachIndex, Vector& vecPos, QAngle& angAng);
 #endif	//ANIMATION_H

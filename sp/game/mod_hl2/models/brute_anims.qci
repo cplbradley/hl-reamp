@@ -1,0 +1,56 @@
+$sequence "brute_run" {
+	"bruteanims\brute_run.smd"
+	activity "ACT_RUN" 1
+	fadein 0.2
+	fadeout 0.2
+	loop
+	fps 30
+	walkframe 22 LX LY
+}
+$sequence "brute_idle" {
+	"bruteanims\brute_idle.smd"
+	activity ACT_IDLE 1
+	fadein 0.2
+	fadeout 0.2
+	loop
+	fps 20
+}
+$sequence "brute_leapattack" {
+	"bruteanims\brute_leapattack.smd"
+	activity "ACT_VORTBRUTE_LEAPATTACK" 1
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	walkframe 5 LX LY
+	walkframe 27 LX LY
+	LX LY
+	{ event AE_VORTBRUTE_LEAPATTACK_TELEPORT 20 }
+	{ event AE_VORTBRUTE_LEAPATTACK_LAND 29 }
+}
+$sequence "brute_righthook" {
+	"bruteanims\vortbrute_righthook.smd"
+	activity ACT_VORTBRUTE_RIGHTHOOK 1
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	{ event AE_VORTBRUTE_SWING_SOUND 4 } 
+	{ event AE_VORTBRUTE_RIGHTHOOK_CONNECT 8 }
+}
+$sequence "brute_lefthook" {
+	"bruteanims\vortbrute_lefthook.smd"
+	activity ACT_VORTBRUTE_LEFTHOOK 1
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	{ event AE_VORTBRUTE_SWING_SOUND 4 } 
+	{ event AE_VORTBRUTE_LEFTHOOK_CONNECT 8 }
+}
+$sequence "brute_rightthrow" {
+	"bruteanims\brute_rightthrow.smd"
+	activity ACT_VORTBRUTE_RIGHTTHROW 1
+	walkframe 20 LX LY
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	{ event AE_VORTBRUTE_RIGHTTHROW_THROW 10 }
+}

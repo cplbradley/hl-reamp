@@ -104,7 +104,7 @@ CHudHealth::CHudHealth( const char *pElementName ) : CHudElement( pElementName )
 {
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent(pParent);
-	SetHiddenBits( HIDEHUD_HEALTH | HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_CINEMATIC_CAMERA);
+	SetHiddenBits( HIDEHUD_HEALTH | HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_CINEMATIC_CAMERA | HIDEHUD_WEAPON_WHEEL);
 }
 
 //-----------------------------------------------------------------------------

@@ -2638,6 +2638,7 @@ void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, b
 	static IMaterial* pFurious = materials->FindMaterial("engine/fury", TEXTURE_GROUP_OTHER);
 	static IMaterial* pTAA = materials->FindMaterial("engine/taa", TEXTURE_GROUP_OTHER);
 	static IMaterial* pSMB = materials->FindMaterial("engine/smb", TEXTURE_GROUP_OTHER);
+	static IMaterial* pBDK = materials->FindMaterial("engine/blurdarken", TEXTURE_GROUP_OTHER);
 
 	ConVarRef smb("mat_simplemotionblur");
 
@@ -2688,6 +2689,16 @@ void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, b
 			pFurious->AddRef();
 			UpdateScreenEffectTexture();
 			pRenderContext->DrawScreenSpaceRectangle(pFurious, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
+		}
+	}
+	ConVarRef blurdarken("mat_blurdarken");
+	if (blurdarken.GetBool())
+	{
+		if (pBDK)
+		{
+			pBDK->AddRef();
+			pRenderContext->DrawScreenSpaceRectangle(pBDK, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
+			UpdateScreenEffectTexture();
 		}
 	}
 #if defined( _X360 )

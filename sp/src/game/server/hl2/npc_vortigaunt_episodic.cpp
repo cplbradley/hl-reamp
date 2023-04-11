@@ -30,6 +30,7 @@
 #include "ai_senses.h"
 #include "npc_vortigaunt_episodic.h"
 #include "hlr/hlr_projectile.h"
+#include "ai_tacticalservices.h"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -93,6 +94,8 @@ ConVar sk_vortigaunt_heal_range("sk_vortigaunt_heal_range", "3192", FCVAR_NONE, 
 
 ConVar g_debug_vortigaunt_aim( "g_debug_vortigaunt_aim", "0" );
 ConVar sk_vortigaunt_heal_rate("sk_vortigaunt_heal_rate", "4");
+ConVar sk_vortigaunt_min_tele_range("sk_vortigaunt_min_tele_range", "256");
+ConVar sk_vortigaunt_max_tele_range("sk_vortigaunt_max_tele_Range", "1920");
 
 // FIXME: Move to shared code!
 #define VORTFX_ZAPBEAM		0	// Beam that damages the target
@@ -207,7 +210,7 @@ BEGIN_DATADESC( CNPC_Vortigaunt )
 	DEFINE_INPUTFUNC( FIELD_VOID,	"Dispel",				InputDispel ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"BeginCarryNPC",		InputBeginCarryNPC ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"EndCarryNPC",			InputEndCarryNPC ),
-	DEFINE_INPUTFUNC( FIELD_VOID,	"SetVortClass",			InputSetVortClass),
+	DEFINE_INPUTFUNC( FIELD_INTEGER,	"SetVortClass",			InputSetVortClass),
 
 	DEFINE_INPUTFUNC( FIELD_BOOLEAN, "TurnBlue", InputTurnBlue ),
 	DEFINE_INPUTFUNC( FIELD_BOOLEAN, "TurnBlack", InputTurnBlack ),
@@ -399,6 +402,20 @@ void CNPC_Vortigaunt::StartTask( const Task_t *pTask )
 		break;
 	}
 
+	case TASK_VORTIGAUNT_TELEPORT:
+	{
+		Vector vecTelePos = FindBestTeleportPosition(sk_vortigaunt_min_tele_range.GetFloat(), sk_vortigaunt_max_tele_range.GetFloat());
+		if (vecTelePos != vec3_origin)
+		{
+			Teleport(vecTelePos);
+		}
+		else
+		{
+			DevWarning(2, "TELEPORT TASK FAILED\n");
+			TaskFail("TELEPORT FAILED");
+		}
+		break;
+	}
 	default:
 		{
 			BaseClass::StartTask( pTask );	
@@ -443,6 +460,14 @@ void CNPC_Vortigaunt::RunTask( const Task_t *pTask )
 		break;
 	}
 	
+	case TASK_VORTIGAUNT_TELEPORT:
+	{
+		if (!HasCondition(COND_VORTIGAUNT_ENEMY_TOO_CLOSE))
+		{
+			TaskComplete();
+		}
+		break;
+	}
 	case TASK_VORTIGAUNT_EXTRACT:
 	{
 		if ( IsActivityFinished() )
@@ -1182,23 +1207,6 @@ Activity CNPC_Vortigaunt::NPC_TranslateActivity( Activity eNewActivity )
 		CAI_Path* pPath = pNav->GetPath();
 		//AI_Waypoint_t *pWaypoint = pPath->GetCurWaypoint();
 
-		//Teleport(pPath->GetCurWaypoint()->GetPos());
-		if (pPath->GoalType() == GOALTYPE_ENEMY)
-		{
-			CBaseEntity* pEntity = (pNav->GetOuter()->GetNavTargetEntity());
-
-			if (pEntity)
-			{
-				string_t pString = pEntity->m_iClassname;
-				DevMsg("NavTarget Classname = %s \n", pString);
-				if (pEntity->GetGroundEntity() == NULL)
-				{
-					DevMsg("WARNING: TARGET ENTITY NOT ON GROUND");
-					return (Activity)ACT_IDLE;
-				}
-			}
-		}
-
 		AIMoveTrace_t moveTrace;
 		//CBaseEntity *pTarget = pNav->GetOuter()->GetNavTargetEntity();
 		GetMoveProbe()->MoveLimit(NAV_JUMP, GetLocalOrigin(), pPath->CurWaypointPos(), MASK_NPCSOLID, GetNavTargetEntity(), &moveTrace);
@@ -1215,17 +1223,11 @@ Activity CNPC_Vortigaunt::NPC_TranslateActivity( Activity eNewActivity )
 
 void CNPC_Vortigaunt::Teleport(Vector vecPos)
 {
+	//SetActivity(ACT_JUMP);
 	DispatchParticleEffect("vortigaunt_teleout", WorldSpaceCenter(), vec3_angle, this);
-	CAI_Navigator *pNav = GetNavigator();
-	CAI_Path *pPath = pNav->GetPath();
-	//AI_Waypoint_t *pNode = pNav->GetPath()->GetCurWaypoint();
-
-	DispatchParticleEffect("vortigaunt_telein", (pPath->CurWaypointPos() + Vector(0, 0, 32)), vec3_angle, this);
+	DispatchParticleEffect("vortigaunt_telein", (vecPos + Vector(0, 0, 32)), vec3_angle, this);
 	SetAbsOrigin(vecPos);
-	//Vector printPos = pPath->NextWaypointPos();
-	//DevMsg("Vort Waypoint Goal Pos %v\n", printPos);
 	SetAbsVelocity(Vector(0, 0, 0));
-	GetMotor()->MoveJumpStop();
 }
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -2020,7 +2022,7 @@ int CNPC_Vortigaunt::SelectSchedule( void )
 		return SCHED_VORTIGAUNT_DISPEL_ANTLIONS;
 	}
 	if (HasCondition(COND_VORTIGAUNT_ENEMY_TOO_CLOSE))
-		return SCHED_TAKE_COVER_FROM_ENEMY;
+		return SCHED_VORT_TELEPORT_FROM_PLAYER;
 
 	// Heal a player if they can be
 	if ( HasCondition( COND_VORTIGAUNT_CAN_HEAL ) )
@@ -2576,7 +2578,7 @@ void CNPC_Vortigaunt::ZapBeam(void)
 	QAngle angAim;
 	VectorAngles(vecAim,angAim);
 	float basespd = 2500.0f;
-	float adjustedspd = g_pGameRules->AdjustProjectileSpeed(basespd);
+	float adjustedspd = g_pGameRules->SkillAdjustValue(basespd);
 	
 
 
@@ -2993,8 +2995,10 @@ void CNPC_Vortigaunt::GatherConditions( void )
 	CBasePlayer* pPlayer = UTIL_GetLocalPlayer();
 	float playerDist = (pPlayer->WorldSpaceCenter() - WorldSpaceCenter()).Length();
 
-	if (playerDist < sk_vortigaunt_flee_range.GetFloat())
+	if (playerDist < sk_vortigaunt_flee_range.GetFloat() && !HasCondition(COND_VORTIGAUNT_ENEMY_TOO_CLOSE))
 		SetCondition(COND_VORTIGAUNT_ENEMY_TOO_CLOSE);
+	else
+		ClearCondition(COND_VORTIGAUNT_ENEMY_TOO_CLOSE);
 
 	// See if we're able to heal now
 	if ( HealBehaviorAvailable() && ( m_flNextHealTime < gpGlobals->curtime ) )
@@ -3402,6 +3406,8 @@ AI_BEGIN_CUSTOM_NPC( npc_vortigaunt, CNPC_Vortigaunt )
 	DECLARE_TASK( TASK_VORTIGAUNT_EXTRACT_COOLDOWN )
 	DECLARE_TASK( TASK_VORTIGAUNT_GET_HEAL_TARGET )
 	DECLARE_TASK( TASK_VORTIGAUNT_DISPEL_ANTLIONS )
+	DECLARE_TASK( TASK_VORTIGAUNT_TELEPORT)
+
 
 	DECLARE_ACTIVITY( ACT_VORTIGAUNT_AIM)
 	DECLARE_ACTIVITY( ACT_VORTIGAUNT_START_HEAL )
@@ -3468,7 +3474,19 @@ AI_BEGIN_CUSTOM_NPC( npc_vortigaunt, CNPC_Vortigaunt )
 		"		COND_NO_CUSTOM_INTERRUPTS"
 	);
 
+	DEFINE_SCHEDULE
+	(
+		SCHED_VORT_TELEPORT_FROM_PLAYER,
 
+		"	Tasks"
+		"		TASK_SET_FAIL_SCHEDULE			SCHEDULE:SCHED_TAKE_COVER_FROM_ENEMY"
+		"		TASK_STOP_MOVING				0"
+		"		TASK_FACE_IDEAL					0"
+		"		TASK_VORTIGAUNT_TELEPORT		0"
+		""
+		"	Interrupts"
+		"		COND_NO_CUSTOM_INTERRUPTS"
+	)
 	//=========================================================
 	// > SCHED_VORTIGAUNT_HEAL
 	//=========================================================

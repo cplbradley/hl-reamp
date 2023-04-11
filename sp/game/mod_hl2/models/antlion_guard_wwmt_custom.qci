@@ -1,0 +1,12 @@
+//File for injecting custom rules. Safe to edit. Do not delete.
+
+$BBox -61.227 -47.669 -2.831 87.513 57.361 141.395
+$PoseParameter "move_yaw" -180 180 360
+$PoseParameter "throw" -45 45 0
+$PoseParameter "head_pitch" -30 90 0
+$PoseParameter "head_yaw" -80 80 0
+$BBox -61.227 -47.669 -2.831 87.513 57.361 141.395
+$PoseParameter "move_yaw" -180 180 360
+$PoseParameter "throw" -45 45 0
+$PoseParameter "head_pitch" -30 90 0
+$PoseParameter "head_yaw" -80 80 0

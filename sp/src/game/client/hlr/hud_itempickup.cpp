@@ -73,7 +73,7 @@ void CHudItemPickup::Paint()
 		if (Q_strcmp(itemList[i].iID, "Armor") == 0)
 			clr = armor;
 		else if (Q_strcmp(itemList[i].iID, "Health") == 0)
-			clr = armor;
+			clr = health;
 		else
 			clr = hudclr;
 		if (scale <= 0.0f)

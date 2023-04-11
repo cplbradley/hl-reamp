@@ -315,6 +315,10 @@ FileWeaponInfo_t::FileWeaponInfo_t()
 	szClassName[0] = 0;
 	szPrintName[0] = 0;
 
+	iWeaponWheelPos = 0;
+	szWheelName[0] = 0;
+	szWheelSubName[0] = 0;
+
 	szViewModel[0] = 0;
 	szWorldModel[0] = 0;
 	szAnimationPrefix[0] = 0;
@@ -367,7 +371,11 @@ void FileWeaponInfo_t::Parse( KeyValues *pKeyValuesData, const char *szWeaponNam
 	Q_strncpy( szViewModel, pKeyValuesData->GetString( "viewmodel" ), MAX_WEAPON_STRING );
 	Q_strncpy( szWorldModel, pKeyValuesData->GetString( "playermodel" ), MAX_WEAPON_STRING );
 	Q_strncpy( szAnimationPrefix, pKeyValuesData->GetString( "anim_prefix" ), MAX_WEAPON_PREFIX );
+	Q_strncpy(szWheelName, pKeyValuesData->GetString("wheelname"), MAX_WEAPON_STRING);
+	Q_strncpy(szWheelSubName, pKeyValuesData->GetString("wheelsubname"), MAX_WEAPON_STRING);
+
 	iSlot = pKeyValuesData->GetInt( "bucket", 0 );
+	iWeaponWheelPos = pKeyValuesData->GetInt("wheelpos", -1);
 	iPosition = pKeyValuesData->GetInt( "bucket_position", 0 );
 	
 	// Use the console (X360) buckets if hud_fastswitch is set to 2.

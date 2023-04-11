@@ -70,9 +70,11 @@ struct ArmorPieces_t
 {
 	int nHelmet;
 	int nChest;
-	int nArms;
+	int nForearm;
+	int nUpperArm;
 	int nThighs;
 	int nBoots;
+	int nCodpiece;
 };
 
 

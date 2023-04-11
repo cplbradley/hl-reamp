@@ -1,0 +1,6 @@
+//File for injecting custom rules. Safe to edit. Do not delete.
+
+$BBox -13 -13 0 13 13 72
+$PoseParameter "move_yaw" -180 180 360
+$bbox -13 -13 0 13 13 72
+$poseparameter "move_yaw" -180 180 loop 360

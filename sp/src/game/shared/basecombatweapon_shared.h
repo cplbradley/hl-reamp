@@ -352,9 +352,13 @@ public:
 	virtual int				GetWeaponFlags( void ) const;
 	virtual int				GetSlot( void ) const;
 	virtual int				GetPosition( void ) const;
+	virtual int				GetWheelPosition(void) const;
 	virtual char const		*GetName( void ) const;
 	virtual char const		*GetPrintName( void ) const;
 	virtual char const		*GetShootSound( int iIndex ) const;
+	virtual char const* GetWheelName(void) const;
+	virtual char const* GetWheelSubName(void) const;
+
 	virtual int				GetRumbleEffect() const;
 	virtual bool			UsesClipsForAmmo1( void ) const;
 	virtual bool			UsesClipsForAmmo2( void ) const;

@@ -1,28 +1,34 @@
 #include "cbase.h"
 #include "rope.h"
 #include "beam_shared.h"
+#include "vphysics_interface.h"
+#include "physobj.h"
 
 #pragma once
 
 
-class CClimbRopeSegment : public CBaseEntity
+class CClimbRopeSegment : public CBaseAnimating
 {
-	DECLARE_CLASS(CClimbRopeSegment, CBaseEntity);
-	//DECLARE_DATADESC();
+	DECLARE_CLASS(CClimbRopeSegment, CBaseAnimating);
+	DECLARE_DATADESC();
 public:
 
 	void Spawn();
-	//void Precache();
+	
+	void Precache();
 
+	bool VPhysicsCreate();
 
-	static CClimbRopeSegment* Create(const Vector& vecOrigin, const QAngle& angAngles, CBaseEntity* pOwner = NULL);
+	bool bAmAnchor;
+
+	static CClimbRopeSegment* Create(const Vector& vecOrigin, const QAngle& angAngles, bool bAnchor = false);
 
 };
 
 class CClimbableRope : public CBaseEntity
 {
 	DECLARE_CLASS(CClimbableRope, CBaseEntity);
-	//DECLARE_DATADESC();
+	DECLARE_DATADESC();
 
 public:
 	void Spawn();
@@ -35,11 +41,12 @@ public:
 	CHandle<CClimbRopeSegment> rpSegment[8];
 	CHandle<CBeam> ropeBeam[7];
 
+	void CreateConstraints();
 	
 
 private:
 	CUtlVector<CClimbRopeSegment*> m_vSegmentList;
-	float m_fRopeLength;
+	float m_fRopeLength = 256.0f;
 	float m_fRopeWidth;
 	const char* szRopeName;
 };

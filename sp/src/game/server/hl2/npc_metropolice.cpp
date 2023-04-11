@@ -20,6 +20,8 @@
 #include "Sprite.h"
 #include "items.h"
 #include "hl2_gamerules.h"
+#include "particle_system.h"
+#include "particle_parse.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -233,8 +235,7 @@ BEGIN_DATADESC( CNPC_MetroPolice )
 
 	DEFINE_OUTPUT( m_OnStunnedPlayer,	"OnStunnedPlayer" ),
 	DEFINE_OUTPUT( m_OnCupCopped, "OnCupCopped" ),
-	DEFINE_FIELD(m_pSprite1,FIELD_EHANDLE),
-	DEFINE_FIELD(m_pSprite2, FIELD_EHANDLE),
+	DEFINE_FIELD(m_pSprite,FIELD_EHANDLE),
 
 END_DATADESC()
 
@@ -633,12 +634,12 @@ void CNPC_MetroPolice::Spawn( void )
 	SetSolid( SOLID_BBOX );
 	AddSolidFlags( FSOLID_NOT_STANDABLE );
 	SetMoveType( MOVETYPE_STEP );
-	SetBloodColor( BLOOD_COLOR_RED );
+	SetBloodColor( BLOOD_COLOR_MECH );
 	m_nIdleChatterType = METROPOLICE_CHATTER_ASK_QUESTION; 
 	m_bSimpleCops = HasSpawnFlags( SF_METROPOLICE_SIMPLE_VERSION );
+	AddSpawnFlags(SF_NPC_GAG);
 	if ( HasSpawnFlags( SF_METROPOLICE_NOCHATTER ) )
 	{
-		AddSpawnFlags( SF_NPC_GAG );
 	}
 
 	if (!m_bSimpleCops)
@@ -737,27 +738,17 @@ void CNPC_MetroPolice::Spawn( void )
 
 void CNPC_MetroPolice::DrawEyes(void)
 {
-		m_pSprite1 = CSprite::SpriteCreate("sprites/glow03.vmt", GetLocalOrigin(), false);
-		m_pSprite2 = CSprite::SpriteCreate("sprites/glow03.vmt", GetLocalOrigin(), false);
+		m_pSprite = CSprite::SpriteCreate("sprites/glow03.vmt", GetLocalOrigin(), false);
 
-		int iAttachment1 = LookupAttachment("lefteye");
-		int iAttachment2 = LookupAttachment("righteye");
+		int iAttachment = LookupAttachment("eye");
 
-		if (m_pSprite1 != NULL)
+		if (m_pSprite != NULL)
 		{
-			m_pSprite1->FollowEntity(this);
-			m_pSprite1->SetScale(0.2);
-			m_pSprite1->SetTransparency(kRenderGlow, 0, 100, 255, 255, kRenderFxNoDissipation);
-			m_pSprite1->SetGlowProxySize(4.0f);
-			m_pSprite1->SetAttachment(this, iAttachment1);
-		}
-		if (m_pSprite2 != NULL)
-		{
-			m_pSprite2->FollowEntity(this);
-			m_pSprite2->SetScale(0.2);
-			m_pSprite2->SetTransparency(kRenderGlow, 0, 100, 255, 255, kRenderFxNoDissipation);
-			m_pSprite2->SetGlowProxySize(4.0f);
-			m_pSprite2->SetAttachment(this, iAttachment2);
+			m_pSprite->FollowEntity(this);
+			m_pSprite->SetScale(0.2);
+			m_pSprite->SetTransparency(kRenderGlow, 0, 100, 255, 255, kRenderFxNoDissipation);
+			m_pSprite->SetGlowProxySize(4.0f);
+			m_pSprite->SetAttachment(this, iAttachment);
 		}
 }
 //-----------------------------------------------------------------------------
@@ -2528,7 +2519,7 @@ void CNPC_MetroPolice::DeathSound( const CTakeDamageInfo &info )
 	if ( IsOnFire() )
 		return;
 
-	m_Sentences.Speak( "METROPOLICE_DIE", SENTENCE_PRIORITY_INVALID, SENTENCE_CRITERIA_ALWAYS );
+	m_Sentences.Speak("COMBINE_DIE", SENTENCE_PRIORITY_INVALID, SENTENCE_CRITERIA_ALWAYS);
 }
 
 
@@ -2674,30 +2665,22 @@ void CNPC_MetroPolice::IdleSound( void )
 //-----------------------------------------------------------------------------
 void CNPC_MetroPolice::PainSound( const CTakeDamageInfo &info )
 {
-	if ( gpGlobals->curtime < m_flNextPainSoundTime )
-		return;
-
-	// Don't make pain sounds if I'm on fire. The looping sound will take care of that for us.
-	if ( IsOnFire() )
-		return;
-
-	float healthRatio = (float)GetHealth() / (float)GetMaxHealth();
-	if ( healthRatio > 0.0f )
+	if (gpGlobals->curtime > m_flNextPainSoundTime)
 	{
-		const char *pSentenceName = "METROPOLICE_PAIN";
-		if ( !HasMemory(bits_MEMORY_PAIN_HEAVY_SOUND) && (healthRatio < 0.25f) )
+		const char* pSentenceName = "COMBINE_PAIN";
+		float healthRatio = (float)GetHealth() / (float)GetMaxHealth();
+		if (!HasMemory(bits_MEMORY_PAIN_LIGHT_SOUND) && healthRatio > 0.9)
 		{
-			Remember( bits_MEMORY_PAIN_HEAVY_SOUND | bits_MEMORY_PAIN_LIGHT_SOUND );
-			pSentenceName = "METROPOLICE_PAIN_HEAVY";
+			Remember(bits_MEMORY_PAIN_LIGHT_SOUND);
+			pSentenceName = "COMBINE_TAUNT";
 		}
-		else if ( !HasMemory(bits_MEMORY_PAIN_LIGHT_SOUND) && healthRatio > 0.8f )
+		else if (!HasMemory(bits_MEMORY_PAIN_HEAVY_SOUND) && healthRatio < 0.25)
 		{
-			Remember( bits_MEMORY_PAIN_LIGHT_SOUND );
-			pSentenceName = "METROPOLICE_PAIN_LIGHT";
+			Remember(bits_MEMORY_PAIN_HEAVY_SOUND);
+			pSentenceName = "COMBINE_COVER";
 		}
-		
-		// This causes it to speak it no matter what; doesn't bother with setting sounds.
-		m_Sentences.Speak( pSentenceName, SENTENCE_PRIORITY_INVALID, SENTENCE_CRITERIA_ALWAYS );
+
+		m_Sentences.Speak(pSentenceName, SENTENCE_PRIORITY_INVALID, SENTENCE_CRITERIA_ALWAYS);
 		m_flNextPainSoundTime = gpGlobals->curtime + 1;
 	}
 }
@@ -3123,42 +3106,15 @@ void CNPC_MetroPolice::ReleaseManhack( void )
 //-----------------------------------------------------------------------------
 void CNPC_MetroPolice::Event_Killed( const CTakeDamageInfo &info )
 {
-	// Release the manhack if we're in the middle of deploying him
-	if ( m_hManhack && m_hManhack->IsAlive() )
+	m_pSprite->SetTransparency(kRenderNone, 0, 0, 0, 0, kRenderFxNone);
+	m_pSprite = NULL;
+	if (m_pSprite != NULL)
 	{
-		ReleaseManhack();
-		m_hManhack = NULL;
-	}
-	m_pSprite1->SetTransparency(kRenderNone, 0, 0, 0, 0, kRenderFxNone);
-	m_pSprite2->SetTransparency(kRenderNone, 0, 0, 0, 0, kRenderFxNone);
-	m_pSprite1 = NULL;
-	m_pSprite2 = NULL;
-	if (m_pSprite1 != NULL)
-	{
-		UTIL_Remove(m_pSprite1);
+		UTIL_Remove(m_pSprite);
 	}
 
-	if (m_pSprite2 != NULL)
-	{
-
-		UTIL_Remove(m_pSprite2);
-	}
-
-
-	CBasePlayer *pPlayer = ToBasePlayer( info.GetAttacker() );
-
-	if ( pPlayer != NULL )
-	{
-		CHalfLife2 *pHL2GameRules = static_cast<CHalfLife2 *>(g_pGameRules);
-
-		// Attempt to drop health
-		if ( pHL2GameRules->NPC_ShouldDropHealth( pPlayer ) )
-		{
-			DropItem( "item_healthvial", WorldSpaceCenter()+RandomVector(-4,4), RandomAngle(0,360) );
-			pHL2GameRules->NPC_DroppedHealth();
-		}
-	}
-
+	DispatchParticleEffect("hlr_base_explosion2", WorldSpaceCenter(), vec3_angle, this);
+	RemoveDeferred();
 	BaseClass::Event_Killed( info );
 }
 

@@ -338,7 +338,7 @@ void CWeaponShotgun::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool
 	pOperator->DoMuzzleFlash();
 	m_iClip1 = m_iClip1 - 2;
 
-	float adjustedspeed = g_pGameRules->AdjustProjectileSpeed(1400.0f);
+	float adjustedspeed = g_pGameRules->SkillAdjustValue(1400.0f);
 
 	QAngle	angShootDir;
 	vecShootOrigin = pOperator->Weapon_ShootPosition();

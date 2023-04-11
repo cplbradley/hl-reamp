@@ -378,14 +378,13 @@ void CWeaponSMG1::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, Vector 
 	VectorAngles(vecShootDir, angAiming);
 	VectorNormalize(vecShootDir);
 	float m_fProjectileSpeed = 1500;
-	float adjustspeed = g_pGameRules->AdjustProjectileSpeed(m_fProjectileSpeed);
+	float adjustspeed = g_pGameRules->SkillAdjustValue(m_fProjectileSpeed);
 	CNPCPlasmaBall *pBall = CNPCPlasmaBall::Create(vecShootOrigin, angAiming, pOperator); //create plasmaball
 	pBall->SetModel(PLASMA_MODEL_NPC);
 	pBall->SetAbsVelocity(vecShootDir * adjustspeed);
 	pBall->m_pGlowTrail->SetTransparency(kRenderTransAdd, 255, 45, 45, 100, kRenderFxNone);
 	
 	pOperator->DoMuzzleFlash();
-	m_iClip1 -= 1;
 }
 
 //-----------------------------------------------------------------------------
@@ -635,7 +634,7 @@ void CWeaponSMG1::PrimaryAttack(void)
 		CNPCPlasmaBall *pBall = CNPCPlasmaBall::Create(vecSrc, angAiming, pOwner); //emit plasma ball object
 		pBall->SetModel(PLASMA_MODEL); //set model to player model
 		float fProjSpeed = PLASMA_SPEED;
-		g_pGameRules->AdjustProjectileSpeed(fProjSpeed);
+		g_pGameRules->SkillAdjustValue(fProjSpeed);
 		pBall->SetAbsVelocity(vecAiming * fProjSpeed); //set speed and vector
 		pBall->m_pGlowTrail->SetTransparency(kRenderTransAdd, 0, 175, 255, 200, kRenderFxNone);//emit trail
 		pBall->DrawSprite();

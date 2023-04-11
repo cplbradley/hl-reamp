@@ -213,6 +213,21 @@ void CWeaponRifle::PrimaryAttack(void)
 		vecSrc = pOwner->Weapon_ShootPosition() + vRight * 3.5f + vUp * -1.0f;
 	else
 		vecSrc = pOwner->EyePosition() + vUp * -8;
+	if (!m_bInZoom)
+	{
+		DispatchParticleEffect("muzzleflash_orange_core_model", PATTACH_POINT_FOLLOW, pOwner->GetViewModel(), iAttachment, true);
+		QAngle punch = QAngle(random->RandomFloat(-2, -1), random->RandomFloat(-2, 2), random->RandomFloat(-2, 2));
+		pOwner->ViewPunch(punch);
+		QAngle snapangle = punch;
+		snapangle[2] = 0;
+		pOwner->SnapEyeAngles(pOwner->EyeAngles() + snapangle);
+	}
+	else
+	{
+		QAngle punch = QAngle(random->RandomFloat(-2, -1), random->RandomFloat(-2, 2), 0);
+		pOwner->ViewPunch(punch / 2);
+		pOwner->SnapEyeAngles(pOwner->EyeAngles() + (punch / 2));
+	}
 	Vector vecAbsStart = pOwner->EyePosition();
 	Vector vecAbsEnd = vecAbsStart + (vForward * MAX_TRACE_LENGTH);
 	Vector vecAiming = pOwner->GetAutoaimVector(AUTOAIM_SCALE_DIRECT_ONLY);
@@ -228,20 +243,9 @@ void CWeaponRifle::PrimaryAttack(void)
 	info.m_pAttacker = GetOwnerEntity();
 	info.m_iDamageType = DMG_BULLET | DMG_DIRECT;
 	FireActualBullet(info, 12000, GetTracerType());
+
 	//pOwner->FireBullets(2, vecSrc, vecDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false);
-	if (!m_bInZoom)
-	{
-		DispatchParticleEffect("muzzleflash_orange_core_model", PATTACH_POINT_FOLLOW, pOwner->GetViewModel(), iAttachment, true);
-		QAngle punch = QAngle(random->RandomFloat(-2, -1), random->RandomFloat(-2, 2), 0);
-		pOwner->ViewPunch(punch);
-		pOwner->SnapEyeAngles(pOwner->EyeAngles() + punch);
-	}
-	else
-	{
-		QAngle punch = QAngle(random->RandomFloat(-2, -1), random->RandomFloat(-2, 2), 0);
-		pOwner->ViewPunch(punch/2);
-		pOwner->SnapEyeAngles(pOwner->EyeAngles() + (punch/2));
-	}
+	
 	SendWeaponAnim(GetPrimaryAttackActivity());
 	WeaponSound(SINGLE);
 	m_iPrimaryAttacks++;

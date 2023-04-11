@@ -1153,7 +1153,7 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	if ((info.GetDamageType() & DMG_BLAST) && (info.GetInflictor()->IsPlayer()))
 	{
 
-		float scale = g_pGameRules->AdjustProjectileSpeed(0.4f);
+		float scale = g_pGameRules->SkillAdjustValue(0.4f);
 		float expscale;
 		ConVarRef mania("g_rocket_jump_mania");
 		mania.GetBool() ? expscale = 0.0f : expscale = scale;
@@ -5387,7 +5387,7 @@ void CBasePlayer::GroundPound(void)
 {
 	SetAnimation(PLAYER_SLAM);
 	EmitSound("BadDog.Smash");
-	UTIL_ScreenShake(WorldSpaceCenter(), 40.0, 60, 1.0, 500, SHAKE_START);
+	UTIL_ScreenShake(WorldSpaceCenter(), 40, 60, 1, 500, SHAKE_START);
 	DispatchParticleEffect("baddog_groundsmash_radialsmoke", GetAbsOrigin(), QAngle(0,0,0), this);
 	CBroadcastRecipientFilter filter2;
 	RadiusDamage(CTakeDamageInfo(this, this, 500, DMG_SONIC), GetAbsOrigin(), 256, CLASS_PLAYER , this);

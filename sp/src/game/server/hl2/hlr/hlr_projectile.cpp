@@ -165,6 +165,7 @@ unsigned int CHLRPistolProjectile::PhysicsSolidMaskForEntity() const
 void CHLRPistolProjectile::Spawn(void)
 {
 	Precache();
+	AddEffects(EF_NODRAW);
 	SetMoveType(MOVETYPE_FLY, MOVECOLLIDE_FLY_CUSTOM);
 	UTIL_SetSize(this, -Vector(10.0f, 10.0f, 1.0f), Vector(10.0f, 10.0f, 10.0f));
 	SetSolid(SOLID_NONE);
@@ -191,6 +192,7 @@ void CHLRPistolProjectile::EnableTouch(void)
 	SetSolid(SOLID_BBOX);
 	AddSolidFlags(FSOLID_NOT_SOLID || FSOLID_TRIGGER);
 	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
+	RemoveEffects(EF_NODRAW);
 }
 bool CHLRPistolProjectile::CreateTrail(void)
 {

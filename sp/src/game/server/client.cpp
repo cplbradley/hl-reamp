@@ -323,6 +323,7 @@ void ClientPrecache( void )
 	CBaseEntity::PrecacheScriptSound( "Player.WeaponSelected" );
 	CBaseEntity::PrecacheScriptSound( "Player.WeaponSelectionClose" );
 	CBaseEntity::PrecacheScriptSound( "Player.WeaponSelectionMoveSlot" );
+	CBaseEntity::PrecacheScriptSound("Generic.Click");
 
 	// General legacy temp ents sounds
 	CBaseEntity::PrecacheScriptSound( "Bounce.Glass" );
@@ -333,6 +334,8 @@ void ClientPrecache( void )
 	CBaseEntity::PrecacheScriptSound( "Bounce.ShotgunShell" );
 	CBaseEntity::PrecacheScriptSound( "Bounce.Shell" );
 	CBaseEntity::PrecacheScriptSound( "Bounce.Concrete" );
+	
+
 
 	ClientGamePrecache();
 }

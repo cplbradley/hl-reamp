@@ -334,7 +334,7 @@ bool CAI_BaseNPC::IsJumpLegal( const Vector &startPos, const Vector &apex, const
 void CAI_BaseNPC::SetJumpLimit(void)
 {
 	int moveclass = GetMovementClass();
-	float diffmod = g_pGameRules->AdjustProjectileSpeed(1);
+	float diffmod = g_pGameRules->SkillAdjustValueInverted(1);
 	switch (moveclass)
 	{
 	case MOVECLASS_ALWAYSJUMP:
@@ -346,32 +346,32 @@ void CAI_BaseNPC::SetJumpLimit(void)
 		break;
 	case MOVECLASS_DEFAULT:
 	{
-		m_fNextAllowedJump = gpGlobals->curtime + 15.0f / diffmod;
+		m_fNextAllowedJump = gpGlobals->curtime + 15.0f * diffmod;
 		break;
 	}
 	case MOVECLASS_HEAVY:
 	{
-		m_fNextAllowedJump = gpGlobals->curtime + 25.0f / diffmod;
+		m_fNextAllowedJump = gpGlobals->curtime + 25.0f * diffmod;
 		break;
 	}
 	case MOVECLASS_LIGHT:
 	{
-		m_fNextAllowedJump = gpGlobals->curtime + 10.0f / diffmod;
+		m_fNextAllowedJump = gpGlobals->curtime + 10.0f * diffmod;
 		break;
 	}
 	case MOVECLASS_SHORTRANGE:
 	{
-		m_fNextAllowedJump = gpGlobals->curtime + 12.0f / diffmod;
+		m_fNextAllowedJump = gpGlobals->curtime + 12.0f * diffmod;
 		break;
 	}
 	case MOVECLASS_LONGRANGE:
 	{
-		m_fNextAllowedJump = gpGlobals->curtime + 18.0f / diffmod;
+		m_fNextAllowedJump = gpGlobals->curtime + 18.0f * diffmod;
 		break;
 	}
 	default:
 	{
-		m_fNextAllowedJump = gpGlobals->curtime + 15.0f / diffmod;
+		m_fNextAllowedJump = gpGlobals->curtime + 15.0f * diffmod;
 		break;
 	}
 	}

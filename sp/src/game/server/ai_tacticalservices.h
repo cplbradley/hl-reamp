@@ -6,6 +6,7 @@
 #define AI_TACTICALSERVICES_H
 
 #include "ai_component.h"
+#include "ai_node.h"
 
 #if defined( _WIN32 )
 #pragma once
@@ -47,8 +48,10 @@ public:
 	bool			FindLateralCover( const Vector &vecThreat, float flMinDist, float distToCheck, int numChecksPerDir, Vector *pResult );
 	bool			FindLateralCover( const Vector &vNearPos, const Vector &vecThreat, float flMinDist, float distToCheck, int numChecksPerDir, Vector *pResult );
 
-	void			AllowFindLateralLos( bool bAllow ) { m_bAllowFindLateralLos = bAllow; }
+	CAI_Node*		FindTeleportNode(const Vector& vNearPos, const Vector& vThreatPos, float minDist, float maxDist);
 
+	void			AllowFindLateralLos( bool bAllow ) { m_bAllowFindLateralLos = bAllow; }
+	Vector			GetNodePos(int);
 private:
 	// Checks lateral cover
 	bool			TestLateralCover( const Vector &vecCheckStart, const Vector &vecCheckEnd, float flMinDist );
@@ -59,7 +62,7 @@ private:
 	int				FindCoverNode( const Vector &vNearPos, const Vector &vThreatPos, const Vector &vThreatEyePos, float flMinDist, float flMaxDist );
 	int				FindLosNode( const Vector &vThreatPos, const Vector &vThreatEyePos, float flMinThreatDist, float flMaxThreatDist, float flBlockTime, FlankType_t eFlankType, const Vector &vThreatFacing, float flFlankParam );
 	
-	Vector			GetNodePos( int );
+	
 
 	CAI_Network *GetNetwork()				{ return m_pNetwork; }
 	const CAI_Network *GetNetwork() const	{ return m_pNetwork; }

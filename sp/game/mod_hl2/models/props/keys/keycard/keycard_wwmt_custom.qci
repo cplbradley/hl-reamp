@@ -1,0 +1,9 @@
+//File for injecting custom rules. Safe to edit. Do not delete.
+
+$keyvalues
+{
+	prop_data
+	{
+		base			Item.Small
+	}
+}

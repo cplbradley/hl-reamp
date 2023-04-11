@@ -152,8 +152,7 @@ private:
 
 	void		BuildScheduleTestBits( void );
 
-	CHandle<CSprite> m_pSprite1;
-	CHandle<CSprite> m_pSprite2;
+	CHandle<CSprite> m_pSprite;
 
 	bool		CanDeployManhack( void );
 

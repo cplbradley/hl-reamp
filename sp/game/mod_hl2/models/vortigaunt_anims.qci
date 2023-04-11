@@ -1,0 +1,2097 @@
+
+$definebone "ValveBiped.hips" "" 0.000002 6.868948 40.376724 -14.999978 -89.999928 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.leg_bone1_L" "ValveBiped.hips" 0.000002 3.722111 0.000000 71.399424 32.983633 -58.404279 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.leg_bone2_L" "ValveBiped.leg_bone1_L" 16.293056 -0.000002 0.000001 -0.000004 86.460019 0.000003 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.leg_bone3_L" "ValveBiped.leg_bone2_L" 14.550485 0.000000 0.000000 0.000002 -88.404178 0.000005 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.Bip01_L_Foot" "ValveBiped.leg_bone3_L" 13.312027 0.000000 0.000000 9.910396 9.695077 1.666510 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.spine1" "ValveBiped.hips" 1.521736 0.000004 4.280872 -80.514039 0.000458 -90.000495 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.spine2" "ValveBiped.spine1" 3.403126 0.000000 0.000000 0.000000 6.327058 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.spine3" "ValveBiped.spine2" 4.482059 -0.000000 0.000000 -0.000000 11.718247 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.spine4" "ValveBiped.spine3" 10.798351 0.000000 -0.000000 -0.000000 44.090661 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.clavical_R" "ValveBiped.spine4" 1.508955 -0.508923 -1.824640 78.540667 -179.997330 -0.000458 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.arm1_R" "ValveBiped.clavical_R" 5.310891 0.000000 -0.000004 9.197578 -0.375230 54.673575 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.arm2_R" "ValveBiped.arm1_R" 20.607859 -0.000000 0.000000 0.000008 -52.508890 0.000004 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.hand1_R" "ValveBiped.arm2_R" 15.149599 0.000002 0.000000 -13.497099 -8.297003 16.420180 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.cleaver_attachment" "ValveBiped.hand1_R" 3.548689 1.687082 1.906624 2.828863 -91.952789 -175.006961 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.leg_bone1_R" "ValveBiped.hips" -0.000008 -3.722115 -0.000004 70.532653 -36.838950 -122.228463 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.leg_bone2_R" "ValveBiped.leg_bone1_R" 16.293056 -0.000002 0.000001 -0.000000 86.749701 -0.000002 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.leg_bone3_R" "ValveBiped.leg_bone2_R" 14.550488 -0.000004 0.000001 -0.000003 -88.705088 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.Bip01_R_Foot" "ValveBiped.leg_bone3_R" 13.312050 0.000124 0.000001 -10.980223 10.583006 -4.308240 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.neck1" "ValveBiped.spine4" 4.747087 0.000004 0.000000 -0.000000 38.604636 0.000057 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.neck2" "ValveBiped.neck1" 6.478227 0.000008 0.000000 -0.000000 7.006759 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.head" "ValveBiped.neck2" 5.452011 -0.000008 0.000000 -0.000000 14.516630 -0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.clavical_L" "ValveBiped.spine4" 1.508955 -0.508923 1.824568 -78.540824 -179.997043 0.000115 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.arm1_L" "ValveBiped.clavical_L" 5.310892 -0.000004 0.000000 -7.004638 -4.183622 -64.981157 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.arm2_L" "ValveBiped.arm1_L" 20.607864 0.000002 0.000008 -0.000003 -52.508880 0.000002 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.hand1_L" "ValveBiped.arm2_L" 15.149605 0.000007 0.000000 13.497048 -8.297053 -16.420110 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.forward" "ValveBiped.head" 3.999996 1.999996 0.000000 -0.000000 -7.000002 90.000004 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.pinky1_L" "ValveBiped.hand1_L" 4.173201 -0.002193 1.519180 5.062078 -11.282050 0.573477 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.pinky2_L" "ValveBiped.pinky1_L" 3.619756 0.000000 0.000000 -0.000003 1.000217 0.000003 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.pinky3_L" "ValveBiped.pinky2_L" 3.076450 0.000004 -0.000008 -0.000005 20.999833 0.000003 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.index1_L" "ValveBiped.hand1_L" 4.065567 0.002193 -1.519188 15.430441 -17.602407 -4.080940 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.index2_L" "ValveBiped.index1_L" 3.619752 -0.000004 -0.000008 -0.000007 6.499979 0.000005 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.Bip01_R_Toe0" "ValveBiped.Bip01_R_Foot" 7.637530 0.000001 0.000001 -0.295419 -65.332167 -4.403980 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.index1_R" "ValveBiped.hand1_R" 4.065565 0.002192 1.519180 -15.430427 -17.602405 4.080946 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.index2_R" "ValveBiped.index1_R" 3.619752 -0.000002 0.000000 0.000015 6.499975 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.index3_R" "ValveBiped.index2_R" 3.076453 0.000002 0.000008 0.000010 25.000035 0.000010 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.pinky1_R" "ValveBiped.hand1_R" 4.173201 -0.002192 -1.519188 -5.062071 -11.282057 -0.573474 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.pinky2_R" "ValveBiped.pinky1_R" 3.619755 -0.000002 0.000000 0.000012 1.000214 0.000002 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.pinky3_R" "ValveBiped.pinky2_R" 3.076452 0.000000 0.000008 0.000007 20.999832 0.000009 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.Bip01_L_Toe0" "ValveBiped.Bip01_L_Foot" 7.548072 -0.000000 -0.000001 -0.294494 -65.119140 -0.294182 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.bone" "ValveBiped.spine3" 3.444981 7.027712 -0.000027 -0.000057 156.972734 0.000057 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.bone1" "ValveBiped.bone" 6.662010 0.000000 0.000000 -0.000000 -134.096081 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.bone2" "ValveBiped.bone1" 6.061832 0.000000 0.000000 -0.000000 56.603127 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.bone3" "ValveBiped.bone2" 2.288945 0.044155 -0.938771 -3.403193 19.391471 -8.120472 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.bone4" "ValveBiped.bone3" 3.500006 -0.000004 -0.000000 -0.000011 83.668056 0.000004 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.bone5" "ValveBiped.bone2" 2.463229 -0.122143 0.785866 -15.660470 19.130774 -2.139998 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.bone6" "ValveBiped.bone5" 3.453001 -0.000004 -0.000001 -0.000001 82.958099 0.000017 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.nectar" "ValveBiped.hand1_L" 5.179167 2.228603 -0.990341 50.605705 -38.264134 -41.079586 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+$definebone "ValveBiped.index3_L" "ValveBiped.index2_L" 3.076453 0.000006 -0.000008 -0.000010 25.000035 0.000002 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+
+
+// The 32 below is a guess until further is known about the format.
+$animblocksize 32
+
+$bonesaveframe "ValveBiped.hips" position rotation
+$bonesaveframe "ValveBiped.leg_bone1_L" rotation
+$bonesaveframe "ValveBiped.leg_bone2_L" rotation
+$bonesaveframe "ValveBiped.leg_bone3_L" rotation
+$bonesaveframe "ValveBiped.Bip01_L_Foot" rotation
+$bonesaveframe "ValveBiped.leg_bone1_R" rotation
+$bonesaveframe "ValveBiped.leg_bone2_R" rotation
+$bonesaveframe "ValveBiped.leg_bone3_R" rotation
+$bonesaveframe "ValveBiped.Bip01_R_Foot" rotation
+$bonesaveframe "ValveBiped.spine1" position rotation
+$bonesaveframe "ValveBiped.spine2" rotation
+$bonesaveframe "ValveBiped.spine3" rotation
+$bonesaveframe "ValveBiped.spine4" rotation
+$bonesaveframe "ValveBiped.neck1" rotation
+$bonesaveframe "ValveBiped.neck2" rotation
+$bonesaveframe "ValveBiped.head" rotation
+$bonesaveframe "ValveBiped.clavical_L" rotation
+$bonesaveframe "ValveBiped.arm1_L" rotation
+$bonesaveframe "ValveBiped.arm2_L" rotation
+$bonesaveframe "ValveBiped.hand1_L" rotation
+$bonesaveframe "ValveBiped.clavical_R" rotation
+$bonesaveframe "ValveBiped.arm1_R" rotation
+$bonesaveframe "ValveBiped.arm2_R" rotation
+
+$sectionframes 30 120
+
+$poseparameter "move_yaw" -180 180 loop 360
+$poseparameter "aim_yaw" -45 45 loop 0
+$poseparameter "aim_pitch" -90 45 loop 0
+$poseparameter "body_yaw" -25.05665 26.50552 loop 0
+$poseparameter "spine_yaw" -20.13916 20.69392 loop 0
+$poseparameter "neck_trans" -0.548103 1.187874 loop 0
+$poseparameter "head_yaw" -44.44309 44.30585 loop 0
+$poseparameter "head_pitch" -59.49796 50.02365 loop 0
+$poseparameter "head_roll" -42.76306 41.08476 loop 0
+
+$weightlist "weights_TC_Aim_all" {
+	 "ValveBiped.hips" 1
+	 "ValveBiped.leg_bone1_L" 0
+	 "ValveBiped.leg_bone2_L" 0
+	 "ValveBiped.leg_bone3_L" 0
+	 "ValveBiped.Bip01_L_Foot" 0
+	 "ValveBiped.Bip01_L_Toe0" 0
+	 "ValveBiped.leg_bone1_R" 0
+	 "ValveBiped.leg_bone2_R" 0
+	 "ValveBiped.leg_bone3_R" 0
+	 "ValveBiped.Bip01_R_Foot" 0
+	 "ValveBiped.Bip01_R_Toe0" 0
+	 "ValveBiped.spine1" 1
+	 "ValveBiped.spine2" 1
+	 "ValveBiped.spine3" 1
+	 "ValveBiped.spine4" 1
+	 "ValveBiped.neck1" 1
+	 "ValveBiped.neck2" 1
+	 "ValveBiped.head" 1
+	 "ValveBiped.clavical_L" 1
+	 "ValveBiped.arm1_L" 1
+	 "ValveBiped.arm2_L" 1
+	 "ValveBiped.hand1_L" 1
+	 "ValveBiped.index1_L" 1
+	 "ValveBiped.index2_L" 1
+	 "ValveBiped.index3_L" 1
+	 "ValveBiped.pinky1_L" 1
+	 "ValveBiped.pinky2_L" 1
+	 "ValveBiped.pinky3_L" 1
+	 "ValveBiped.clavical_R" 1
+	 "ValveBiped.arm1_R" 1
+	 "ValveBiped.arm2_R" 1
+	 "ValveBiped.hand1_R" 1
+	 "ValveBiped.index1_R" 1
+	 "ValveBiped.index2_R" 1
+	 "ValveBiped.index3_R" 1
+	 "ValveBiped.pinky1_R" 1
+	 "ValveBiped.pinky2_R" 1
+	 "ValveBiped.pinky3_R" 1
+	 "ValveBiped.cleaver_attachment" 1
+	 "ValveBiped.bone" 1
+	 "ValveBiped.bone1" 1
+	 "ValveBiped.bone2" 1
+	 "ValveBiped.bone3" 1
+	 "ValveBiped.bone4" 1
+	 "ValveBiped.bone5" 1
+	 "ValveBiped.bone6" 1
+	 "ValveBiped.nectar" 1
+	 "ValveBiped.forward" 1
+}
+
+$weightlist "weights_Walk_All_HoldPart_ArmLayer" {
+	 "ValveBiped.hips" 0
+	 "ValveBiped.leg_bone1_L" 0
+	 "ValveBiped.leg_bone2_L" 0
+	 "ValveBiped.leg_bone3_L" 0
+	 "ValveBiped.Bip01_L_Foot" 0
+	 "ValveBiped.Bip01_L_Toe0" 0
+	 "ValveBiped.leg_bone1_R" 0
+	 "ValveBiped.leg_bone2_R" 0
+	 "ValveBiped.leg_bone3_R" 0
+	 "ValveBiped.Bip01_R_Foot" 0
+	 "ValveBiped.Bip01_R_Toe0" 0
+	 "ValveBiped.spine1" 0
+	 "ValveBiped.spine2" 0
+	 "ValveBiped.spine3" 0
+	 "ValveBiped.spine4" 0
+	 "ValveBiped.neck1" 0
+	 "ValveBiped.neck2" 0
+	 "ValveBiped.head" 0
+	 "ValveBiped.clavical_L" 0
+	 "ValveBiped.arm1_L" 1
+	 "ValveBiped.arm2_L" 1
+	 "ValveBiped.hand1_L" 1
+	 "ValveBiped.index1_L" 1
+	 "ValveBiped.index2_L" 1
+	 "ValveBiped.index3_L" 1
+	 "ValveBiped.pinky1_L" 1
+	 "ValveBiped.pinky2_L" 1
+	 "ValveBiped.pinky3_L" 1
+	 "ValveBiped.clavical_R" 0
+	 "ValveBiped.arm1_R" 1
+	 "ValveBiped.arm2_R" 1
+	 "ValveBiped.hand1_R" 1
+	 "ValveBiped.index1_R" 1
+	 "ValveBiped.index2_R" 1
+	 "ValveBiped.index3_R" 1
+	 "ValveBiped.pinky1_R" 1
+	 "ValveBiped.pinky2_R" 1
+	 "ValveBiped.pinky3_R" 1
+	 "ValveBiped.cleaver_attachment" 1
+	 "ValveBiped.bone" 0
+	 "ValveBiped.bone1" 0
+	 "ValveBiped.bone2" 0
+	 "ValveBiped.bone3" 0
+	 "ValveBiped.bone4" 0
+	 "ValveBiped.bone5" 0
+	 "ValveBiped.bone6" 0
+	 "ValveBiped.nectar" 1
+	 "ValveBiped.forward" 0
+}
+
+$weightlist "weights_Walk_All_TC_upper" {
+	 "ValveBiped.hips" 0
+	 "ValveBiped.leg_bone1_L" 0
+	 "ValveBiped.leg_bone2_L" 0
+	 "ValveBiped.leg_bone3_L" 0
+	 "ValveBiped.Bip01_L_Foot" 0
+	 "ValveBiped.Bip01_L_Toe0" 0
+	 "ValveBiped.leg_bone1_R" 0
+	 "ValveBiped.leg_bone2_R" 0
+	 "ValveBiped.leg_bone3_R" 0
+	 "ValveBiped.Bip01_R_Foot" 0
+	 "ValveBiped.Bip01_R_Toe0" 0
+	 "ValveBiped.spine1" 1
+	 "ValveBiped.spine2" 1
+	 "ValveBiped.spine3" 1
+	 "ValveBiped.spine4" 1
+	 "ValveBiped.neck1" 1
+	 "ValveBiped.neck2" 1
+	 "ValveBiped.head" 1
+	 "ValveBiped.clavical_L" 1
+	 "ValveBiped.arm1_L" 1
+	 "ValveBiped.arm2_L" 1
+	 "ValveBiped.hand1_L" 1
+	 "ValveBiped.index1_L" 1
+	 "ValveBiped.index2_L" 1
+	 "ValveBiped.index3_L" 1
+	 "ValveBiped.pinky1_L" 1
+	 "ValveBiped.pinky2_L" 1
+	 "ValveBiped.pinky3_L" 1
+	 "ValveBiped.clavical_R" 1
+	 "ValveBiped.arm1_R" 1
+	 "ValveBiped.arm2_R" 1
+	 "ValveBiped.hand1_R" 1
+	 "ValveBiped.index1_R" 1
+	 "ValveBiped.index2_R" 1
+	 "ValveBiped.index3_R" 1
+	 "ValveBiped.pinky1_R" 1
+	 "ValveBiped.pinky2_R" 1
+	 "ValveBiped.pinky3_R" 1
+	 "ValveBiped.cleaver_attachment" 1
+	 "ValveBiped.bone" 1
+	 "ValveBiped.bone1" 1
+	 "ValveBiped.bone2" 1
+	 "ValveBiped.bone3" 1
+	 "ValveBiped.bone4" 1
+	 "ValveBiped.bone5" 1
+	 "ValveBiped.bone6" 1
+	 "ValveBiped.nectar" 1
+	 "ValveBiped.forward" 1
+}
+
+$weightlist "weights_turnleft" {
+	 "ValveBiped.hips" 0
+	 "ValveBiped.leg_bone1_L" 0
+	 "ValveBiped.leg_bone2_L" 0
+	 "ValveBiped.leg_bone3_L" 0
+	 "ValveBiped.Bip01_L_Foot" 0
+	 "ValveBiped.Bip01_L_Toe0" 0
+	 "ValveBiped.leg_bone1_R" 0
+	 "ValveBiped.leg_bone2_R" 0
+	 "ValveBiped.leg_bone3_R" 0
+	 "ValveBiped.Bip01_R_Foot" 0
+	 "ValveBiped.Bip01_R_Toe0" 0
+	 "ValveBiped.spine1" 0
+	 "ValveBiped.spine2" 0
+	 "ValveBiped.spine3" 0
+	 "ValveBiped.spine4" 0
+	 "ValveBiped.neck1" 0
+	 "ValveBiped.neck2" 0
+	 "ValveBiped.head" 0
+	 "ValveBiped.clavical_L" 0
+	 "ValveBiped.arm1_L" 0
+	 "ValveBiped.arm2_L" 0
+	 "ValveBiped.hand1_L" 0
+	 "ValveBiped.index1_L" 0
+	 "ValveBiped.index2_L" 0
+	 "ValveBiped.index3_L" 0
+	 "ValveBiped.pinky1_L" 0
+	 "ValveBiped.pinky2_L" 0
+	 "ValveBiped.pinky3_L" 0
+	 "ValveBiped.clavical_R" 0
+	 "ValveBiped.arm1_R" 0
+	 "ValveBiped.arm2_R" 0
+	 "ValveBiped.hand1_R" 0
+	 "ValveBiped.index1_R" 0
+	 "ValveBiped.index2_R" 0
+	 "ValveBiped.index3_R" 0
+	 "ValveBiped.pinky1_R" 0
+	 "ValveBiped.pinky2_R" 0
+	 "ValveBiped.pinky3_R" 0
+	 "ValveBiped.cleaver_attachment" 0
+	 "ValveBiped.bone" 0
+	 "ValveBiped.bone1" 0
+	 "ValveBiped.bone2" 0
+	 "ValveBiped.bone3" 0
+	 "ValveBiped.bone4" 0
+	 "ValveBiped.bone5" 0
+	 "ValveBiped.bone6" 0
+	 "ValveBiped.nectar" 0
+	 "ValveBiped.forward" 0
+}
+
+$weightlist "weights_body_rot_z" {
+	 "ValveBiped.hips" 1
+	 "ValveBiped.leg_bone1_L" 0
+	 "ValveBiped.leg_bone2_L" 0
+	 "ValveBiped.leg_bone3_L" 0
+	 "ValveBiped.Bip01_L_Foot" 0
+	 "ValveBiped.Bip01_L_Toe0" 0
+	 "ValveBiped.leg_bone1_R" 0
+	 "ValveBiped.leg_bone2_R" 0
+	 "ValveBiped.leg_bone3_R" 0
+	 "ValveBiped.Bip01_R_Foot" 0
+	 "ValveBiped.Bip01_R_Toe0" 0
+	 "ValveBiped.spine1" 1
+	 "ValveBiped.spine2" 1
+	 "ValveBiped.spine3" 1
+	 "ValveBiped.spine4" 1
+	 "ValveBiped.neck1" 0
+	 "ValveBiped.neck2" 0
+	 "ValveBiped.head" 0
+	 "ValveBiped.clavical_L" 0
+	 "ValveBiped.arm1_L" 0
+	 "ValveBiped.arm2_L" 0
+	 "ValveBiped.hand1_L" 0
+	 "ValveBiped.index1_L" 0
+	 "ValveBiped.index2_L" 0
+	 "ValveBiped.index3_L" 0
+	 "ValveBiped.pinky1_L" 0
+	 "ValveBiped.pinky2_L" 0
+	 "ValveBiped.pinky3_L" 0
+	 "ValveBiped.clavical_R" 0
+	 "ValveBiped.arm1_R" 0
+	 "ValveBiped.arm2_R" 0
+	 "ValveBiped.hand1_R" 0
+	 "ValveBiped.index1_R" 0
+	 "ValveBiped.index2_R" 0
+	 "ValveBiped.index3_R" 0
+	 "ValveBiped.pinky1_R" 0
+	 "ValveBiped.pinky2_R" 0
+	 "ValveBiped.pinky3_R" 0
+	 "ValveBiped.cleaver_attachment" 0
+	 "ValveBiped.bone" 1
+	 "ValveBiped.bone1" 1
+	 "ValveBiped.bone2" 1
+	 "ValveBiped.bone3" 1
+	 "ValveBiped.bone4" 1
+	 "ValveBiped.bone5" 1
+	 "ValveBiped.bone6" 1
+	 "ValveBiped.nectar" 0
+	 "ValveBiped.forward" 0
+}
+
+$weightlist "weights_neck_trans_x" {
+	 "ValveBiped.hips" 1
+	 "ValveBiped.leg_bone1_L" 0
+	 "ValveBiped.leg_bone2_L" 0
+	 "ValveBiped.leg_bone3_L" 0
+	 "ValveBiped.Bip01_L_Foot" 0
+	 "ValveBiped.Bip01_L_Toe0" 0
+	 "ValveBiped.leg_bone1_R" 0
+	 "ValveBiped.leg_bone2_R" 0
+	 "ValveBiped.leg_bone3_R" 0
+	 "ValveBiped.Bip01_R_Foot" 0
+	 "ValveBiped.Bip01_R_Toe0" 0
+	 "ValveBiped.spine1" 1
+	 "ValveBiped.spine2" 1
+	 "ValveBiped.spine3" 1
+	 "ValveBiped.spine4" 1
+	 "ValveBiped.neck1" 1
+	 "ValveBiped.neck2" 1
+	 "ValveBiped.head" 1
+	 "ValveBiped.clavical_L" 0
+	 "ValveBiped.arm1_L" 0
+	 "ValveBiped.arm2_L" 0
+	 "ValveBiped.hand1_L" 0
+	 "ValveBiped.index1_L" 0
+	 "ValveBiped.index2_L" 0
+	 "ValveBiped.index3_L" 0
+	 "ValveBiped.pinky1_L" 0
+	 "ValveBiped.pinky2_L" 0
+	 "ValveBiped.pinky3_L" 0
+	 "ValveBiped.clavical_R" 0
+	 "ValveBiped.arm1_R" 0
+	 "ValveBiped.arm2_R" 0
+	 "ValveBiped.hand1_R" 0
+	 "ValveBiped.index1_R" 0
+	 "ValveBiped.index2_R" 0
+	 "ValveBiped.index3_R" 0
+	 "ValveBiped.pinky1_R" 0
+	 "ValveBiped.pinky2_R" 0
+	 "ValveBiped.pinky3_R" 0
+	 "ValveBiped.cleaver_attachment" 0
+	 "ValveBiped.bone" 1
+	 "ValveBiped.bone1" 1
+	 "ValveBiped.bone2" 1
+	 "ValveBiped.bone3" 1
+	 "ValveBiped.bone4" 1
+	 "ValveBiped.bone5" 1
+	 "ValveBiped.bone6" 1
+	 "ValveBiped.nectar" 0
+	 "ValveBiped.forward" 1
+}
+
+$animation "a_aim_TC_neutral" "vortigaunt_anims_anims\a_aim_TC_neutral.smd" {
+	fps 30
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+}
+
+$animation "a_TC_aim_down_left" "vortigaunt_anims_anims\a_TC_aim_down_left.smd" {
+	fps 30
+	//ikrule "lhand" touch "ValveBiped.hand1_R"
+	weightlist "weights_TC_Aim_all"
+}
+
+$animation "a_TC_aim_down_center" "vortigaunt_anims_anims\a_TC_aim_down_center.smd" {
+	fps 30
+	//ikrule "lhand" touch "ValveBiped.hand1_R"
+	weightlist "weights_TC_Aim_all"
+}
+
+$animation "a_TC_aim_down_right" "vortigaunt_anims_anims\a_TC_aim_down_right.smd" {
+	fps 30
+	//ikrule "lhand" touch "ValveBiped.hand1_R"
+	weightlist "weights_TC_Aim_all"
+}
+
+$animation "a_TC_aim_mid_left" "vortigaunt_anims_anims\a_TC_aim_mid_left.smd" {
+	fps 30
+	//ikrule "lhand" touch "ValveBiped.hand1_R"
+	weightlist "weights_TC_Aim_all"
+}
+
+$animation "a_TC_aim_mid_center" "vortigaunt_anims_anims\a_TC_aim_mid_center.smd" {
+	fps 30
+	//ikrule "lhand" touch "ValveBiped.hand1_R"
+	weightlist "weights_TC_Aim_all"
+}
+
+$animation "a_TC_aim_mid_right" "vortigaunt_anims_anims\a_TC_aim_mid_right.smd" {
+	fps 30
+	//ikrule "lhand" touch "ValveBiped.hand1_R"
+	weightlist "weights_TC_Aim_all"
+}
+
+$animation "a_TC_aim_up_left" "vortigaunt_anims_anims\a_TC_aim_up_left.smd" {
+	fps 30
+	//ikrule "lhand" touch "ValveBiped.hand1_R"
+	weightlist "weights_TC_Aim_all"
+}
+
+$animation "a_TC_aim_up_center" "vortigaunt_anims_anims\a_TC_aim_up_center.smd" {
+	fps 30
+	//ikrule "lhand" touch "ValveBiped.hand1_R"
+	weightlist "weights_TC_Aim_all"
+}
+
+$animation "a_TC_aim_up_right" "vortigaunt_anims_anims\a_TC_aim_up_right.smd" {
+	fps 30
+	//ikrule "lhand" touch "ValveBiped.hand1_R"
+	weightlist "weights_TC_Aim_all"
+}
+
+$animation "a_TC_aim_straight_up" "vortigaunt_anims_anims\a_TC_aim_straight_up.smd" {
+	fps 30
+	//ikrule "lhand" touch "ValveBiped.hand1_R"
+	weightlist "weights_TC_Aim_all"
+}
+
+$animation "a_run_aim_TC_neutral" "vortigaunt_anims_anims\a_run_aim_TC_neutral.smd" {
+	fps 30
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+}
+
+$animation "a_TC_run_aim_down_left" "vortigaunt_anims_anims\a_TC_run_aim_down_left.smd" {
+	fps 30
+	//ikrule "lhand" touch "ValveBiped.hand1_R"
+	weightlist "weights_TC_Aim_all"
+}
+
+$animation "a_TC_run_aim_down_center" "vortigaunt_anims_anims\a_TC_run_aim_down_center.smd" {
+	fps 30
+	//ikrule "lhand" touch "ValveBiped.hand1_R"
+	weightlist "weights_TC_Aim_all"
+}
+
+$animation "a_TC_run_aim_down_right" "vortigaunt_anims_anims\a_TC_run_aim_down_right.smd" {
+	fps 30
+	//ikrule "lhand" touch "ValveBiped.hand1_R"
+	weightlist "weights_TC_Aim_all"
+}
+
+$animation "a_TC_run_aim_mid_left" "vortigaunt_anims_anims\a_TC_run_aim_mid_left.smd" {
+	fps 30
+	//ikrule "lhand" touch "ValveBiped.hand1_R"
+	weightlist "weights_TC_Aim_all"
+}
+
+$animation "a_TC_run_aim_mid_center" "vortigaunt_anims_anims\a_TC_run_aim_mid_center.smd" {
+	fps 30
+	//ikrule "lhand" touch "ValveBiped.hand1_R"
+	weightlist "weights_TC_Aim_all"
+}
+
+$animation "a_TC_run_aim_mid_right" "vortigaunt_anims_anims\a_TC_run_aim_mid_right.smd" {
+	fps 30
+	//ikrule "lhand" touch "ValveBiped.hand1_R"
+	weightlist "weights_TC_Aim_all"
+}
+
+$animation "a_TC_run_aim_up_left" "vortigaunt_anims_anims\a_TC_run_aim_up_left.smd" {
+	fps 30
+	//ikrule "lhand" touch "ValveBiped.hand1_R"
+	weightlist "weights_TC_Aim_all"
+}
+
+$animation "a_TC_run_aim_up_center" "vortigaunt_anims_anims\a_TC_run_aim_up_center.smd" {
+	fps 30
+	//ikrule "lhand" touch "ValveBiped.hand1_R"
+	weightlist "weights_TC_Aim_all"
+}
+
+$animation "a_TC_run_aim_up_right" "vortigaunt_anims_anims\a_TC_run_aim_up_right.smd" {
+	fps 30
+	//ikrule "lhand" touch "ValveBiped.hand1_R"
+	weightlist "weights_TC_Aim_all"
+}
+
+$animation "a_TC_run_aim_straight_up" "vortigaunt_anims_anims\a_TC_run_aim_straight_up.smd" {
+	fps 30
+	//ikrule "lhand" touch "ValveBiped.hand1_R"
+	weightlist "weights_TC_Aim_all"
+}
+
+$animation "a_WalkN" "vortigaunt_anims_anims\a_WalkN.smd" {
+	fps 30
+	loop
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	walkframe 33 LX LY
+}
+
+$animation "a_WalkNE" "vortigaunt_anims_anims\a_WalkNE.smd" {
+	fps 30
+	loop
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	walkframe 33 LX LY
+}
+
+$animation "a_WalkE" "vortigaunt_anims_anims\a_WalkE.smd" {
+	fps 30
+	loop
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	walkframe 33 LX LY
+}
+
+$animation "a_WalkSE" "vortigaunt_anims_anims\a_WalkSE.smd" {
+	fps 30
+	loop
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	walkframe 33 LX LY
+}
+
+$animation "a_WalkS" "vortigaunt_anims_anims\a_WalkS.smd" {
+	fps 30
+	loop
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	walkframe 33 LX LY
+}
+
+$animation "a_WalkSW" "vortigaunt_anims_anims\a_WalkSW.smd" {
+	fps 30
+	loop
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	walkframe 33 LX LY
+}
+
+$animation "a_WalkW" "vortigaunt_anims_anims\a_WalkW.smd" {
+	fps 30
+	loop
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	walkframe 33 LX LY
+}
+
+$animation "a_WalkNW" "vortigaunt_anims_anims\a_WalkNW.smd" {
+	fps 30
+	loop
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	walkframe 33 LX LY
+}
+
+$animation "a_runN" "vortigaunt_anims_anims\a_runN.smd" {
+	fps 30
+	loop
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	walkframe 24 LX LY
+}
+
+$animation "a_runNE" "vortigaunt_anims_anims\a_runNE.smd" {
+	fps 30
+	loop
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	walkframe 24 LX LY
+}
+
+$animation "a_runE" "vortigaunt_anims_anims\a_runE.smd" {
+	fps 30
+	loop
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	walkframe 24 LX LY
+}
+
+$animation "a_runSE" "vortigaunt_anims_anims\a_runSE.smd" {
+	fps 30
+	loop
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	walkframe 24 LX LY
+}
+
+$animation "a_runS" "vortigaunt_anims_anims\a_runS.smd" {
+	fps 30
+	loop
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	walkframe 24 LX LY
+}
+
+$animation "a_runSW" "vortigaunt_anims_anims\a_runSW.smd" {
+	fps 30
+	loop
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	walkframe 24 LX LY
+}
+
+$animation "a_runW" "vortigaunt_anims_anims\a_runW.smd" {
+	fps 30
+	loop
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	walkframe 24 LX LY
+}
+
+$animation "a_runNW" "vortigaunt_anims_anims\a_runNW.smd" {
+	fps 30
+	loop
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	walkframe 24 LX LY
+}
+
+$animation "a_walkN_HoldPart" "vortigaunt_anims_anims\a_walkN_HoldPart.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_HoldPart_ArmLayer"
+}
+
+$animation "a_walkNE_HoldPart" "vortigaunt_anims_anims\a_walkNE_HoldPart.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_HoldPart_ArmLayer"
+}
+
+$animation "a_walkE_HoldPart" "vortigaunt_anims_anims\a_walkE_HoldPart.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_HoldPart_ArmLayer"
+}
+
+$animation "a_walkSE_HoldPart" "vortigaunt_anims_anims\a_walkSE_HoldPart.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_HoldPart_ArmLayer"
+}
+
+$animation "a_walkS_HoldPart" "vortigaunt_anims_anims\a_walkS_HoldPart.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_HoldPart_ArmLayer"
+}
+
+$animation "a_walkSW_HoldPart" "vortigaunt_anims_anims\a_walkSW_HoldPart.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_HoldPart_ArmLayer"
+}
+
+$animation "a_walkW_HoldPart" "vortigaunt_anims_anims\a_walkW_HoldPart.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_HoldPart_ArmLayer"
+}
+
+$animation "a_walkNW_HoldPart" "vortigaunt_anims_anims\a_walkNW_HoldPart.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_HoldPart_ArmLayer"
+}
+
+$animation "a_walkN_HoldBroom" "vortigaunt_anims_anims\a_walkN_HoldBroom.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_HoldPart_ArmLayer"
+}
+
+$animation "a_walkNE_HoldBroom" "vortigaunt_anims_anims\a_walkNE_HoldBroom.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_HoldPart_ArmLayer"
+}
+
+$animation "a_walkE_HoldBroom" "vortigaunt_anims_anims\a_walkE_HoldBroom.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_HoldPart_ArmLayer"
+}
+
+$animation "a_walkSE_HoldBroom" "vortigaunt_anims_anims\a_walkSE_HoldBroom.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_HoldPart_ArmLayer"
+}
+
+$animation "a_walkS_HoldBroom" "vortigaunt_anims_anims\a_walkS_HoldBroom.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_HoldPart_ArmLayer"
+}
+
+$animation "a_walkSW_HoldBroom" "vortigaunt_anims_anims\a_walkSW_HoldBroom.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_HoldPart_ArmLayer"
+}
+
+$animation "a_walkW_HoldBroom" "vortigaunt_anims_anims\a_walkW_HoldBroom.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_HoldPart_ArmLayer"
+}
+
+$animation "a_walkNW_HoldBroom" "vortigaunt_anims_anims\a_walkNW_HoldBroom.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_HoldPart_ArmLayer"
+}
+
+$animation "airgunwalkn" "vortigaunt_anims_anims\airgunwalkn.smd" {
+	fps 30
+	loop
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	walkframe 33 LX LY
+}
+
+$animation "a_walkN_Holdgun" "vortigaunt_anims_anims\a_walkN_Holdgun.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_HoldPart_ArmLayer"
+}
+
+$animation "a_walkNE_Holdgun" "vortigaunt_anims_anims\a_walkNE_Holdgun.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_HoldPart_ArmLayer"
+}
+
+$animation "a_walkE_Holdgun" "vortigaunt_anims_anims\a_walkE_Holdgun.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_HoldPart_ArmLayer"
+}
+
+$animation "a_walkSE_Holdgun" "vortigaunt_anims_anims\a_walkSE_Holdgun.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_HoldPart_ArmLayer"
+}
+
+$animation "a_walkS_Holdgun" "vortigaunt_anims_anims\a_walkS_Holdgun.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_HoldPart_ArmLayer"
+}
+
+$animation "a_walkSW_Holdgun" "vortigaunt_anims_anims\a_walkSW_Holdgun.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_HoldPart_ArmLayer"
+}
+
+$animation "a_walkW_Holdgun" "vortigaunt_anims_anims\a_walkW_Holdgun.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_HoldPart_ArmLayer"
+}
+
+$animation "a_walkNW_Holdgun" "vortigaunt_anims_anims\a_walkNW_Holdgun.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_HoldPart_ArmLayer"
+}
+
+$animation "TCwalkn" "vortigaunt_anims_anims\TCwalkn.smd" {
+	fps 30
+	loop
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	walkframe 33 LX LY
+}
+
+$animation "a_walkN_TC" "vortigaunt_anims_anims\a_walkN_TC.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_TC_upper"
+}
+
+$animation "a_walkNE_TC" "vortigaunt_anims_anims\a_walkNE_TC.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_TC_upper"
+}
+
+$animation "a_walkE_TC" "vortigaunt_anims_anims\a_walkE_TC.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_TC_upper"
+}
+
+$animation "a_walkSE_TC" "vortigaunt_anims_anims\a_walkSE_TC.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_TC_upper"
+}
+
+$animation "a_walkS_TC" "vortigaunt_anims_anims\a_walkS_TC.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_TC_upper"
+}
+
+$animation "a_walkSW_TC" "vortigaunt_anims_anims\a_walkSW_TC.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_TC_upper"
+}
+
+$animation "a_walkW_TC" "vortigaunt_anims_anims\a_walkW_TC.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_TC_upper"
+}
+
+$animation "a_walkNW_TC" "vortigaunt_anims_anims\a_walkNW_TC.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_TC_upper"
+}
+
+$animation "TCrunN" "vortigaunt_anims_anims\TCrunN.smd" {
+	fps 30
+	loop
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	walkframe 24 LX LY
+}
+
+$animation "a_runN_TC" "vortigaunt_anims_anims\a_runN_TC.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_TC_upper"
+}
+
+$animation "a_runNE_TC" "vortigaunt_anims_anims\a_runNE_TC.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_TC_upper"
+}
+
+$animation "a_runE_TC" "vortigaunt_anims_anims\a_runE_TC.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_TC_upper"
+}
+
+$animation "a_runSE_TC" "vortigaunt_anims_anims\a_runSE_TC.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_TC_upper"
+}
+
+$animation "a_runS_TC" "vortigaunt_anims_anims\a_runS_TC.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_TC_upper"
+}
+
+$animation "a_runSW_TC" "vortigaunt_anims_anims\a_runSW_TC.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_TC_upper"
+}
+
+$animation "a_runW_TC" "vortigaunt_anims_anims\a_runW_TC.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_TC_upper"
+}
+
+$animation "a_runNW_TC" "vortigaunt_anims_anims\a_runNW_TC.smd" {
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	weightlist "weights_Walk_All_TC_upper"
+}
+
+$animation "a_pose_neutral" "vortigaunt_anims_anims\a_pose_neutral.smd" {
+	fps 30
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$animation "a_body_rot" "vortigaunt_anims_anims\a_body_rot.smd" {
+	fps 30
+	weightlist "weights_body_rot_z"
+}
+
+$animation "a_body_rot_z_rt" "vortigaunt_anims_anims\a_body_rot_z_rt.smd" {
+	fps 30
+	weightlist "weights_body_rot_z"
+}
+
+$animation "a_body_rot_z_lt" "vortigaunt_anims_anims\a_body_rot_z_lt.smd" {
+	fps 30
+	weightlist "weights_body_rot_z"
+}
+
+$animation "a_spine_rot" "vortigaunt_anims_anims\a_spine_rot.smd" {
+	fps 30
+	weightlist "weights_body_rot_z"
+}
+
+$animation "a_spine_rot_z_rt" "vortigaunt_anims_anims\a_spine_rot_z_rt.smd" {
+	fps 30
+	weightlist "weights_body_rot_z"
+}
+
+$animation "a_spine_rot_z_lt" "vortigaunt_anims_anims\a_spine_rot_z_lt.smd" {
+	fps 30
+	weightlist "weights_body_rot_z"
+}
+
+$animation "a_head_rot" "vortigaunt_anims_anims\a_head_rot.smd" {
+	fps 30
+	weightlist "weights_neck_trans_x"
+}
+
+$animation "a_head_rot_lt" "vortigaunt_anims_anims\a_head_rot_lt.smd" {
+	fps 30
+	weightlist "weights_neck_trans_x"
+}
+
+$animation "a_head_rot_rt" "vortigaunt_anims_anims\a_head_rot_rt.smd" {
+	fps 30
+	weightlist "weights_neck_trans_x"
+}
+
+$animation "a_neck_trans" "vortigaunt_anims_anims\a_neck_trans.smd" {
+	fps 30
+	weightlist "weights_neck_trans_x"
+}
+
+$animation "a_neck_trans_fwd" "vortigaunt_anims_anims\a_neck_trans_fwd.smd" {
+	fps 30
+	weightlist "weights_neck_trans_x"
+}
+
+$animation "a_neck_trans_back" "vortigaunt_anims_anims\a_neck_trans_back.smd" {
+	fps 30
+	weightlist "weights_neck_trans_x"
+}
+
+$animation "a_head_rot_dwn" "vortigaunt_anims_anims\a_head_rot_dwn.smd" {
+	fps 30
+	weightlist "weights_neck_trans_x"
+}
+
+$animation "a_head_rot_up" "vortigaunt_anims_anims\a_head_rot_up.smd" {
+	fps 30
+	weightlist "weights_neck_trans_x"
+}
+
+$animation "a_head_rot_z_rt" "vortigaunt_anims_anims\a_head_rot_z_rt.smd" {
+	fps 30
+	weightlist "weights_neck_trans_x"
+}
+
+$animation "a_head_rot_z_lt" "vortigaunt_anims_anims\a_head_rot_z_lt.smd" {
+	fps 30
+	weightlist "weights_neck_trans_x"
+}
+
+$sequence "cleaverAttachment_init" {
+	"vortigaunt_anims_anims\cleaverAttachment_init.smd"
+	fadein 0.2
+	fadeout 0.2
+	hidden
+	fps 30
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "Idle01" {
+	"vortigaunt_anims_anims\Idle01.smd"
+	activity "ACT_IDLE" 1
+	fadein 0.2
+	fadeout 0.2
+	node "1"
+	fps 30
+	loop
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+}
+
+$sequence "Idle02" {
+	"vortigaunt_anims_anims\Idle02.smd"
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "ActionIdle" {
+	"vortigaunt_anims_anims\ActionIdle.smd"
+	activity "ACT_IDLE_ANGRY" 1
+	fadein 0.2
+	fadeout 0.2
+	node "2"
+	fps 30
+	loop
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+}
+
+$sequence "CrouchIdle" {
+	"vortigaunt_anims_anims\CrouchIdle.smd"
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	loop
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+}
+
+$sequence "ToAction" {
+	"vortigaunt_anims_anims\ToAction.smd"
+	activity "ACT_VORTIGAUNT_TO_ACTION" 1
+	fadein 0.2
+	fadeout 0.2
+	transition "1" "2"
+	fps 60
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+}
+
+$sequence "FromAction" {
+	"vortigaunt_anims_anims\FromAction.smd"
+	activity "ACT_VORTIGAUNT_TO_IDLE" 1
+	fadein 0.2
+	fadeout 0.2
+	transition "2" "1"
+	fps 30
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+}
+
+$sequence "TC_Aim_all" {
+	"a_TC_aim_straight_up"
+	"a_TC_aim_straight_up"
+	"a_TC_aim_straight_up"
+	"a_TC_aim_up_right"
+	"a_TC_aim_up_center"
+	"a_TC_aim_up_left"
+	"a_TC_aim_mid_right"
+	"a_TC_aim_mid_center"
+	"a_TC_aim_mid_left"
+	"a_TC_aim_down_right"
+	"a_TC_aim_down_center"
+	"a_TC_aim_down_left"
+	blend "aim_yaw" -45 45
+	blend "aim_pitch" -90 45
+	blendwidth 3
+	delta
+	fadein 0.2
+	fadeout 0.2
+	//iklock "rfoot" 1 0
+	//iklock "lfoot" 1 0
+}
+
+$sequence "TC_run_Aim_all" {
+	"a_TC_run_aim_straight_up"
+	"a_TC_run_aim_straight_up"
+	"a_TC_run_aim_straight_up"
+	"a_TC_run_aim_up_right"
+	"a_TC_run_aim_up_center"
+	"a_TC_run_aim_up_left"
+	"a_TC_run_aim_mid_right"
+	"a_TC_run_aim_mid_center"
+	"a_TC_run_aim_mid_left"
+	"a_TC_run_aim_down_right"
+	"a_TC_run_aim_down_center"
+	"a_TC_run_aim_down_left"
+	blend "aim_yaw" -45 45
+	blend "aim_pitch" -90 45
+	blendwidth 3
+	delta
+	fadein 0.2
+	fadeout 0.2
+	//iklock "rfoot" 1 0
+	//iklock "lfoot" 1 0
+}
+
+$sequence "Walk_all" {
+	"a_WalkS"
+	"a_WalkSE"
+	"a_WalkE"
+	"a_WalkNE"
+	"a_WalkN"
+	"a_WalkNW"
+	"a_WalkW"
+	"a_WalkSW"
+	"a_WalkS"
+	activity "ACT_WALK" 1
+	blend "move_yaw" -180 180
+	blendwidth 9
+	{ event AE_NPC_RIGHTFOOT 15 "" }
+	{ event AE_NPC_LEFTFOOT 32 "" }
+	fadein 0.2
+	fadeout 0.2
+}
+
+$sequence "Run_all" {
+	"a_runS"
+	"a_runSE"
+	"a_runE"
+	"a_runNE"
+	"a_runN"
+	"a_runNW"
+	"a_runW"
+	"a_runSW"
+	"a_runS"
+	activity "ACT_Run" 1
+	blend "move_yaw" -180 180
+	blendwidth 9
+	{ event AE_NPC_RIGHTFOOT 3 "" }
+	{ event AE_NPC_LEFTFOOT 15 "" }
+	fadein 0.2
+	fadeout 0.2
+}
+
+$sequence "Walk_All_HoldPart_ArmLayer" {
+	"a_walkS_HoldPart"
+	"a_walkSE_HoldPart"
+	"a_walkE_HoldPart"
+	"a_walkNE_HoldPart"
+	"a_walkN_HoldPart"
+	"a_walkNW_HoldPart"
+	"a_walkW_HoldPart"
+	"a_walkSW_HoldPart"
+	"a_walkS_HoldPart"
+	blend "move_yaw" -180 180
+	blendwidth 9
+	fadein 0.2
+	fadeout 0.2
+	hidden
+}
+
+$sequence "Walk_all_HoldPart" {
+	"a_WalkS"
+	"a_WalkSE"
+	"a_WalkE"
+	"a_WalkNE"
+	"a_WalkN"
+	"a_WalkNW"
+	"a_WalkW"
+	"a_WalkSW"
+	"a_WalkS"
+	blend "move_yaw" -180 180
+	blendwidth 9
+	{ event AE_NPC_RIGHTFOOT 15 "" }
+	{ event AE_NPC_LEFTFOOT 32 "" }
+	fadein 0.2
+	fadeout 0.2
+
+keyvalues
+{
+	interior lab_partInstall_idle
+}
+	addlayer "Walk_All_HoldPart_ArmLayer"
+}
+
+$sequence "Walk_All_HoldBroom_ArmLayer" {
+	"a_walkS_HoldBroom"
+	"a_walkSE_HoldBroom"
+	"a_walkE_HoldBroom"
+	"a_walkNE_HoldBroom"
+	"a_walkN_HoldBroom"
+	"a_walkNW_HoldBroom"
+	"a_walkW_HoldBroom"
+	"a_walkSW_HoldBroom"
+	"a_walkS_HoldBroom"
+	blend "move_yaw" -180 180
+	blendwidth 9
+	fadein 0.2
+	fadeout 0.2
+	hidden
+}
+
+$sequence "Walk_all_HoldBroom" {
+	"a_WalkS"
+	"a_WalkSE"
+	"a_WalkE"
+	"a_WalkNE"
+	"a_WalkN"
+	"a_WalkNW"
+	"a_WalkW"
+	"a_WalkSW"
+	"a_WalkS"
+	blend "move_yaw" -180 180
+	blendwidth 9
+	{ event AE_NPC_RIGHTFOOT 15 "" }
+	{ event AE_NPC_LEFTFOOT 32 "" }
+	fadein 0.2
+	fadeout 0.2
+
+keyvalues
+{
+	interior sweep_idle
+}
+	addlayer "Walk_All_HoldBroom_ArmLayer"
+}
+
+$sequence "Walk_All_Holdgun_ArmLayer" {
+	"a_walkS_Holdgun"
+	"a_walkSE_Holdgun"
+	"a_walkE_Holdgun"
+	"a_walkNE_Holdgun"
+	"a_walkN_Holdgun"
+	"a_walkNW_Holdgun"
+	"a_walkW_Holdgun"
+	"a_walkSW_Holdgun"
+	"a_walkS_Holdgun"
+	blend "move_yaw" -180 180
+	blendwidth 9
+	fadein 0.2
+	fadeout 0.2
+	hidden
+}
+
+$sequence "Walk_all_Holdgun" {
+	"a_WalkS"
+	"a_WalkSE"
+	"a_WalkE"
+	"a_WalkNE"
+	"airgunwalkn"
+	"a_WalkNW"
+	"a_WalkW"
+	"a_WalkSW"
+	"a_WalkS"
+	blend "move_yaw" -180 180
+	blendwidth 9
+	{ event AE_NPC_RIGHTFOOT 15 "" }
+	{ event AE_NPC_LEFTFOOT 32 "" }
+	fadein 0.2
+	fadeout 0.2
+
+keyvalues
+{
+	interior airgunidle_holding
+}
+	addlayer "Walk_All_Holdgun_ArmLayer"
+}
+
+$sequence "Walk_All_TC_upper" {
+	"a_walkS_TC"
+	"a_walkSE_TC"
+	"a_walkE_TC"
+	"a_walkNE_TC"
+	"a_walkN_TC"
+	"a_walkNW_TC"
+	"a_walkW_TC"
+	"a_walkSW_TC"
+	"a_walkS_TC"
+	blend "move_yaw" -180 180
+	blendwidth 9
+	fadein 0.2
+	fadeout 0.2
+	hidden
+}
+
+$sequence "Walk_all_TC" {
+	"a_WalkS"
+	"a_WalkSE"
+	"a_WalkE"
+	"a_WalkNE"
+	"TCwalkn"
+	"a_WalkNW"
+	"a_WalkW"
+	"a_WalkSW"
+	"a_WalkS"
+	blend "move_yaw" -180 180
+	blendwidth 9
+	{ event AE_NPC_RIGHTFOOT 15 "" }
+	{ event AE_NPC_LEFTFOOT 32 "" }
+	fadein 0.2
+	fadeout 0.2
+	addlayer "Walk_All_TC_upper"
+	addlayer "TC_Aim_all"
+}
+
+$sequence "run_All_TC_upper" {
+	"a_runS_TC"
+	"a_runSE_TC"
+	"a_runE_TC"
+	"a_runNE_TC"
+	"a_runN_TC"
+	"a_runNW_TC"
+	"a_runW_TC"
+	"a_runSW_TC"
+	"a_runS_TC"
+	blend "move_yaw" -180 180
+	blendwidth 9
+	fadein 0.2
+	fadeout 0.2
+	hidden
+}
+
+$sequence "run_all_TC" {
+	"a_runS"
+	"a_runSE"
+	"a_runE"
+	"a_runNE"
+	"TCrunN"
+	"a_runNW"
+	"a_runW"
+	"a_runSW"
+	"a_runS"
+	blend "move_yaw" -180 180
+	blendwidth 9
+	{ event AE_NPC_RIGHTFOOT 3 "" }
+	{ event AE_NPC_LEFTFOOT 15 "" }
+	fadein 0.2
+	fadeout 0.2
+	addlayer "run_All_TC_upper"
+	addlayer "TC_run_Aim_all"
+}
+
+$sequence "TCidle" {
+	"vortigaunt_anims_anims\TCidle.smd"
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	loop
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+}
+
+$sequence "TCidlecombat" {
+	"vortigaunt_anims_anims\TCidlecombat.smd"
+	fadein 0.2
+	fadeout 0.2
+	addlayer "TC_Aim_all"
+	fps 30
+	loop
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+}
+
+$sequence "TCfire" {
+	"vortigaunt_anims_anims\TCfire.smd"
+	fadein 0.2
+	fadeout 0.2
+	snap
+	fps 30
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+}
+
+$sequence "turnleft" {
+	"vortigaunt_anims_anims\turnleft.smd"
+	activity "ACT_GESTURE_TURN_LEFT" 1
+	fadein 0.2
+	fadeout 0.2
+	fps 15
+	//ikrule "lfoot" unlatch
+	//ikrule "rfoot" unlatch
+	weightlist "weights_turnleft"
+}
+
+$sequence "turnright" {
+	"vortigaunt_anims_anims\turnright.smd"
+	activity "ACT_GESTURE_TURN_RIGHT" 1
+	fadein 0.2
+	fadeout 0.2
+	fps 15
+	//ikrule "lfoot" unlatch
+	//ikrule "rfoot" unlatch
+	weightlist "weights_turnleft"
+}
+
+$sequence "Die_simple" {
+	"vortigaunt_anims_anims\Die_simple.smd"
+	activity "ACT_DIESIMPLE" 1
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "MeleeHigh1" {
+	"vortigaunt_anims_anims\MeleeHigh1.smd"
+	activity "ACT_MELEE_ATTACK1" 3
+	{ event AE_VORTIGAUNT_SWING_SOUND 15 "" }
+	{ event AE_VORTIGAUNT_CLAW_LEFT 20 "" }
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "MeleeHigh2" {
+	"vortigaunt_anims_anims\MeleeHigh2.smd"
+	activity "ACT_MELEE_ATTACK1" 3
+	{ event AE_VORTIGAUNT_SWING_SOUND 16 "" }
+	{ event AE_VORTIGAUNT_CLAW_RIGHT 20 "" }
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "MeleeHigh3" {
+	"vortigaunt_anims_anims\MeleeHigh3.smd"
+	activity "ACT_MELEE_ATTACK1" 1
+	{ event AE_VORTIGAUNT_SWING_SOUND 14 "" }
+	{ event AE_VORTIGAUNT_CLAW_LEFT 19 "" }
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "MeleeLow" {
+	"vortigaunt_anims_anims\MeleeLow.smd"
+	activity "ACT_MELEE_ATTACK2" 2
+	{ event AE_VORTIGAUNT_SWING_SOUND 16 "" }
+	{ event AE_VORTIGAUNT_KICK 17 "" }
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "zapattack1" {
+	"vortigaunt_anims_anims\zapattack1.smd"
+	activity "ACT_RANGE_ATTACK1" 1
+	{ event AE_VORTIGAUNT_ZAP_POWERUP 1 "2" }
+	{ event AE_VORTIGAUNT_ZAP_POWERUP 5 "2" }
+	{ event AE_VORTIGAUNT_ZAP_POWERUP 10 "2" }
+	{ event AE_VORTIGAUNT_SHOOT_SOUNDSTART 44 "" }
+	{ event AE_VORTIGAUNT_ZAP_SHOOT 47 "2" }
+	{ event AE_VORTIGAUNT_ZAP_DONE 55 "" }
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "heal_start" {
+	"vortigaunt_anims_anims\heal_start.smd"
+	activity "ACT_VORTIGAUNT_START_HEAL" 1
+	{ event AE_VORTIGAUNT_HEAL_STARTGLOW 35 "" }
+	{ event AE_VORTIGAUNT_HEAL_STARTSOUND 70 "" }
+	fadein 0.2
+	fadeout 0.2
+	fps 60
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "heal_cycle" {
+	"vortigaunt_anims_anims\heal_cycle.smd"
+	activity "ACT_VORTIGAUNT_HEAL_LOOP" 1
+	{ event AE_VORTIGAUNT_HEAL_STARTBEAMS 5 "" }
+	fadein 0.2
+	fadeout 0.2
+	node "3"
+	fps 30
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "heal_end" {
+	"vortigaunt_anims_anims\heal_end.smd"
+	activity "ACT_VORTIGAUNT_END_HEAL" 1
+	fadein 0.2
+	fadeout 0.2
+	transition "3" "1"
+	fps 60
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "turn" {
+	"vortigaunt_anims_anims\turn.smd"
+	activity "ACT_TURN_LEFT" 1
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "ToDefend" {
+	"vortigaunt_anims_anims\ToDefend.smd"
+	activity "ACT_VORTIGAUNT_TO_DEFEND" 1
+	fadein 0.2
+	fadeout 0.2
+	transition "2" "4"
+	fps 30
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "Defend" {
+	"vortigaunt_anims_anims\Defend.smd"
+	activity "ACT_VORTIGAUNT_DEFEND" 1
+	{ event AE_VORTIGAUNT_DEFEND_BEAMS 1 "" }
+	{ event AE_VORTIGAUNT_DEFEND_BEAMS 5 "" }
+	fadein 0.2
+	fadeout 0.2
+	node "4"
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "FromDefend" {
+	"vortigaunt_anims_anims\FromDefend.smd"
+	activity "ACT_VORTIGAUNT_FROM_DEFEND" 1
+	{ event AE_VORTIGAUNT_DEFEND_BEAMS 1 "" }
+	fadein 0.2
+	fadeout 0.2
+	transition "4" "2"
+	fps 30
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "stomp" {
+	"vortigaunt_anims_anims\stomp.smd"
+	activity "ACT_VORTIGAUNT_STOMP" 1
+	{ event AE_VORTIGAUNT_SWING_SOUND 11 "" }
+	{ event AE_VORTIGAUNT_STOMP 29 "" }
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "barnaclehit" {
+	"vortigaunt_anims_anims\barnaclehit.smd"
+	activity "ACT_BARNACLE_HIT" 1
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "barnaclepull" {
+	"vortigaunt_anims_anims\barnaclepull.smd"
+	activity "ACT_BARNACLE_PULL" 1
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "barnaclecrunch" {
+	"vortigaunt_anims_anims\barnaclecrunch.smd"
+	activity "ACT_BARNACLE_CHOMP" 1
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "barnaclechew" {
+	"vortigaunt_anims_anims\barnaclechew.smd"
+	activity "ACT_BARNACLE_CHEW" 1
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "soupstir" {
+	"vortigaunt_anims_anims\soupstir.smd"
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "butcher" {
+	"vortigaunt_anims_anims\butcher.smd"
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "chess_pose" {
+	"vortigaunt_anims_anims\chess_pose.smd"
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "chess_wait" {
+	"vortigaunt_anims_anims\chess_wait.smd"
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "lab_inspectPart" {
+	"vortigaunt_anims_anims\lab_inspectPart.smd"
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "lab_inspectPart_preIdle" {
+	"vortigaunt_anims_anims\lab_inspectPart_preIdle.smd"
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "lab_PartInstall" {
+	"vortigaunt_anims_anims\lab_PartInstall.smd"
+	{ event 1003 240 "1" }
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "lab_partInstall_idle" {
+	"vortigaunt_anims_anims\lab_partInstall_idle.smd"
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "lab_partInstall_workloop" {
+	"vortigaunt_anims_anims\lab_partInstall_workloop.smd"
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "tvsitidle" {
+	"vortigaunt_anims_anims\tvsitidle.smd"
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "tvstand" {
+	"vortigaunt_anims_anims\tvstand.smd"
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+	walkframe 111 LX LY LZR
+}
+
+$sequence "airgunidle" {
+	"vortigaunt_anims_anims\airgunidle.smd"
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "airgunidle_holding" {
+	"vortigaunt_anims_anims\airgunidle_holding.smd"
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "airgungreet" {
+	"vortigaunt_anims_anims\airgungreet.smd"
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "airgunpickup" {
+	"vortigaunt_anims_anims\airgunpickup.smd"
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "airgunputdown" {
+	"vortigaunt_anims_anims\airgunputdown.smd"
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "sweep" {
+	"vortigaunt_anims_anims\sweep.smd"
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "sweep_idle" {
+	"vortigaunt_anims_anims\sweep_idle.smd"
+	fadein 0.2
+	fadeout 0.2
+	fps 30
+	loop
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
+}
+
+$sequence "pose_neutral" {
+	"a_pose_neutral"
+	fadein 0.2
+	fadeout 0.2
+}
+
+$sequence "body_rot_z" {
+	"a_body_rot_z_lt"
+	"a_body_rot"
+	"a_body_rot_z_rt"
+	autoplay
+	blend "body_yaw" 26.50552 -25.05665
+	blendwidth 3
+	delta
+	fadein 0.2
+	fadeout 0.2
+	hidden
+}
+
+$sequence "spine_rot_z" {
+	"a_spine_rot_z_lt"
+	"a_spine_rot"
+	"a_spine_rot_z_rt"
+	autoplay
+	blend "spine_yaw" 20.69392 -20.13916
+	blendwidth 3
+	delta
+	fadein 0.2
+	fadeout 0.2
+	hidden
+}
+
+$sequence "neck_trans_x" {
+	"a_neck_trans_back"
+	"a_neck_trans"
+	"a_neck_trans_fwd"
+	autoplay
+	blend "neck_trans" -0.548103 1.187874
+	blendwidth 3
+	delta
+	fadein 0.2
+	fadeout 0.2
+	hidden
+}
+
+$sequence "head_rot_z" {
+	"a_head_rot_z_lt"
+	"a_head_rot"
+	"a_head_rot_z_rt"
+	autoplay
+	blend "head_yaw" 44.30585 -44.44309
+	blendwidth 3
+	delta
+	fadein 0.2
+	fadeout 0.2
+	hidden
+}
+
+$sequence "head_rot_y" {
+	"a_head_rot_dwn"
+	"a_head_rot"
+	"a_head_rot_up"
+	autoplay
+	blend "head_pitch" 50.02365 -59.49796
+	blendwidth 3
+	delta
+	fadein 0.2
+	fadeout 0.2
+	hidden
+}
+
+$sequence "head_rot_x" {
+	"a_head_rot_lt"
+	"a_head_rot"
+	"a_head_rot_rt"
+	autoplay
+	blend "head_roll" -42.76306 41.08476
+	blendwidth 3
+	delta
+	fadein 0.2
+	fadeout 0.2
+	hidden
+}
+

@@ -3325,6 +3325,9 @@
     <ClCompile Include="hlr\hud_skullkey.cpp">
       <Filter>Source Files\HLR</Filter>
     </ClCompile>
+    <ClCompile Include="hlr\hud_weaponwheel.cpp">
+      <Filter>Source Files\HLR</Filter>
+    </ClCompile>
     <ClCompile Include="hlr\mapload_background.cpp">
       <Filter>Source Files\HLR</Filter>
     </ClCompile>

@@ -6261,7 +6261,7 @@ bool CNPC_Hunter::ShootFlechette( CBaseEntity *pTargetEntity, bool bSingleShot )
 
 	pFlechette->AddEffects( EF_NOSHADOW );
 	float basespd = hunter_flechette_speed.GetFloat();
-	float adjustedspd = g_pGameRules->AdjustProjectileSpeed(basespd);
+	float adjustedspd = g_pGameRules->SkillAdjustValue(basespd);
 	vecShoot *= adjustedspd;
 
 	pFlechette->Shoot( vecShoot, bStriderBuster );

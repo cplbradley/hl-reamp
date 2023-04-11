@@ -44,6 +44,7 @@ enum Hull_Bits_t
 	bits_MEDIUM_TALL_HULL		=	0x00000200,
 	bits_MECHUBUS_HULL			=	0x00000400,
 	bits_VORTBOSS_HULL			=	0x00000800,
+	bits_VORTBRUTE_HULL			=	0x00001000,
 	bits_HULL_BITS_MASK			=	0x000002ff,
 };
 

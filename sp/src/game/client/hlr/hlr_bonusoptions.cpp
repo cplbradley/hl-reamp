@@ -20,11 +20,15 @@
 #include "basemodelpanel.h"
 #include "basemodel_panel.h"
 #include "animation.h"
-
+#include "bone_setup.h"
 #include "tier0/memdbgon.h"
+#include "view.h"
+#include "viewrender.h"
+#include "view_scene.h"
 
 
 using namespace vgui;
+
 
 //////////////////////////////////////////////////////////////
 ////////// BONUS OPTIONS GRAPHICS PAGE //////////////////
@@ -338,10 +342,11 @@ public:
 	CStudioHdr* studio;
 
 	int m_nRotation;
+	CBaseModelPanel* armorPanel;
 
 
 private:
-	CBaseModelPanel* armorPanel;
+	
 	
 };
 
@@ -356,8 +361,6 @@ CHLRArmorPanel::CHLRArmorPanel(vgui::Panel* parent) : BaseClass(parent, NULL)
 
 	m_nRotation = 0;
 	handle = mdlcache->FindMDL("models/player/mark6.mdl");
-	
-
 
 	armorPanel->SetMDL(handle);
 	armorPanel->SetMouseInputEnabled(true);
@@ -387,12 +390,12 @@ void CHLRArmorPanel::Paint()
 
 void CHLRArmorPanel::SetArmorGroup(const char* szGroupName, int nValue)
 {
-	if (!studio->IsValid())
-		return;
-	int bodygroup = ::FindBodygroupByName(studio, szGroupName);
-	if (!handle)
-		return;
-	armorPanel->SetBodygroup(handle, bodygroup, nValue);
+	if (studio->IsValid())
+	{
+		int bodygroup = ::FindBodygroupByName(studio, szGroupName);
+		if (handle)
+			armorPanel->SetBodygroup(handle, bodygroup, nValue);
+	}
 }
 
 class CHLRArmorCustomization : public vgui::PropertyPage
@@ -405,6 +408,11 @@ public:
 	virtual void OnApplyChanges();
 	virtual void OnDataChanged();
 	virtual void OnResetData();
+	void SetupHelmets();
+	void SetupChest();
+	void SetupBoots();
+	void SetupArms();
+	void SetupCodpiece();
 	void UpdateEditorBodygroups();
 	void UpdatePlayerBodygroups();
 	
@@ -412,6 +420,12 @@ public:
 
 	CHLRArmorPanel* armorPanel;
 	ComboBox* helmetCombo;
+	ComboBox* chestcombo;
+	ComboBox* bootscombo;
+	ComboBox* upperarmscombo;
+	ComboBox* codpiececombo;
+	ComboBox* forearmscombo;
+	ComboBox* thighcombo;
 	Slider* modelSlider;
 };
 
@@ -422,11 +436,11 @@ CHLRArmorCustomization::CHLRArmorCustomization(vgui::Panel* parent) : BaseClass(
 	armorPanel->SetVisible(true);
 	armorPanel->SetEnabled(true);
 
-	helmetCombo = new ComboBox(this, "HelmetCombo", 3, false);
-	helmetCombo->AddItem("#HLR_Mark6", NULL);
-
-	helmetCombo->AddItem("#HLR_CQB", NULL);
-	helmetCombo->AddItem("#HLR_Cosmoneer", NULL);
+	SetupHelmets();
+	SetupBoots();
+	SetupChest();
+	SetupCodpiece();
+	SetupArms();
 
 
 	modelSlider = new Slider(this, "ModelRotationSlider");
@@ -435,13 +449,55 @@ CHLRArmorCustomization::CHLRArmorCustomization(vgui::Panel* parent) : BaseClass(
 	LoadControlSettings("resource/ui/bonusoptionsarmor.res");
 }
 
+void CHLRArmorCustomization::SetupHelmets()
+{
+	helmetCombo = new ComboBox(this, "HelmetCombo", 3, false);
+	helmetCombo->AddItem("#HLR_Mark6", NULL);
+	helmetCombo->AddItem("#HLR_CQB", NULL);
+	helmetCombo->AddItem("#HLR_Cosmoneer", NULL);
+}
+void CHLRArmorCustomization::SetupChest()
+{
+	chestcombo = new ComboBox(this, "ChestCombo", 3, false);
+	chestcombo->AddItem("#HLR_Mark6", NULL);
+	chestcombo->AddItem("#HLR_CQB", NULL);
+	chestcombo->AddItem("#HLR_Cosmoneer", NULL);
+}
+void CHLRArmorCustomization::SetupBoots()
+{
+	bootscombo = new ComboBox(this, "BootsCombo", 3, false);
+	bootscombo->AddItem("#HLR_Mark6", NULL);
+	bootscombo->AddItem("#HLR_CQB", NULL);
+	bootscombo->AddItem("#HLR_Cosmoneer", NULL);
 
+	thighcombo = new ComboBox(this, "ThighCombo", 3, false);
+	thighcombo->AddItem("#HLR_Mark6", NULL);
+	thighcombo->AddItem("#HLR_CQB", NULL);
+	thighcombo->AddItem("#HLR_Cosmoneer", NULL);
+}
+void CHLRArmorCustomization::SetupArms()
+{
+	upperarmscombo = new ComboBox(this, "UpperArmsCombo", 3, false);
+	upperarmscombo->AddItem("#HLR_Mark6", NULL);
+	upperarmscombo->AddItem("#HLR_CQB", NULL);
+	upperarmscombo->AddItem("#HLR_Cosmoneer", NULL);
+
+	forearmscombo = new ComboBox(this, "ForearmsCombo", 3, false);
+	forearmscombo->AddItem("#HLR_Mark6", NULL);
+	forearmscombo->AddItem("#HLR_CQB", NULL);
+	forearmscombo->AddItem("#HLR_Cosmoneer", NULL);
+}
+void CHLRArmorCustomization::SetupCodpiece()
+{
+	codpiececombo = new ComboBox(this, "CodpieceCombo", 3, false);
+	codpiececombo->AddItem("#HLR_Mark6", NULL);
+	codpiececombo->AddItem("#HLR_CQB", NULL);
+	codpiececombo->AddItem("#HLR_Cosmoneer", NULL);
+}
 void CHLRArmorCustomization::OnPageShow()
 {
 	UpdateEditorBodygroups();
 }
-
-
 void CHLRArmorCustomization::OnResetData()
 {
 	//C_BasePlayer* pPlayer = CBasePlayer::GetLocalPlayer();
@@ -455,14 +511,32 @@ void CHLRArmorCustomization::OnApplyChanges()
 
 void CHLRArmorCustomization::UpdateEditorBodygroups()
 {
-	armorPanel->SetArmorGroup("helmet", helmetCombo->GetActiveItem());	
+	armorPanel->SetArmorGroup("helmet", helmetCombo->GetActiveItem());
+	armorPanel->SetArmorGroup("chest", chestcombo->GetActiveItem());
+	armorPanel->SetArmorGroup("codpiece", codpiececombo->GetActiveItem());
+	armorPanel->SetArmorGroup("thighs", thighcombo->GetActiveItem());
+	armorPanel->SetArmorGroup("boots", bootscombo->GetActiveItem());
+	armorPanel->SetArmorGroup("upperarm", upperarmscombo->GetActiveItem());
+	armorPanel->SetArmorGroup("forearm", forearmscombo->GetActiveItem());
 }
 
 void CHLRArmorCustomization::UpdatePlayerBodygroups()
 {
-	armorPanel->SetArmorGroup("helmet", helmetCombo->GetActiveItem());
+	UpdateEditorBodygroups();
 	ConVarRef helmet("cl_armor_helmet");
+	ConVarRef chest("cl_armor_chest");
+	ConVarRef boots("cl_armor_boots");
+	ConVarRef codpiece("cl_armor_codpiece");
+	ConVarRef thighs("cl_armor_thighs");
+	ConVarRef forearm("cl_armor_forearm");
+	ConVarRef upperarm("cl_armor_upperarm");
 	helmet.SetValue(helmetCombo->GetActiveItem());
+	chest.SetValue(chestcombo->GetActiveItem());
+	boots.SetValue(bootscombo->GetActiveItem());
+	codpiece.SetValue(codpiececombo->GetActiveItem());
+	thighs.SetValue(thighcombo->GetActiveItem());
+	forearm.SetValue(forearmscombo->GetActiveItem());
+	upperarm.SetValue(upperarmscombo->GetActiveItem());
 	C_BasePlayer* pPlayer = CBasePlayer::GetLocalPlayer();
 	pPlayer->SetArmorPieces();
 }
@@ -475,11 +549,47 @@ void CHLRArmorCustomization::OnDataChanged()
 void CHLRArmorCustomization::Paint()
 {
 	BaseClass::Paint();
-	UpdateEditorBodygroups();
+	UpdateEditorBodygroups(); 
 	armorPanel->m_nRotation = modelSlider->GetValue();
 
 	if (helmetCombo->IsDropdownVisible())
 		OnDataChanged();
+	
+
+
+	////// DOESN'T WORK DON'T EVEN TRY TO MAKE IT WORK UGUUUGUGGGHGHGHGHGHG
+
+	/*if (armorPanel->studio->IsValid())
+	{
+		int bone = Studio_BoneIndexByName(armorPanel->studio, "ValveBiped.Bip01_Head1");
+		QAngle ang, camang;
+		Vector vec, camvec, position;
+		int x, y, x2, y2, x3, y3;
+
+		helmetCombo->GetPos(x, y);
+		GetParent()->GetPos(x2, y2);
+		Camera_t cam;
+		Vector2D vec2d;
+		position = armorPanel->studio->pBone(bone)->pos;
+		matrix3x4_t *matrix = armorPanel->studio->pAttachment(1).
+		armorPanel->armorPanel->GetCameraPositionAndAngles(camvec, camang);
+		GetVectorInScreenSpace(position, x3, y3);
+
+		
+		cam.m_origin = view->GetViewSetup()->origin;
+		cam.m_angles = view->GetViewSetup()->angles;
+		cam.m_flFOV = view->GetViewSetup()->fov;
+		cam.m_flZNear = view->GetViewSetup()->zNear;
+		cam.m_flZFar = view->GetViewSetup()->zFar;
+		DevMsg("attachment x = %f\n attachment y = %f\n attachment z = %f\n", position.x, position.y, position.z);
+		DevMsg("Transform x = %f\n Transform y = %f\n, Transform z = %f\n", camvec.x, camvec.y, camvec.z);
+		DevMsg("screenspace x = %f\n screenspace y = %f\n",x3,y3);
+		//DevMsg("screenspace x = %f\n screenspace y = %f\n", vec2d.x, vec2d.y);
+		surface()->DrawSetColor(Color(255, 255, 255, 255));
+		surface()->DrawLine(position.x, position.z, x + helmetCombo->GetWide(), y + (helmetCombo->GetTall() * 0.5f));
+
+	}
+*/	
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -532,8 +642,8 @@ void CHLRBonusOptions::Activate()
 	EnableApplyButton(true);
 }
 
-static vgui::DHANDLE<CHLRBonusOptions> g_hBonusOptions;
 
+static vgui::DHANDLE<CHLRBonusOptions> g_hBonusOptions;
 CON_COMMAND(OpenBonusOptions, "")
 {
 	if (!g_hBonusOptions.Get())

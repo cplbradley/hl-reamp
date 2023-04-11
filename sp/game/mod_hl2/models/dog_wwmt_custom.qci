@@ -1,0 +1,7 @@
+//File for injecting custom rules. Safe to edit. Do not delete.
+
+$include "dog_gestures.mdl"
+$include "dog_postures.mdl"
+$include "dog_animations.mdl"
+$bbox -42.407 -40.337 -8.041 46.948 52.319 113.333
+$proceduralbones "dog.vrd"

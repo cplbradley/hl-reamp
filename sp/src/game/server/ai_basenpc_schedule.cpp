@@ -34,6 +34,7 @@
 #include "ndebugoverlay.h"
 #include "tier0/vcrmode.h"
 #include "env_debughistory.h"
+#include "ai_network.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -850,6 +851,8 @@ bool CAI_BaseNPC::FindCoverPos( CBaseEntity *pEntity, Vector *pResult )
 	return true;
 }
 
+
+
 //=========================================================
 
 bool CAI_BaseNPC::FindCoverPosInRadius( CBaseEntity *pEntity, const Vector &goalPos, float coverRadius, Vector *pResult )
@@ -988,7 +991,28 @@ bool CAI_BaseNPC::FindCoverFromEnemy( bool bNodesOnly, float flMinDistance, floa
 	return true;
 }
 
+Vector CAI_BaseNPC::FindBestTeleportPosition(float flMinDistance, float flMaxDistance)
+{
+	CBaseEntity* pEnemy = GetEnemy();
+	if (pEnemy == NULL)
+	{
+		DevWarning(2, "No enemy found, teleport failed.\n");
+		return vec3_origin;
+	}
+	Vector telePos = vec3_origin;
+	ClearHintNode();
+	
+	CAI_Node* pNode = GetTacticalServices()->FindTeleportNode(GetAbsOrigin(), pEnemy->GetAbsOrigin(), flMinDistance, flMaxDistance);
+	if (!pNode)
+		return vec3_origin;
 
+	telePos = pNode->m_vOrigin;
+
+	DevMsg(2, "Teleport Destination: %f %f %f \n", telePos.x, telePos.y, telePos.z);
+	
+	return telePos;
+
+}
 //-----------------------------------------------------------------------------
 // TASK_FIND_COVER_FROM_BEST_SOUND
 //-----------------------------------------------------------------------------

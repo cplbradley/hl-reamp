@@ -118,6 +118,12 @@ ConVar demo_fov_override( "demo_fov_override", "0", FCVAR_CLIENTDLL | FCVAR_DONT
 
 
 ConVar cl_armor_helmet("cl_armor_helmet", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+ConVar cl_armor_chest("cl_armor_chest", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+ConVar cl_armor_codpiece("cl_armor_codpiece", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+ConVar cl_armor_thighs("cl_armor_thighs", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+ConVar cl_armor_boots("cl_armor_boots", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+ConVar cl_armor_upperarm("cl_armor_upperarm", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+ConVar cl_armor_forearm("cl_armor_forearm", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
 
 // This only needs to be approximate - it just controls the distance to the pivot-point of the head ("the neck") of the in-game character, not the player's real-world neck length.
 // Ideally we would find this vector by subtracting the neutral-pose difference between the head bone (the pivot point) and the "eyes" attachment point.
@@ -491,6 +497,12 @@ void C_BasePlayer::Spawn( void )
 	m_iFOV	= 0;	// init field of view.
 
 	armorpieces.nHelmet = cl_armor_helmet.GetInt();
+	armorpieces.nBoots = cl_armor_boots.GetInt();
+	armorpieces.nChest = cl_armor_chest.GetInt();
+	armorpieces.nForearm = cl_armor_forearm.GetInt();
+	armorpieces.nUpperArm = cl_armor_upperarm.GetInt();
+	armorpieces.nThighs = cl_armor_thighs.GetInt();
+	armorpieces.nCodpiece = cl_armor_codpiece.GetInt();
 
     SetModel( "models/player/mark6.mdl" );
 	SetArmorPieces();
@@ -1799,7 +1811,20 @@ float C_BasePlayer::GetDeathCamInterpolationTime()
 void C_BasePlayer::SetArmorPieces()
 {
 	int headgroup = FindBodygroupByName("helmet");
+	int chestgroup = FindBodygroupByName("chest");
+	int codpiecegroup = FindBodygroupByName("codpiece");
+	int bootsgroup = FindBodygroupByName("boots");
+	int thighsgroup = FindBodygroupByName("thighs");
+	int forearmgroup = FindBodygroupByName("forearm");
+	int upperarmgroup = FindBodygroupByName("upperarm");
+
 	SetBodygroup(headgroup, cl_armor_helmet.GetInt());
+	SetBodygroup(chestgroup, cl_armor_chest.GetInt());
+	SetBodygroup(codpiecegroup, cl_armor_codpiece.GetInt());
+	SetBodygroup(bootsgroup, cl_armor_boots.GetInt());
+	SetBodygroup(thighsgroup, cl_armor_thighs.GetInt());
+	SetBodygroup(forearmgroup, cl_armor_forearm.GetInt());
+	SetBodygroup(upperarmgroup, cl_armor_upperarm.GetInt());
 }
 void C_BasePlayer::CalcThirdPersonDeathView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 {

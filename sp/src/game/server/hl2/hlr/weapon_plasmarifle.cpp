@@ -42,6 +42,7 @@ public:
 	void	KillIt(void);
 	void  MoveTowardsTarget(void);
 	void  SetTargetPos(const Vector &vecTargetpos, const float &fVelocity);
+	void Unhide(void);
 
 	float flVelocity;
 	Vector vecTarget;
@@ -59,6 +60,7 @@ LINK_ENTITY_TO_CLASS(plasma_ball, CPlasmaBall);
 BEGIN_DATADESC(CPlasmaBall)
 // Function Pointers
 DEFINE_FUNCTION(PlasmaTouch),
+DEFINE_THINKFUNC(Unhide),
 END_DATADESC()
 CPlasmaBall *CPlasmaBall::Create(const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner)
 {
@@ -85,6 +87,9 @@ void CPlasmaBall::Spawn(void)
 	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 	//SetSolidFlags(FSOLID_TRIGGER);
 	CreateTrail();
+	AddEffects(EF_NODRAW);
+	SetThink(&CPlasmaBall::Unhide);
+	SetNextThink(gpGlobals->curtime + 0.01f);
 	SetTouch(&CPlasmaBall::PlasmaTouch);
 }
 void CPlasmaBall::Precache(void)
@@ -96,6 +101,11 @@ void CPlasmaBall::Precache(void)
 	PrecacheModel("sprites/smoke.vmt");
 	PrecacheModel("sprites/physcannon_bluecore2b.vmt");
 
+}
+void CPlasmaBall::Unhide(void)
+{
+	RemoveEffects(EF_NODRAW);
+	SetThink(NULL);
 }
 bool CPlasmaBall::CreateTrail(void)
 {
@@ -639,6 +649,9 @@ void CWeaponPlasmaRifle::AddViewKick(void)
 	DoMachineGunKick(pPlayer, EASY_DAMPEN, MAX_VERTICAL_KICK, m_fFireDuration, SLIDE_LIMIT);
 }
 
+
+ConVar g_exp_plasma_pos("g_exp_plasma_pos", "0");
+ConVar g_exp_plasma_pos_factor("g_exp_plasma_pos_factor", "0.05");
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -719,7 +732,9 @@ void CWeaponPlasmaRifle::PrimaryAttack(void)
 
 	pOwner->EyeVectors(&vForward, &vRight, &vUp);
 
-	Vector vecSrc = pPlayer->EyePosition() + vForward * 12.0f + vRight * 2.0f + vUp * -3.0f;
+	Vector vecSrc;
+
+	g_exp_plasma_pos.GetBool() ? (vecSrc = (pPlayer->EyePosition() + vForward * 12.0f + vRight * 2.0f + vUp * -3.0f) + (pPlayer->GetAbsVelocity() * g_exp_plasma_pos_factor.GetFloat())) : (vecSrc = pPlayer->EyePosition() + vForward * 12.0f + vRight * 2.0f + vUp * -3.0f);
 	QAngle angAiming = pOwner->EyeAngles();
 	AngleVectors(angAiming, &vecAiming);
 

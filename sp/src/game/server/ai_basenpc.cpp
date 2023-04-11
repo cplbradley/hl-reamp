@@ -4104,7 +4104,7 @@ void CAI_BaseNPC::PostNPCThink( void )
 	if (AmBeingHealed() && (GetHealth() < GetMaxHealth()))
 	{
 		ConVarRef vorthealrate("sk_vortigaunt_heal_rate");
-		float healrate = g_pGameRules->AdjustProjectileSpeed(vorthealrate.GetFloat());
+		float healrate = g_pGameRules->SkillAdjustValue(vorthealrate.GetFloat());
 		m_iHealth += healrate;
 	}
 	

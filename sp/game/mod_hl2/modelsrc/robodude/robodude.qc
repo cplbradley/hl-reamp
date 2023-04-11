@@ -1,7 +1,8 @@
 // Created by Crowbar 0.62
-$include "DefineBones.qci"
-$modelname "robodude.mdl"
 
+$modelname "robodude.mdl"
+$scale 1.2
+$include "DefineBones.qci"
 $bodygroup "Body"
 {
 	studio "robodude_ref.smd"
@@ -19,7 +20,7 @@ $lod 40
 {
 	replacemodel "robodude_ref.smd" "robodude_lod2.smd"
 }
-$lod 60
+$lod 50
 {
 	replacemodel "robodude_ref.smd" "robodude_lod3.smd"
 }
@@ -32,6 +33,13 @@ $contents "solid"
 $eyeposition 0 0 73
 
 $cdmaterials "models\robodude\"
+
+$texturegroup "skins"
+{
+	{ "robodude" }
+	{ "robodude_black" }
+	{ "robodude_white" }
+}
 
 $attachment "eye" "ValveBiped.Bip01_Head1" 2.5 -5.50 -2 rotate 0 0 0
 
@@ -77,6 +85,7 @@ $sequence "ragdoll" {
 }
 
 $include "combine_soldier_anims.qci"
+$include "pistol_anims.qci"
 $collisionjoints "combine_soldier_physics.smd"
 {
 	$mass 0

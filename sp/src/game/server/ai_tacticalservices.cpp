@@ -792,3 +792,105 @@ Vector CAI_TacticalServices::GetNodePos( int node )
 }
 
 //-----------------------------------------------------------------------------
+CAI_Node *CAI_TacticalServices::FindTeleportNode(const Vector& vNearPos, const Vector& vThreatPos, float minDist, float maxDist)
+{
+	if (!CAI_NetworkManager::NetworksLoaded())
+		return NULL;
+
+	float flMyZ = GetOuter()->GetAbsOrigin().z;
+	int iMyNode = GetPathfinder()->NearestNodeToPoint(vNearPos);
+
+	if (iMyNode == NULL)
+	{
+		Vector pos = GetOuter()->GetAbsOrigin();
+		DevWarning(2, "FindCover() - %s has no nearest node! (Check near %f %f %f)\n", GetEntClassname(), pos.x, pos.y, pos.z);
+		return NULL;
+	}
+
+	AI_NearNode_t* pBuffer = (AI_NearNode_t*)stackalloc(sizeof(AI_NearNode_t) * GetNetwork()->NumNodes());
+
+	CNodeList list(pBuffer, GetNetwork()->NumNodes());
+	CVarBitVec wasVisited(GetNetwork()->NumNodes());	// Nodes visited
+
+	// mark start as visited
+	list.Insert(AI_NearNode_t(iMyNode, 0));
+	wasVisited.Set(iMyNode);
+	float flMinDistSqr = minDist * minDist;
+	float flMaxDistSqr = maxDist * maxDist;
+
+	static int nSearchRandomizer = 0;		// tries to ensure the links are searched in a different order each time;
+
+	// Search until the list is empty
+	while (list.Count())
+	{
+		// Get the node that is closest in the number of steps and remove from the list
+		int nodeIndex = list.ElementAtHead().nodeIndex;
+		DevMsg(2, "Node #%i\n", nodeIndex);
+		list.RemoveAtHead();
+
+		CAI_Node* pNode = GetNetwork()->GetNode(nodeIndex);
+
+		Vector nodeOrigin = pNode->GetPosition(GetHullType());
+
+		float dist = (vNearPos - nodeOrigin).LengthSqr();
+		
+		for (int link = 0; link < GetNetwork()->GetNode(nodeIndex)->NumLinks(); link++)
+		{
+			int index = (link + nSearchRandomizer) % GetNetwork()->GetNode(nodeIndex)->NumLinks();
+			CAI_Link* nodeLink = GetNetwork()->GetNode(nodeIndex)->GetLinkByIndex(index);
+
+			if (!m_pPathfinder->IsLinkUsable(nodeLink, iMyNode))
+				continue;
+
+			int newID = nodeLink->DestNodeID(nodeIndex);
+
+			// If not already on the closed list, add to it and set its distance
+			if (!wasVisited.IsBitSet(newID))
+			{
+				// Don't accept climb nodes or nodes that aren't ready to use yet
+				if (GetNetwork()->GetNode(newID)->GetType() != NODE_CLIMB && !GetNetwork()->GetNode(newID)->IsLocked())
+				{
+					// UNDONE: Shouldn't we really accumulate the distance by path rather than
+					// absolute distance.  After all, we are performing essentially an A* here.
+					nodeOrigin = GetNetwork()->GetNode(newID)->GetPosition(GetHullType());
+					dist = (vNearPos - nodeOrigin).LengthSqr();
+
+					// use distance to threat as a heuristic to keep AIs from running toward
+					// the threat in order to take cover from it.
+					float threatDist = (vThreatPos - nodeOrigin).LengthSqr();
+
+					// Now check this node is not too close towards the threat
+					if (dist < threatDist * 1.5)
+					{
+						list.Insert(AI_NearNode_t(newID, dist));
+					}
+				}
+				// mark visited
+				wasVisited.Set(newID);
+			}
+		}
+		if (dist >= flMinDistSqr && dist < flMaxDistSqr)
+		{
+			if (pNode->IsLocked())
+				continue;
+
+			if (abs(flMyZ - pNode->m_vOrigin.z) >= 350.0f)
+			{
+				pNode->Lock(3.0f);
+				return pNode;
+			}
+			if (GetOuter()->IsValidCover(nodeOrigin, pNode->GetHint()))
+			{
+				pNode->Lock(3.0f);
+				return pNode;
+			}
+		}
+		// Add its children to the search list
+		// Go through each link
+		// UNDONE: Pass in a cost function to measure each link?
+	}
+	DevWarning(2, "Failed to find suitable node to teleport to.\n");
+	// We failed. No suitable nodes found. Return null.
+	// Time to figure something else out.
+	return NULL;
+}

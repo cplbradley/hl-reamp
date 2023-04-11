@@ -2015,7 +2015,7 @@ void CNPC_CScanner::BlindFlashTarget( CBaseEntity *pTarget )
 	Vector vecAim = vecEnd - vecSrc;
 	VectorNormalize(vecAim);
 
-	float flSpd = g_pGameRules->AdjustProjectileSpeed(sk_scanner_projectile_speed.GetFloat());
+	float flSpd = g_pGameRules->SkillAdjustValue(sk_scanner_projectile_speed.GetFloat());
 
 	CHLRScannerProjectile *pPew = (CHLRScannerProjectile*)CreateEntityByName("hlr_scannerprojectile");
 	pPew->SetAbsOrigin(vecSrc);

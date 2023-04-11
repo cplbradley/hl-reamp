@@ -1,0 +1,2 @@
+normal 1
+dxt5 1

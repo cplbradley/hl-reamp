@@ -21,6 +21,7 @@ static ConVar g_thirdperson("g_thirdperson", "0", FCVAR_REPLICATED | FCVAR_GAMED
 static ConVar hud_weapon_selection_slowmo("hud_weapon_selection_slowmo", "1", FCVAR_REPLICATED | FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Slowmo during weapon selection");
 static ConVar g_draw_fury_effects("g_draw_fury_effects", "1", FCVAR_REPLICATED | FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Draws fury screen effects");
 static ConVar g_rocket_jump_mania("g_rocket_jump_mania", "0", FCVAR_REPLICATED | FCVAR_GAMEDLL | FCVAR_ARCHIVE, "No explosive self-damage. Rocket-jump away!");
+static ConVar mat_blurdarken("mat_blurdarken", "0");
 
 static ConVar mat_taa("mat_taa", "0", FCVAR_REPLICATED | FCVAR_CLIENTDLL, "");
 

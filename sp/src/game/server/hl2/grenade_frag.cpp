@@ -249,7 +249,7 @@ void CGrenadeFrag::Precache( void )
 {
 	PrecacheModel( GRENADE_MODEL );
 
-	PrecacheScriptSound( "Grenade.Blip" );
+	PrecacheScriptSound( "Frag.Tick" );
 	PrecacheScriptSound("Grenade.ImpactHard");
 
 	PrecacheModel( "sprites/redglow1.vmt" );
@@ -523,7 +523,7 @@ void CGrenadeFrag::DelayThink()
 }
 void CGrenadeFrag::BlipSound()
 {
-	EmitSound("Grenade.Blip");
+	EmitSound("Frag.Tick");
 	m_flAlpha = 250.0f;
 	m_flScale = 0.5f;
 }

@@ -41,6 +41,7 @@ ConVar sk_autoaim_mode( "sk_autoaim_mode", "1", FCVAR_ARCHIVE | FCVAR_REPLICATED
 #ifndef CLIENT_DLL
 ConVar log_verbose_enable( "log_verbose_enable", "0", FCVAR_GAMEDLL, "Set to 1 to enable verbose server log on the server." );
 ConVar log_verbose_interval( "log_verbose_interval", "3.0", FCVAR_GAMEDLL, "Determines the interval (in seconds) for the verbose server log." );
+
 #endif // CLIENT_DLL
 
 static CViewVectors g_DefaultViewVectors(
@@ -174,27 +175,49 @@ bool CGameRules::CanHaveAmmo( CBaseCombatCharacter *pPlayer, int iAmmoIndex )
 
 	return false;
 }
-float CGameRules::AdjustProjectileSpeed(float projspeed)
+
+ConVar sk_skill_adjust_easy("sk_skill_adjust_easy", "0.8");
+ConVar sk_skill_adjust_medium("sk_skill_adjust_medium", "1.0");
+ConVar sk_skill_adjust_hard("sk_skill_adjust_hard", "1.4");
+
+float CGameRules::SkillAdjustValue(float projspeed) //Hard increases, easy decreases
 {
 	switch (GetSkillLevel())
 	{
 	case SKILL_EASY:
-		//Msg("adjusting speed to easy\n");
-		return (projspeed * 0.85f);
+		return (projspeed * sk_skill_adjust_easy.GetFloat());
 		break;
 
 	case SKILL_MEDIUM:
-		//Msg("adjusting speed to medium\n");
-		return (projspeed);
+		return (projspeed * sk_skill_adjust_medium.GetFloat());
 		break;
 
 	case SKILL_HARD:
-		//Msg("adjusting speed to hard\n");
-		return (projspeed * 1.4);
+		return (projspeed * sk_skill_adjust_hard.GetFloat());
 		break;
 
 	default:
-		//Msg("adjusting speed to default\n");
+		return projspeed;
+		break;
+	}
+}
+float CGameRules::SkillAdjustValueInverted(float projspeed) //Hard decreases, easy increases
+{
+	switch (GetSkillLevel())
+	{
+	case SKILL_EASY:
+		return (projspeed * sk_skill_adjust_hard.GetFloat());
+		break;
+
+	case SKILL_MEDIUM:
+		return (projspeed * sk_skill_adjust_medium.GetFloat());
+		break;
+
+	case SKILL_HARD:
+		return (projspeed * sk_skill_adjust_easy.GetFloat());
+		break;
+
+	default:
 		return projspeed;
 		break;
 	}

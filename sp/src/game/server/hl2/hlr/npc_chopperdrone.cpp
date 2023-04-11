@@ -1814,7 +1814,7 @@ void CNPC_ChopperDrone::ShootAtPlayer( const Vector &vBasePos, const Vector &vGu
 		Vector vecShootDir = info.m_vecDirShooting + (VECTOR_CONE_PRECALCULATED/2);
 		VectorNormalize(vecShootDir);
 		float basespd = 2600.0f;
-		float adjustedspeed = g_pGameRules->AdjustProjectileSpeed(basespd);
+		float adjustedspeed = g_pGameRules->SkillAdjustValue(basespd);
 		Vector vecVelocity = vecShootDir * adjustedspeed;
 		pPew->Spawn();
 		pPew->SetOwnerEntity(this);
@@ -2476,7 +2476,7 @@ void CNPC_ChopperDrone::ShootAtFacingDirection( const Vector &vBasePos, const Ve
 		Vector vecShootDir = info.m_vecDirShooting + VECTOR_CONE_PRECALCULATED;
 		VectorNormalize(vecShootDir);
 		float basespd = 2000.0f;
-		float adjustedspeed = g_pGameRules->AdjustProjectileSpeed(basespd);
+		float adjustedspeed = g_pGameRules->SkillAdjustValue(basespd);
 		Vector vecVelocity = vecShootDir * adjustedspeed;
 		pPew->Spawn();
 		pPew->SetAbsVelocity(vecVelocity);

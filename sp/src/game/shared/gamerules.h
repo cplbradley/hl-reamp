@@ -310,7 +310,12 @@ public:
 	// Determines how much damage Player's attacks inflict, based on skill level.
 	virtual float AdjustPlayerDamageInflicted( float damage ) { return damage; }
 	virtual void  AdjustPlayerDamageTaken( CTakeDamageInfo *pInfo ) {}; // Base class does nothing.
-	virtual float AdjustProjectileSpeed(float projspeed);
+
+// Skill-based value adjustment
+	//Hard increases, Easy decreases
+	virtual float SkillAdjustValue(float projspeed);
+	//Hard decreases, Easy increases
+	virtual float SkillAdjustValueInverted(float projspeed);
 
 // Weapon retrieval
 	virtual bool CanHavePlayerItem( CBasePlayer *pPlayer, CBaseCombatWeapon *pWeapon );// The player is touching an CBaseCombatWeapon, do I give it to him?

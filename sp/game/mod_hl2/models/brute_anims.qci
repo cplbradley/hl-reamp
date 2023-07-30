@@ -1,3 +1,7 @@
+$animation "a_brute_jump" "bruteanims/brute_jump.smd" frame 5 15
+$animation "a_brute_glide" "bruteanims/brute_jump.smd" frame 26 30
+$animation "a_brute_land" "bruteanims/brute_jump.smd" frame 32 40
+
 $sequence "brute_run" {
 	"bruteanims\brute_run.smd"
 	activity "ACT_RUN" 1
@@ -53,4 +57,30 @@ $sequence "brute_rightthrow" {
 	fadeout 0.2
 	fps 30
 	{ event AE_VORTBRUTE_RIGHTTHROW_THROW 10 }
+}
+
+$sequence "brute_jump" {
+	"a_brute_jump"
+	activity ACT_JUMP 1
+	fps 30
+	fadein 0.2
+	fadeout 0.2
+	walkframe 10 LZ
+}
+$sequence "brute_glide" {
+	"a_brute_glide"
+	activity ACT_GLIDE 1
+	fps 30
+	loop
+	fadein 0.2
+	fadeout 0.2
+	fps 4
+	walkframe 4 LX LY LZ
+}
+$sequence "brute_land" {
+	"a_brute_land"
+	activity ACT_LAND 1
+	fps 30
+	fadein 0.2
+	fadeout 0.2
 }

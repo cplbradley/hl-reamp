@@ -655,10 +655,10 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 
 	BaseClass::Event_Killed( info );
 	CBasePlayer *pPlayer = ToBasePlayer(info.GetAttacker());
-	if ( m_bFadeCorpse )
+	/*if (m_bFadeCorpse)
 	{
-		m_bImportanRagdoll = RagdollManager_SaveImportant( this );
-	}
+		m_bImportanRagdoll = false;
+	}*/
 	
 	// Make sure this condition is fired too (OnTakeDamage breaks out before this happens on death)
 	SetCondition( COND_LIGHT_DAMAGE );
@@ -681,12 +681,12 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 	if (info.GetDamage() >= (m_iMaxHealth * ai_gib_threshold.GetFloat()))
 	{
 		DevMsg("threshold passed, should gib now\n");
-		GoreGib();
+		GoreGib(info.GetAttacker());
 	}
-	if (g_guts_and_glory.GetBool() == true)
+	if (g_guts_and_glory.GetBool())
 	{
 		DevMsg("guts and glory enabled, should gib now\n");
-		GoreGib();
+		GoreGib(info.GetAttacker());
 	}
 	
 	// Just Wax - Dynamic Health Spawn Call
@@ -749,9 +749,14 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 	}
 
 }
+ConVar gib_size("gib_size", "10");
+ConVar gib_rand_min("gib_rand_min", "-1");
+ConVar gib_rand_max("gib_rand_max", "1");
+ConVar gib_rand("gib_rand", "100");
+ConVar gib_time("gib_time", "3");
 
 
-void CAI_BaseNPC::GoreGib(void)
+void CAI_BaseNPC::GoreGib(CBaseEntity* pKiller)
 {
 	ConVarRef ultragibs("g_ultragibs");
 	DevMsg("gibbing\n");
@@ -766,7 +771,13 @@ void CAI_BaseNPC::GoreGib(void)
 	}
 	else
 		gibcount = m_iGibCount;
+	CPVSFilter filter(WorldSpaceCenter());
 
+	CBaseCombatCharacter* killer = ToBaseCombatCharacter(pKiller);
+	QAngle eyeAng = killer->EyeAngles();
+	Vector vecAng;
+	AngleVectors(eyeAng, &vecAng);
+	VectorNormalize(vecAng);
 
 	switch (blood)
 	{
@@ -785,34 +796,13 @@ void CAI_BaseNPC::GoreGib(void)
 		else
 			DispatchParticleEffect("hgib_sploosh", WorldSpaceCenter(), GetAbsAngles());
 		EmitSound("Gore.Splatter");
-	
+
+		
 
 		for (int i = 0; i <= gibcount; i++)
 		{
-			int rand = RandomInt(1, 3);
-			switch (rand)
-			{
-			case 1:
-			{
-				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/human/hgib_1.mdl", 5);
-				break;
-			}
-			case 2:
-			{
-				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/human/hgib_2.mdl", 5);
-				break;
-			}
-			case 3:
-			{
-				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/human/hgib_3.mdl", 5);
-				break;
-			}
-			default:
-			{
-				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/human/hgib_1.mdl", 5);
-				break;
-			}
-			}
+			int modelindex = modelinfo->GetModelIndex(g_PropDataSystem.GetRandomChunkModel("FleshChunks"));
+			te->BreakModel(filter, 0.0f, WorldSpaceCenter(), vec3_angle, GetHullMaxs(), vecAng * 200, modelindex, 200, 1, 5.0f, BREAK_FLESH);
 		}
 		
 		RemoveDeferred();
@@ -821,6 +811,7 @@ void CAI_BaseNPC::GoreGib(void)
 	}
 	case BLOOD_COLOR_GREEN:
 	{
+		m_bIsGibbed = true;
 		SetSolid(SOLID_NONE);
 		SetSolidFlags(FSOLID_NOT_SOLID);
 		AddEffects(EF_NODRAW);
@@ -829,41 +820,15 @@ void CAI_BaseNPC::GoreGib(void)
 		EmitSound("Gore.Splatter");
 		for (int i = 0; i <= gibcount; i++)
 		{
-			int rand = RandomInt(1, 4);
-			switch (rand)
-			{
-			case 1:
-			{
-				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_1.mdl", 5);
-				break;
-			}
-			case 2:
-			{
-				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_2.mdl", 5);
-				break;
-			}
-			case 3:
-			{
-				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_3.mdl", 5);
-				break;
-			}
-			case 4:
-			{
-				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_4.mdl", 5);
-				break;
-			}
-			default:
-			{
-				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_1.mdl", 5);
-				break;
-			}
-			}
+			int modelindex = modelinfo->GetModelIndex(g_PropDataSystem.GetRandomChunkModel("AlienFleshChunks"));
+			te->BreakModel(filter, 0.0f, WorldSpaceCenter(), vec3_angle, GetHullMaxs(), vecAng * 200, modelindex, 200, 1, 5.0f, BREAK_FLESH);
 		}
 		RemoveDeferred();
 		break;
 	}
 	case BLOOD_COLOR_YELLOW:
 	{
+			m_bIsGibbed = true;
 			SetSolid(SOLID_NONE);
 			SetSolidFlags(FSOLID_NOT_SOLID);
 			AddEffects(EF_NODRAW);
@@ -873,42 +838,25 @@ void CAI_BaseNPC::GoreGib(void)
 			EmitSound("Gore.Splatter");
 			for (int i = 0; i <= gibcount; i++)
 			{
-				int rand = RandomInt(1, 4);
-				switch (rand)
-				{
-				case 1:
-				{
-					CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_1.mdl", 5);
-					break;
-				}
-				case 2:
-				{
-					CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_2.mdl", 5);
-					break;
-				}
-				case 3:
-				{
-					CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_3.mdl", 5);
-					break;
-				}
-				case 4:
-				{
-					CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_4.mdl", 5);
-					break;
-				}
-				default:
-				{
-					CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_1.mdl", 5);
-					break;
-				}
-				}
+				int modelindex = modelinfo->GetModelIndex(g_PropDataSystem.GetRandomChunkModel("AlienFleshChunks"));
+				te->BreakModel(filter, 0.0f, WorldSpaceCenter(), vec3_angle, GetHullMaxs(), vecAng * 200, modelindex, 200, 1, 5.0f, BREAK_FLESH);
 			}
-			m_bIsGibbed = true;
 			RemoveDeferred();
 			break;
 	}
 	case BLOOD_COLOR_MECH:
 	{
+		m_bIsGibbed = true;
+		SetSolid(SOLID_NONE);
+		SetSolidFlags(FSOLID_NOT_SOLID);
+		AddEffects(EF_NODRAW);
+		SetModelName(NULL_STRING);
+		for (int i = 0; i <= gibcount; i++)
+		{
+			int modelindex = modelinfo->GetModelIndex(g_PropDataSystem.GetRandomChunkModel("MetalChunks"));
+			te->BreakModel(filter, 0.0f, WorldSpaceCenter(), vec3_angle, GetHullMaxs(), vecAng * 200, modelindex, 200, 1, 5.0f, BREAK_METAL);
+		}
+		RemoveDeferred();
 		break;
 	}
 	case DONT_BLEED:
@@ -1476,7 +1424,7 @@ void CAI_BaseNPC::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir
 	case HITGROUP_HEAD:
 		if (subInfo.GetDamageType() & DMG_DIRECT)
 		{
-			subInfo.ScaleDamage(5);
+			subInfo.ScaleDamage(10.0f);
 			DevMsg("Revolver Headshot, multiplying damage x10\n");
 		}
 		else 
@@ -4085,7 +4033,7 @@ void CAI_BaseNPC::PostNPCThink( void )
 
 	if (ai_draw_hitboxes.GetInt() == 1)
 	{
-		DrawServerHitboxes();
+		DrawServerHitboxes(GetNextThink() - gpGlobals->curtime);
 	}
 	if (IsStunned())
 	{
@@ -8776,25 +8724,6 @@ void CAI_BaseNPC::HandleAnimEvent( animevent_t *pEvent )
 
 	case NPC_EVENT_WEAPON_DROP:
 		{
-			//
-			// Drop our active weapon (or throw it at the specified target entity).
-			//
-			CBaseEntity *pTarget = NULL;
-			if (pEvent->options)
-			{
-				pTarget = gEntList.FindEntityGeneric(NULL, pEvent->options, this);
-			}
-
-			if (pTarget)
-			{
-				Vector vecTargetPos = pTarget->WorldSpaceCenter();
-				Weapon_Drop(GetActiveWeapon(), &vecTargetPos);
-			}
-			else
-			{
-				Weapon_Drop(GetActiveWeapon());
-			}
-
 			break;
 		}
 
@@ -11331,6 +11260,9 @@ void CAI_BaseNPC::Precache( void )
 	PrecacheModel("models/gibs/human/hgib_1.mdl");
 	PrecacheModel("models/gibs/human/hgib_2.mdl");
 	PrecacheModel("models/gibs/human/hgib_3.mdl");
+	PrecacheModel("models/gibs/human/hgib_small1.mdl");
+	PrecacheModel("models/gibs/human/hgib_small2.mdl");
+	PrecacheModel("models/gibs/human/hgib_small3.mdl");
 	PrecacheParticleSystem("hgib_sploosh");
 	PrecacheParticleSystem("hgib_megasploosh");
 	PrecacheModel("models/gibs/alien/agib_1.mdl");

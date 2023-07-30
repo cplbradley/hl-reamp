@@ -34,7 +34,7 @@
 #include "gamestats.h"
 #include "physobj.h"
 #include "SpriteTrail.h"
-
+#include "hlr/npc/npc_antlionwarrior.h"
 #ifdef PORTAL
 #include "portal_util_shared.h"
 #endif
@@ -51,6 +51,7 @@ extern int g_interactionPlayerLaunchedRPG;
 static ConVar sk_apc_missile_damage("sk_apc_missile_damage", "15");
 ConVar rpg_missle_use_custom_detonators("rpg_missle_use_custom_detonators", "1");
 extern ConVar mat_classic_render;
+extern ConVar sk_plr_dmg_rpg_round;
 
 #define APC_MISSILE_DAMAGE	sk_apc_missile_damage.GetFloat()
 
@@ -190,6 +191,7 @@ CMissile::CMissile()
 {
 	m_hRocketTrail = NULL;
 	m_bCreateDangerSounds = false;
+	m_bExplosionAllowed = true;
 }
 
 CMissile::~CMissile()
@@ -220,7 +222,7 @@ void CMissile::Precache(void)
 void CMissile::Spawn(void)
 {
 	Precache();
-
+	RegisterThinkContext("EnableExplosion");
 	SetSolid(SOLID_BBOX);
 	SetModel("models/weapons/w_missile_launch.mdl");
 	UTIL_SetSize(this, -Vector(4, 4, 4), Vector(4, 4, 4));
@@ -232,7 +234,7 @@ void CMissile::Spawn(void)
 	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 
 	SetNextThink(gpGlobals->curtime);
-	SetDamage(125.0f);
+	SetDamage(sk_plr_dmg_rpg_round.GetFloat());
 
 	m_takedamage = DAMAGE_YES;
 	m_iHealth = m_iMaxHealth = 100;
@@ -493,9 +495,53 @@ void CMissile::MissileTouch(CBaseEntity *pOther)
 			return;
 	}
 
+	if (IsHitEntityWarrior(pOther))
+	{
+		CNPC_AntlionWarrior* pWarrior = dynamic_cast<CNPC_AntlionWarrior*>(pOther);
+		
+		ReturnToSender(pWarrior->WorldSpaceCenter(), GetOwnerEntity()->WorldSpaceCenter(),pWarrior->GetLocalAngles());
+		return;
+	}
+
 	Explode();
 }
+void CMissile::ReturnToSender(Vector vecStart, Vector vecEnd, QAngle angle)
+{
+	DefferExplosion(0.2f);
+	Vector vecDir = vecEnd - vecStart;
+	VectorNormalize(vecDir);
+	Msg("X %f Y %f Z %f\n", vecDir[0], vecDir[1], vecDir[2]);
+	SetAbsOrigin(vecStart + (vecDir * 100.0f));
+	ActiveSteerMode();
+	SetAbsVelocity(vecDir * 1500.0f);
+}
+bool CMissile::IsHitEntityWarrior(CBaseEntity* pOther)
+{
+	if (pOther->ClassMatches("npc_antlionwarrior"))
+	{
+		CNPC_AntlionWarrior* pWarrior = dynamic_cast<CNPC_AntlionWarrior*>(pOther);
+		if (pWarrior)
+		{
+			Msg("Hit a warrior\n");
+			if (pWarrior->IsCharging())
+			{
+				Msg("Warrior is charging\n");
+				return true;
+			}
+		}
+	}
 
+	return false;
+}
+void CMissile::DefferExplosion(float flwaittime)
+{
+	m_bExplosionAllowed = false;
+	SetContextThink(&CMissile::EnabledExplosion,gpGlobals->curtime + flwaittime,"EnableExplosion");
+}
+void CMissile::EnabledExplosion()
+{
+	m_bExplosionAllowed = true;
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -1578,6 +1624,7 @@ void CWeaponRPG::Precache(void)
 
 	PrecacheScriptSound("Missile.Ignite");
 	PrecacheScriptSound("Missile.Accelerate");
+	PrecacheParticleSystem("muzzleflash_shotgun_altfire");
 
 	// Laser dot...
 	PrecacheModel("sprites/glow04.vmt");
@@ -1742,7 +1789,10 @@ void CWeaponRPG::LaunchRocket(void)
 	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
 	QAngle vecAngles;
 	VectorAngles(vForward, vecAngles);
-	Vector	muzzlePoint = pPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * 6.0f + vUp * -3.0f;
+	ConVarRef classicpos("r_classic_weapon_pos");
+	int right = classicpos.GetBool() ? 0 : 6;
+	int up = classicpos.GetBool() ? -5 : -3;
+	Vector	muzzlePoint = pPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * right + vUp * up;
 	m_hMissile = CMissile::Create(muzzlePoint, vecAngles, GetOwner()->edict());
 	m_hMissile->SetOwnerEntity(pPlayer);
 	m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
@@ -1757,6 +1807,7 @@ void CWeaponRPG::LaunchRocket(void)
 	
 	m_iPrimaryAttacks++;
 	gamestats->Event_WeaponFired(pPlayer, true, GetClassname());
+	DispatchParticleEffect("muzzleflash_shotgun_altfire", muzzlePoint, vecAngles, this);
 }
 void CWeaponRPG::SecondaryAttack(void)
 {

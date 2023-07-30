@@ -218,7 +218,7 @@ public:
 	void Touch(CBaseEntity* pOther);
 	void EndTouch(CBaseEntity* pOther);
 	
-	bool bHealShields;
+	int bHealShields;
 	int m_iHealAmount;
 	float m_fHealFrequency;
 	bool bAmHealing;

@@ -111,7 +111,6 @@ protected:
 	//bool			DoubleJump(void);
 
 	void			GroundPound(void);
-
 	
 
 	// Handles both ground friction and water friction

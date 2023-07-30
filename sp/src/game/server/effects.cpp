@@ -1466,25 +1466,11 @@ void CItemSoda::CanTouch ( CBaseEntity *pOther )
 	SetNextThink( gpGlobals->curtime );
 }
 
+///
+/// func_precipitation, declaration moved to header for reasons
+/// 
+
 #ifndef _XBOX
-//=========================================================
-// func_precipitation - temporary snow solution for first HL2
-// technology demo
-//=========================================================
-
-class CPrecipitation : public CBaseEntity
-{
-public:
-	DECLARE_CLASS( CPrecipitation, CBaseEntity );
-	DECLARE_DATADESC();
-	DECLARE_SERVERCLASS();
-
-	CPrecipitation();
-	void	Spawn( void );
-
-	CNetworkVar( PrecipitationType_t, m_nPrecipType );
-};
-
 LINK_ENTITY_TO_CLASS( func_precipitation, CPrecipitation );
 
 BEGIN_DATADESC( CPrecipitation )
@@ -1513,6 +1499,8 @@ void CPrecipitation::Spawn( void )
 	SetSolid( SOLID_NONE );							// Remove model & collisions
 	SetMoveType( MOVETYPE_NONE );
 	SetModel( STRING( GetModelName() ) );		// Set size
+
+	SetTransmitState(FL_EDICT_ALWAYS);
 
 	// Default to rain.
 	if ( m_nPrecipType < 0 || m_nPrecipType > NUM_PRECIPITATION_TYPES )

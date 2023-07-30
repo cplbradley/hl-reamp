@@ -8,6 +8,14 @@ $modelname	"props/skies/skydome_1.mdl"
 $staticprop
 $body skydome_1 "skydome_1.smd"
 $cdmaterials "models/props/skies"
+$texturegroup "skydome_skins"
+{
+ {  "spheremap_space" }
+ {  "spheremap_hell" }
+ {  "spheremap_purple" }
+ {	"spheremap_orange" }
+
+}
 $sequence idle "skydome_1.smd" activity ACT_IDLE -1 fps 1
 
 $include	"skydome_1_wwmt_custom.qci"

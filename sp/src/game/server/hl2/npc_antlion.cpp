@@ -1079,6 +1079,7 @@ void CNPC_Antlion::HandleAnimEvent( animevent_t *pEvent )
 				
 				// Try and spit at our target
 				Vector	vecToss;
+				Vector vecTossAbs;
 				if ( GetSpitVector( vSpitPos, vTarget, &vecToss ) == false )
 				{
 					// Now try where they were
@@ -1089,12 +1090,22 @@ void CNPC_Antlion::HandleAnimEvent( animevent_t *pEvent )
 					}
 				}
 
+				if (GetSpitVector(vSpitPos, GetEnemy()->GetAbsOrigin(), &vecTossAbs))
+				{
+					float tossdot = DotProduct(vecToss, vecTossAbs);
+
+					if (tossdot < 0.4f || GetEnemy()->GetGroundEntity() == NULL)
+						vecToss = vecTossAbs;
+				}
+				
 				// Find what our vertical theta is to estimate the time we'll impact the ground
 				Vector vecToTarget = ( vTarget - vSpitPos );
 				VectorNormalize( vecToTarget );
 				float flVelocity = VectorNormalize( vecToss );
 				float flCosTheta = DotProduct( vecToTarget, vecToss );
 				float flTime = (vSpitPos-vTarget).Length2D() / ( flVelocity * flCosTheta );
+
+
 
 				// Emit a sound where this is going to hit so that targets get a chance to act correctly
 				CSoundEnt::InsertSound( SOUND_DANGER, vTarget, (15*12), flTime, this );

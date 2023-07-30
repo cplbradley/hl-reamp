@@ -5,18 +5,29 @@
 
 $scale 1.0
 $modelname	"weapons/v_spas.mdl"
-$body v_spas "v_spas.smd"
+$body v_spas "spas01_fixedUV.smd"
 $model hands "v_hands_mark6.smd"
+$origin -2.6 0 0
 $contents "solid"
 $cdmaterials "models/weapons/spas"
 $cdmaterials "models/weapons/v_hands"
 $attachment muzzle "muzzle" 0 0 0 rotate 0 0 0
 $attachment "1" "Franchi_SP" -3.00 5.00 4.00 rotate -0 -180 0
 $sequence fire "v_spas_sequence_fire" fps 30.0 activity ACT_VM_PRIMARYATTACK -1.0 fadein 0.0 fadeout 0.2 snap
-$sequence pump "v_spas_sequence_pump" fps 30.0 activity ACT_SHOTGUN_PUMP -1.0 fadein 0.2 fadeout 0.2 {
-{ event 6001 1 "2" }
+$sequence pump "v_spas_sequence_pump" fps 30.0 activity ACT_SHOTGUN_PUMP 20 fadein 0.2 fadeout 0.2 {
+{ event 6001 5 "2" }
+}
+$sequence pump2 "v_spas_sequence_pump2" fps 30.0 activity ACT_SHOTGUN_PUMP 14 fadein 0.2 fadeout 0.2 {
+{ event 6001 6 "2" }
+}
+$sequence pump3 "v_spas_sequence_pump3" fps 30.0 activity ACT_SHOTGUN_PUMP 4 fadein 0.2 fadeout 0.2 {
+{ event 6001 6 "2" }
+}
+$sequence pumpclassic "v_spas_sequence_pump2" fps 30.0 activity ACT_VM_PULLBACK -1.0 fadein 0.2 fadeout 0.2 {
+{ event 6001 6 "2" }
 }
 $sequence idle "v_spas_sequence_idle" fps 5.0 loop  activity ACT_VM_IDLE -1.0 fadein 0.2 fadeout 0.2 
 $sequence draw "v_spas_sequence_draw" fps 30.0 activity ACT_VM_DRAW -1.0 fadein 0.2 fadeout 0.2
+$sequence fire2 "v_spas_sequence_altfire" fps 30.0 activity ACT_VM_SECONDARYATTACK -1.0 fadein 0.0 fadeout 0.2 snap
 
 $include	"v_spas_wwmt_custom.qci"

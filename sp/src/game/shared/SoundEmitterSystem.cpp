@@ -505,6 +505,7 @@ public:
 			pitchmod = 1.0f;
 		}
 		int pitch = params.pitch * pitchmod;
+		pitch = MIN(pitch, 250);
 
 #if !defined( CLIENT_DLL )
 		bool bSwallowed = CEnvMicrophone::OnSoundPlayed(
@@ -590,6 +591,7 @@ public:
 		}
 
 		int pitch = ep.m_nPitch * pitchmod;
+		pitch = MIN(pitch, 250);
 		if (ep.m_pSoundName &&
 			(Q_stristr(ep.m_pSoundName, ".wav") ||
 			Q_stristr(ep.m_pSoundName, ".mp3") ||
@@ -858,7 +860,7 @@ public:
 			pitch *= GetTimeScale();
 		}
 
-
+		pitch = MIN(pitch, 250);
 #if defined( CLIENT_DLL )
 		enginesound->EmitAmbientSound(params.soundname, params.volume, pitch, iFlags | SND_SHOULDPAUSE, soundtime / GetTimeScale());
 #else
@@ -970,6 +972,7 @@ public:
 			pitchmod = 1.0f;
 
 		int newpitch = pitch * pitchmod;
+		newpitch = MIN(newpitch, 250);
 
 #if !defined( CLIENT_DLL )
 		CUtlVector< Vector > dummyorigins;
@@ -1420,6 +1423,7 @@ void UTIL_EmitAmbientSound(int entindex, const Vector &vecOrigin, const char *sa
 		pitchmod = 1.0f;
 
 	int newpitch = pitch * pitchmod;
+	newpitch = MIN(newpitch, 250);
 	if (samp && *samp == '!')
 	{
 		int sentenceIndex = SENTENCEG_Lookup(samp);

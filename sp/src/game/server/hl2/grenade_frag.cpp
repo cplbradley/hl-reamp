@@ -95,7 +95,7 @@ void CGrenadeFrag::Spawn( void )
 	//CreateVPhysics();
 	
 
-	BlipSound();
+	//BlipSound();
 	m_flNextBlipTime = gpGlobals->curtime + FRAG_GRENADE_BLIP_FREQUENCY;
 
 	SetTouch(&CGrenadeFrag::NadeTouch);
@@ -263,7 +263,7 @@ void CGrenadeFrag::SetTimer( float detonateDelay, float warnDelay )
 	m_flDetonateTime = gpGlobals->curtime + detonateDelay;
 	m_flWarnAITime = gpGlobals->curtime + warnDelay;
 	SetThink( &CGrenadeFrag::DelayThink );
-	SetNextThink( gpGlobals->curtime );
+	SetNextThink( gpGlobals->curtime + FRAG_GRENADE_BLIP_FREQUENCY);
 
 	CreateEffects();
 }
@@ -302,16 +302,18 @@ void CGrenadeFrag::NadeTouch(CBaseEntity *pOther)
 		}
 		Vector vecDir = GetAbsVelocity();
 		float speed = VectorNormalize(vecDir);
+		
 		float hitDot = DotProduct(tr.plane.normal, -vecDir);
 		iBounces += 0.5f;
 		Vector vReflection = 2.0f * tr.plane.normal * hitDot + vecDir;
 		SetAbsVelocity(vReflection * (speed * 1/iBounces));
 		EmitSound("Grenade.ImpactHard");
+		float actualspeed = GetAbsVelocity().Length();
 		if (iBounces > 2.0f)
 		{
 			SetLocalAngularVelocity(QAngle(0, 0, 0));
 		}
-		if (speed < 1)
+		if (abs(actualspeed) < 1)
 		{
 			SetMoveType(MOVETYPE_NONE);
 			SetAbsVelocity(Vector(0, 0, 0));
@@ -372,7 +374,7 @@ void CGrenadeFrag::Explode(trace_t *pTrace, int bitsDamageType)
 			!(contents & MASK_WATER) ? g_sModelIndexFireball : g_sModelIndexWExplosion,
 			m_DmgRadius * .03,
 			25,
-			TE_EXPLFLAG_NOFIREBALL,
+			TE_EXPLFLAG_SMALL,
 			m_DmgRadius,
 			m_flDamage,
 			&vecNormal,
@@ -386,7 +388,7 @@ void CGrenadeFrag::Explode(trace_t *pTrace, int bitsDamageType)
 			!(contents & MASK_WATER) ? g_sModelIndexFireball : g_sModelIndexWExplosion,
 			m_DmgRadius * .03,
 			25,
-			TE_EXPLFLAG_NOFIREBALL,
+			TE_EXPLFLAG_SMALL,
 			m_DmgRadius,
 			m_flDamage);
 	}

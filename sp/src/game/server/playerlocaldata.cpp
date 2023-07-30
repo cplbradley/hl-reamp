@@ -48,6 +48,8 @@ BEGIN_SEND_TABLE_NOBASE( CPlayerLocalData, DT_Local )
 	SendPropFloat	(SENDINFO(m_flFallVelocity), 17, SPROP_CHANGES_OFTEN, -4096.0f, 4096.0f ),
 	SendPropVector	(SENDINFO(m_vecPunchAngle),      -1,  SPROP_COORD|SPROP_CHANGES_OFTEN),
 	SendPropVector	(SENDINFO(m_vecPunchAngleVel),      -1,  SPROP_COORD),
+	SendPropVector(SENDINFO(m_vecAbsPunchAngle), -1, SPROP_COORD|SPROP_CHANGES_OFTEN),
+	SendPropVector(SENDINFO(m_vecAbsPunchAngleVel), -1, SPROP_COORD),
 #endif
 	SendPropInt		(SENDINFO(m_bDrawViewmodel), 1, SPROP_UNSIGNED ),
 	SendPropInt		(SENDINFO(m_bWearingSuit), 1, SPROP_UNSIGNED ),
@@ -150,6 +152,8 @@ BEGIN_SIMPLE_DATADESC( CPlayerLocalData )
 	DEFINE_FIELD( m_nOldButtons, FIELD_INTEGER ),
 	DEFINE_FIELD( m_vecPunchAngle, FIELD_VECTOR ),
 	DEFINE_FIELD( m_vecPunchAngleVel, FIELD_VECTOR ),
+	DEFINE_FIELD(m_vecAbsPunchAngle, FIELD_VECTOR),
+	DEFINE_FIELD(m_vecAbsPunchAngleVel, FIELD_VECTOR),
 	DEFINE_FIELD( m_bDrawViewmodel, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bWearingSuit, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bPoisoned, FIELD_BOOLEAN ),

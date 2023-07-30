@@ -405,6 +405,9 @@ void CBreakable::Precache( void )
 	case matRocks:
 		pGibName = "ConcreteChunks";
 		break;
+	case matFlesh:
+		pGibName = "FleshChunks";
+		break;
 
 #ifdef HL1_DLL
 	case matComputer:
@@ -415,9 +418,7 @@ void CBreakable::Precache( void )
 		pGibName = "CeilingTile";
 		break;
 
-	case matFlesh:
-		pGibName = "FleshGibs";
-		break;
+
 
 	case matCinderBlock:
 		pGibName = "CinderBlocks";
@@ -1019,7 +1020,10 @@ void CBreakable::Die( void )
 	switch( m_Explosion )
 	{
 	case expDirected:
-		vecVelocity = g_vecAttackDir * -200;
+		if (m_spawnflags & SF_BREAK_REVERSE_DIRECTION)
+			vecVelocity = g_vecAttackDir * 200;
+		else
+			vecVelocity = g_vecAttackDir * -200;
 		break;
 
 	case expUsePrecise:

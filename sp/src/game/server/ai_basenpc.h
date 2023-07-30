@@ -648,9 +648,9 @@ public:
 		NEXT_CONDITION 	= LAST_SHARED_CONDITION,
 	};
 
-	virtual void GoreGib(void);
+	virtual void GoreGib(CBaseEntity* pKiller);
 
-	int m_iGibCount = 4;
+	int m_iGibCount = 8;
 
 protected:
 	// Used by derived classes to chain a task to a task that might not be the 

@@ -2419,7 +2419,7 @@ void UTIL_PredictedPosition( CBaseEntity *pTarget, float flTimeDelta, Vector *ve
 		else
 		{
 			//Get the player's stored velocity
-			vecPredictedVel = pPlayer->GetSmoothedVelocity();
+			vecPredictedVel = pPlayer->GetAbsVelocity();
 		}
 	}
 	else

@@ -20,6 +20,7 @@
 ConVar	sk_healthkit( "sk_healthkit","0" );		
 ConVar	sk_healthvial( "sk_healthvial","0" );		
 ConVar	sk_healthcharger( "sk_healthcharger","0" );		
+ConVar	sk_healthkit_small("sk_healthkit_small", "0");
 
 //-----------------------------------------------------------------------------
 // Small health kit. Heals the player when picked up.
@@ -28,18 +29,22 @@ class CHealthKit : public CItem
 {
 public:
 	DECLARE_CLASS( CHealthKit, CItem );
+	DECLARE_DATADESC();
 
 	void Spawn( void );
 	void Precache( void );
 	void CreateEffects(void);
 	bool MyTouch( CBasePlayer *pPlayer );
 protected:
-	CHandle<CSpriteTrail>	m_pGlowTrail;
+	CHandle<CSprite>	m_pSprite;
 };
 
 LINK_ENTITY_TO_CLASS( item_healthkit, CHealthKit );
 PRECACHE_REGISTER(item_healthkit);
 
+BEGIN_DATADESC(CHealthKit)
+DEFINE_FIELD(m_pSprite,FIELD_EHANDLE),
+END_DATADESC()
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -54,15 +59,15 @@ void CHealthKit::Spawn( void )
 
 void CHealthKit::CreateEffects(void)
 {
-	m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/bluelaser1.vmt", GetLocalOrigin(), false);
+	m_pSprite = CSprite::SpriteCreate("sprites/health.vmt", GetAbsOrigin(), false);
 
-	if (m_pGlowTrail != NULL)
+	if (m_pSprite != NULL)
 	{
-		m_pGlowTrail->FollowEntity(this);
-		m_pGlowTrail->SetTransparency(kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone);
-		m_pGlowTrail->SetStartWidth(14.0f);
-		m_pGlowTrail->SetEndWidth(1.0f);
-		m_pGlowTrail->SetLifeTime(1.0f);
+		m_pSprite->FollowEntity(this);
+		m_pSprite->SetLocalOrigin(vec3_origin + Vector(0, 0, 16));
+		m_pSprite->SetTransparency(kRenderGlow, 255, 255, 255, 255, kRenderFxHologram);
+		m_pSprite->SetScale(0.4f);
+		m_pSprite->SetGlowProxySize(16.0f);
 	}
 }
 //-----------------------------------------------------------------------------
@@ -71,8 +76,7 @@ void CHealthKit::CreateEffects(void)
 void CHealthKit::Precache( void )
 {
 	PrecacheModel("models/items/healthkit.mdl");
-	PrecacheModel("sprites/bluelaser1.vmt");
-	PrecacheModel("sprites/glow04.vmt");
+	PrecacheMaterial("sprites/health.vmt");
 	PrecacheScriptSound( "HealthKit.Touch" );
 }
 
@@ -110,6 +114,94 @@ bool CHealthKit::MyTouch( CBasePlayer *pPlayer )
 	return false;
 }
 
+class CHealthKitSmall : public CItem
+{
+public:
+	DECLARE_CLASS(CHealthKitSmall, CItem);
+	DECLARE_DATADESC();
+
+	void Spawn(void);
+	void Precache(void);
+	void CreateEffects(void);
+	bool MyTouch(CBasePlayer* pPlayer);
+protected:
+	CHandle<CSprite>	m_pSprite;
+};
+
+LINK_ENTITY_TO_CLASS(item_healthkit_small, CHealthKitSmall);
+PRECACHE_REGISTER(item_healthkit_small);
+
+BEGIN_DATADESC(CHealthKitSmall)
+DEFINE_FIELD(m_pSprite, FIELD_EHANDLE),
+END_DATADESC()
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CHealthKitSmall::Spawn(void)
+{
+	Precache();
+	SetModel("models/items/healthkit_small.mdl");
+	CreateEffects();
+	BaseClass::Spawn();
+}
+
+void CHealthKitSmall::CreateEffects(void)
+{
+	m_pSprite = CSprite::SpriteCreate("sprites/health.vmt", GetAbsOrigin(), false);
+
+	if (m_pSprite != NULL)
+	{
+		m_pSprite->FollowEntity(this);
+		m_pSprite->SetLocalOrigin(vec3_origin + Vector(0, 0, 16));
+		m_pSprite->SetTransparency(kRenderGlow, 255, 255, 255, 255, kRenderFxHologram);
+		m_pSprite->SetScale(0.4f);
+		m_pSprite->SetGlowProxySize(16.0f);
+	}
+}
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CHealthKitSmall::Precache(void)
+{
+	PrecacheModel("models/items/healthkit_small.mdl");
+	PrecacheMaterial("sprites/health.vmt");
+	PrecacheScriptSound("HealthKit.Touch");
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : *pPlayer - 
+// Output : 
+//-----------------------------------------------------------------------------
+bool CHealthKitSmall::MyTouch(CBasePlayer* pPlayer)
+{
+	if (pPlayer->TakeHealth(sk_healthkit_small.GetFloat(), DMG_GENERIC))
+	{
+		CSingleUserRecipientFilter user(pPlayer);
+		user.MakeReliable();
+
+		UserMessageBegin(user, "ItemPickup");
+		WRITE_STRING(GetClassname());
+		MessageEnd();
+
+		CPASAttenuationFilter filter(pPlayer, "HealthKit.Touch");
+		EmitSound(filter, pPlayer->entindex(), "HealthKit.Touch");
+
+		if (g_pGameRules->ItemShouldRespawn(this))
+		{
+			Respawn();
+		}
+		else
+		{
+			UTIL_Remove(this);
+		}
+
+		return true;
+	}
+
+	return false;
+}
 //-----------------------------------------------------------------------------
 // Small dynamically dropped health kit
 //-----------------------------------------------------------------------------

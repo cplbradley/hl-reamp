@@ -15,11 +15,6 @@
 #define CFMODDynamicPlayer C_FMODDynamicPlayer
 #endif
 
-
-
-
-
-
 struct musicscript_t
 {
 	char szMusicType[MAX_PATH];
@@ -35,6 +30,17 @@ enum MusicType
 	MUSICTYPE_TRANSITION_LIGHT,
 	MUSICTYPE_TRANSITION_MEDIUM,
 	MUSICTYPE_TRANSITION_HEAVY
+};
+
+enum
+{
+	SIGNAL_RESET,
+	SIGNAL_PRINT,
+	SIGNAL_PARSE,
+	SIGNAL_TRANSITION,
+	SIGNAL_STOP,
+	SIGNAL_PLAY,
+	SIGNAL_RANDOMPATH,
 };
 
 class CFMODDynamicPlayer : public CBaseEntity
@@ -56,22 +62,26 @@ public:
 	
 
 	void PrintToConsole(inputdata_t &inputdata);
-
+	void RandomMusicPath(inputdata_t& inputdata);
 	void InputPlaySpecificSound(inputdata_t &inputdata);
 	void InputTransitionToHeavyMusic(inputdata_t &inputdata);
 	void InputTransitionToMediumMusic(inputdata_t &inputdata);
 	void InputTransitionToLightMusic(inputdata_t &inputdata);
 	void InputImmediateHeavyMusic(inputdata_t &inputdata);
+	void InputImmediateMediumMusic(inputdata_t& inputdata);
 	void EnablePlayer(inputdata_t &inputdata);
 	void ParseScript(inputdata_t& inputdata);
 	void PrintScriptToConsole();
 	void CheckMusicFile();
+	void fuckit();
 #ifdef GAME_DLL
 	int UpdateTransmitState();
+	void TransmitMessage(int message);
 	
 #endif
 
 #ifdef CLIENT_DLL
+	void ReceiveMessage(int classID, bf_read& msg);
 	void ParseMusicScript(const char* pKeyName);
 	void ReadMusicDirectory(KeyValues* KeyValue);
 	const char* GetFixedPathToMusic(const char* path);
@@ -82,9 +92,15 @@ public:
 	void PickMediumTransition();
 	void PickHeavyTransition();
 	void PostDataUpdate(DataUpdateType_t updateType);
+
+	void PrintRandomPath();
+
+	
 	
 	const char* GetPathToMusic();
 	const char* GetMusicTypeForScriptParse();
+
+	virtual void ClientThink();
 
 	int m_iPrevMusicType;
 #endif
@@ -92,13 +108,15 @@ public:
 	CNetworkString(scriptpath, 512);
 	CNetworkVar(int, m_iMusicType);
 
-	CUtlVector<musicscript_t> m_musiclist;
+	
 	
 private:
 	
 
 #ifdef CLIENT_DLL
+	int lastrand;
 	const char* musicpath[512];
+	CUtlVector<musicscript_t> m_musiclist;
 #endif
 };
 

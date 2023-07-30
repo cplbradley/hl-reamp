@@ -36,82 +36,15 @@ extern ConVar in_forceuser;
 ConVar r_classic_weapon_pos("r_classic_weapon_pos", "0", FCVAR_REPLICATED);
 //ALL BELOW IS NEW
 #if defined( CLIENT_DLL )
-void ExpWpnTestOffset(ConVar *pConVar, char *pszString);
-ConVar   cl_exp_test_wpn_offset("cl_exp_test_wpn_offset", "0", 0, "Tests weapon offsets",
-	(FnChangeCallback_t)ExpWpnTestOffset);
+ConVar   cl_test_classic_offsets("cl_test_classic_offsets", "0", 0, "Tests weapon offsets");
 
-ConVar   cl_exp_test_wpn_offset_x("cl_exp_test_wpn_offset_x", "0");
-ConVar   cl_exp_test_wpn_offset_y("cl_exp_test_wpn_offset_y", "0");
-ConVar   cl_exp_test_wpn_offset_z("cl_exp_test_wpn_offset_z", "0");
+ConVar   cl_classic_offset_x("cl_classic_offset_x", "0");
+ConVar   cl_classic_offset_y("cl_classic_offset_y", "0");
+ConVar   cl_classic_offset_z("cl_classic_offset_z", "0");
 
-ConVar   cl_exp_test_wpn_ori_offset_x("cl_exp_test_wpn_ori_offset_x", "0");
-ConVar   cl_exp_test_wpn_ori_offset_y("cl_exp_test_wpn_ori_offset_y", "0");
-ConVar   cl_exp_test_wpn_ori_offset_z("cl_exp_test_wpn_ori_offset_z", "0");
-
-// cin: 070105 - applies existing weapon offsets when
-// entering test mode (this will not be called upon
-// weapon change, so beware)
-// this mode should only be used for calibrating the
-// ironsighted mode offests for a particular weapon
-void ExpWpnTestOffset(ConVar *pConVar, char *pszString)
-{
-	CBasePlayer *pPlayer = UTIL_PlayerByIndex(engine->GetLocalPlayer());
-	if (pPlayer)
-	{
-		CBaseCombatWeapon *pWeapon = dynamic_cast<CBaseCombatWeapon *>(pPlayer->GetActiveWeapon());
-		if (pWeapon)
-		{
-			cl_exp_test_wpn_offset_x.SetValue(pWeapon->GetWpnData().m_expOffset.x);
-			cl_exp_test_wpn_offset_y.SetValue(pWeapon->GetWpnData().m_expOffset.y);
-			cl_exp_test_wpn_offset_z.SetValue(pWeapon->GetWpnData().m_expOffset.z);
-
-			cl_exp_test_wpn_ori_offset_x.SetValue(pWeapon->GetWpnData().m_expOriOffset.x);
-			cl_exp_test_wpn_ori_offset_y.SetValue(pWeapon->GetWpnData().m_expOriOffset.y);
-			cl_exp_test_wpn_ori_offset_z.SetValue(pWeapon->GetWpnData().m_expOriOffset.z);
-		}
-	}
-}
-
-
-// last time ironsighted mode was toggled
-float gIronsightedTime(0.0f);
-
-// I bound this to a key for testing(i.e. bind [ ironsight_toggle)
-
-
-void CalcExpWpnOffsets(CBasePlayer *owner, Vector &pos, QAngle &ang)
-{
-	Vector   forward, right, up, offset;
-
-	// this is a simple test mode to help determine the proper values
-	// to place in the weapon script
-	if (cl_exp_test_wpn_offset.GetBool())
-	{
-		ang.x += cl_exp_test_wpn_ori_offset_x.GetFloat();
-		ang.y += cl_exp_test_wpn_ori_offset_y.GetFloat();
-		ang.z += cl_exp_test_wpn_ori_offset_z.GetFloat();
-		offset.Init(cl_exp_test_wpn_offset_x.GetFloat(),
-			cl_exp_test_wpn_offset_y.GetFloat(),
-			cl_exp_test_wpn_offset_z.GetFloat());
-	}
-	else
-	{
-		CBaseCombatWeapon *pWeapon = dynamic_cast<CBaseCombatWeapon *>(ToBasePlayer(owner)->GetActiveWeapon());
-		if (pWeapon)
-		{
-			ang += pWeapon->GetWpnData().m_expOriOffset;
-			offset = pWeapon->GetWpnData().m_expOffset;
-		}
-	}
-
-	// get eye direction angles
-	AngleVectors(ang, &forward, &right, &up);
-
-	// apply the offsets
-	pos += forward   * offset.x;
-	pos += right     * offset.y;
-	pos += up        * offset.z;
-}
+ConVar   cl_classic_ang_offset_x("cl_classic_ang_offset_x", "0");
+ConVar   cl_classic_ang_offset_y("cl_classic_ang_offset_y", "0");
+ConVar   cl_classic_ang_offset_z("cl_classic_ang_offset_z", "0");
 #endif
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -164,6 +97,9 @@ void CBaseViewModel::Spawn( void )
 	Precache( );
 	SetSize( Vector( -8, -4, -2), Vector(8, 4, 2) );
 	SetSolid( SOLID_NONE );
+	m_fCurtime = gpGlobals->curtime;
+	m_fVMDelta = 1.0f;
+	gIronsightedTime = gpGlobals->curtime;
 }
 
 
@@ -460,6 +396,33 @@ void CBaseViewModel::SendViewModelMatchingSequence( int sequence )
 
 #if defined( CLIENT_DLL )
 #include "ivieweffects.h"
+
+void CalcClassicPosOffsets(CBaseCombatWeapon* weapon, Vector& pos, QAngle& ang)
+{
+	if (!weapon)
+		return;
+
+	Vector forward,right,up, offset;
+	QAngle angOffset;
+
+	if (cl_test_classic_offsets.GetBool())
+	{
+		angOffset = QAngle(cl_classic_ang_offset_x.GetFloat(), cl_classic_ang_offset_y.GetFloat(), cl_classic_ang_offset_z.GetFloat());
+		offset = Vector(cl_classic_offset_x.GetFloat(), cl_classic_offset_y.GetFloat(), cl_classic_offset_z.GetFloat());
+	}
+	else
+	{
+		angOffset = weapon->GetWpnData().classicAngOffset;
+		offset = weapon->GetWpnData().classicOffset;
+	}
+	AngleVectors(ang, &forward,&right,&up);
+	pos += forward * offset.x;
+	pos += right * offset.y;
+	pos += up * offset.z;
+	ang[PITCH] += angOffset[0];
+	ang[YAW] += angOffset[1];
+	ang[ROLL] += angOffset[2];
+}
 #endif
 
 void CBaseViewModel::CalcViewModelView( CBasePlayer *owner, const Vector& eyePosition, const QAngle& eyeAngles )
@@ -490,7 +453,7 @@ void CBaseViewModel::CalcViewModelView( CBasePlayer *owner, const Vector& eyePos
 #if !defined ( CSTRIKE_DLL )
 	// This was causing weapon jitter when rotating in updated CS:S; original Source had this in above InPrediction block  07/14/10
 	// Add lag
-	if (r_classic_weapon_pos.GetBool() == false)
+	if(!r_classic_weapon_pos.GetBool())
 		CalcViewModelLag( vmorigin, vmangles, vmangoriginal );
 #endif
 
@@ -500,78 +463,75 @@ void CBaseViewModel::CalcViewModelView( CBasePlayer *owner, const Vector& eyePos
 		// Let the viewmodel shake at about 10% of the amplitude of the player's view
 		vieweffects->ApplyShake( vmorigin, vmangles, 0.1 );	
 	}
-#endif
+
 
 	if( UseVR() )
 	{
 		g_ClientVirtualReality.OverrideViewModelTransform( vmorigin, vmangles, pWeapon && pWeapon->ShouldUseLargeViewModelVROverride() );
 	}
-	if (r_classic_weapon_pos.GetBool() == true)
+
+
+	Vector vmoffsetorigin = vmorigin;
+	Vector vmfinalorigin = vmoffsetorigin;
+	QAngle vmanglesoffset = vmangles;
+	float delta;
+
+	if (!r_classic_weapon_pos.GetBool())
 	{
+		if (owner->m_bFocused)
 		{
-			Vector   forward, right, up, offset;
-
-			// this is a simple test mode to help determine the proper values
-			// to place in the weapon script
-			if (cl_exp_test_wpn_offset.GetBool())
+			if (!m_bFocused)
 			{
-				vmangles.x += cl_exp_test_wpn_ori_offset_x.GetFloat();
-				vmangles.y += cl_exp_test_wpn_ori_offset_y.GetFloat();
-				vmangles.z += cl_exp_test_wpn_ori_offset_z.GetFloat();
-				offset.Init(cl_exp_test_wpn_offset_x.GetFloat(),
-					cl_exp_test_wpn_offset_y.GetFloat(),
-					cl_exp_test_wpn_offset_z.GetFloat());
-			}
-			else
-			{
-				CBaseCombatWeapon *pWeapon = dynamic_cast<CBaseCombatWeapon *>(ToBasePlayer(owner)->GetActiveWeapon());
-				if (pWeapon)
-				{
-					vmangles += pWeapon->GetWpnData().m_expOriOffset;
-					offset = pWeapon->GetWpnData().m_expOffset;
-				}
-			}
+				m_fCurtime = gpGlobals->curtime;
+				gIronsightedTime = gpGlobals->curtime + owner->m_fFocusOffsetTime;
+				m_bFocused = true;
 
-			// get eye direction angles
+			}
+			Vector forward, right, up;
 			AngleVectors(vmangles, &forward, &right, &up);
-
-			// apply the offsets
-			vmorigin += forward   * offset.x;
-			vmorigin += right     * offset.y;
-			vmorigin += up        * offset.z;
+			vmoffsetorigin -= right * (2.0f);
+			vmoffsetorigin += up * 2.0f;
+			delta = (gpGlobals->curtime - m_fCurtime) / (gIronsightedTime - m_fCurtime);
+			delta = MIN(delta, 1.0f);
+			delta = MAX(0.01f, delta);
+			m_fVMDelta = delta;
+			InterpolateVector(m_fVMDelta, vmorigin, vmoffsetorigin, vmfinalorigin);
 		}
-	}
-	SetLocalOrigin( vmorigin );
-	SetLocalAngles( vmangles );
-
-#ifdef SIXENSE
-	if( g_pSixenseInput->IsEnabled() && (owner->GetObserverMode()==OBS_MODE_NONE) && !UseVR() )
-	{
-		const float max_gun_pitch = 20.0f;
-
-		float viewmodel_fov_ratio = g_pClientMode->GetViewModelFOV()/owner->GetFOV();
-		QAngle gun_angles = g_pSixenseInput->GetViewAngleOffset() * -viewmodel_fov_ratio;
-
-		// Clamp pitch a bit to minimize seeing back of viewmodel
-		if( gun_angles[PITCH] < -max_gun_pitch )
-		{ 
-			gun_angles[PITCH] = -max_gun_pitch; 
-		}
-
-#ifdef WIN32 // ShouldFlipViewModel comes up unresolved on osx? Mabye because it's defined inline? fixme
-		if( ShouldFlipViewModel() ) 
+		else
 		{
-			gun_angles[YAW] *= -1.0f;
+			if (m_bFocused)
+			{
+				m_fCurtime = gpGlobals->curtime;
+				gIronsightedTime = gpGlobals->curtime + owner->m_fFocusOffsetTime;
+				m_bFocused = false;
+				
+			}
+			Vector forward, right, up;
+			AngleVectors(vmangles, &forward, &right, &up);
+			vmoffsetorigin -= right * (2.0f);
+			vmoffsetorigin += up * 2.0f;
+			delta = (gpGlobals->curtime - m_fCurtime) / (gIronsightedTime - m_fCurtime);
+			delta = MIN(delta, 1.0f);
+			delta = MAX(0.01f, delta);
+			m_fVMDelta = delta;
+			InterpolateVector(m_fVMDelta, vmoffsetorigin, vmorigin, vmfinalorigin);
 		}
-#endif
-
-		vmangles = EyeAngles() +  gun_angles;
-
-		SetLocalAngles( vmangles );
+		//engine->Con_NPrintf(0, "VMDelta %f Curtime %f StoredTime %f IronsightedTime %f", delta, gpGlobals->curtime, m_fCurtime, gIronsightedTime);
 	}
-#endif
-#endif
+	else
+	{
+		CalcClassicPosOffsets(pWeapon, vmfinalorigin, vmanglesoffset);
+		//engine->Con_NPrintf(0, "OriginalX %f OriginalY %f OriginalZ %f OriginalPitch %f OriginalYaw %f OriginalRoll %f",vmorigin.x, vmorigin.y, vmorigin.z, vmangles.x, vmangles.y, vmangles.z);
+		//engine->Con_NPrintf(1, "AdjustedX %f AdjustedY %f AdjustedZ %f AdjustedPitch %f AdjustedYaw %f AdjustedRoll %f", vmfinalorigin.x, vmfinalorigin.y, vmfinalorigin.z, vmanglesoffset.x, vmanglesoffset.y, vmanglesoffset.z);
+		//engine->Con_NPrintf(2, "OffsetX %f OffsetY %f OffsetZ %f OffsetPitch %f OffsetYaw %f OffsetRoll %f", vmorigin.x - vmfinalorigin.x, vmorigin.y - vmfinalorigin.y, vmorigin.z - vmfinalorigin.z, vmangles.x - vmanglesoffset.x, vmangles.y - vmanglesoffset.y, vmangles.z - vmanglesoffset.z);
+	}
+	
+	
+	SetLocalOrigin(vmfinalorigin);
+	SetLocalAngles( vmanglesoffset );
 
+#endif
+#endif
 }
 
 //-----------------------------------------------------------------------------

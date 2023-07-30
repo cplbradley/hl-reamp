@@ -1424,6 +1424,17 @@ void CBasePlayer::ViewPunch( const QAngle &angleOffset )
 	m_Local.m_vecPunchAngleVel += angleOffset * 20;
 }
 
+void CBasePlayer::AbsViewPunch(const QAngle& angleOffset)
+{
+	if (sv_suppress_viewpunch.GetBool())
+		return;
+
+	// We don't allow view kicks in the vehicle
+	if (IsInAVehicle())
+		return;
+
+	m_Local.m_vecAbsPunchAngleVel += angleOffset * 20;
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -1562,8 +1573,16 @@ void CBasePlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, 
 #ifdef CLIENT_DLL
 		else if (!this->IsAlive())
 		{
-			engine->ClientCmd_Unrestricted("thirdperson\n");
-			CalcThirdPersonDeathView(eyeOrigin, eyeAngles, fov);
+			if (m_bGibbed)
+			{
+				CalcDeathCamView(eyeOrigin, eyeAngles, fov);
+				engine->ClientCmd_Unrestricted("thirdperson\n");
+			}
+			else
+			{
+				engine->ClientCmd_Unrestricted("thirdperson\n");
+				CalcThirdPersonDeathView(eyeOrigin, eyeAngles, fov);
+			}
 		}
 #endif
 		else
@@ -1632,7 +1651,6 @@ void CBasePlayer::CalcPlayerView( Vector& eyeOrigin, QAngle& eyeAngles, float& f
 
 	CalcViewRoll( eyeAngles );
 
-	// Apply punch angle
 	VectorAdd( eyeAngles, m_Local.m_vecPunchAngle, eyeAngles );
 
 #if defined( CLIENT_DLL )
@@ -1650,8 +1668,21 @@ void CBasePlayer::CalcPlayerView( Vector& eyeOrigin, QAngle& eyeAngles, float& f
 	GetPredictionErrorSmoothingVector( vSmoothOffset );
 	eyeOrigin += vSmoothOffset;
 	m_flObserverChaseDistance = 0.0;
-#endif
+	
 
+	if (m_Local.m_vecAbsPunchAngle->LengthSqr() > 0.001)
+	{
+		QAngle oldEyes, newEyes;
+		VectorCopy(EyeAngles(), oldEyes);
+		QAngle punch = m_Local.m_vecAbsPunchAngle * 0.1f;
+		DevMsg("frametime = %f\n", gpGlobals->frametime);
+		punch[ROLL] = 0.0f;
+		VectorAdd(oldEyes, punch, newEyes);
+		DevMsg("Punch X = %f Punch Y = %f Punch Z = %f\n",punch.x,punch.y,punch.z);
+		engine->SetViewAngles(newEyes);
+	}
+#endif
+	
 	// calc current FOV
 	fov = GetFOV();
 }

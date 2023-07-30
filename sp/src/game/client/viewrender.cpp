@@ -127,6 +127,9 @@ ConVar r_DrawDetailProps("r_DrawDetailProps", "1", FCVAR_NONE, "0=Off, 1=Normal,
 
 ConVar r_worldlistcache("r_worldlistcache", "1");
 
+ConVar r_adaptive_resolution("r_adaptive_resolution", "0");
+ConVar r_adaptive_resolution_target("r_adaptive_resolution_target", "0");
+
 //-----------------------------------------------------------------------------
 // Convars related to fog color
 //-----------------------------------------------------------------------------
@@ -428,8 +431,9 @@ public:
 protected:
 	ITexture* m_pColorTexture;
 	ITexture* m_pDepthTexture;
-	void			DrawInternal(view_id_t iSkyBoxViewID);
+	void			DrawInternal(view_id_t iViewID);
 };
+
 
 
 //-----------------------------------------------------------------------------
@@ -1975,6 +1979,10 @@ void CViewRender::FreezeFrame(float flFreezeTime)
 const char* COM_GetModDirectory();
 
 
+inline int interpFPS(int prevframe, int curframe, float frac)
+{
+	return prevframe + (curframe - prevframe) * frac;
+}
 //-----------------------------------------------------------------------------
 // Purpose: This renders the entire 3D view and the in-game hud/viewmodel
 // Input  : &view - 
@@ -1990,6 +1998,52 @@ void CViewRender::RenderView(const CViewSetup& view, int nClearFlags, int whatTo
 	if (building_cubemaps.GetBool())
 		m_CurrentView.fov = RAD2DEG(2.0f * atanf(64.0f / (64 - 0.5f)));
 
+	if (r_adaptive_resolution.GetBool() && !engine->IsPaused())
+	{
+		float realFrameTime = gpGlobals->realtime - m_fLastRealTime;
+		int nFps = -1;
+		if (realFrameTime > 0.0)
+		{
+			nFps = static_cast<int>(1.0f / realFrameTime);
+		}
+		m_fLastRealTime = gpGlobals->realtime;
+		m_iLastFPS = nFps;
+		iFrameCount++;
+		if (iFrameCount > 9)
+			iFrameCount = 0;
+		iFPS[iFrameCount] = nFps;
+
+		for (int i = 0; i < 10; i++)
+		{
+			m_iAvgFPS += iFPS[i];
+		}
+		m_iAvgFPS /= 10;
+		
+		if (r_adaptive_resolution_target.GetFloat() > 0)
+		{
+			float frameRatio = m_iAvgFPS / r_adaptive_resolution_target.GetFloat();
+			int roundedRatio = Ceil2Int(frameRatio * 100);
+			float outval = 0.0f;
+			fPollTime = gpGlobals->curtime + 0.1f;
+
+			if (frameRatio < 1.0f && roundedRatio < 90)
+			{
+				if (roundedRatio < 90)
+					Msg("roundedratio is low, it is %i\n",roundedRatio);
+				if (frameRatio < 1.0f)
+					Msg("frameratio is low, it is %f\n",frameRatio);
+				outval = roundedRatio / 100.0f;
+				mat_viewportscale.SetValue(outval);
+			}
+			else
+				mat_viewportscale.SetValue(1);
+
+			engine->Con_NPrintf(0, "framerate: %i frameratio: %f rouded ratio: %i outval: %f avg:%i\n", nFps, frameRatio, roundedRatio, outval, m_iAvgFPS);
+		}
+		m_iAvgFPS = (nFps + m_iLastFPS) * 0.5;
+	}
+	else if (mat_viewportscale.GetFloat() != 1)
+		mat_viewportscale.SetValue(1);
 	C_BaseAnimating::AutoAllowBoneAccess boneaccess(true, true);
 	VPROF("CViewRender::RenderView");
 	tmZone(TELEMETRY_LEVEL0, TMZF_NONE, "%s", __FUNCTION__);
@@ -2075,6 +2129,7 @@ void CViewRender::RenderView(const CViewSetup& view, int nClearFlags, int whatTo
 			}
 		}
 
+
 		// Render world and all entities, particles, etc.
 		if (!g_pIntroData)
 		{
@@ -2085,6 +2140,7 @@ void CViewRender::RenderView(const CViewSetup& view, int nClearFlags, int whatTo
 			ViewDrawScene_Intro(view, nClearFlags, *g_pIntroData);
 		}
 
+		
 		CDepthView* pDepthView = new CDepthView(this);
 		pDepthView->Setup(view);
 		{
@@ -2436,6 +2492,7 @@ void CViewRender::RenderView(const CViewSetup& view, int nClearFlags, int whatTo
 	{
 		CDebugViewRender::GenerateOverdrawForTesting();
 	}
+
 
 	render->PopView(GetFrustum());
 
@@ -4378,7 +4435,7 @@ void CRendering3dView::DrawTranslucentRenderablesNoWorld(bool bInSkybox)
 		return;
 
 	// Draw the particle singletons.
-	DrawParticleSingletons(bInSkybox);
+	//DrawParticleSingletons(bInSkybox);
 
 	bool bShadowDepth = (m_DrawFlags & (DF_SHADOW_DEPTH_MAP | DF_SSAO_DEPTH_PASS)) != 0;
 
@@ -5774,23 +5831,21 @@ void CSimpleWorldView::Draw()
 #endif
 }
 
+ConVar r_depthbuffer_nearz("r_depthbuffer_nearz", "1");
+ConVar r_depthbuffer_farz("r_depthbuffer_farz", "8192");
+
 bool CDepthView::Setup(const CViewSetup& view, ITexture* pDepthTexture, ITexture* pRenderTarget)
 {
-
-	CViewSetup newView = view;
-	newView.zNear = 2.0f;
-	newView.zFar = 10000.0f;
-
-	BaseClass::Setup(newView);
+	BaseClass::Setup(view);
 
 	// At this point, we've cleared everything we need to clear
 	// The next path will need to clear depth, though.
 	m_ClearFlags = VIEW_CLEAR_COLOR | VIEW_CLEAR_DEPTH | VIEW_CLEAR_STENCIL | VIEW_CLEAR_FULL_TARGET;
 
-	m_DrawFlags = DF_RENDER_UNDERWATER | DF_RENDER_ABOVEWATER | DF_RENDER_WATER | DF_RENDER_REFRACTION;
+	m_DrawFlags = DF_RENDER_UNDERWATER | DF_RENDER_ABOVEWATER | DF_RENDER_WATER | DF_DRAWSKYBOX;
 
-	zNear = 2.0;
-	zFar = 4096;
+	zNear = r_depthbuffer_nearz.GetInt();
+	zFar = r_depthbuffer_farz.GetInt();
 
 	m_pDepthTexture = pDepthTexture;
 	m_pColorTexture = pRenderTarget;
@@ -5798,18 +5853,24 @@ bool CDepthView::Setup(const CViewSetup& view, ITexture* pDepthTexture, ITexture
 	return true;
 }
 
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
 void CDepthView::Draw()
 {
-	VPROF_BUDGET("CViewRender::DepthPass", "Depth Pass");
+	VPROF_BUDGET("CViewRender::Draw3dSkyboxworld", "3D Skybox");
 
 	DrawInternal(CurrentViewID());
 }
 
-void CDepthView::DrawInternal(view_id_t iSkyBoxViewID)
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+void CDepthView::DrawInternal(view_id_t iViewId)
 {
-	ITexture* DepthBufferTexture = materials->FindTexture("_rt_TrueDepth", TEXTURE_GROUP_RENDER_TARGET);
+	g_CurrentViewID = VIEW_DEPTHBUFFER;
 
-	render->ViewSetupVis(false, 1, &origin);
+	ITexture* DepthBufferTexture = materials->FindTexture("_rt_TrueDepth", TEXTURE_GROUP_RENDER_TARGET);
 
 	if (m_pDepthTexture == NULL && m_pColorTexture == NULL)
 	{
@@ -5819,10 +5880,9 @@ void CDepthView::DrawInternal(view_id_t iSkyBoxViewID)
 	{
 		render->Push3DView((*this), m_ClearFlags, m_pDepthTexture, GetFrustum(), m_pColorTexture);
 	}
-
 	render->BeginUpdateLightmaps();
 	BuildWorldRenderLists(true, true, -1);
-	BuildRenderableRenderLists(iSkyBoxViewID);
+	BuildRenderableRenderLists(iViewId);
 	render->EndUpdateLightmaps();
 
 	m_DrawFlags |= DF_SSAO_DEPTH_PASS;
@@ -5835,6 +5895,7 @@ void CDepthView::DrawInternal(view_id_t iSkyBoxViewID)
 
 	// Iterate over all leaves and render objects in those leaves
 	DrawOpaqueRenderables(DEPTH_MODE_SSA0);
+	DrawTranslucentRenderablesNoWorld(true);
 
 	m_pMainView->DrawViewModels((*this), true);
 
@@ -5842,11 +5903,14 @@ void CDepthView::DrawInternal(view_id_t iSkyBoxViewID)
 
 	render->PopView(GetFrustum());
 
+	g_CurrentViewID = iViewId;
+
 #if defined( _X360 )
 	pRenderContext.GetFrom(materials);
 	pRenderContext->PopVertexShaderGPRAllocation();
 #endif
 }
+
 
 
 

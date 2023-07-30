@@ -11,7 +11,7 @@
 #include "vguicenterprint.h"
 #include "iloadingdisc.h"
 #include "ifpspanel.h"
-#include "ism30panel.h"
+#include "hlr/vgui/ism30panel.h"
 #include "imessagechars.h"
 #include "inetgraphpanel.h"
 #include "idebugoverlaypanel.h"

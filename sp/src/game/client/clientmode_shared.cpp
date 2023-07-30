@@ -15,7 +15,7 @@
 #include "iviewrender.h"
 #include "hud_basechat.h"
 #include "weapon_selection.h"
-#include "hlr/hud_healthbar.h"
+#include "hlr/hud/hud_healthbar.h"
 #include <vgui/IVGui.h>
 #include <vgui/Cursor.h>
 #include <vgui/IPanel.h>
@@ -43,7 +43,7 @@
 #endif
 //Fenix: Needed for the custom background loading screens
 #include "GameUI/IGameUI.h"
-#include "hlr/mapload_background.h"
+#include "hlr/vgui/mapload_background.h"
 #if defined( REPLAY_ENABLED )
 #include "replay/replaycamera.h"
 #include "replay/ireplaysystem.h"
@@ -335,14 +335,9 @@ void ClientModeShared::Init()
 
 	m_pWeaponSelection = ( CBaseHudWeaponSelection * )GET_HUDELEMENT( CHudWeaponSelection );
 	Assert( m_pWeaponSelection );
-
-	m_pHBar1 = (CHudHealthBar1 *)GET_HUDELEMENT(CHudHealthBar1);
-	Assert(m_pHBar1);
-	m_pHBar2 = (CHudHealthBar2 *)GET_HUDELEMENT(CHudHealthBar2);
-	Assert(m_pHBar2);
-	m_pHBar3 = (CHudHealthBar3 *)GET_HUDELEMENT(CHudHealthBar3);
-	Assert(m_pHBar3);
-
+	m_pHBar1 = (CHudHealthBar1*)GET_HUDELEMENT(CHudHealthBar1);
+	m_pHBar2 = (CHudHealthBar2*)GET_HUDELEMENT(CHudHealthBar2);
+	m_pHBar3 = (CHudHealthBar3*)GET_HUDELEMENT(CHudHealthBar3);
 	KeyValuesAD pConditions( "conditions" );
 	ComputeVguiResConditions( pConditions );
 
@@ -916,15 +911,15 @@ void ClientModeShared::LevelShutdown( void )
 
 	if (m_pHBar1)
 	{
-		m_pHBar1->bIsAlive1 = false;
+		m_pHBar1->bIsAlive = false;
 	}
 	if (m_pHBar2)
 	{
-		m_pHBar2->bIsAlive2 = false;
+		m_pHBar2->bIsAlive = false;
 	}
 	if (m_pHBar3)
 	{
-		m_pHBar3->bIsAlive3 = false;
+		m_pHBar3->bIsAlive = false;
 	}
 }
 

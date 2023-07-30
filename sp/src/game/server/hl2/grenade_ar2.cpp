@@ -176,8 +176,18 @@ void CGrenadeAR2::Kill(void)
 void CGrenadeAR2::GrenadeAR2Touch( CBaseEntity *pOther )
 {
 	Assert( pOther );
-	if ( !pOther->IsSolid() )
+
+	if (!pOther)
 		return;
+
+	if (pOther->IsSolidFlagSet(FSOLID_TRIGGER | FSOLID_VOLUME_CONTENTS))
+	{
+		// Some NPCs are triggers that can take damage (like antlion grubs). We should hit them.
+		if ((pOther->m_takedamage == DAMAGE_NO) || (pOther->m_takedamage == DAMAGE_EVENTS_ONLY))
+			return;
+		if (pOther->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE)
+			return;
+	}
 
 	// If I'm live go ahead and blow up
 	if (m_bIsLive)
@@ -213,7 +223,7 @@ void CGrenadeAR2::Detonate(void)
 		m_hSmokeTrail = NULL;
 	}
 	ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), 0, 0,
-		SF_ENVEXPLOSION_NOFIREBALL, 0.0f, this);
+		SF_ENVEXPLOSION_SMALL, 0.0f, this);
 	Vector vecForward = GetAbsVelocity();
 	VectorNormalize(vecForward);
 	trace_t		tr;

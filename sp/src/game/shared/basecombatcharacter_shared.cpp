@@ -7,6 +7,7 @@
 
 #include "cbase.h"
 #include "ammodef.h"
+#include "string_t.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -70,6 +71,9 @@ bool CBaseCombatCharacter::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmo
 //-----------------------------------------------------------------------------
 bool CBaseCombatCharacter::Weapon_CanSwitchTo( CBaseCombatWeapon *pWeapon )
 {
+	if (!pWeapon)
+		return false;
+
 	if (IsPlayer())
 	{
 		CBasePlayer *pPlayer = (CBasePlayer *)this;

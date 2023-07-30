@@ -1,0 +1,124 @@
+//-----------------------------------------------------------------------------
+//	SERVER_HL2.VPC
+//
+//	Project Script
+//-----------------------------------------------------------------------------
+
+$Macro SRCDIR		"..\.."
+$Macro GAMENAME 	"hlr" [!$SOURCESDK]
+$Macro GAMENAME 	"hlr" [$SOURCESDK]
+
+$Include "$SRCDIR\game\server\server_base.vpc"
+
+$Configuration
+{
+	$Compiler
+	{
+		$AdditionalIncludeDirectories	"$BASE;$SRCDIR\game\shared\hl2;.\hl2;.\hlr;.\hlr\entity;.\hlr\npc;.\hlr\player;.\hlr\util;.\hlr\weapons;"
+		$PreprocessorDefinitions		"$BASE;HL2_DLL;USES_SAVERESTORE;HLR_SERVER;HLR;"
+	}
+}
+
+$Project
+{
+	$Folder	"Source Files"
+	{
+		$Folder "HLR"
+		{
+			$Folder "Weapons"
+			{
+				$File "hlr/weapons/actual_bullet.cpp"
+				$File "hlr/weapons/actual_bullet.h"
+				$File "hlr/weapons/weapon_bfg.cpp"
+				$File "hlr/weapons/weapon_npc_chaingun.cpp"
+				$File "hlr/weapons/weapon_npc_chaingun.h"
+				$File "hlr/weapons/weapon_npcfrag.cpp"
+				$File "hlr/weapons/weapon_plasmarifle.cpp"
+				$File "hlr/weapons/weapon_furybar.cpp"
+				$File "hlr/weapons/weapon_rifle.cpp"
+				$File "hlr/weapons/weapon_plasma.cpp"
+				$File "hlr/weapons/weapon_plasmarifle.cpp"
+				$File "hlr/weapons/weapon_pumpshotgun.cpp"
+				$File "hlr/weapons/weapon_gluon.cpp"
+				$File	"hl2\weapon_357.cpp"
+				$File	"hl2\weapon_ar2.cpp"
+				$File	"hl2\weapon_ar2.h"
+				$File	"hl2\weapon_frag.cpp"
+				$File	"hl2\weapon_pistol.cpp"
+				$File	"hl2\weapon_rpg.cpp"
+				$File	"hl2\weapon_rpg.h"
+				$File	"hl2\weapon_shotgun.cpp"
+				$File	"hl2\weapon_smg1.cpp"
+			}
+			$Folder "NPC"
+			{
+				$File "hlr/npc/npc_legs.cpp"
+				$File "hlr/npc/npc_vortboss.cpp"
+				$File "hlr/npc/npc_baddog.cpp"
+				$File "hlr/npc/npc_bloat.cpp"
+				$File "hlr/npc/npc_chopperdrone.cpp"
+				$File "hlr/npc/npc_antlionwarrior.h"
+				$File "hlr/npc/npc_antlionwarrior.cpp"
+				$File "hlr/npc/npc_vortbrute.cpp"
+				$File "hlr/npc/npc_mechubus.cpp"
+				$File	"hl2\npc_metropolice.cpp"
+				$File	"hl2\npc_metropolice.h"
+				$File	"hl2\npc_antlion.cpp"
+				$File	"hl2\npc_antlion.h"
+				$File	"hl2\npc_combines.cpp"
+				$File	"hl2\npc_combines.h"
+				$File	"hl2\npc_combine.cpp"
+				$File	"hl2\npc_combine.h"
+				$File	"episodic\npc_hunter.cpp"
+				$File	"episodic\npc_hunter.h"
+				$File	"hl2\npc_zombie.cpp"
+				$File	"hl2\npc_vortigaunt_episodic.cpp"
+				$File	"hl2\npc_vortigaunt_episodic.h"
+			}
+			$Folder "Util"
+			{
+				$File "hlr/util/logic_difficulty.cpp"
+				$File "hlr/util/hlr_projectile.cpp"
+				$File "hlr/util/hlr_projectile.h"
+				$File "$SRCDIR\game\shared\hl2\hlr\hlr_shareddefs.h"
+				$File "$SRCDIR\game\shared\singleplayer_animstate.cpp"
+				$File "$SRCDIR\game\shared\singleplayer_animstate.h"
+				$File "movie_display.cpp"
+				$File "hlr/util/hlr_screen_flipper.cpp"
+				$File "hlr/util/hlr_speedmod.cpp"
+				$File "hlr/util/npc_memory_manager.cpp"
+				$File "hlr/util/env_weather_controller.cpp"
+			}
+			$Folder "Player"
+			{
+				$File "hlr/player/hlr_floorsprite.cpp"
+				$File "hlr/player/hlr_floorsprite.h"
+			}
+			$Folder "Entities"
+			{
+				$File "hlr/entity/item_custom.cpp"
+				$File "hlr/entity/item_armor.cpp"
+				$File "hlr/entity/hlr_environmental_resistance.cpp"
+				$File "hlr/entity/hlr_keycard.cpp"
+				$File "hlr/entity/hlr_keycard.h"
+				$File "hlr/entity/hlr_skullkey.cpp"
+				$File "hlr/entity/hlr_hud_healthbar.cpp"
+				$File "hlr/entity/hlr_jumppad.cpp"
+				$File "hlr/entity/hlr_jumpreset.cpp"
+				$File "hlr/entity/hlr_megamelon.cpp"
+				$File "hlr/entity/hlr_powerups.cpp"
+				$File "hlr/entity/hlr_powerups.h"
+			}
+		}
+		$Folder "FMOD"
+		{
+			$File "$SRCDIR\game\shared\fmod\fmod_dynamic_player.cpp"
+			$File "$SRCDIR\game\shared\fmod\fmod_dynamic_player.h"
+		}
+		$Folder "Experimental"
+		{
+			$File "experimental\climbable_rope.cpp"
+			$File "experimental\climbable_rope.h"
+		}
+	}
+}

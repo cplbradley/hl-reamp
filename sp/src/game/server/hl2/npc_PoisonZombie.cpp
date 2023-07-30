@@ -23,7 +23,7 @@
 #include "activitylist.h"
 #include "engine/IEngineSound.h"
 #include "npc_BaseZombie.h"
-#include "hlr/hlr_projectile.h"
+#include "hlr/util/hlr_projectile.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -259,21 +259,10 @@ void CNPC_PoisonZombie::Precache( void )
 {
 	PrecacheModel("models/mechubus.mdl");
 
-	PrecacheScriptSound( "NPC_PoisonZombie.Die" );
-	PrecacheScriptSound( "NPC_PoisonZombie.ThrowWarn" );
-	PrecacheScriptSound( "NPC_PoisonZombie.Throw" );
-	PrecacheScriptSound( "NPC_PoisonZombie.Idle" );
-	PrecacheScriptSound( "NPC_PoisonZombie.Pain" );
-	PrecacheScriptSound( "NPC_PoisonZombie.Alert" );
-	PrecacheScriptSound( "NPC_PoisonZombie.FootstepRight" );
-	PrecacheScriptSound( "NPC_PoisonZombie.FootstepLeft" );
-	PrecacheScriptSound( "NPC_PoisonZombie.Attack" );
-
-	PrecacheScriptSound( "NPC_PoisonZombie.FastBreath" );
-	PrecacheScriptSound( "NPC_PoisonZombie.Moan1" );
-
-	PrecacheScriptSound( "Zombie.AttackHit" );
-	PrecacheScriptSound( "Zombie.AttackMiss" );
+	PrecacheScriptSound("Mechubus.Cannon");
+	PrecacheScriptSound("Mechubus.Footstep");
+	PrecacheScriptSound("NPC_Vortigaunt.Swing");
+	PrecacheScriptSound("Punch.Impact");
 
 	BaseClass::Precache();
 }
@@ -435,12 +424,7 @@ void CNPC_PoisonZombie::StopLoopingSounds( void )
 //-----------------------------------------------------------------------------
 void CNPC_PoisonZombie::Event_Killed( const CTakeDamageInfo &info )
 {
-	if ( !( info.GetDamageType() & ( DMG_BLAST | DMG_ALWAYSGIB) ) ) 
-	{
-		EmitSound( "NPC_PoisonZombie.Die" );
-	}
-
-	UTIL_Remove(this);
+	//UTIL_Remove(this);
 	/*if ( !m_fIsTorso )
 	{
 		EvacuateNest(info.GetDamageType() == DMG_BLAST, info.GetDamage(), info.GetAttacker() );
@@ -663,21 +647,17 @@ void CNPC_PoisonZombie::HandleAnimEvent( animevent_t *pEvent )
 
 	if ( pEvent->event == AE_ZOMBIE_POISON_THROW_WARN_SOUND )
 	{
-		BreatheOffShort();
-		EmitSound( "NPC_PoisonZombie.ThrowWarn" );
 		return;
 	}
 
 	if ( pEvent->event == AE_ZOMBIE_POISON_THROW_SOUND )
 	{
-		BreatheOffShort();
-		EmitSound( "NPC_PoisonZombie.Throw" );
 		return;
 	}
 
 	if ( pEvent->event == AE_ZOMBIE_POISON_THROW_CRAB )
 	{
-		SetBodygroup( ZOMBIE_BODYGROUP_THROW, 0 );
+		EmitSound("Mechubus.Cannon");
 		CBaseEntity *pEnemy = GetEnemy();
 		float adjustspd = g_pGameRules->SkillAdjustValue(2000.0f);
 		if (pEnemy)
@@ -978,7 +958,7 @@ bool CNPC_PoisonZombie::ShouldPlayIdleSound( void )
 //-----------------------------------------------------------------------------
 void CNPC_PoisonZombie::AttackHitSound( void )
 {
-	EmitSound( "Zombie.AttackHit" );
+	
 }
 
 //-----------------------------------------------------------------------------
@@ -986,7 +966,7 @@ void CNPC_PoisonZombie::AttackHitSound( void )
 //-----------------------------------------------------------------------------
 void CNPC_PoisonZombie::AttackMissSound( void )
 {
-	EmitSound( "Zombie.AttackMiss" );
+
 }
 
 //-----------------------------------------------------------------------------
@@ -994,7 +974,6 @@ void CNPC_PoisonZombie::AttackMissSound( void )
 //-----------------------------------------------------------------------------
 void CNPC_PoisonZombie::AttackSound( void )
 {
-	EmitSound( "NPC_PoisonZombie.Attack" );
 }
 
 //-----------------------------------------------------------------------------
@@ -1002,13 +981,6 @@ void CNPC_PoisonZombie::AttackSound( void )
 //-----------------------------------------------------------------------------
 void CNPC_PoisonZombie::IdleSound( void )
 {
-	// HACK: base zombie code calls IdleSound even when not idle!
-	if ( m_NPCState != NPC_STATE_COMBAT )
-	{
-		BreatheOffShort();
-		EmitSound( "NPC_PoisonZombie.Idle" );
-		MakeAISpookySound( 360.0f );
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1016,13 +988,6 @@ void CNPC_PoisonZombie::IdleSound( void )
 //-----------------------------------------------------------------------------
 void CNPC_PoisonZombie::PainSound( const CTakeDamageInfo &info )
 {
-	// Don't make pain sounds too often.
-	if ( m_flNextPainSoundTime <= gpGlobals->curtime )
-	{	
-		BreatheOffShort();
-		EmitSound( "NPC_PoisonZombie.Pain" );
-		m_flNextPainSoundTime = gpGlobals->curtime + random->RandomFloat( 4.0, 7.0 );
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1030,9 +995,6 @@ void CNPC_PoisonZombie::PainSound( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 void CNPC_PoisonZombie::AlertSound( void )
 {
-	BreatheOffShort();
-
-	EmitSound( "NPC_PoisonZombie.Alert" );
 }
 
 
@@ -1041,20 +1003,7 @@ void CNPC_PoisonZombie::AlertSound( void )
 //-----------------------------------------------------------------------------
 void CNPC_PoisonZombie::FootstepSound( bool fRightFoot )
 {
-	if( fRightFoot )
-	{
-		EmitSound( "NPC_PoisonZombie.FootstepRight" );
-	}
-	else
-	{
-		EmitSound( "NPC_PoisonZombie.FootstepLeft" );
-	}
-
-	if( ShouldPlayFootstepMoan() )
-	{
-		m_flNextMoanSound = gpGlobals->curtime;
-		MoanSound( envPoisonZombieMoanVolumeFast, ARRAYSIZE( envPoisonZombieMoanVolumeFast ) );
-	}
+	EmitSound("Mechubus.Footstep");
 }
 
 

@@ -185,12 +185,15 @@ void C_BaseExplosionEffect::Create( const Vector &position, float force, float s
 	PlaySound();
 	if (m_fFlags & TE_EXPLFLAG_NOPARTICLES)
 		return;
-	if (m_fFlags & TE_EXPLFLAG_NOFIREBALL)
+
+	if (m_fFlags & TE_EXPLFLAG_SMALL)
 	{
+		Msg("creating small explosion\n");
 		DispatchParticleEffect("hlr_base_explosion2", position, vec3_angle);
 		return;
 	}
 	// UNDONE: Make core size parametric to scale or remove scale?
+	Msg("creating large explosion\n");
 	DispatchParticleEffect("hlr_base_explosion1", position, QAngle(0, 0, 0));	
 	CreateDebris();
 	CreateDynamicLight();

@@ -17,6 +17,7 @@
 #include "c_baseplayer.h"
 #include "IGameUIFuncs.h"
 #include "inputsystem/iinputsystem.h"
+#include "view_scene.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -157,7 +158,7 @@ bool CHudHintDisplay::SetHintText( wchar_t *text )
 		label->SetPaintBorderEnabled( false );
 		label->SizeToContents();
 		label->SetContentAlignment( vgui::Label::a_west );
-		label->SetFgColor( GetFgColor() );
+		label->SetFgColor( gHUD.GetDefaultColor() );
 		m_Labels.AddToTail( vgui::SETUP_PANEL(label) );
 	}
 
@@ -240,10 +241,10 @@ void CHudHintDisplay::PerformLayout()
 //-----------------------------------------------------------------------------
 void CHudHintDisplay::OnThink()
 {
-	m_pLabel->SetFgColor(GetFgColor());
+	m_pLabel->SetFgColor(gHUD.GetDefaultColor());
 	for (int i = 0; i < m_Labels.Count(); i++)
 	{
-		m_Labels[i]->SetFgColor(GetFgColor());
+		m_Labels[i]->SetFgColor(gHUD.GetDefaultColor());
 	}
 
 	// If our label size isn't at the extreme's, we're sliding open / closed
@@ -360,12 +361,17 @@ public:
 
 protected:
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
+	virtual void ApplySettings(KeyValues* inResourceData);
 	virtual void OnThink();
 
 private:
 	CUtlVector<vgui::Label *> m_Labels;
 	vgui::HFont m_hSmallFont, m_hLargeFont;
 	int		m_iBaseY;
+	int baseXpos;
+	int baseYpos;
+	bool bUseWorldPos;
+	Vector vecWorldPos;
 
 	CPanelAnimationVarAliasType( float, m_iTextX, "text_xpos", "8", "proportional_float" );
 	CPanelAnimationVarAliasType( float, m_iTextY, "text_ypos", "8", "proportional_float" );
@@ -394,6 +400,7 @@ CHudHintKeyDisplay::CHudHintKeyDisplay( const char *pElementName ) : BaseClass(N
 void CHudHintKeyDisplay::Init()
 {
 	HOOK_HUD_MESSAGE( CHudHintKeyDisplay, KeyHintText );
+	bUseWorldPos = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -412,10 +419,13 @@ void CHudHintKeyDisplay::ApplySchemeSettings( vgui::IScheme *pScheme )
 {
 	m_hSmallFont = pScheme->GetFont( "HudHintTextSmall", true );
 	m_hLargeFont = pScheme->GetFont( "HudHintTextLarge", true );
-
 	BaseClass::ApplySchemeSettings( pScheme );
 }
-
+void CHudHintKeyDisplay::ApplySettings(KeyValues* inResourceData)
+{
+	BaseClass::ApplySettings(inResourceData);
+	GetPos(baseXpos, baseYpos);
+}
 //-----------------------------------------------------------------------------
 // Purpose: Save CPU cycles by letting the HUD system early cull
 // costly traversal.  Called per frame, return true if thinking and 
@@ -440,13 +450,28 @@ void CHudHintKeyDisplay::OnThink()
 		}
 		else
 		{
-			m_Labels[i]->SetFgColor(GetFgColor());
+			m_Labels[i]->SetFgColor(gHUD.GetDefaultColor());
 		}
 	}
-
-	int ox, oy;
-	GetPos(ox, oy);
-	SetPos( ox, m_iBaseY + m_iYOffset );
+	if (bUseWorldPos)
+	{
+		Vector screen = Vector(0, 0, 0);
+		float screenX = ScreenWidth() * 0.5f;
+		float screenY = ScreenHeight() * 0.5f;
+		ScreenTransform(vecWorldPos, screen);
+		screenX += 0.5 * screen[0] * ScreenWidth() + 0.5;
+		screenY -= 0.5 * screen[1] * ScreenHeight() + 0.5;
+		screenX -= GetWide() * 0.5;
+		screenY -= GetTall() * 0.5;
+		float x = clamp(screenX, 0, ScreenWidth()-GetWide());
+		float y = clamp(screenY, 0, ScreenHeight()-GetTall());
+		SetPos(x, y);
+		engine->Con_NPrintf(0, "HudX: %f HudY:%f", screenX, screenY);
+	}
+	else
+	{
+		SetPos(baseXpos - GetWide(), baseYpos - (GetTall() / 2));
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -638,7 +663,7 @@ bool CHudHintKeyDisplay::SetHintText( const char *text )
 		}
 		else
 		{
-			label->SetFgColor( GetFgColor() );
+			label->SetFgColor( gHUD.GetDefaultColor() );
 		}
 		m_Labels.AddToTail( vgui::SETUP_PANEL(label) );
 	}
@@ -674,7 +699,7 @@ bool CHudHintKeyDisplay::SetHintText( const char *text )
 		label->SetPaintBorderEnabled( false );
 		label->SizeToContents();
 		label->SetContentAlignment( vgui::Label::a_west );
-		label->SetFgColor( GetFgColor() );
+		label->SetFgColor(gHUD.GetDefaultColor());
 		m_Labels.AddToTail( vgui::SETUP_PANEL(label) );
 	}
 #endif
@@ -764,6 +789,7 @@ void CHudHintKeyDisplay::MsgFunc_KeyHintText( bf_read &msg )
 {
 	// how many strings do we receive ?
 	int count = msg.ReadByte();
+	bUseWorldPos = msg.ReadByte();
 
 	// here we expect only one string
 	if ( count != 1 )
@@ -775,6 +801,8 @@ void CHudHintKeyDisplay::MsgFunc_KeyHintText( bf_read &msg )
 	// read the string
 	char szString[2048];
 	msg.ReadString( szString, sizeof(szString) );
+
+	msg.ReadBitVec3Coord(vecWorldPos);
 
 	// make it visible
 	if ( SetHintText( szString ) )

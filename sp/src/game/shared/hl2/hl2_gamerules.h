@@ -90,7 +90,6 @@ public:
 	void	NPC_DroppedHealth( void );
 	void	NPC_DroppedGrenade( void );
 	bool	MegaPhyscannonActive( void ) { return m_bMegaPhysgun;	}
-	//bool	QuadDmg (int DmgOn);
 	
 	virtual bool IsAlyxInDarknessMode();
 

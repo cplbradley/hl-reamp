@@ -32,6 +32,8 @@ public:
 	{
 		m_iv_vecPunchAngle.Setup( &m_vecPunchAngle.m_Value, LATCH_SIMULATION_VAR );
 		m_iv_vecPunchAngleVel.Setup( &m_vecPunchAngleVel.m_Value, LATCH_SIMULATION_VAR );
+		m_iv_vecAbsPunchAngle.Setup(&m_vecAbsPunchAngle.m_Value, LATCH_SIMULATION_VAR);
+		m_iv_vecAbsPunchAngleVel.Setup(&m_vecAbsPunchAngleVel.m_Value, LATCH_SIMULATION_VAR);
 		m_flFOVRate = 0;
 	}
 
@@ -60,6 +62,12 @@ public:
 
 	CNetworkQAngle( m_vecPunchAngleVel );		// velocity of auto-decaying view angle adjustment
 	CInterpolatedVar< QAngle >	m_iv_vecPunchAngleVel;
+
+	CNetworkQAngle(m_vecAbsPunchAngle);
+	CInterpolatedVar<QAngle> m_iv_vecAbsPunchAngle;
+	CNetworkQAngle(m_vecAbsPunchAngleVel);
+	CInterpolatedVar<QAngle> m_iv_vecAbsPunchAngleVel;
+
 	bool					m_bDrawViewmodel;
 	bool					m_bWearingSuit;
 	bool					m_bPoisoned;

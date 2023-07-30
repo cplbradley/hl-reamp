@@ -176,6 +176,7 @@ float3 ambientLookup(float3 normal, float3 EnvAmbientCube[6], float3 textureNorm
 float2 parallaxCorrect(float2 texCoord, float3 viewRelativeDir, sampler depthMap, float parallaxDepth, float parallaxCenter)
 {
     float fLength = length( viewRelativeDir );
+	int nNumSteps = 30;
     float fParallaxLength = sqrt( fLength * fLength - viewRelativeDir.z * viewRelativeDir.z ) / viewRelativeDir.z; 
     float2 vParallaxDirection = normalize(  viewRelativeDir.xy );
     float2 vParallaxOffsetTS = vParallaxDirection * fParallaxLength;
@@ -185,10 +186,8 @@ float2 parallaxCorrect(float2 texCoord, float3 viewRelativeDir, sampler depthMap
     float2 dx = ddx( texCoord );
     float2 dy = ddy( texCoord );
 
-    int nNumSteps = 20;
-
     float fCurrHeight = 0.0;
-    float fStepSize   = 1.0 / (float) nNumSteps;
+    float fStepSize   = 1.0 / nNumSteps;
     float fPrevHeight = 1.0;
     float fNextHeight = 0.0;
 
@@ -239,7 +238,6 @@ float2 parallaxCorrect(float2 texCoord, float3 viewRelativeDir, sampler depthMap
     float2 texSample = texCoord - vParallaxOffset;
     return texSample;
 }
-
 #endif
 
 float3 worldToRelative(float3 worldVector, float3 surfTangent, float3 surfBasis, float3 surfNormal)

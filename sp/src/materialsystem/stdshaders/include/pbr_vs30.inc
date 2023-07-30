@@ -10,18 +10,36 @@
 
 class pbr_vs30_Static_Index
 {
+	unsigned int m_nISDECAL : 2;
+#ifdef _DEBUG
+	bool m_bISDECAL : 1;
+#endif	// _DEBUG
 public:
+	void SetISDECAL( int i )
+	{
+		Assert( i >= 0 && i <= 1 );
+		m_nISDECAL = i;
+#ifdef _DEBUG
+		m_bISDECAL = true;
+#endif	// _DEBUG
+	}
+
 	pbr_vs30_Static_Index( IShaderShadow* pShaderShadow, IMaterialVar** params )
 	{
+		m_nISDECAL = 0;
+#ifdef _DEBUG
+		m_bISDECAL = false;
+#endif	// _DEBUG
 	}
 
 	int GetIndex() const
 	{
-		return 0;
+		Assert( m_bISDECAL );
+		return ( 80 * m_nISDECAL ) + 0;
 	}
 };
 
-#define shaderStaticTest_pbr_vs30 1
+#define shaderStaticTest_pbr_vs30 vsh_forgot_to_set_static_ISDECAL
 
 
 class pbr_vs30_Dynamic_Index

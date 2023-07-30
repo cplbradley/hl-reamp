@@ -12,6 +12,7 @@
 #include "history_resource.h"
 #include "iinput.h"
 #include "input.h"
+#include "iefx.h"
 #include "view.h"
 #include "iviewrender.h"
 #include "iclientmode.h"
@@ -42,6 +43,8 @@
 #include "fx.h"
 #include "dt_utlvector_recv.h"
 #include "cam_thirdperson.h"
+#include "dlight.h"
+#include "cdll_client_int.h"
 #if defined( REPLAY_ENABLED )
 #include "replay/replaycamera.h"
 #include "replay/ireplaysystem.h"
@@ -175,6 +178,8 @@ BEGIN_RECV_TABLE_NOBASE( CPlayerLocalData, DT_Local )
 #else
 	RecvPropVector	(RECVINFO(m_vecPunchAngle)),
 	RecvPropVector	(RECVINFO(m_vecPunchAngleVel)),
+	RecvPropVector	(RECVINFO(m_vecAbsPunchAngle)),
+	RecvPropVector	(RECVINFO(m_vecAbsPunchAngleVel)),
 #endif
 
 	RecvPropInt		(RECVINFO(m_bDrawViewmodel)),
@@ -290,6 +295,10 @@ END_RECV_TABLE()
 		RecvPropInt(RECVINFO(m_iMaxToxicDamage)),
 		RecvPropInt(RECVINFO(m_iMaxFireDamage)),
 		RecvPropInt(RECVINFO(m_iMaxElectricDamage)),
+		RecvPropBool(RECVINFO(m_bFocused)),
+		RecvPropFloat(RECVINFO(m_fFocusOffsetTime)),
+		RecvPropBool(RECVINFO(m_bUseAltCrosshair)),
+		RecvPropBool(RECVINFO(m_bGibbed)),
 
 
 		RecvPropEHandle( RECVINFO(m_hVehicle) ),
@@ -303,7 +312,6 @@ END_RECV_TABLE()
 
 		RecvPropFloat	(RECVINFO(m_flMaxspeed)),
 		RecvPropInt		(RECVINFO(m_fFlags)),
-		RecvPropBool(RECVINFO(m_bTripleDamage)),
 
 		RecvPropInt		(RECVINFO(m_iObserverMode), 0, RecvProxy_ObserverMode ),
 		RecvPropEHandle	(RECVINFO(m_hObserverTarget), RecvProxy_ObserverTarget ),
@@ -342,6 +350,7 @@ BEGIN_PREDICTION_DATA_NO_BASE( CPlayerLocalData )
 #else
 	DEFINE_PRED_FIELD_TOL( m_vecPunchAngle, FIELD_VECTOR, FTYPEDESC_INSENDTABLE, 0.125f ),
 	DEFINE_PRED_FIELD_TOL( m_vecPunchAngleVel, FIELD_VECTOR, FTYPEDESC_INSENDTABLE, 0.125f ),
+	DEFINE_PRED_FIELD_TOL(m_vecAbsPunchAngle, FIELD_VECTOR, FTYPEDESC_INSENDTABLE, 0.125f),
 #endif
 	DEFINE_PRED_FIELD( m_bDrawViewmodel, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bWearingSuit, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
@@ -525,26 +534,6 @@ void C_BasePlayer::Spawn( void )
 
 void C_BasePlayer::GroundPound(void)
 {
-}
-
-bool C_BasePlayer::HasQuadJump(void)
-{
-	return m_bQuadJump;
-}
-bool C_BasePlayer::HasOverdrive(void)
-{
-	return m_bOverdrive;
-}
-bool C_BasePlayer::HasTripleDamage(void)
-{
-	return m_bTripleDamage;
-}
-int C_BasePlayer::GetQuadDmgScale(void)
-{
-	if (HasTripleDamage())
-		return 3;
-	else
-	return 1;
 }
 void C_BasePlayer::Dash(void)
 {
@@ -1070,6 +1059,29 @@ void C_BasePlayer::OnDataChanged( DataUpdateType_t updateType )
 	}
 }
 
+void C_BasePlayer::MsgFunc_MuzzleLight(bf_read& msg)
+{
+	float red = msg.ReadFloat();
+	float green = msg.ReadFloat();
+	float blue = msg.ReadFloat();
+	CreateMuzzleLight((int)red, (int)green, (int)blue);
+}
+
+void C_BasePlayer::CreateMuzzleLight(int r, int g, int b)
+{
+	dlight_t* dl = effects->CL_AllocDlight(index);
+	QAngle eyeang = EyeAngles();
+	Vector vForward, vRight, vUp;
+	AngleVectors(eyeang, &vForward, &vRight, &vUp);
+
+	dl->origin = EyePosition() + vForward * 32.0f;
+	dl->color.r = r;
+	dl->color.g = g;
+	dl->color.b = b;
+	dl->die = gpGlobals->curtime + 0.05f;
+	dl->radius = random->RandomFloat(200.0f, 256.0f);
+	dl->decay = 512.0f;
+}
 
 //-----------------------------------------------------------------------------
 // Did we just enter a vehicle this frame?
@@ -1264,16 +1276,30 @@ void C_BasePlayer::TeamChange( int iNewTeam )
 	// Base class does nothing
 }
 
-
+int dbfarz = 8192;
+ConVar r_nightvision_scan_speed("r_nightvision_scan_speed", "10");
 //-----------------------------------------------------------------------------
 // Purpose: Creates, destroys, and updates the flashlight effect as needed.
 //-----------------------------------------------------------------------------
 void C_BasePlayer::UpdateFlashlight()
 {
 	// The dim light is the flashlight.
-	if ( IsEffectActive( EF_DIMLIGHT ) )
+	if (IsEffectActive(EF_DIMLIGHT))
 	{
-		if (!m_pFlashlight)
+		if (!nvLight)
+		{
+			dbfarz = 128;
+			nvLight = effects->CL_AllocDlight(index);
+			nvLight->color.r = 100;
+			nvLight->color.g = 255;
+			nvLight->color.b = 0;
+			nvLight->radius = 512;
+			nvLight->origin = EyePosition();
+		}
+		dbfarz += r_nightvision_scan_speed.GetInt();
+		nvLight->origin = EyePosition();
+		nvLight->die = gpGlobals->curtime + 1;
+		/*if (!m_pFlashlight)
 		{
 			// Turned on the headlight; create it.
 			m_pFlashlight = new CFlashlightEffect(index);
@@ -1287,7 +1313,7 @@ void C_BasePlayer::UpdateFlashlight()
 		Vector vecForward, vecRight, vecUp;
 		EyeVectors( &vecForward, &vecRight, &vecUp );
 
-		// Update the light with the new position and direction.		
+		// Update the light with the new position and direction.
 		m_pFlashlight->UpdateLight( EyePosition(), vecForward, vecRight, vecUp, FLASHLIGHT_DISTANCE );
 	}
 	else if (m_pFlashlight)
@@ -1295,7 +1321,21 @@ void C_BasePlayer::UpdateFlashlight()
 		// Turned off the flashlight; delete it.
 		delete m_pFlashlight;
 		m_pFlashlight = NULL;
+	}*/
 	}
+	else
+	{
+		
+		if (nvLight)
+		{
+			dbfarz = 8192;
+			nvLight->die = gpGlobals->curtime;
+			nvLight = NULL;
+		}
+	}
+	dbfarz = MIN(dbfarz, 8192);
+	ConVarRef farz("r_depthbuffer_farz");
+	farz.SetValue(dbfarz);
 }
 
 
@@ -1745,6 +1785,16 @@ void C_BasePlayer::CalcFreezeCamView( Vector& eyeOrigin, QAngle& eyeAngles, floa
 	}
 }
 
+
+QAngle C_BasePlayer::CalcAbsRecoil(const QAngle& recoilAngle)
+{
+	QAngle curAngle = EyeAngles();
+	QAngle destAngle = EyeAngles();
+	QAngle outAngle = QAngle(0, 0, 0);
+	InterpolateAngles(curAngle, destAngle, outAngle, 0.5f);
+
+	return outAngle;
+}
 void C_BasePlayer::CalcInEyeCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 {
 	C_BaseEntity *target = GetObserverTarget();
@@ -1772,7 +1822,7 @@ void C_BasePlayer::CalcInEyeCamView(Vector& eyeOrigin, QAngle& eyeAngles, float&
 	eyeOrigin = target->GetAbsOrigin();
 
 	// Apply punch angle
-	VectorAdd( eyeAngles, GetPunchAngle(), eyeAngles );
+//	VectorAdd( eyeAngles, GetPunchAngle(), eyeAngles );
 
 #if defined( REPLAY_ENABLED )
 	if( engine->IsHLTV() || g_pEngineClientReplay->IsPlayingReplayDemo() )
@@ -1799,7 +1849,10 @@ void C_BasePlayer::CalcInEyeCamView(Vector& eyeOrigin, QAngle& eyeAngles, float&
 		eyeOrigin += offset; // hack hack
 	}
 
+	//pl.v_angle = eyeAngles;// + m_Local.m_iv_vecPunchAngle.GetCurrent();
 	engine->SetViewAngles( eyeAngles );
+	SetAbsAngles(eyeAngles);
+	//SnapEyeAngles()
 }
 
 float C_BasePlayer::GetDeathCamInterpolationTime()
@@ -1815,8 +1868,8 @@ void C_BasePlayer::SetArmorPieces()
 	int codpiecegroup = FindBodygroupByName("codpiece");
 	int bootsgroup = FindBodygroupByName("boots");
 	int thighsgroup = FindBodygroupByName("thighs");
-	int forearmgroup = FindBodygroupByName("forearm");
-	int upperarmgroup = FindBodygroupByName("upperarm");
+	int forearmgroup = FindBodygroupByName("forearms");
+	int upperarmgroup = FindBodygroupByName("upperarms");
 
 	SetBodygroup(headgroup, cl_armor_helmet.GetInt());
 	SetBodygroup(chestgroup, cl_armor_chest.GetInt());
@@ -1834,6 +1887,16 @@ void C_BasePlayer::CalcThirdPersonDeathView(Vector& eyeOrigin, QAngle& eyeAngles
 
 		if (!pPlayer)
 			return;
+
+
+		if (m_bGibbed)
+		{
+			fov = GetFOV();
+			eyeOrigin = GetAbsOrigin();
+			SetModelName(NULL);
+			Msg("player gibbed\n");
+			return;
+		}
 
 		// Keep a copy of the actual player model.
 		pPlayer->SnatchModelInstance(this);
@@ -1864,18 +1927,19 @@ void C_BasePlayer::CalcThirdPersonDeathView(Vector& eyeOrigin, QAngle& eyeAngles
 		Vector origin = EyePosition();
 
 		IRagdoll* pRagdoll = GetRepresentativeRagdoll();
+		SetGravity(3.0f);
 
 		if (pRagdoll)
 		{
 			origin = pRagdoll->GetRagdollOrigin();
-			origin.z += VEC_DEAD_VIEWHEIGHT.z; // look over ragdoll, not through
+			//origin.z += VEC_DEAD_VIEWHEIGHT.z; // look over ragdoll, not through
 			
 		}
 
 		eyeOrigin = origin;
 
 		Vector vForward;
-		AngleVectors(eyeAngles, &vForward);
+		AngleVectors(eyeAngles, &vForward);	
 
 		VectorNormalize(vForward);
 		VectorMA(origin, -96.0f, vForward, eyeOrigin);
@@ -1913,18 +1977,22 @@ void C_BasePlayer::CalcDeathCamView(Vector& eyeOrigin, QAngle& eyeAngles, float&
 	float interpolation = ( gpGlobals->curtime - m_flDeathTime ) / GetDeathCamInterpolationTime();
 	interpolation = clamp( interpolation, 0.0f, 1.0f );
 
+	if (m_bGibbed)
+	{
+		SetModel("models/skeleton/skeleton_whole.mdl");
+		m_nSkin = 2;
+	}
 	m_flObserverChaseDistance += gpGlobals->frametime*48.0f;
 	m_flObserverChaseDistance = clamp( m_flObserverChaseDistance, ( CHASE_CAM_DISTANCE_MIN * 2 ), CHASE_CAM_DISTANCE_MAX );
 
 	QAngle aForward = eyeAngles;
-	Vector origin = EyePosition();			
+	Vector origin = EyePosition();
 
 	// NOTE:  This will create the ragdoll in CSS if m_hRagdoll is set, but m_pRagdoll is not yet presetn
 	IRagdoll *pRagdoll = GetRepresentativeRagdoll();
 	if ( pRagdoll )
 	{
-		origin = pRagdoll->GetRagdollOrigin();
-		origin.z += VEC_DEAD_VIEWHEIGHT_SCALED( this ).z;
+		pRagdoll = NULL;
 	}
 	
 	if ( pKiller && pKiller->IsPlayer() && (pKiller != this) ) 
@@ -2340,7 +2408,7 @@ Vector C_BasePlayer::GetAutoaimVector( float flScale )
 {
 	// Never autoaim a predicted weapon (for now)
 	Vector	forward;
-	AngleVectors( GetAbsAngles() + m_Local.m_vecPunchAngle, &forward );
+	AngleVectors( GetAbsAngles(), &forward );
 	return	forward;
 }
 

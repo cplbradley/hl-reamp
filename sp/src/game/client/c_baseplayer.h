@@ -26,6 +26,7 @@
 #include "c_env_fog_controller.h"
 #include "igameevents.h"
 #include "GameEventListener.h"
+#include "dlight.h"
 
 #if defined USES_ECON_ITEMS
 #include "econ_item.h"
@@ -95,13 +96,17 @@ public:
 	virtual void	Spawn( void );
 	void			GroundPound(void);
 
-	virtual bool HasTripleDamage(void);
-	virtual bool HasQuadJump(void);
-	virtual bool HasOverdrive(void);
-	virtual int GetQuadDmgScale(void);
-	bool m_bTripleDamage;
+	bool HasQuadJump(void) { return m_bQuadJump; }
+	bool HasOverdrive(void) { return m_bOverdrive; }
+	bool HasFury(void) { return m_bFury; }
 	bool m_bQuadJump;
 	bool m_bOverdrive;
+	bool m_bFury;
+	bool m_bGibbed;
+
+	float m_fFocusOffsetTime;
+	bool m_bFocused;
+	bool m_bUseAltCrosshair;
 
 
 	void			Dash(void);
@@ -117,6 +122,9 @@ public:
 	
 	virtual void	ReceiveMessage( int classID, bf_read &msg );
 
+	void CreateMuzzleLight(int r, int g, int b);
+
+	void	MsgFunc_MuzzleLight(bf_read& msg);
 	virtual void	OnRestore();
 
 	virtual void	AddEntity( void );
@@ -321,6 +329,7 @@ public:
 	float						GetFOVDistanceAdjustFactor();
 
 	virtual void				ViewPunch( const QAngle &angleOffset );
+	virtual void				AbsViewPunch(const QAngle& angleOffset);
 	void						ViewPunchReset( float tolerance = 0 );
 
 	void						UpdateButtonState( int nUserCmdButtonMask );
@@ -512,6 +521,8 @@ protected:
 	void				CalcChaseCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
 	virtual void		CalcInEyeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
 
+	QAngle		CalcAbsRecoil(const QAngle& recoilAngle);
+
 	virtual float		GetDeathCamInterpolationTime();
 
 	virtual void		CalcDeathCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
@@ -587,6 +598,8 @@ private:
 
 	// Player flashlight dynamic light pointers
 	CFlashlightEffect *m_pFlashlight;
+
+	dlight_t* nvLight;
 
 	typedef CHandle<C_BaseCombatWeapon> CBaseCombatWeaponHandle;
 	CNetworkVar( CBaseCombatWeaponHandle, m_hLastWeapon );

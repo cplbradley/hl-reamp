@@ -1078,6 +1078,7 @@ void CGameMovement::CheckParameters( void )
 		}
 		mv->m_vecAngles[PITCH] = v_angle[PITCH];
 		mv->m_vecAngles[YAW]   = v_angle[YAW];
+		
 	}
 	else
 	{
@@ -1213,7 +1214,7 @@ void CGameMovement::FinishMove( void )
 
 #define PUNCH_DAMPING		60.0f		// bigger number makes the response more damped, smaller is less damped
 										// currently the system will overshoot, with larger damping values it won't
-#define PUNCH_SPRING_CONSTANT	90.0f	// bigger number increases the speed at which the view corrects
+#define PUNCH_SPRING_CONSTANT	130.0f	// bigger number increases the speed at which the view corrects
 
 //-----------------------------------------------------------------------------
 // Purpose: Decays the punchangle toward 0,0,0.
@@ -1221,9 +1222,10 @@ void CGameMovement::FinishMove( void )
 //-----------------------------------------------------------------------------
 void CGameMovement::DecayPunchAngle( void )
 {
-	if ( player->m_Local.m_vecPunchAngle->LengthSqr() > 0.001 || player->m_Local.m_vecPunchAngleVel->LengthSqr() > 0.001 )
+	if ( player->m_Local.m_vecPunchAngle->LengthSqr() > 0.001 || player->m_Local.m_vecPunchAngleVel->LengthSqr() > 0.001 || player->m_Local.m_vecAbsPunchAngle->LengthSqr() > 0.001 || player->m_Local.m_vecAbsPunchAngleVel->LengthSqr() > 0.001)
 	{
 		player->m_Local.m_vecPunchAngle += player->m_Local.m_vecPunchAngleVel * gpGlobals->frametime;
+		player->m_Local.m_vecAbsPunchAngle += player->m_Local.m_vecAbsPunchAngleVel * gpGlobals->frametime;
 		float damping = 1 - (PUNCH_DAMPING * gpGlobals->frametime);
 		
 		if ( damping < 0 )
@@ -1231,24 +1233,31 @@ void CGameMovement::DecayPunchAngle( void )
 			damping = 0;
 		}
 		player->m_Local.m_vecPunchAngleVel *= damping;
-		 
+		player->m_Local.m_vecAbsPunchAngleVel *= damping;
 		// torsional spring
 		// UNDONE: Per-axis spring constant?
 		float springForceMagnitude = PUNCH_SPRING_CONSTANT * gpGlobals->frametime;
 		springForceMagnitude = clamp(springForceMagnitude, 0.f, 2.f );
 		player->m_Local.m_vecPunchAngleVel -= player->m_Local.m_vecPunchAngle * springForceMagnitude;
+		player->m_Local.m_vecAbsPunchAngleVel -= player->m_Local.m_vecAbsPunchAngle * springForceMagnitude;
 
 		// don't wrap around
 		player->m_Local.m_vecPunchAngle.Init( 
 			clamp(player->m_Local.m_vecPunchAngle->x, -89.f, 89.f ), 
 			clamp(player->m_Local.m_vecPunchAngle->y, -179.f, 179.f ),
 			clamp(player->m_Local.m_vecPunchAngle->z, -89.f, 89.f ) );
+		player->m_Local.m_vecAbsPunchAngle.Init(
+			clamp(player->m_Local.m_vecAbsPunchAngle->x, -89.f, 89.f),
+			clamp(player->m_Local.m_vecAbsPunchAngle->y, -179.f, 179.f),
+			clamp(player->m_Local.m_vecAbsPunchAngle->z, -89.f, 89.f));
 
 	}
 	else
 	{
 		player->m_Local.m_vecPunchAngle.Init( 0, 0, 0 );
 		player->m_Local.m_vecPunchAngleVel.Init( 0, 0, 0 );
+		player->m_Local.m_vecAbsPunchAngle.Init(0, 0, 0);
+		player->m_Local.m_vecAbsPunchAngleVel.Init(0, 0, 0);
 	}
 }
 
@@ -2465,7 +2474,12 @@ bool CGameMovement::CheckJumpButton( void )
 
 
 	if (player->GetGroundEntity() == NULL)
+	{
 		player->EmitSound("Player.DoubleJump");
+#ifndef CLIENT_DLL
+		player->DoubleJump();
+#endif
+	}
 	else
 		player->PlayStepSound((Vector &)mv->GetAbsOrigin(), player->m_pSurfaceData, 1.0, true);
 
@@ -3920,16 +3934,11 @@ void CGameMovement::TryTouchGroundInQuadrants( const Vector& start, const Vector
 //-----------------------------------------------------------------------------
 void CGameMovement::CategorizePosition( void )
 {
-	Vector point;
-	trace_t pm;
+	if (player->IsObserver())
+		return;
 
 	// Reset this each time we-recategorize, otherwise we have bogus friction when we jump into water and plunge downward really quickly
 	player->m_surfaceFriction = 1.0f;
-
-	// if the player hull point one unit down is solid, the player
-	// is on ground
-	
-	// see if standing on something solid	
 
 	// Doing this before we move may introduce a potential latency in water detection, but
 	// doing it after can get us stuck on the bottom in water if the amount we move up
@@ -3938,104 +3947,77 @@ void CGameMovement::CategorizePosition( void )
 	// water on each call, and the converse case will correct itself if called twice.
 	CheckWater();
 
-	// observers don't have a ground entity
-	if ( player->IsObserver() )
+	// If standing on a ladder we are not on ground.
+	if (player->GetMoveType() == MOVETYPE_LADDER)
+	{
+		SetGroundEntity(NULL);
 		return;
-
-	float flOffset = 2.0f;
-
-	point[0] = mv->GetAbsOrigin()[0];
-	point[1] = mv->GetAbsOrigin()[1];
-	point[2] = mv->GetAbsOrigin()[2] - flOffset;
-
-	Vector bumpOrigin;
-	bumpOrigin = mv->GetAbsOrigin();
-
-	// Shooting up really fast.  Definitely not on ground.
-	// On ladder moving up, so not on ground either
-	// NOTE: 145 is a jump.
-#define NON_JUMP_VELOCITY 140.0f
-
-	float zvel = mv->m_vecVelocity[2];
-	bool bMovingUp = zvel > 0.0f;
-	bool bMovingUpRapidly = zvel > NON_JUMP_VELOCITY;
-	float flGroundEntityVelZ = 0.0f;
-	if ( bMovingUpRapidly )
-	{
-		// Tracker 73219, 75878:  ywb 8/2/07
-		// After save/restore (and maybe at other times), we can get a case where we were saved on a lift and 
-		//  after restore we'll have a high local velocity due to the lift making our abs velocity appear high.  
-		// We need to account for standing on a moving ground object in that case in order to determine if we really 
-		//  are moving away from the object we are standing on at too rapid a speed.  Note that CheckJump already sets
-		//  ground entity to NULL, so this wouldn't have any effect unless we are moving up rapidly not from the jump button.
-		CBaseEntity *ground = player->GetGroundEntity();
-		if ( ground )
-		{
-			flGroundEntityVelZ = ground->GetAbsVelocity().z;
-			bMovingUpRapidly = ( zvel - flGroundEntityVelZ ) > NON_JUMP_VELOCITY;
-		}
 	}
 
-	// Was on ground, but now suddenly am not
-	if ( bMovingUpRapidly || 
-		( bMovingUp && player->GetMoveType() == MOVETYPE_LADDER ) )   
+	// Check for a jump.
+	if (mv->m_vecVelocity.z > 250.0f)
 	{
-		SetGroundEntity( NULL );
+		SetGroundEntity(NULL);
+		return;
 	}
-	else
-	{
-		// Try and move down.
-		TryTouchGround( bumpOrigin, point, GetPlayerMins(), GetPlayerMaxs(), MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, pm );
-		
-		// Was on ground, but now suddenly am not.  If we hit a steep plane, we are not on ground
-		if ( !pm.m_pEnt || pm.plane.normal[2] < 0.7 )
-		{
-			// Test four sub-boxes, to see if any of them would have found shallower slope we could actually stand on
-			TryTouchGroundInQuadrants( bumpOrigin, point, MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, pm );
 
-			if ( !pm.m_pEnt || pm.plane.normal[2] < 0.7 )
+	// Calculate the start and end position.
+	Vector vecStartPos = mv->GetAbsOrigin();
+	Vector vecEndPos(mv->GetAbsOrigin().x, mv->GetAbsOrigin().y, (mv->GetAbsOrigin().z - 2.0f));
+
+	// NOTE YWB 7/5/07:  Since we're already doing a traceline here, we'll subsume the StayOnGround (stair debouncing) check into the main traceline we do here to see what we're standing on
+	bool bUnderwater = (player->GetWaterLevel() >= WL_Eyes);
+	bool bMoveToEndPos = false;
+	if (player->GetMoveType() == MOVETYPE_WALK &&
+		player->GetGroundEntity() != NULL && !bUnderwater)
+	{
+		// if walking and still think we're on ground, we'll extend trace down by stepsize so we don't bounce down slopes
+		vecEndPos.z -= player->GetStepSize();
+		bMoveToEndPos = true;
+	}
+
+	trace_t trace;
+	TracePlayerBBox(vecStartPos, vecEndPos, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, trace);
+
+	// Steep plane, not on ground.
+	if (trace.plane.normal.z < 0.7f)
+	{
+		// Test four sub-boxes, to see if any of them would have found shallower slope we could actually stand on.
+		TracePlayerBBoxForGround(vecStartPos, vecEndPos, GetPlayerMins(), GetPlayerMaxs(), mv->m_nPlayerHandle.Get(), PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, trace);
+		if (trace.plane.normal[2] < 0.7f)
+		{
+			// Too steep.
+			SetGroundEntity(NULL);
+			if ((mv->m_vecVelocity.z > 0.0f) &&
+				(player->GetMoveType() != MOVETYPE_NOCLIP))
 			{
-				SetGroundEntity( NULL );
-				// probably want to add a check for a +z velocity too!
-				if ( ( mv->m_vecVelocity.z > 0.0f ) && 
-					( player->GetMoveType() != MOVETYPE_NOCLIP ) )
-				{
-					player->m_surfaceFriction = 0.25f;
-				}
-			}
-			else
-			{
-				SetGroundEntity( &pm );
+				player->m_surfaceFriction = 0.25f;
 			}
 		}
 		else
 		{
-			SetGroundEntity( &pm );  // Otherwise, point to index of ent under us.
+			SetGroundEntity(&trace);
 		}
-
-#ifndef CLIENT_DLL
-		
-		//Adrian: vehicle code handles for us.
-		if ( player->IsInAVehicle() == false )
+	}
+	else
+	{
+		// YWB:  This logic block essentially lifted from StayOnGround implementation
+		if (bMoveToEndPos &&
+			!trace.startsolid &&	 // not sure we need this check as fraction would == 0.0f?
+			trace.fraction > 0.0f && // must go somewhere
+			trace.fraction < 1.0f)	 // must hit something
 		{
-			// If our gamematerial has changed, tell any player surface triggers that are watching
-			IPhysicsSurfaceProps *physprops = MoveHelper()->GetSurfaceProps();
-			surfacedata_t *pSurfaceProp = physprops->GetSurfaceData( pm.surface.surfaceProps );
-			char cCurrGameMaterial = pSurfaceProp->game.material;
-			if ( !player->GetGroundEntity() )
+			float flDelta = fabs(mv->GetAbsOrigin().z - trace.endpos.z);
+			// HACK HACK:  The real problem is that trace returning that strange value
+			//  we can't network over based on bit precision of networking origins
+			if (flDelta > 0.5f * COORD_RESOLUTION)
 			{
-				cCurrGameMaterial = 0;
+				Vector org = mv->GetAbsOrigin();
+				org.z = trace.endpos.z;
+				mv->SetAbsOrigin(org);
 			}
-
-			// Changed?
-			if ( player->m_chPreviousTextureType != cCurrGameMaterial )
-			{
-				CEnvPlayerSurfaceTrigger::SetPlayerSurface( player, cCurrGameMaterial );
-			}
-
-			player->m_chPreviousTextureType = cCurrGameMaterial;
 		}
-#endif
+		SetGroundEntity(&trace);
 	}
 }
 
@@ -4108,7 +4090,10 @@ void CGameMovement::CheckFalling( void )
 	//
 	// Clear the fall velocity so the impact doesn't happen again.
 	//
-	player->ViewPunch(QAngle(player->m_Local.m_flFallVelocity/100.0f, 0, 0));
+	QAngle punch = QAngle(0, 0, 0);
+	punch[PITCH] = player->m_Local.m_flFallVelocity * 0.01f;
+
+	player->ViewPunch(punch);
 	player->m_Local.m_flFallVelocity = 0;
 	m_iJumpCount = 0;
 	

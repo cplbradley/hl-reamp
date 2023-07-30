@@ -4,20 +4,19 @@
 //
 //==================================================================================================
 
-// STATIC: "DETAILTEXTURE"				"0..1"
 // STATIC: "FLASHLIGHT"                 "0..1"
 // STATIC: "FLASHLIGHTDEPTHFILTERMODE"  "0..2"
 // STATIC: "LIGHTMAPPED"                "0..1"
 // STATIC: "EMISSIVE"                   "0..1"
 // STATIC: "PARALLAXOCCLUSION"          "0..1"
+// STATIC: "DETAILTEXTURE"				"0..1"
 
-// DYNAMIC: "WRITEWATERFOGTODESTALPHA"  "0..1"
-// DYNAMIC: "PIXELFOGTYPE"              "0..1"
-// DYNAMIC: "NUM_LIGHTS"                "0..4"
-// DYNAMIC: "WRITE_DEPTH_TO_DESTALPHA"  "0..1"
 // DYNAMIC: "FLASHLIGHTSHADOWS"         "0..1"
 // DYNAMIC: "LIGHTMAPPED_MODEL"         "0..1"
-// DYNAMIC: "MRAO_DEBUG"				"0..4"
+// DYNAMIC: "PIXELFOGTYPE"              "0..1"
+// DYNAMIC: "WRITEWATERFOGTODESTALPHA"  "0..1"
+// DYNAMIC: "NUM_LIGHTS"                "0..4"
+// DYNAMIC: "WRITE_DEPTH_TO_DESTALPHA"  "0..1"
 
 // Can't write fog to alpha if there is no fog
 // SKIP: ($PIXELFOGTYPE == 0) && ($WRITEWATERFOGTODESTALPHA != 0)
@@ -25,7 +24,8 @@
 // SKIP: ( $FLASHLIGHT == 0 ) && ( $FLASHLIGHTSHADOWS == 1 )
 // Flashlight shadow filter mode is irrelevant if there is no flashlight
 // SKIP: ( $FLASHLIGHT == 0 ) && ( $FLASHLIGHTDEPTHFILTERMODE != 0 )
-
+// SKIP: ( $LIGHTMAPPED_MODEL == 1 ) && ( $LIGHTMAPPED == 1 )
+// SKIP: ( $LIGHTMAPPED == 1 ) && ( $NUM_LIGHTS > 0 )
 
 #include "common_ps_fxc.h"
 #include "common_flashlight_fxc.h"
@@ -48,10 +48,9 @@ PixelShaderLightInfo cLightInfo[3]              : register(PSREG_LIGHT_INFO_ARRA
 #if PARALLAXOCCLUSION
 const float4 g_ParallaxParms                    : register( c27 );
 #define PARALLAX_DEPTH                          g_ParallaxParms.r
-#define PARALLAX_CENTER                         g_ParallaxParms.g
+#define PARALLAX_CENTER                         g_ParallaxParms.g				
 #endif
-const float2 g_BlendFactor						: register(c26);
-
+const float4 g_DetailParams						: register(c26);
 
 sampler BaseTextureSampler          : register(s0);     // Base map, selfillum in alpha
 sampler NormalTextureSampler        : register(s1);     // Normal map
@@ -65,7 +64,7 @@ sampler MRAOTextureSampler          : register(s10);    // MRAO texture
 sampler EmissionTextureSampler      : register(s11);    // Emission texture
 #endif
 sampler DetailSampler			: register( s12 );
-
+sampler DetailMaskSampler		: register( s13 );
 #define ENVMAPLOD (g_EyePos.a)
 
 struct PS_INPUT
@@ -80,12 +79,20 @@ struct PS_INPUT
 	float4 detailTexCoord			: TEXCOORD7;
 	
 };
-
+float roughnessDetail(float rough,float detail,float factor)
+{
+	return rough + ((1 - detail) * factor / 4);
+}
 // Entry point
 float4 main(PS_INPUT i) : COLOR
 {
 	bool bDetailTexture = DETAILTEXTURE ? true : false;
 	
+	bool bHasDetailMask = g_DetailParams.y;
+	bool bMultiDetail = g_DetailParams.z;
+	bool bDetailInMrao = g_DetailParams.w;
+	
+	float detailBlendFactor = g_DetailParams.x;
 	
     #define EnvAmbientCube cAmbientCube
 	
@@ -111,18 +118,36 @@ float4 main(PS_INPUT i) : COLOR
 
     float3 textureNormal = normalize((tex2D( NormalTextureSampler,  correctedTexCoord.xy).xyz - float3(0.5, 0.5, 0.5)) * 2);
     float3 normal = normalize(mul(textureNormal, normalBasis)); // World Normal
-	float4 detailColor = tex2D( DetailSampler, correctedDetailTexCoord.xy );
+	
 	float4 basetexture = tex2D(BaseTextureSampler, correctedTexCoord.xy);
-#if DETAILTEXTURE
-	float4 albedo = TextureCombine( basetexture, detailColor, 0, g_BlendFactor.x );
-#else
 	float4 albedo = basetexture;
+	float4 mrao = tex2D(MRAOTextureSampler, correctedTexCoord);
+	
+    float metalness = mrao.x;
+	float roughness = mrao.y;
+	float ambientOcclusion = mrao.z;
+	
+#if DETAILTEXTURE
+	float4 detailColor = tex2D( DetailSampler, correctedDetailTexCoord.xy );
+	albedo = TextureCombine( basetexture, detailColor, 0, detailBlendFactor );
+	
+	if(bHasDetailMask)
+	{
+		float4 detailMask = tex2D(DetailMaskSampler,correctedTexCoord.xy);
+		if(bMultiDetail)
+		{
+			float4 combined1 = TextureCombine(basetexture, detailColor.r, 0, detailMask.r * detailBlendFactor) * detailMask.r;
+			float4 combined2 = TextureCombine(basetexture, detailColor.g, 0, detailMask.g * detailBlendFactor) * detailMask.g;
+			float4 combined3 = TextureCombine(basetexture, detailColor.b, 0, detailMask.b * detailBlendFactor) * detailMask.b;
+			
+			albedo = combined1 + combined2 + combined3;
+		}
+		else
+		{
+			albedo = TextureCombine( basetexture, detailColor, 0, detailMask.r * detailBlendFactor );
+		}
+	}
 #endif
-
-
-
-    float4 mrao = tex2D(MRAOTextureSampler, correctedTexCoord);
-    float metalness = mrao.x, roughness = mrao.y, ambientOcclusion = mrao.z;
 
 #if EMISSIVE
     float3 emission = tex2D(EmissionTextureSampler, correctedTexCoord).xyz;
@@ -244,17 +269,7 @@ float4 main(PS_INPUT i) : COLOR
 	
 	float4 finalColor = float4(combinedLighting, alpha);
 	
-#if MRAO_DEBUG == 1
-	finalColor = mrao.rgba;
-#endif
-#if MRAO_DEBUG == 2
-	finalColor = mrao.rrra;
-#endif
-#if MRAO_DEBUG == 3
-	finalColor = mrao.ggga;
-#endif
-#if MRAO_DEBUG == 4
-	finalColor = mrao.bbba;
-#endif
+
+	
     return FinalOutput(finalColor, fogFactor, PIXELFOGTYPE, TONEMAP_SCALE_LINEAR, bWriteDepthToAlpha, i.projPos.z);
 }

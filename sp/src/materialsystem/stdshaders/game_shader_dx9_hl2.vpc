@@ -15,14 +15,19 @@ $Project "Shaders"
 		$File	"common_vertexlitgeneric_dx9.h"
 		$File	"common_lightmappedgeneric_fxc.h"
 		$File	"common_flashlight_fxc.h"
+		//$File	"pbr_dx9_helper.h"
 	}
 
 	$Folder "Shader Source"
 	{
 		$Folder "fxc"
 		{
-			$File	"pbr_ps30.fxc"
+			//$File	"pbr_model_ps30.fxc"
+			//$File	"pbr_model_vs30.fxc"
+			//$File	"pbr_brush_ps30.fxc"
+			//$File	"pbr_brush_vs30.fxc"
 			$File	"pbr_vs30.fxc"
+			$File	"pbr_ps30.fxc"
 			$File	"coreball_ps2x.fxc"
 			$File	"coreball_vs20.fxc"
 			$File	"AlphaCable_ps2x.fxc"
@@ -35,8 +40,8 @@ $Project "Shaders"
 			$File 	"taa_vs30.fxc"
 			$File	"smb_ps30.fxc"
 			$File	"smb_vs30.fxc"
-			$File 	"unlitwiggly_ps2x.fxc"
-			$File	"unlitwiggly_vs20.fxc"
+			$File	"nightvision_enemyoverlay_ps30.fxc"
+			$File	"nightvision_enemyoverlay_vs30.fxc"
 		}
 
 		$Folder "Headers"
@@ -49,6 +54,9 @@ $Project "Shaders"
 
 	$Folder "Source Files"
 	{
+		//$File	"pbr_model_dx9.cpp"
+		//$File	"pbr_brush_dx9.cpp"
+		//$File	"pbr_dx9_helper.cpp"
 		$File	"pbr_dx9.cpp"
 		$File	"coreball_dx9.cpp"
 		$File	"alphacable_dx9.cpp"
@@ -56,6 +64,7 @@ $Project "Shaders"
 		$File	"wigglywater.cpp"
 		$File	"taa_dx9.cpp"
 		$File	"simplemotionblur_dx9.cpp"
-		$File	"unlitwiggly_dx9.cpp"
+		$File	"nightvision_enemyoverlay_dx9.cpp"
+		
 	}
 }

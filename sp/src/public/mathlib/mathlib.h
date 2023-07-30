@@ -683,6 +683,14 @@ static inline float FLerp(float f1, float f2, float i1, float i2, float x)
   return f1+(f2-f1)*(x-i1)/(i2-i1);
 }
 
+static inline float FSigmoid(float val)
+{
+	return ((val - 0.5) * 4) / (1 + abs(val - 0.5) * 6) + 0.5;
+}
+static inline float FLogit(float val)
+{
+	return ((val - 0.5) * 0.25) / (1 - abs(val - 0.5) * 1.5) + 0.5;
+}
 
 #ifndef VECTOR_NO_SLOW_OPERATIONS
 

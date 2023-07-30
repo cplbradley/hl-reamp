@@ -3281,9 +3281,9 @@ void Panel::ParentLocalToScreen(int &x, int &y)
 	y = y + py;
 }
 
-void Panel::MakePopup(bool showTaskbarIcon,bool disabled)
+void Panel::MakePopup(bool showTaskbarIcon,bool disabled, bool kb)
 {
-	surface()->CreatePopup(GetVPanel(), false, showTaskbarIcon,disabled);
+	surface()->CreatePopup(GetVPanel(), false, showTaskbarIcon,disabled,true,kb);
 }
 
 void Panel::SetCursor(HCursor cursor)
@@ -4621,6 +4621,12 @@ void Panel::ApplySettings(KeyValues *inResourceData)
 		// Only slam the name if the new one differs...
 		SetName(newName);
 	}
+
+	int nProportional = inResourceData->GetInt("proportional", false);
+
+	if (nProportional)
+		SetProportional(true);
+
 
 	// check to see if we need to render to the frame buffer even if 
 	// stereo mode is trying to render all of the ui to a render target

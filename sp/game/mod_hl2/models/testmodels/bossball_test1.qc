@@ -5,11 +5,15 @@
 
 $scale 1.0
 $modelname	"testmodels/bossball_test1.mdl"
-$origin 0 0 -356
-$body bossball_test1 "bossball_test1.smd"
+$body bossball_ball "bossball_ball.smd"
+$bodygroup "legs"
+{
+	studio "bossball_legs.smd"
+	blank
+}
 $contents "solid"
 $cdmaterials "models/testmodels"
-$sequence walk "bossball_test1_sequence_walk" fps 25.0 loop walkframe 45 LX LY fadein 0.2 fadeout 0.2 
-$sequence idle "bossball_test1_sequence_idle" fps 30.0 fadein 0.2 fadeout 0.2 
-
+$sequence idle "bossball_test_idle" fps 30.0 fadein 0.2 fadeout 0.2 
+$sequence wiggle "bossball_test_wiggle" fps 30.0 fadein 0.2 fadeout 0.2 
+$sequence roll "bossball_test_roll" { event AE_CL_BODYGROUP_SET_VALUE 30 "legs 1" } fps 30.0 fadein 0.2 fadeout 0.2 
 $include	"bossball_test1_wwmt_custom.qci"

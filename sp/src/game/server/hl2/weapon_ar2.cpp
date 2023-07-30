@@ -28,7 +28,7 @@
 #include "npc_combine.h"
 #include "rumble_shared.h"
 #include "gamestats.h"
-#include "actual_bullet.h"
+#include "hlr/weapons/actual_bullet.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -158,11 +158,14 @@ CWeaponAR2::CWeaponAR2( )
 	m_iMuzzleG = 128;
 	m_iMuzzleB = 250;
 
+	bActive = false;
+	iNumShots = 0;
 	vMuzzleFlashLightColor = Vector(0, 128, 250);
 
 	m_bAltFiresUnderwater = false;
 	m_bPlayingWoundSound = false;
 	m_iWeaponState = WEAPON_STATE_NOTFULLSPEED;
+	
 	//InitWoundSound();
 }
 
@@ -178,6 +181,19 @@ float CWeaponAR2::GetMaxFirerate()
 		return MAXFIRERATE;
 }
 
+Vector CWeaponAR2::GetSpread(void)
+{
+	Vector cone;
+
+	if (AmFocusFiring())
+		cone = VECTOR_CONE_1DEGREES;
+	else
+	{
+		cone = VECTOR_CONE_8DEGREES * (1.0f - (iNumShots / 50) * 0.6f);
+	}
+
+	return cone;
+}
 void CWeaponAR2::Precache( void )
 {
 	BaseClass::Precache();
@@ -230,8 +246,12 @@ void CWeaponAR2::ItemPostFrame(void)
 		DelayedAttack();
 	}
 
+
 	// Update our pose parameter for the vents
 	CBasePlayer* pOwner = ToBasePlayer(GetOwner());
+
+	if ((UsesClipsForAmmo1() && m_iClip1 == 0) || (!UsesClipsForAmmo1() && !pOwner->GetAmmoCount(m_iPrimaryAmmoType)))
+		ShutdownAllSounds();
 
 	if (pOwner->m_nButtons & IN_ATTACK)
 	{
@@ -286,21 +306,32 @@ void CWeaponAR2::ItemPostFrame(void)
 		}
 	}*/
 
+	if (AmFocusFiring())
+		iNumShots = 70;
 
 	if (m_flfirerate < GetMaxFirerate())
 		m_flfirerate = GetMaxFirerate();
 
 	if (m_flfirerate == GetMaxFirerate() && pOwner->m_nButtons & IN_ATTACK)
+	{
 		m_iWeaponState = WEAPON_STATE_FULLSPEED;
+	}
 	else
 	{
+		iNumShots--;
 		m_iWeaponState = WEAPON_STATE_NOTFULLSPEED;
 		m_bPlayingWoundSound = false;
 	}
 
-	
-	UpdateWeaponSoundState();
+	if (iNumShots < 0)
+		iNumShots = 0;
+	else if (!AmFocusFiring() && iNumShots > 50)
+		iNumShots = 50;
 
+	bActive = pOwner->GetActiveWeapon() == this;
+
+	UpdateWeaponSoundState();
+	SendData();
 
 	ConVarRef thirdperson("g_thirdperson");
 	if (thirdperson.GetBool())
@@ -482,6 +513,10 @@ void CWeaponAR2::PrimaryAttack(void)
 		pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);
 	}
 	m_iPrimaryAttacks++;
+
+	if(GetFireRate() == GetMaxFirerate() && !AmFocusFiring())
+		iNumShots++;
+
 	gamestats->Event_WeaponFired(pPlayer, true, GetClassname());
 	Vector vUp, vRight, vForward;
 	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
@@ -525,7 +560,7 @@ void CWeaponAR2::PrimaryAttack(void)
 	info.m_iShots = iBulletsToFire;
 	info.m_vecSrc = vecSrc;
 	info.m_vecDirShooting = vecDirShooting;
-	info.m_vecSpread = GetBulletSpread();
+	info.m_vecSpread = GetSpread();
 	info.m_flDistance = MAX_TRACE_LENGTH;
 	info.m_iAmmoType = m_iPrimaryAmmoType;
 	info.m_iTracerFreq = 1;
@@ -807,10 +842,22 @@ void CWeaponAR2::Operator_ForceNPCFire( CBaseCombatCharacter *pOperator, bool bS
 		FireNPCPrimaryAttack( pOperator, true );
 	}
 }
+void CWeaponAR2::SendData()
+{
+	CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+	user.MakeReliable();
+	UserMessageBegin(user, "HudChaingun");
+	WRITE_BOOL(bActive);
+	WRITE_BYTE(iNumShots);
+	MessageEnd();
+}
 void CWeaponAR2::ItemHolsterFrame(void)
 {
 	BaseClass::ItemHolsterFrame();
 	m_flfirerate = MINFIRERATE;
+	iNumShots = 0;
+	bActive = false;
+	SendData();
 	//UTIL_GetLocalPlayer()->SetMaxSpeed(450.0f);
 	ShutdownAllSounds();
 }

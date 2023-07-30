@@ -96,6 +96,8 @@ public:
 	static const int			HUDPB_HORIZONTAL;
 	static const int			HUDPB_VERTICAL;
 	static const int			HUDPB_HORIZONTAL_INV;
+	static const int			HUDPB_HORIZONTAL_INV_NOBG;
+	static const int			HUDPB_VERTICAL_NOBG;
 
 public:
 								CHud();

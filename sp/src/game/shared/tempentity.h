@@ -19,6 +19,7 @@
 #define TE_EXPLFLAG_ROTATE		0x20	// rotate the sprite randomly
 #define TE_EXPLFLAG_NOFIREBALL	0x40	// do not draw a fireball
 #define TE_EXPLFLAG_NOFIREBALLSMOKE	0x80	// do not draw smoke with the fireball
+#define TE_EXPLFLAG_SMALL 0x100 //small explosion
 
 #define	TE_BEAMPOINTS		0		// beam effect between two points
 #define TE_SPRITE			1	// additive sprite, plays 1 cycle

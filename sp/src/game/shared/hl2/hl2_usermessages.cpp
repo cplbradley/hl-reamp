@@ -45,6 +45,8 @@ void RegisterUserMessages( void )
 	usermessages->Register( "LogoTimeMsg", 4 );
 	usermessages->Register( "AchievementEvent", -1 );
 	usermessages->Register( "UpdateJalopyRadar", -1 );
+
+
 	usermessages->Register("EnemyHealth1", -1);
 	usermessages->Register("EnemyHealth2", -1);
 	usermessages->Register("EnemyHealth3", -1);
@@ -57,6 +59,10 @@ void RegisterUserMessages( void )
 	usermessages->Register("PurpleSkullKey", -1);
 	usermessages->Register("ShowScope", 1);
 	usermessages->Register("SuitPickup", 1);
+	usermessages->Register("HudChaingun", -1);
+	usermessages->Register("FragLaunch", -1);
+	usermessages->Register("MuzzleLight", -1);
+
 #ifndef _X360
 	// NVNT register haptic user messages
 	RegisterHapticMessages();

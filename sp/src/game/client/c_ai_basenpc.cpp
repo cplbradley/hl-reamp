@@ -15,6 +15,7 @@
 #include "fx.h"
 #include "model_types.h"
 #include "bone_setup.h"
+#include "viewrender.h"
 
 #if defined( HL2_DLL ) || defined( HL2_EPISODIC )
 #include "c_basehlplayer.h"
@@ -61,109 +62,121 @@ C_AI_BaseNPC::C_AI_BaseNPC()
 }
 
 
-bool C_AI_BaseNPC::InterpScale()
+void C_AI_BaseNPC::InterpScale()
 {
-	if (!m_bShouldDrawShieldOverlay)
-		return false;
 
-	flscale = FLerp(0, 1.25, 3);
-
-	return true;
+	flscale += 0.05;
+	flscale = MIN(flscale, 1.25);
 }
+
+ConVar testnvoverlay("testnvoverlay", "0");
+
 int C_AI_BaseNPC::InternalDrawModel(int flags)
 {
+		
+	if (m_bIsGibbed)
+		return 0;
 
+		C_BasePlayer* player = CBasePlayer::GetLocalPlayer();
 		int ret = BaseClass::InternalDrawModel(flags);
+
+
+		ConVarRef depthfarz("r_depthbuffer_farz");
+		float fDist = (GetAbsOrigin() - player->GetAbsOrigin()).Length();
+		bool bNightVision = ((player && player->IsEffectActive(EF_DIMLIGHT) && fDist < depthfarz.GetFloat()) || testnvoverlay.GetBool());
+
 		if (ret != 0)
 		{
-			if (m_bShouldDrawShieldOverlay)
+			if (CurrentViewID() != VIEW_DEPTHBUFFER)
 			{
-				// Cyanide; So we basically need to redraw the model but scaled up slightly
-
-				UpdateBoneAttachments();
-
-				ClientModelRenderInfo_t info;
-				ClientModelRenderInfo_t* pInfo;
-
-				pInfo = &info;
-
-				pInfo->flags = flags;
-				pInfo->pRenderable = this;
-				pInfo->instance = GetModelInstance();
-				pInfo->entity_index = index;
-				pInfo->pModel = GetModel();
-				pInfo->origin = GetRenderOrigin();
-				pInfo->angles = GetRenderAngles();
-				pInfo->skin = GetSkin();
-				pInfo->body = GetBody();
-				pInfo->hitboxset = m_nHitboxSet;
-
-				Assert(!pInfo->pModelToWorld);
-				if (!pInfo->pModelToWorld)
+				if (m_bShouldDrawShieldOverlay || bNightVision)
 				{
-					pInfo->pModelToWorld = &pInfo->modelToWorld;
+					// Cyanide; So we basically need to redraw the model but scaled up slightly
+					UpdateBoneAttachments();
 
-					// Turns the origin + angles into a matrix
-					AngleMatrix(pInfo->angles, pInfo->origin, pInfo->modelToWorld);
-				}
-				;
-				// Set override material for glow color
-				IMaterial* pMatGlowColor = NULL;
-				pMatGlowColor = GetShieldType(m_iVortEffectType);
-				if (pMatGlowColor)
-				{
-					pMatGlowColor->AddRef();
-					modelrender->ForcedMaterialOverride(pMatGlowColor);
+					ClientModelRenderInfo_t info;
+					ClientModelRenderInfo_t* pInfo;
+
+					pInfo = &info;
+
+					pInfo->flags = flags;
+					pInfo->pRenderable = this;
+					pInfo->instance = GetModelInstance();
+					pInfo->entity_index = index;
+					pInfo->pModel = GetModel();
+					pInfo->origin = GetRenderOrigin();
+					pInfo->angles = GetRenderAngles();
+					pInfo->skin = GetSkin();
+					pInfo->body = GetBody();
+					pInfo->hitboxset = m_nHitboxSet;
+
+					Assert(!pInfo->pModelToWorld);
+					if (!pInfo->pModelToWorld)
+					{
+						pInfo->pModelToWorld = &pInfo->modelToWorld;
+
+						// Turns the origin + angles into a matrix
+						AngleMatrix(pInfo->angles, pInfo->origin, pInfo->modelToWorld);
+					}
+					;
+					// Set override material for glow color
+					IMaterial* pMatGlowColor = NULL;
+
+					pMatGlowColor = bNightVision ? GetNightVisionOverlay() : GetShieldType(m_iVortEffectType);
+
+					if (pMatGlowColor)
+					{
+						pMatGlowColor->AddRef();
+						modelrender->ForcedMaterialOverride(pMatGlowColor);
+					}
+
+					// Scale the base transform if we don't have a bone hierarchy
+					CStudioHdr* pHdr = GetModelPtr();
+					// Yes we do need to save how these were before
+					matrix3x4_t pBones[MAXSTUDIOBONES]; // maybe have this be global?
+
 					
-				}
-
-				// Scale the base transform if we don't have a bone hierarchy
-				CStudioHdr* pHdr = GetModelPtr();
-				// Yes we do need to save how these were before
-				matrix3x4_t pBones[MAXSTUDIOBONES]; // maybe have this be global?
-	
-				if (!InterpScale())
-					InterpScale();
-				if (pHdr)
-				{
-					for (int i = 0; i < pHdr->numbones(); i++)
+					if (pHdr)
 					{
-						matrix3x4_t& transform = GetBoneForWrite(i);
-						// Apply client-side effects to the transformation matrix
-						
-						float scale = 1.1;
-						// Yes, we do need to copy this over to our array
-						MatrixCopy(transform, pBones[i]);
-						VectorScale(transform[0], scale, transform[0]);
-						VectorScale(transform[1], scale, transform[1]);
-						VectorScale(transform[2], scale, transform[2]);
+						for (int i = 0; i < pHdr->numbones(); i++)
+						{
+							matrix3x4_t& transform = GetBoneForWrite(i);
+							// Apply client-side effects to the transformation matrix
+							InterpScale();
+							float scale = bNightVision ? 1.1f : flscale;
+							// Yes, we do need to copy this over to our array
+							MatrixCopy(transform, pBones[i]);
+							VectorScale(transform[0], scale, transform[0]);
+							VectorScale(transform[1], scale, transform[1]);
+							VectorScale(transform[2], scale, transform[2]);
+						}
 					}
-				}
 
-				// Now draw the model
-				DrawModelState_t state;
-				matrix3x4_t* pBoneToWorld = NULL;
-				bool bMarkAsDrawn = modelrender->DrawModelSetup(*pInfo, &state, NULL, &pBoneToWorld);
-				DoInternalDrawModel(pInfo, (bMarkAsDrawn && (pInfo->flags & STUDIO_RENDER)) ? &state : NULL, pBoneToWorld);
-				OnPostInternalDrawModel(pInfo);
-				
-				
-				if (pMatGlowColor)
-				{
-					modelrender->ForcedMaterialOverride(0);
-				}
+					// Now draw the model
+					DrawModelState_t state;
+					matrix3x4_t* pBoneToWorld = NULL;
+					bool bMarkAsDrawn = modelrender->DrawModelSetup(*pInfo, &state, NULL, &pBoneToWorld);
+					DoInternalDrawModel(pInfo, (bMarkAsDrawn && (pInfo->flags & STUDIO_RENDER)) ? &state : NULL, pBoneToWorld);
+					OnPostInternalDrawModel(pInfo);
 
-				if (pHdr)
-				{
-					// Yes we need to apply them back after we've drawn the outline
-					for (int i = 0; i < pHdr->numbones(); i++)
+
+					if (pMatGlowColor)
 					{
-						matrix3x4_t& transform = GetBoneForWrite(i);
-						MatrixCopy(pBones[i], transform);
+						modelrender->ForcedMaterialOverride(0);
 					}
-				}
 
-				return bMarkAsDrawn;
+					if (pHdr)
+					{
+						// Yes we need to apply them back after we've drawn the outline
+						for (int i = 0; i < pHdr->numbones(); i++)
+						{
+							matrix3x4_t& transform = GetBoneForWrite(i);
+							MatrixCopy(pBones[i], transform);
+						}
+					}
+
+					return bMarkAsDrawn;
+				}
 			}
 		}
 
@@ -264,6 +277,7 @@ void C_AI_BaseNPC::ClientThink( void )
 	}
 	else
 	{
+		flscale = 1.0f;
 		if (m_pShieldFX)
 		{
 			m_pShieldFX = NULL;

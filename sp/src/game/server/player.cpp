@@ -19,7 +19,7 @@
 #include "entitylist.h"
 #include "particle_parse.h"
 #include "eventqueue.h"
-#include "hlr\hlr_floorsprite.h"
+#include "hlr/player/hlr_floorsprite.h"
 #include "worldsize.h"
 #include "isaverestore.h"
 #include "globalstate.h"
@@ -403,6 +403,7 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_FIELD(m_iMaxElectricDamage, FIELD_INTEGER),
 
 	DEFINE_FIELD(m_bHasBlocker,FIELD_BOOLEAN),
+	DEFINE_FIELD(m_bGibbed,FIELD_BOOLEAN),
 	
 	DEFINE_FIELD( m_flMaxspeed, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flWaterJumpTime, FIELD_TIME ),
@@ -1003,13 +1004,13 @@ void CBasePlayer::DamageEffect(float flDamage, int fDamageType)
 	{
 		//Red damage indicator
 		color32 red = {128,0,0,128};
-		UTIL_ScreenFade( this, red, 1.0f, 0.1f, FFADE_IN );
+		UTIL_ScreenFade( this, red, 0.3f, 0.1f, FFADE_IN );
 	}
 	else if (fDamageType & DMG_DROWN)
 	{
 		//Red damage indicator
 		color32 blue = {0,0,128,128};
-		UTIL_ScreenFade( this, blue, 1.0f, 0.1f, FFADE_IN );
+		UTIL_ScreenFade( this, blue, 0.3f, 0.1f, FFADE_IN );
 	}
 	else if (fDamageType & DMG_SLASH)
 	{
@@ -1087,6 +1088,19 @@ bool CBasePlayer::ShouldTakeDamageInCommentaryMode( const CTakeDamageInfo &input
 	return true;
 }
 
+void CBasePlayer::CreateMuzzleLight(int r, int g, int b)
+{
+	float red = r;
+	float green = g;
+	float blue = b;
+	CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+	user.MakeReliable();
+	UserMessageBegin(user, "MuzzleLight");
+	WRITE_FLOAT(red);
+	WRITE_FLOAT(green);
+	WRITE_FLOAT(blue);
+	MessageEnd();
+}
 int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 {
 	// have suit diagnose the problem - ie: report damage type
@@ -1524,9 +1538,7 @@ void CBasePlayer::OnDamagedByExplosion( const CTakeDamageInfo &info )
 	if ( !shock && !ear_ringing )
 		return;
 
-	int effect = shock ? 
-		random->RandomInt( 32, 34 ) : 
-		random->RandomInt( 32, 34 );
+	int effect = random->RandomInt(32, 34);
 
 	CSingleUserRecipientFilter user( this );
 	enginesound->SetPlayerDSP( user, effect, false );
@@ -1876,6 +1888,48 @@ void CBasePlayer::Event_Killed( const CTakeDamageInfo &info )
 	m_flDeathTime = gpGlobals->curtime;
 
 	ClearLastKnownArea();
+
+	DevMsg("Player recieved %f damage\n", info.GetDamage());
+	if (info.GetDamage() > 50)
+	{
+		m_bGibbed = true;
+		AddEffects(EF_NODRAW);
+		SetSolid(SOLID_NONE);
+		SetSolidFlags(FSOLID_NOT_SOLID);
+		SetModel("models/skeleton/skeleton_whole.mdl");
+		SetSkin(2);
+		DispatchParticleEffect("hgib_sploosh", WorldSpaceCenter(), GetAbsAngles());
+		EmitSound("Gore.Splatter");
+
+
+		for (int i = 0; i <= 5; i++)
+		{
+			int rand = RandomInt(1, 3);
+			switch (rand)
+			{
+			case 1:
+			{
+				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/human/hgib_1.mdl", 5);
+				break;
+			}
+			case 2:
+			{
+				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/human/hgib_2.mdl", 5);
+				break;
+			}
+			case 3:
+			{
+				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/human/hgib_3.mdl", 5);
+				break;
+			}
+			default:
+			{
+				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/human/hgib_1.mdl", 5);
+				break;
+			}
+			}
+		}
+	}
 
 	BaseClass::Event_Killed( info );
 }
@@ -4757,7 +4811,7 @@ void CBasePlayer::PostThink()
 		if ( m_bForceOrigin )
 		{
 			SetLocalOrigin( m_vForcedOrigin );
-			SetLocalAngles( m_Local.m_vecPunchAngle );
+			SetAbsAngles( m_Local.m_vecPunchAngle );
 			m_Local.m_vecPunchAngle = RandomAngle( -25, 25 );
 			m_Local.m_vecPunchAngleVel.Init();
 		}
@@ -5243,6 +5297,7 @@ void CBasePlayer::Precache( void )
 
 	PrecacheModel("models/player/gordon.mdl");
 	PrecacheModel("models/player/mark6.mdl");
+	PrecacheModel("models/skeleton/skeleton_whole.mdl");
 	PrecacheScriptSound( "Player.FallGib" );
 	PrecacheScriptSound( "Player.Death" );
 	PrecacheScriptSound( "Player.PlasmaDamage" );
@@ -5266,6 +5321,7 @@ void CBasePlayer::Precache( void )
 	PrecacheMaterial("sprites/floorsprite.vmt");
 
 	PrecacheParticleSystem("baddog_groundsmash_radialsmoke");
+	PrecacheParticleSystem("doublejump");
 	// in the event that the player JUST spawned, and the level node graph
 	// was loaded, fix all of the node graph pointers before the game starts.
 	
@@ -5324,25 +5380,6 @@ void CBasePlayer::Dash(void)
 void CBasePlayer::StopDash(void)
 {
 	SetAbsVelocity(m_vecSavedVelocity);
-}
-
-bool CBasePlayer::HasQuadJump(void)
-{
-	return m_bQuadJump;
-}
-bool CBasePlayer::HasOverdrive(void)
-{
-	return m_bOverdrive;
-}
-bool CBasePlayer::HasTripleDamage(void)
-{
-	return m_bTripleDamage;
-}
-int CBasePlayer::GetQuadDmgScale(void)
-{
-	if (HasTripleDamage())
-		return 3;
-	return 1;
 }
 void CBasePlayer::CheckThirdPerson(void)
 {
@@ -5411,6 +5448,10 @@ void CBasePlayer::GroundPound(void)
 		);
 
 	SetAbsVelocity(Vector(0, 0, 0));
+}
+void CBasePlayer::DoubleJump(void)
+{
+	DispatchParticleEffect("doublejump", WorldSpaceCenter(), vec3_angle, this);
 }
 //-----------------------------------------------------------------------------
 // Purpose: Force this player to immediately respawn
@@ -6169,14 +6210,26 @@ void CBasePlayer::ImpulseCommands( )
 	{
 	case 100:
         // temporary flashlight for level designers
-		/*if ( FlashlightIsOn() )
+		if ( FlashlightIsOn() )
 		{
+			color32 clr;
+			clr.r = 0;
+			clr.g = 0;
+			clr.b = 0;
+			clr.a = 200;
+			UTIL_ScreenFade(this, clr, 0.2f, 0.0f, FFADE_IN);
 			FlashlightTurnOff();
 		}
         else 
 		{
+			color32 clr;
+			clr.r = 0;
+			clr.g = 0;
+			clr.b = 0;
+			clr.a = 200;
+			UTIL_ScreenFade(this, clr, 0.2f, 0.0f, FFADE_IN);
 			FlashlightTurnOn();
-		}*/
+		}
 		break;
 
 	case 200:
@@ -6433,33 +6486,25 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 		EquipSuit();
 
 		// Give the player everything!
-		GiveAmmo( 255,	"Pistol");
 		GiveAmmo( 255,	"AR2");
 		GiveAmmo( 5,	"AR2AltFire");
 		GiveAmmo( 450,	"SMG1");
 		GiveAmmo( 255,	"Buckshot");
-		GiveAmmo( 3,	"smg1_grenade");
 		GiveAmmo( 30,	"rpg_round");
-		GiveAmmo( 25,	"grenade");
-		GiveAmmo( 32,	"357" );
-		GiveAmmo( 16,	"XBowBolt" );
 #ifdef HL2_EPISODIC
 		GiveAmmo( 5,	"Hopwire" );
 #endif		
 		GiveNamedItem( "weapon_plasmarifle" );
 		GiveNamedItem( "weapon_frag" );
-		//GiveNamedItem( "weapon_crowbar" );
 		GiveNamedItem( "weapon_pistol" );
 		GiveNamedItem( "weapon_ar2" );
 		GiveNamedItem( "weapon_shotgun" );
-		//GiveNamedItem( "weapon_physcannon" );
-		//GiveNamedItem( "weapon_bugbait" );
 		GiveNamedItem( "weapon_rpg" );
 		GiveNamedItem( "weapon_357" );
-		//GiveNamedItem( "weapon_crossbow" );
 		//HLR
 		GiveNamedItem( "weapon_pumpshotgun");
 		GiveNamedItem( "weapon_bfg" );
+		GiveNamedItem("weapon_rifle");
 
 #ifdef HL2_EPISODIC
 		// GiveNamedItem( "weapon_magnade" );
@@ -7192,7 +7237,7 @@ bool CBasePlayer::ShouldAutoaim( void )
 		return false;
 
 	// autoaiming is only for easy and medium skill
-	return ( IsX360() || !g_pGameRules->IsSkillLevel(SKILL_HARD) );
+	return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -7231,7 +7276,7 @@ void CBasePlayer::GetAutoaimVector( autoaim_params_t &params )
 	if ( ( ShouldAutoaim() == false ) || ( params.m_fScale == AUTOAIM_SCALE_DIRECT_ONLY ) )
 	{
 		Vector	forward;
-		AngleVectors( EyeAngles() + m_Local.m_vecPunchAngle, &forward );
+		AngleVectors( EyeAngles() + m_Local.m_vecPunchAngleVel, &forward );
 
 		params.m_vecAutoAimDir = forward;
 		params.m_hAutoAimEntity.Set(NULL);
@@ -8295,6 +8340,10 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropInt(SENDINFO(m_iMaxFireDamage), 8, SPROP_UNSIGNED),
 		SendPropInt(SENDINFO(m_iElectricDamageLeft), 8, SPROP_UNSIGNED),
 		SendPropInt(SENDINFO(m_iMaxElectricDamage), 8, SPROP_UNSIGNED),
+		SendPropBool(SENDINFO(m_bFocused)),
+		SendPropFloat(SENDINFO(m_fFocusOffsetTime)),
+		SendPropBool(SENDINFO(m_bUseAltCrosshair)),
+		SendPropBool(SENDINFO(m_bGibbed)),
 
 
 		SendPropInt		(SENDINFO(m_iFOVStart), 8, SPROP_UNSIGNED ),
@@ -8303,7 +8352,6 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropEHandle	(SENDINFO(m_hZoomOwner) ),
 		SendPropArray	( SendPropEHandle( SENDINFO_ARRAY( m_hViewModel ) ), m_hViewModel ),
 		SendPropString	(SENDINFO(m_szLastPlaceName) ),
-		SendPropBool(SENDINFO(m_bTripleDamage)),
 
 #if defined USES_ECON_ITEMS
 		SendPropUtlVector( SENDINFO_UTLVECTOR( m_hMyWearables ), MAX_WEARABLES_SENT_FROM_SERVER, SendPropEHandle( NULL, 0 ) ),

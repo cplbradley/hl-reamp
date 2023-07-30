@@ -80,6 +80,7 @@ enum view_id_t
 	VIEW_INTRO_CAMERA = 6,
 	VIEW_SHADOW_DEPTH_TEXTURE = 7,
 	VIEW_SSAO = 8,
+	VIEW_DEPTHBUFFER = 9,
 	VIEW_ID_COUNT
 };
 view_id_t CurrentViewID();
@@ -430,7 +431,12 @@ public:
 private:
 	int				m_BuildWorldListsNumber;
 
-
+	float m_fLastRealTime;
+	int m_iLastFPS;
+	int m_iAvgFPS;
+	float fPollTime;
+	int iFrameCount;
+	int iFPS[10];
 	// General draw methods
 	// baseDrawFlags is a combination of DF_ defines. DF_MONITOR is passed into here while drawing a monitor.
 	void			ViewDrawScene( bool bDrew3dSkybox, SkyboxVisibility_t nSkyboxVisible, const CViewSetup &view, int nClearFlags, view_id_t viewID, bool bDrawViewModel = false, int baseDrawFlags = 0, ViewCustomVisibility_t *pCustomVisibility = NULL );

@@ -1,0 +1,116 @@
+//-----------------------------------------------------------------------------
+//	CLIENT_HL2.VPC
+//
+//	Project Script
+//-----------------------------------------------------------------------------
+
+$Macro SRCDIR		"..\.."
+$Macro GAMENAME 	"hlr" [!$SOURCESDK]
+$Macro GAMENAME 	"hlr" [$SOURCESDK]
+
+$Include "$SRCDIR\game\client\client_base.vpc"
+
+$Configuration
+{
+	$Compiler
+	{
+		$AdditionalIncludeDirectories	".\hl2;./ShaderEditor;.\hl2\elements;.\hlr;.\hlr\entites;.\hlr\hud;.\hlr\npc;.\hlr\util;.\hlr\vgui;.\hlr\weapons;$SRCDIR\game\shared\hl2;$BASE;$SRCDIR\fmod\inc"
+		$PreprocessorDefinitions		"$BASE;HL2_CLIENT_DLL;SOURCE_2013;HLR_CLIENT;HLR;"
+	}
+}
+
+$Project
+{
+	$Folder	"Source Files"
+	{
+		$Folder "Shader Editor" [$WIN32]
+		{
+			$Folder	"Header Files"
+			{
+				$File	"ShaderEditor\ISEdit_ModelRender.h"
+				$File	"ShaderEditor\IVShaderEditor.h"
+				$File	"ShaderEditor\ShaderEditorSystem.h"
+				$File	"ShaderEditor\SEdit_ModelRender.h"
+			}
+		
+			$Folder	"Implementation Files"
+			{
+				$File	"$SRCDIR\game\client\ShaderEditor\ShaderEditorSystem.cpp"
+				$File	"$SRCDIR\game\client\ShaderEditor\SEdit_ModelRender.cpp"
+			}
+		}
+		$Folder "HLR"
+		{
+			$Folder "HUD"
+			{
+				$File "hlr/hud/hud_environmental_resistance.cpp"
+				$File "hlr/hud/hud_environmental_resistance.h"
+				$File "hlr/hud/hud_bluekey.cpp"
+				$File "hlr/hud/hud_bluekey.h"
+				$File "hlr/hud/hud_purplekey.h"
+				$File "hlr/hud/hud_purplekey.cpp"
+				$File "hlr/hud/hud_redkey.cpp"
+				$File "hlr/hud/hud_redkey.h"
+				$File "hlr/hud/hud_deathskull.cpp"
+				$File "hlr/hud/hud_deathskull.h"
+				$File "hlr/hud/hud_healthbar.cpp"
+				$File "hlr/hud/hud_healthbar.h"
+				$File "hlr/hud/hud_poweruptime.cpp"
+				$File "hlr/hud/hud_poweruptime.h"
+				$File "hlr/hud/hud_railgun_screen.cpp"
+				$File "hlr/hud/hud_skullkey.cpp"
+				$File "hlr/hud/hud_skullkey.h"
+				$File "hlr/hud/hud_itempickup.h"
+				$File "hlr/hud/hud_itempickup.cpp"
+				$File "hlr/hud/hud_weaponwheel.cpp"
+				$File "hlr/hud/hud_chaingun.cpp"
+				$File "hlr/hud/hud_fraglaunch.cpp"
+			}
+			$Folder "NPC"
+			{
+				$File "hlr/npc/c_npc_antlionwarrior.cpp"
+				$File "hlr/npc/c_npc_vortboss.cpp"
+			}
+			$Folder "VGUI"
+			{
+				$File "hlr/vgui/hlr_bonusoptions.cpp"
+				$File "hlr/vgui/IBonusOptions.h"
+				$File "hlr/vgui/mapload_background.cpp"
+				$File "hlr/vgui/mapload_background.h"
+				$File "hlr/vgui/hlr_masochistmode.cpp"
+				$File "hlr/vgui/ISM30panel.h"
+				$File "hlr/vgui/vgui_sm30error.cpp"
+				$File "hlr/vgui/hlr_armorcustomization.cpp"
+			}
+			$Folder "Weapons"
+			{
+				$File "hlr/weapons/c_actual_bullet.cpp"
+				$File "hlr/weapons/c_weapon_plasmarifle.cpp"
+				$File "hlr/weapons/c_weapon_frag.cpp"
+			}
+			$Folder "Util"
+			{
+				$File "hlr/util/c_hlr_floorsprite.cpp"
+				$File "$SRCDIR\game\shared\singleplayer_animstate.cpp"
+				$File "$SRCDIR\game\shared\singleplayer_animstate.h"
+				$File "$SRCDIR\game\shared\hl2\hlr\hlr_shareddefs.h"
+				$File "c_movie_display.h"
+				$File "c_movie_display.cpp"	
+			}
+			$Folder "Entity"
+			{
+				$File "hlr/entities/c_hlr_environmental_resistance.cpp"
+				$File "hlr/entities/c_hlr_keycard.cpp"
+				$File "hlr/entities/c_hlr_skullkey.cpp"
+				$File "hlr/entities/c_hlr_powerups.cpp"
+			}
+		}
+		$Folder "FMOD"
+		{
+			$File "fmod/fmod_system.cpp"
+			$File "fmod/fmod_system.h"
+			$File "$SRCDIR\game\shared\fmod\fmod_dynamic_player.cpp"
+			$File "$SRCDIR\game\shared\fmod\fmod_dynamic_player.h"
+		}
+	}
+}

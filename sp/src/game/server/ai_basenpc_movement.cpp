@@ -339,7 +339,7 @@ void CAI_BaseNPC::SetJumpLimit(void)
 	{
 	case MOVECLASS_ALWAYSJUMP:
 	{
-		m_fNextAllowedJump = gpGlobals->curtime;
+		m_fNextAllowedJump = gpGlobals->curtime + 1.0f;
 		break;
 	}
 	case MOVECLASS_NEVERJUMP:

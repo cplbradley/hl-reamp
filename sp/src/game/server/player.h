@@ -18,7 +18,7 @@
 #include "hintsystem.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "util_shared.h"
-#include "hlr\hlr_floorsprite.h"
+#include "hlr/player/hlr_floorsprite.h"
 
 #if defined USES_ECON_ITEMS
 #include "game_item_schema.h"
@@ -278,6 +278,9 @@ public:
 	void					UnlockPlayer( void );
 
 	void					GroundPound(void);
+	void					DoubleJump(void);
+
+	void					CreateMuzzleLight(int r, int g, int b);
 
 	virtual void			DrawDebugGeometryOverlays(void);
 	
@@ -386,6 +389,7 @@ public:
 
 	void					VelocityPunch( const Vector &vecForce );
 	void					ViewPunch( const QAngle &angleOffset );
+	void					AbsViewPunch(const QAngle& angleOffset);
 	void					ViewPunchReset( float tolerance = 0 );
 	void					ShowViewModel( bool bShow );
 	void					ShowCrosshair( bool bShow );
@@ -717,14 +721,14 @@ public:
 
 	virtual float GetPlayerMaxSpeed();
 
-
-	virtual bool HasTripleDamage(void);
-	virtual bool HasQuadJump(void);
-	virtual bool HasOverdrive(void);
-	virtual int GetQuadDmgScale(void);
-	CNetworkVar(bool,m_bTripleDamage);
+	virtual bool HasFury(void) { return m_bFury; }
+	virtual bool HasQuadJump(void) { return m_bQuadJump; }
+	virtual bool HasOverdrive(void) { return m_bOverdrive; }
 	bool m_bQuadJump;
 	bool m_bOverdrive;
+	bool m_bFury;
+
+	
 
 	// Used to set private physics flags PFLAG_*
 	void	SetPhysicsFlag( int nFlag, bool bSet );
@@ -747,10 +751,16 @@ public:
 	CNetworkVar(int, m_iMaxFireDamage);
 	CNetworkVar(int, m_iMaxToxicDamage);
 	CNetworkVar(int, m_iMaxElectricDamage);
+	CNetworkVar(bool, m_bFocused);
+	CNetworkVar(float, m_fFocusOffsetTime);
+	CNetworkVar(bool, m_bUseAltCrosshair);
+	CNetworkVar(bool, m_bGibbed);
 
 
 	bool m_bInCinematicCamera;
 
+
+	bool m_bClimbingRope;
 public:
 	// Suicide...
 	virtual void CommitSuicide( bool bExplode = false, bool bForce = false );

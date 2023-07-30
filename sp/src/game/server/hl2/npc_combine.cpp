@@ -174,11 +174,8 @@ DEFINE_INPUTFUNC( FIELD_STRING,	"ThrowGrenadeAtTarget",	InputThrowGrenadeAtTarge
 DEFINE_FIELD( m_iLastAnimEventHandled, FIELD_INTEGER ),
 DEFINE_FIELD( m_fIsElite, FIELD_BOOLEAN ),
 DEFINE_FIELD( m_vecAltFireTarget, FIELD_VECTOR ),
-DEFINE_FIELD(m_pLeftEyeG,FIELD_EHANDLE),
-DEFINE_FIELD(m_pRightEyeG,FIELD_EHANDLE),
-DEFINE_FIELD(m_pLeftEyeT,FIELD_EHANDLE),
-DEFINE_FIELD(m_pRightEyeT,FIELD_EHANDLE),
-
+DEFINE_AUTO_ARRAY(m_pEyeGlow,FIELD_EHANDLE),
+DEFINE_AUTO_ARRAY(m_pEyeTrail, FIELD_EHANDLE),
 
 DEFINE_KEYFIELD( m_iTacticalVariant, FIELD_INTEGER, "tacticalvariant" ),
 DEFINE_KEYFIELD( m_iPathfindingVariant, FIELD_INTEGER, "pathfindingvariant" ),
@@ -404,59 +401,44 @@ void CNPC_Combine::PostNPCInit()
 }
 void CNPC_Combine::DrawStuff(void)
 {
-	m_pLeftEyeG = CSprite::SpriteCreate("sprites/glow03.vmt", GetLocalOrigin(), false);
-	m_pRightEyeG = CSprite::SpriteCreate("sprites/glow04.vmt", GetLocalOrigin(), false);
-	m_pLeftEyeT = CSpriteTrail::SpriteTrailCreate("sprites/laser.vmt", GetLocalOrigin(), false);
-	m_pRightEyeT = CSpriteTrail::SpriteTrailCreate("sprites/laser.vmt", GetLocalOrigin(), false);
-
 	int	nLeftEye = LookupAttachment("lefteye");
 	int	nRightEye = LookupAttachment("righteye");
-	if (m_pLeftEyeG != NULL)
-	{
-		m_pLeftEyeG->FollowEntity(this);
-		m_pLeftEyeG->SetAttachment(this, nLeftEye);
-		m_pLeftEyeG->SetScale(0.2f);
-		m_pLeftEyeG->SetGlowProxySize(4.0f);
-	}
-	if (m_pRightEyeG != NULL)
-	{
-		m_pRightEyeG->FollowEntity(this);
-		m_pRightEyeG->SetAttachment(this, nRightEye);
+	Msg("Left Eye = %i Right Eye = %i\n", nLeftEye, nRightEye);
 
-		m_pRightEyeG->SetScale(0.2f);
-		m_pRightEyeG->SetGlowProxySize(4.0f);
-	}
-	if (m_pLeftEyeT != NULL)
+	for (int i = 0; i < 2; i++)
 	{
-		m_pLeftEyeT->FollowEntity(this);
-		m_pLeftEyeT->SetAttachment(this, nLeftEye);
+		m_pEyeGlow[i] = (CSprite::SpriteCreate("sprites/glow03.vmt", GetLocalOrigin(), false));
+		m_pEyeTrail[i] = (CSpriteTrail::SpriteTrailCreate("sprites/laser.vmt", GetLocalOrigin(), false));
 
-		m_pLeftEyeT->SetStartWidth(8.0f);
-		m_pLeftEyeT->SetEndWidth(1.0f);
-		m_pLeftEyeT->SetLifeTime(0.5f);
+
+		if (m_pEyeGlow[i].Get())
+		{
+			m_pEyeGlow[i]->FollowEntity(this);
+			m_pEyeGlow[i]->SetAttachment(this, i + 3);
+			m_pEyeGlow[i]->SetScale(0.2f);
+			m_pEyeGlow[i]->SetGlowProxySize(4.0f);
+		}
+		if (m_pEyeTrail[i].Get())
+		{
+			m_pEyeTrail[i]->FollowEntity(this);
+			m_pEyeTrail[i]->SetAttachment(this, i + 3);
+
+			m_pEyeTrail[i]->SetStartWidth(8.0f);
+			m_pEyeTrail[i]->SetEndWidth(1.0f);
+			m_pEyeTrail[i]->SetLifeTime(0.5f);
+		}
+		if (!HasShotgun())
+		{
+			m_pEyeGlow[i]->SetTransparency(kRenderGlow, 255, 190, 0, 200, kRenderFxNoDissipation);
+			m_pEyeTrail[i]->SetTransparency(kRenderTransAdd, 255, 190, 0, 255, kRenderFxNone);
+		}
+		else
+		{
+			m_pEyeGlow[i]->SetTransparency(kRenderGlow, 255, 0, 0, 200, kRenderFxNoDissipation);
+			m_pEyeTrail[i]->SetTransparency(kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone);
+		}
 	}
-	if (m_pRightEyeT != NULL)
-	{
-		m_pRightEyeT->FollowEntity(this);
-		m_pRightEyeT->SetAttachment(this, nRightEye);
-		m_pRightEyeT->SetStartWidth(8.0f);
-		m_pRightEyeT->SetEndWidth(1.0f);
-		m_pRightEyeT->SetLifeTime(0.5f);
-	}
-	if (!HasShotgun())
-	{
-		m_pLeftEyeG->SetTransparency(kRenderGlow, 255, 190, 0, 200, kRenderFxNoDissipation);
-		m_pRightEyeG->SetTransparency(kRenderGlow, 255, 190, 0, 200, kRenderFxNoDissipation);
-		m_pLeftEyeT->SetTransparency(kRenderTransAdd, 255, 190, 0, 255, kRenderFxNone);
-		m_pRightEyeT->SetTransparency(kRenderTransAdd, 255, 190, 0, 255, kRenderFxNone);
-	}
-	else
-	{
-		m_pLeftEyeG->SetTransparency(kRenderGlow, 255, 0, 0, 200, kRenderFxNoDissipation);
-		m_pRightEyeG->SetTransparency(kRenderGlow, 255, 0, 0, 200, kRenderFxNoDissipation);
-		m_pLeftEyeT->SetTransparency(kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone);
-		m_pRightEyeT->SetTransparency(kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone);
-	}
+
 }
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -1283,6 +1265,7 @@ bool CNPC_Combine::FVisible( CBaseEntity *pEntity, int traceMask, CBaseEntity **
 //-----------------------------------------------------------------------------
 void CNPC_Combine::Event_Killed( const CTakeDamageInfo &info )
 {
+#ifndef HLR
 	// if I was killed before I could finish throwing my grenade, drop
 	// a grenade item that the player can retrieve.
 	if( GetActivity() == ACT_RANGE_ATTACK2 )
@@ -1309,18 +1292,15 @@ void CNPC_Combine::Event_Killed( const CTakeDamageInfo &info )
 				}
 			}
 		}
-	
-	if (m_pLeftEyeG != NULL)
-		m_pLeftEyeG->SetTransparency(kRenderNone, 0, 0, 0, 0, kRenderFxNone);
-		UTIL_Remove(m_pLeftEyeG);
-	if (m_pRightEyeG != NULL)
-		m_pRightEyeG->SetTransparency(kRenderNone, 0, 0, 0, 0, kRenderFxNone);
-		UTIL_Remove(m_pRightEyeG);
-	if (m_pLeftEyeT != NULL)
-		UTIL_Remove(m_pLeftEyeT);
-	if (m_pRightEyeT != NULL)
-		UTIL_Remove(m_pRightEyeT);
+#endif
 
+	for (int i = 0; i < 2; i++)
+	{
+		if (m_pEyeGlow[i].Get())
+			m_pEyeGlow[i]->Remove();
+		if (m_pEyeTrail[i].Get())
+			m_pEyeTrail[i]->Remove();
+	}
 
 	BaseClass::Event_Killed( info );
 }
@@ -3022,6 +3002,7 @@ bool CNPC_Combine::CanAltFireEnemy( bool bUseFreeKnowledge )
 //-----------------------------------------------------------------------------
 bool CNPC_Combine::CanGrenadeEnemy( bool bUseFreeKnowledge )
 {
+#ifndef HLR
 	if( IsElite() )
 		return false;
 
@@ -3046,8 +3027,9 @@ bool CNPC_Combine::CanGrenadeEnemy( bool bUseFreeKnowledge )
 			return CanThrowGrenade( GetEnemies()->LastSeenPosition( pEnemy ) );
 		}
 	}
-
+#endif
 	return false;
+
 }
 
 //-----------------------------------------------------------------------------

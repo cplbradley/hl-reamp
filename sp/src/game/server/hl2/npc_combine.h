@@ -156,10 +156,8 @@ public:
 protected:
 	void			SetKickDamage( int nDamage ) { m_nKickDamage = nDamage; }
 	CAI_Sentence< CNPC_Combine > *GetSentences() { return &m_Sentences; }
-	CHandle<CSprite>		m_pLeftEyeG;
-	CHandle<CSprite>		m_pRightEyeG;
-	CHandle<CSpriteTrail>	m_pLeftEyeT;
-	CHandle<CSpriteTrail>	m_pRightEyeT;
+	CHandle<CSprite>		m_pEyeGlow[2];
+	CHandle<CSpriteTrail>	m_pEyeTrail[2];
 
 private:
 	//=========================================================

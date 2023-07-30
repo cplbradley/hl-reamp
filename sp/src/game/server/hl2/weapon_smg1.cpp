@@ -325,6 +325,7 @@ void CWeaponSMG1::Precache( void )
 {
 	UTIL_PrecacheOther("grenade_ar2");
 	UTIL_PrecacheOther("npc_plasma_ball");
+	SetSkin(1);
 
 	BaseClass::Precache();
 }

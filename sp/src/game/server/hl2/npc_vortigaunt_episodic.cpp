@@ -29,7 +29,7 @@
 #include "particle_system.h"
 #include "ai_senses.h"
 #include "npc_vortigaunt_episodic.h"
-#include "hlr/hlr_projectile.h"
+#include "hlr/util/hlr_projectile.h"
 #include "ai_tacticalservices.h"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

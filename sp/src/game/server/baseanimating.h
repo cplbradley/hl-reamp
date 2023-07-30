@@ -90,6 +90,8 @@ public:
 	inline int GetSequence() { return m_nSequence; }
 	virtual void SetSequence(int nSequence);
 	/* inline */ void ResetSequence(int nSequence);
+	void SetSkin(int skin) { m_nSkin = skin; }
+	int GetSkin() {return m_nSkin;}
 	// FIXME: push transitions support down into CBaseAnimating?
 	virtual bool IsActivityFinished( void ) { return m_bSequenceFinished; }
 	inline bool IsSequenceFinished( void ) { return m_bSequenceFinished; }
@@ -297,9 +299,6 @@ public:
 	void InputIgniteNumHitboxFires( inputdata_t &inputdata );
 	void InputIgniteHitboxFireScale( inputdata_t &inputdata );
 	void InputBecomeRagdoll( inputdata_t &inputdata );
-
-
-	void SetMuzzleLight(int r, int g, int b);
 
 	// Dissolve, returns true if the ragdoll has been created
 	bool Dissolve( const char *pMaterialName, float flStartTime, bool bNPCOnly = true, int nDissolveType = 0, Vector vDissolverOrigin = vec3_origin, int iMagnitude = 0 );

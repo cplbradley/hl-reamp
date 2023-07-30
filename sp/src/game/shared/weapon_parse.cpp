@@ -342,16 +342,21 @@ FileWeaponInfo_t::FileWeaponInfo_t()
 	iSpriteCount = 0;
 	iconActive = 0;
 	iconInactive = 0;
+	iconWheelActive = 0;
+	iconWheelInactive = 0;
 	iconAmmo = 0;
 	iconAmmo2 = 0;
 	iconHUDAmmo = 0;
 	iconCrosshair = 0;
+	iconCrosshairAlt = 0;
 	iconAutoaim = 0;
 	iconZoomedCrosshair = 0;
 	iconZoomedAutoaim = 0;
 	bShowUsageHint = false;
 	m_bAllowFlipping = true;
 	m_bBuiltRightHanded = true;
+	classicOffset = vec3_origin;
+	classicAngOffset = vec3_angle;
 }
 
 #ifdef CLIENT_DLL
@@ -469,27 +474,27 @@ void FileWeaponInfo_t::Parse( KeyValues *pKeyValuesData, const char *szWeaponNam
 			}
 		}
 	}
-	KeyValues *pEt = pKeyValuesData->FindKey("ExpOffset");
-	KeyValues *pAEt = pKeyValuesData->FindKey("ExpAngleOffset");
-	if (pEt)
+	KeyValues *pCO = pKeyValuesData->FindKey("ClassicOffset");
+	KeyValues *pCOA = pKeyValuesData->FindKey("ClassicAngleOffset");
+	if (pCO)
 	{
-		m_expOffset.x = pEt->GetFloat("x", 0.0f);
-		m_expOffset.y = pEt->GetFloat("y", 0.0f);
-		m_expOffset.z = pEt->GetFloat("z", 0.0f);
+		classicOffset.x = pCO->GetFloat("x", 0.0f);
+		classicOffset.y = pCO->GetFloat("y", 0.0f);
+		classicOffset.z = pCO->GetFloat("z", 0.0f);
 	}
 	else
 	{
-		m_expOffset = vec3_origin;
+		classicOffset = vec3_origin;
 	}
-	if (pAEt)
+	if (pCOA)
 	{
-		m_expOriOffset.x = pAEt->GetFloat("x", 0.0f);
-		m_expOriOffset.y = pAEt->GetFloat("y", 0.0f);
-		m_expOriOffset.z = pAEt->GetFloat("z", 0.0f);
+		classicAngOffset.x = pCOA->GetFloat("x", 0.0f);
+		classicAngOffset.y = pCOA->GetFloat("y", 0.0f);
+		classicAngOffset.z = pCOA->GetFloat("z", 0.0f);
 	}
 	else
 	{
-		m_expOriOffset = vec3_angle;
+		classicAngOffset = vec3_angle;
 	}
 }
 

@@ -4,19 +4,21 @@
 // http://dev.wallworm.com 
 
 $scale 1.0
-$modelname	"weapons/v_plasmarifle_hands.mdl"
-$origin 0 0 64.5
-$body v_plasmarifle "plasmarifle2021.smd"
+$modelname	"weapons/v_plasmarifle.mdl"
+$origin 0 0 64
+$body v_plasmarifle "plasmarifle_2023.smd"
 $model hands "v_hands_mark6.smd"
 $contents "solid"
-$attachment "barrel" "Stock_Handle" 0.00 -30.00 0.00 rotate 0 0 -0
+$attachment "barrel_vm" "PlasmaRifle" 0.00 -32.00 3.00 rotate 0 180 0
+$attachment "vent" "Plasmarifle_barrel" 0.00 -15.00 3.00 rotate 0 0 0
 $cdmaterials "models/weapons/plasmarifle"
 $cdmaterials "models/weapons/v_hands"
-$sequence draw "pr2022_draw" fps 30.0 activity ACT_VM_DRAW -1.0 fadein 0.2 fadeout 0.2 
-$sequence fire1 "pr2022_f1" fps 30.0 activity ACT_VM_PRIMARYATTACK -1.0 fadein 0.2 fadeout 0.2 snap 
-$sequence fire2 "pr2022_f2" fps 30.0 activity ACT_VM_RECOIL1 -1.0 fadein 0.2 fadeout 0.2 snap 
-$sequence fire3 "pr2022_f3" fps 30.0 activity ACT_VM_RECOIL2 -1.0 fadein 0.2 fadeout 0.2 snap 
-$sequence fire4 "pr2022_f4" fps 30.0 activity ACT_VM_RECOIL3 -1.0 fadein 0.2 fadeout 0.2 snap 
-$sequence idle "pr2022_idle" fps 4.0 activity ACT_VM_IDLE -1.0 loop  fadein 0.2 fadeout 0.2 
+$sequence draw "plasmarifle_2023_draw" fps 30.0 activity ACT_VM_DRAW -1.0 fadein 0.2 fadeout 0.2 
+$sequence fire1 "plasmarifle_2023_fire1" fps 30.0 activity ACT_VM_PRIMARYATTACK -1.0 fadein 0.2 fadeout 0.2 snap 
+$sequence fire2 "plasmarifle_2023_fire2" fps 30.0 activity ACT_VM_RECOIL1 -1.0 fadein 0.2 fadeout 0.2 snap 
+$sequence fire3 "plasmarifle_2023_fire3" fps 30.0 activity ACT_VM_RECOIL2 -1.0 fadein 0.2 fadeout 0.2 snap 
+$sequence fire4 "plasmarifle_2023_fire4" fps 30.0 activity ACT_VM_RECOIL3 -1.0 fadein 0.2 fadeout 0.2 snap 
+$sequence idle "plasmarifle_2023_idle" fps 4.0 activity ACT_VM_IDLE -1.0 loop  fadein 0.2 fadeout 0.2 
+$sequence overheat "plasmarifle_2023_overheat" activity ACT_VM_RELEASE -1 snap
 
 $include	"v_plasmarifle_wwmt_custom.qci"

@@ -71,6 +71,10 @@ public:
 	void	SeekThink( void );
 	void	DumbFire( void );
 	void	SetGracePeriod( float flGracePeriod );
+	void	DefferExplosion(float flwaittime);
+	void	EnabledExplosion();
+	void	ReturnToSender(Vector vecStart, Vector vecEnd, QAngle angle);
+	bool	IsHitEntityWarrior(CBaseEntity* pOther);
 
 	int		OnTakeDamage_Alive( const CTakeDamageInfo &info );
 	void	Event_Killed( const CTakeDamageInfo &info );
@@ -94,6 +98,8 @@ protected:
 	virtual int AugerHealth() { return m_iMaxHealth - 20; }
 
 	// Creates the smoke trail
+
+	bool m_bExplosionAllowed;
 
 
 	// Gets the shooting position 

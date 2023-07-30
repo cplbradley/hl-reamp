@@ -214,7 +214,7 @@ namespace vgui
 		void LocalToScreen(int& x, int& y);
 		void ScreenToLocal(int& x, int& y);
 		void ParentLocalToScreen(int& x, int& y);
-		void MakePopup(bool showTaskbarIcon = true, bool disabled = false);		// turns the panel into a popup window (ie. can draw outside of it's parents space)
+		void MakePopup(bool showTaskbarIcon = true, bool disabled = false, bool kb = true);	// turns the panel into a popup window (ie. can draw outside of it's parents space)
 		virtual void OnMove();
 
 		// panel hierarchy
@@ -326,6 +326,8 @@ namespace vgui
 		virtual void SetPaintEnabled(bool state);
 		virtual void SetPostChildPaintEnabled(bool state);
 		virtual void SetPaintBackgroundType(int type);  // 0 for normal(opaque), 1 for single texture from Texture1, and 2 for rounded box w/ four corner textures
+
+
 		virtual void GetInset(int& left, int& top, int& right, int& bottom);
 		virtual void GetPaintSize(int& wide, int& tall);
 		virtual void SetBuildGroup(BuildGroup* buildGroup);
@@ -420,6 +422,8 @@ namespace vgui
 		static Panel* GetPanelWithKeyBindings(KeyBindingContextHandle_t handle, int index);
 
 		static void			RevertKeyBindings(KeyBindingContextHandle_t handle);
+
+
 
 		static void			ReloadKeyBindings(KeyBindingContextHandle_t handle);
 		static void			SaveKeyBindings(KeyBindingContextHandle_t handle);

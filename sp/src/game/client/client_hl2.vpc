@@ -9,37 +9,20 @@ $Macro GAMENAME 	"hl2" [!$SOURCESDK]
 $Macro GAMENAME 	"mod_hl2" [$SOURCESDK]
 
 $Include "$SRCDIR\game\client\client_base.vpc"
-$Include "$SRCDIR\game\protobuf_include.vpc"
 
 $Configuration
 {
 	$Compiler
 	{
-		$AdditionalIncludeDirectories	".\hl2;./ShaderEditor;.\hl2\elements;.\hlr;$SRCDIR\game\shared\hl2;$BASE;$SRCDIR\fmod\inc"
-		$PreprocessorDefinitions		"$BASE;HL2_CLIENT_DLL;SOURCE_2013;"
+		$AdditionalIncludeDirectories	".\hl2;./ShaderEditor;.\hl2\elements;.\hlr;.\hlr\entites;.\hlr\hud;.\hlr\npc;.\hlr\util;.\hlr\vgui;.\hlr\weapons;$SRCDIR\game\shared\hl2;$BASE;$SRCDIR\fmod\inc"
+		$PreprocessorDefinitions		"$BASE;HL2_CLIENT_DLL;SOURCE_2013;HLR_CLIENT;HLR;"
 	}
 }
 
-$Project "Client (HL2)"
+$Project "Client"
 {
 	$Folder	"Source Files"
 	{
-	$Folder "Shader Editor" [$WIN32]
-		{
-			$Folder	"Header Files"
-			{
-				$File	"ShaderEditor\ISEdit_ModelRender.h"
-				$File	"ShaderEditor\IVShaderEditor.h"
-				$File	"ShaderEditor\ShaderEditorSystem.h"
-				$File	"ShaderEditor\SEdit_ModelRender.h"
-			}
-		
-			$Folder	"Implementation Files"
-			{
-				$File	"$SRCDIR\game\client\ShaderEditor\ShaderEditorSystem.cpp"
-				$File	"$SRCDIR\game\client\ShaderEditor\SEdit_ModelRender.cpp"
-			}
-		}
 		$File	"hud_chat.cpp"
 		$File	"c_team_objectiveresource.cpp"
 		$File	"c_team_objectiveresource.h"
@@ -133,56 +116,6 @@ $Project "Client (HL2)"
 			$File	"episodic\episodic_screenspaceeffects.h"
 			$File	"episodic\flesh_internal_material_proxy.cpp"
 
-		}
-		$Folder "HLR"
-		{
-			$File "hlr/c_actual_bullet.cpp"
-			$File "hlr/c_hlr_environmental_resistance.cpp"
-			$File "hlr/hud_environmental_resistance.cpp"
-			$File "hlr/hud_environmental_resistance.h"
-			$File "hlr/c_hlr_floorsprite.cpp"
-			$File "hlr/c_hlr_keycard.cpp"
-			$File "hlr/c_hlr_skullkey.cpp"
-			$File "hlr/c_hlr_powerups.cpp"
-			$File "hlr/c_npc_antlionwarrior.cpp"
-			$File "hlr/c_npc_vortboss.cpp"
-			$File "hlr/hlr_bonusoptions.cpp"
-			$File "hlr/hud_bluekey.cpp"
-			$File "hlr/hud_bluekey.h"
-			$File "hlr/hud_purplekey.h"
-			$File "hlr/hud_purplekey.cpp"
-			$File "hlr/hud_redkey.cpp"
-			$File "hlr/hud_redkey.h"
-			$File "hlr/hud_deathskull.cpp"
-			$File "hlr/hud_deathskull.h"
-			$File "hlr/hud_healthbar.cpp"
-			$File "hlr/hud_healthbar.h"
-			$File "hlr/hud_poweruptime.cpp"
-			$File "hlr/hud_poweruptime.h"
-			$File "hlr/hud_railgun_screen.cpp"
-			$File "hlr/hud_skullkey.cpp"
-			$File "hlr/hud_skullkey.h"
-			$File "hlr/IBonusOptions.h"
-			$File "hlr/mapload_background.cpp"
-			$File "hlr/mapload_background.h"
-			$File "$SRCDIR\game\shared\singleplayer_animstate.cpp"
-			$File "$SRCDIR\game\shared\singleplayer_animstate.h"
-			$File "$SRCDIR\game\shared\hl2\hlr\hlr_shareddefs.h"
-			$File "c_movie_display.h"
-			$File "c_movie_display.cpp"	
-			$File "hlr/hlr_masochistmode.cpp"
-			$File "hlr/ISM30panel.h"
-			$File "hlr/vgui_sm30error.cpp"
-			$File "hlr/hud_itempickup.h"
-			$File "hlr/hud_itempickup.cpp"
-			$File "hlr/hud_weaponwheel.cpp"
-		}
-		$Folder "FMOD"
-		{
-			$File "fmod/fmod_system.cpp"
-			$File "fmod/fmod_system.h"
-			$File "$SRCDIR\game\shared\fmod\fmod_dynamic_player.cpp"
-			$File "$SRCDIR\game\shared\fmod\fmod_dynamic_player.h"
 		}
 	}
 }

@@ -50,6 +50,10 @@ public:
 	void	SecondaryAttack( void );
 	void	DecrementAmmo( CBaseCombatCharacter *pOwner );
 	void	ItemPostFrame( void );
+	void	ItemHolsterFrame(void);
+
+
+	bool	IsCharging() { return m_bIsCharging; }
 
 
 	void	WeaponIdle(void);
@@ -79,6 +83,11 @@ private:
 	
 	int		m_AttackPaused;
 	bool	m_fDrawbackFinished;
+	bool	m_bFocused;
+
+	CNetworkVar(bool,m_bIsCharging);
+
+	CNetworkVar(float,m_fChargedMultiplier);
 protected:
 	CHandle<CBaseGrenade> m_Grenada;
 	DECLARE_ACTTABLE();
@@ -92,6 +101,8 @@ BEGIN_DATADESC( CWeaponFrag )
 	DEFINE_FIELD( m_Grenada, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_AttackPaused, FIELD_INTEGER ),
 	DEFINE_FIELD( m_fDrawbackFinished, FIELD_BOOLEAN ),
+	DEFINE_FIELD(m_bIsCharging,FIELD_BOOLEAN),
+	DEFINE_FIELD(m_fChargedMultiplier,FIELD_FLOAT),
 END_DATADESC()
 
 acttable_t	CWeaponFrag::m_acttable[] = 
@@ -114,6 +125,8 @@ LINK_ENTITY_TO_CLASS( weapon_frag, CWeaponFrag );
 PRECACHE_WEAPON_REGISTER(weapon_frag);
 
 IMPLEMENT_SERVERCLASS_ST(CWeaponFrag, DT_WeaponFrag)
+SendPropFloat(SENDINFO(m_fChargedMultiplier)),
+SendPropBool(SENDINFO(m_bIsCharging)),
 END_SEND_TABLE()
 
 
@@ -158,6 +171,12 @@ bool CWeaponFrag::Holster( CBaseCombatWeapon *pSwitchingTo )
 	m_fDrawbackFinished = false;
 
 	m_iLastFireAct = 0;
+	m_bFocused = false;
+	m_bIsCharging = false;
+	m_fChargedMultiplier = 0.0f;
+
+	CBasePlayer* pPlayer = ToBasePlayer(GetOwner());
+	pPlayer->SetFOV(this, 0, 0.2f);
 
 	return BaseClass::Holster( pSwitchingTo );
 }
@@ -323,16 +342,18 @@ void CWeaponFrag::PrimaryAttack(void)
 	Vector vecAng;
 	pPlayer->EyeVectors(&vecAng);
 	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
+	ConVarRef classicpos("r_classic_weapon_pos");
+	float right = classicpos.GetBool() ? 0.0f : 6.0f;
 	QAngle qEyeAng = pPlayer->EyeAngles();
-	Vector	muzzlePoint = pPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * 6.0f + vUp * -3.0f;
+	Vector	muzzlePoint = pPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * right + vUp * -3.0f;
 	Vector vecSrc = vecEye + vForward * 18.0f + vRight * 8.0f + Vector(0, 0, -8);
 	//CheckThrowPosition(pPlayer, vecEye, vecSrc);
 
 	float vertfactor = sk_plr_grenade_vert_factor.GetFloat();
-	Vector vecThrow = vecAng * sk_plr_grenade_launch_speed.GetFloat() + Vector(0, 0, vertfactor);
+	Vector vecThrow = vecAng * (sk_plr_grenade_launch_speed.GetFloat() * (1.0f + m_fChargedMultiplier)) + Vector(0, 0, vertfactor);
 	Fraggrenade_Create(muzzlePoint, vec3_angle, vecThrow, AngularImpulse(random->RandomInt(-600, 600), random->RandomInt(-600, 600),0), pPlayer, 3.0f, false);
 	
-
+	DevMsg("Launching Grenade at Speed %f\n", sk_plr_grenade_launch_speed.GetFloat() * (1.0f + m_fChargedMultiplier));
 
 	
 	if (pPlayer->HasOverdrive())
@@ -395,7 +416,7 @@ void CWeaponFrag::DecrementAmmo( CBaseCombatCharacter *pOwner )
 //-----------------------------------------------------------------------------
 void CWeaponFrag::SecondaryAttack(void)
 {
-	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+	/*CBasePlayer* pPlayer = ToBasePlayer(GetOwner());
 	Vector	vecEye = pPlayer->EyePosition();
 	Vector	vForward, vRight, vUp;
 	Vector vecAng;
@@ -420,14 +441,56 @@ void CWeaponFrag::SecondaryAttack(void)
 	m_iPrimaryAttacks++;
 	gamestats->Event_WeaponFired(pPlayer, true, GetClassname());
 
-	DecrementAmmo(GetOwner());
+	DecrementAmmo(GetOwner());*/
+
+
 }
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CWeaponFrag::ItemPostFrame( void )
 {
-	if( m_fDrawbackFinished )
+	CBasePlayer* pPlayer = ToBasePlayer(GetOwner());
+
+	m_fChargedMultiplier = MIN(2.0f, m_fChargedMultiplier);
+	m_fChargedMultiplier = MAX(0.0f, m_fChargedMultiplier);
+
+	if (gpGlobals->curtime > m_flNextSecondaryAttack)
+	{
+		if (pPlayer->m_nButtons & IN_ATTACK2)
+		{
+			pPlayer->m_nButtons &= ~IN_ATTACK;
+			m_bIsCharging = true;
+			m_fChargedMultiplier += 0.02f;
+		}
+		else
+		{
+			if (IsCharging())
+			{
+				m_bIsCharging = false;
+				PrimaryAttack();
+				m_fChargedMultiplier = 0.0f;
+			}
+		}
+	}
+
+	if (IsCharging())
+	{
+		if (!m_bFocused)
+		{
+			pPlayer->SetFOV(this, pPlayer->GetDefaultFOV() - 20, 1.5f);
+			m_bFocused = true;
+			pPlayer->m_bFocused = true;
+			pPlayer->m_fFocusOffsetTime = 1.5f;
+		}
+	}
+	else if (m_bFocused)
+	{
+		pPlayer->SetFOV(this, 0, 0.2f);
+		m_bFocused = false;
+		pPlayer->m_bFocused = false;
+	}
+	/*if (m_fDrawbackFinished)
 	{
 		CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 
@@ -467,7 +530,7 @@ void CWeaponFrag::ItemPostFrame( void )
 			}
 		}
 	}
-
+	*/
 	BaseClass::ItemPostFrame();
 
 	if ( m_bRedraw )
@@ -591,3 +654,8 @@ void CWeaponFrag::RollGrenade( CBasePlayer *pPlayer )
 	gamestats->Event_WeaponFired( pPlayer, true, GetClassname() );
 }
 
+
+void CWeaponFrag::ItemHolsterFrame(void)
+{
+	BaseClass::ItemHolsterFrame();
+}

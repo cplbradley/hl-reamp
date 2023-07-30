@@ -211,6 +211,7 @@ struct CallbackData_t
 		player_speed.Init();
 		player_pos.Init();
 		view_distance.Init();
+		resolution.Init();
 	};
 	Vector4D sun_data;
 	Vector sun_dir;
@@ -218,6 +219,7 @@ struct CallbackData_t
 	Vector4D player_speed;
 	Vector player_pos;
 	Vector view_distance;
+	Vector2D resolution;
 };
 
 static CallbackData_t clCallback_data;
@@ -282,8 +284,17 @@ void ShaderEditorHandler::PrepareCallbackData()
 		clCallback_data.player_pos = pPlayer->GetLocalOrigin();
 
 	}
+
+	clCallback_data.resolution[0] = ScreenWidth();
+	clCallback_data.resolution[1] = ScreenHeight();
 }
 
+pFnClCallback_Declare(ClCallback_Resolution)
+{
+	m_Lock.Lock();
+	Q_memcpy(pfl4, clCallback_data.resolution.Base(), sizeof(float) * 2);
+	m_Lock.Unlock();
+}
 pFnClCallback_Declare( ClCallback_SunData )
 {
 	m_Lock.Lock();
@@ -324,6 +335,7 @@ void ShaderEditorHandler::RegisterCallbacks()
 		return;
 
 	// 4 components max
+	shaderEdit->RegisterClientCallback("resolution", ClCallback_Resolution, 2);
 	shaderEdit->RegisterClientCallback( "sun data", ClCallback_SunData, 4 );
 	shaderEdit->RegisterClientCallback( "sun dir", ClCallback_SunDirection, 3 );
 	shaderEdit->RegisterClientCallback( "local player velocity", ClCallback_PlayerVelocity, 4 );

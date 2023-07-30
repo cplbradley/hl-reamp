@@ -871,7 +871,7 @@ LINK_ENTITY_TO_CLASS(trigger_heal, CTriggerHeal);
 
 
 BEGIN_DATADESC(CTriggerHeal)
-	DEFINE_KEYFIELD(bHealShields,FIELD_BOOLEAN,"HealShields"),
+	DEFINE_KEYFIELD(bHealShields,FIELD_INTEGER,"HealShields"),
 	DEFINE_KEYFIELD(m_iHealAmount,FIELD_INTEGER,"HealAmount"),
 	DEFINE_KEYFIELD(m_fHealFrequency,FIELD_FLOAT,"HealFrequency"),
 
@@ -893,14 +893,24 @@ void CTriggerHeal::Spawn(void)
 void CTriggerHeal::HealThink(void)
 {
 	CBasePlayer* pPlayer = UTIL_GetLocalPlayer();
-	pPlayer->TakeHealth(m_iHealAmount, DMG_GENERIC);
+	if (!pPlayer)
+		return;
+	CHL2_Player* pHL2 = dynamic_cast<CHL2_Player*>(pPlayer);
 
-	if (bHealShields)
+	switch (bHealShields)
 	{
-		CHL2_Player* pHL2 = dynamic_cast<CHL2_Player*>(pPlayer);
+	case 0:
+		pPlayer->TakeHealth(m_iHealAmount, DMG_GENERIC);
+		break;
+	case 1:
+		pPlayer->TakeHealth(m_iHealAmount, DMG_GENERIC);
+	case 2:
 		pHL2->ApplyArmor(m_iHealAmount);
+		break;
+	default:
+		pPlayer->TakeHealth(m_iHealAmount, DMG_GENERIC);
+		break;
 	}
-
 	SetNextThink(gpGlobals->curtime + m_fHealFrequency);
 }
 
@@ -2849,6 +2859,8 @@ private:
 	EHANDLE m_hPlayer;
 	EHANDLE m_hTarget;
 
+	float m_fFOVChangeRate;
+
 	// used for moving the camera along a path (rail rides)
 	CBaseEntity *m_pPath;
 	string_t m_sPath;
@@ -2920,6 +2932,7 @@ BEGIN_DATADESC( CTriggerCamera )
 	DEFINE_FIELD( m_nPlayerButtons, FIELD_INTEGER ),
 	DEFINE_FIELD( m_nOldTakeDamage, FIELD_INTEGER ),
 	DEFINE_KEYFIELD( m_camFOV, FIELD_FLOAT, "CameraFOV"),
+	DEFINE_KEYFIELD(m_fFOVChangeRate,FIELD_FLOAT,"FOVChangeRate"),
 
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
@@ -3080,7 +3093,7 @@ void CTriggerCamera::Enable( void )
 	if (thirdperson.GetBool())
 		engine->ClientCommand(pPlayer->edict(),"firstperson\n");
 
-	pPlayer->SetFOV(this, m_camFOV, 0.2f);
+	pPlayer->SetFOV(this, m_camFOV, m_fFOVChangeRate);
 
 	if (HasSpawnFlags(SF_CAMERA_CINEMATIC))
 	{
@@ -3225,7 +3238,7 @@ void CTriggerCamera::Disable( void )
 
 		((CBasePlayer*)m_hPlayer.Get())->SetViewEntity( m_hPlayer );
 		((CBasePlayer*)m_hPlayer.Get())->EnableControl(TRUE);
-		((CBasePlayer*)m_hPlayer.Get())->SetFOV(this, 0, 0.2f);
+		((CBasePlayer*)m_hPlayer.Get())->SetFOV(this, 0, m_fFOVChangeRate);
 
 
 		// Restore the player's viewmodel

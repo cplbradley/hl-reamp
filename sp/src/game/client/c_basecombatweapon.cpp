@@ -263,7 +263,10 @@ void C_BaseCombatWeapon::DrawCrosshair()
 	if ( !crosshair )
 		return;
 
-	crosshair->SetCrosshair(GetWpnData().iconCrosshair, clr);
+	if (player->m_bUseAltCrosshair)
+		crosshair->SetCrosshair(GetWpnData().iconCrosshairAlt, gHUD.GetDefaultColor());
+	else
+		crosshair->SetCrosshair(GetWpnData().iconCrosshair, clr);
 	// Find out if this weapon's auto-aimed onto a target
 	/*bool bOnTarget = ( m_iState == WEAPON_IS_ONTARGET );
 	

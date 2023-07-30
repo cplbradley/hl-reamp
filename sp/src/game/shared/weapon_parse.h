@@ -128,14 +128,17 @@ public:
 	CHudTexture 					*iconZoomedAutoaim;
 	CHudTexture						*iconSmall;
 	CHudTexture						*iconHUDAmmo;
+	CHudTexture* iconWheelActive;
+	CHudTexture* iconWheelInactive;
+	CHudTexture* iconCrosshairAlt;
 
 // TF2 specific
 	bool					bShowUsageHint;							// if true, then when you receive the weapon, show a hint about it
 
 // SERVER DLL
 
-	Vector m_expOffset; //ADDED
-	QAngle m_expOriOffset; //ADDED
+	Vector classicOffset; //ADDED
+	QAngle classicAngOffset; //ADDED
 
 };
 

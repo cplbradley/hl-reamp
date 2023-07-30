@@ -797,6 +797,8 @@ CAI_Node *CAI_TacticalServices::FindTeleportNode(const Vector& vNearPos, const V
 	if (!CAI_NetworkManager::NetworksLoaded())
 		return NULL;
 
+	if (GetNetwork()->NumNodes() == 0)
+		return NULL;
 	float flMyZ = GetOuter()->GetAbsOrigin().z;
 	int iMyNode = GetPathfinder()->NearestNodeToPoint(vNearPos);
 

@@ -14,7 +14,7 @@
 #include "globalstate.h"
 #include "soundent.h"
 #include "npc_citizen17.h"
-#include "hlr/hlr_projectile.h"
+#include "hlr/util/hlr_projectile.h"
 #include "gib.h"
 #include "spotlightend.h"
 #include "IEffects.h"

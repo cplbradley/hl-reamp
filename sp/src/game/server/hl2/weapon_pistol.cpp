@@ -17,7 +17,7 @@
 #include "game.h"
 #include "vstdlib/random.h"
 #include "particle_parse.h"
-#include "hlr/hlr_projectile.h"
+#include "hlr/util/hlr_projectile.h"
 #include "hl2_gamerules.h"
 #include "gamestats.h"
 

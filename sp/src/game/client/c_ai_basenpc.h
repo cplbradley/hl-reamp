@@ -48,7 +48,7 @@ public:
 	bool m_bShouldDrawShieldOverlay;
 	int m_iVortEffectType;
 
-	bool InterpScale();
+	void InterpScale();
 	float flscale;
 
 private:
@@ -74,6 +74,7 @@ private:
 	int shieldtimer;
 
 	IMaterial* GetShieldType(int vorttype);
+	IMaterial* GetNightVisionOverlay() { return materials->FindMaterial("engine/nightvision_enemyoverlay", TEXTURE_GROUP_OTHER); }
 
 	const char* GetStartParticle();
 	const char* GetBurstParticle();

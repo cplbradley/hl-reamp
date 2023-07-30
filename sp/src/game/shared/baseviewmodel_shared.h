@@ -32,6 +32,10 @@ class CBaseViewModel : public CBaseAnimating, public IHasOwner
 {
 	DECLARE_CLASS( CBaseViewModel, CBaseAnimating );
 public:
+	bool m_bFocused; //ADDED
+	float m_fCurtime;
+	float m_fVMDelta;
+	float gIronsightedTime;
 
 	DECLARE_NETWORKCLASS();
 	DECLARE_PREDICTABLE();

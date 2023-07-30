@@ -39,6 +39,7 @@ public:
 	void	AddViewKick( void );
 
 	void PrimaryAttack(void);
+	void SendData();
 
 	void UpdateWeaponSoundState(void);
 	int m_iWeaponState;
@@ -85,14 +86,7 @@ public:
 
 	float GetMaxFirerate();
 
-	virtual const Vector& GetBulletSpread( void )
-	{
-		static Vector cone;
-		
-		cone = AmFocusFiring() ? VECTOR_CONE_1DEGREES : VECTOR_CONE_3DEGREES;
-
-		return cone;
-	}
+	Vector GetSpread(void);
 
 	const WeaponProficiencyInfo_t *GetProficiencyValues();
 
@@ -102,6 +96,8 @@ protected:
 	float					m_flDelayedFire;
 	bool					m_bShotDelayed;
 	int						m_nVentPose;
+	bool					bActive;
+	int						iNumShots;
 	
 	DECLARE_ACTTABLE();
 	DECLARE_DATADESC();

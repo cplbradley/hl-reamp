@@ -573,8 +573,7 @@ void CHL2_Player::PreThink(void)
 
 		UTIL_PredictedPosition( this, player_showpredictedposition_timestep.GetFloat(), &predPos );
 
-		NDebugOverlay::Box( predPos, NAI_Hull::Mins( GetHullType() ), NAI_Hull::Maxs( GetHullType() ), 0, 255, 0, 0, 0.01f );
-		NDebugOverlay::Line( GetAbsOrigin(), predPos, 0, 255, 0, 0, 0.01f );
+		NDebugOverlay::Cross3D(predPos, 32.0f, 0, 255, 0, false, 0.1f);
 	}
 
 #ifdef HL2_EPISODIC
@@ -1421,8 +1420,10 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 
 	Activity idealActivity = ACT_HL2MP_RUN;
 
-	if (GetGroundEntity() == NULL)
+	if (GetGroundEntity() == NULL || !(GetFlags() & FL_ONGROUND))
+	{
 		idealActivity = ACT_HL2MP_JUMP;
+	}
 
 	if (playerAnim == PLAYER_START_GROUNDPOUND)
 		idealActivity = ACT_HLR_GROUNDPOUND_START;

@@ -26,6 +26,7 @@ typedef enum { matGlass = 0, matWood, matMetal, matFlesh, matCinderBlock, matCei
 #define SF_BREAK_PHYSICS_BREAK_IMMEDIATELY	0x0200	// the first physics collision this breakable has will immediately break it
 #define SF_BREAK_DONT_TAKE_PHYSICS_DAMAGE	0x0400	// this breakable doesn't take damage from physics collisions
 #define SF_BREAK_NO_BULLET_PENETRATION		0x0800  // don't allow bullets to penetrate
+#define SF_BREAK_REVERSE_DIRECTION			0x1000
 
 // Spawnflags for func_pushable (it's also func_breakable, so don't collide with those flags)
 #define SF_PUSH_BREAKABLE					0x0080

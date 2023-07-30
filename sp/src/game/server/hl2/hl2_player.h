@@ -14,7 +14,7 @@
 #include "hl2_playerlocaldata.h"
 #include "simtimer.h"
 #include "soundenvelope.h"
-#include "hlr/hlr_floorsprite.h"
+#include "hlr/player/hlr_floorsprite.h"
 #include "singleplayer_animstate.h"
 
 

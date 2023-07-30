@@ -1,0 +1,32 @@
+// Includes
+#include "common_ps_fxc.h"
+#include "common_vertexlitgeneric_dx9.h"
+#include "common_lightmappedgeneric_fxc.h"
+#include "common_flashlight_fxc.h"
+
+sampler NOISESAMPLER	: register (s0);
+const float2 cRandFloat : register( c16 );
+struct PS_INPUT
+{
+	float4 vTexCoord_0			:	TEXCOORD0;
+};
+
+struct PS_OUTPUT
+{
+	float4 vColor_0				:	COLOR0;
+};
+
+// Entry point
+PS_OUTPUT main( const PS_INPUT In )
+{
+	PS_OUTPUT Out;
+	float2 viewProjUV = (In.vTexCoord_0.xy / In.vTexCoord_0.w) * 10;
+	float2 scatteredUV = viewProjUV + cRandFloat;
+	float4 noiseTex = tex2D(NOISESAMPLER,scatteredUV);
+	
+	float4 baseColor = float4(1,0,0,1);
+	
+	Out.vColor_0 = baseColor * noiseTex;
+	Out.vColor_0.a = 1;
+	return Out;
+}

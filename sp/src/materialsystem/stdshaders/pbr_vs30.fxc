@@ -4,6 +4,9 @@
 //
 //==================================================================================================
 
+
+//	STATIC: "ISDECAL"						"0..1"
+
 //  DYNAMIC: "COMPRESSED_VERTS"         "0..1"
 //  DYNAMIC: "DOWATERFOG"               "0..1"
 //  DYNAMIC: "SKINNING"                 "0..1"
@@ -14,7 +17,7 @@
 
 static const bool g_bSkinning           = SKINNING ? true : false;
 static const int g_FogType              = DOWATERFOG;
-const float4 cBaseTexCoordTransform[2]	: register(SHADER_SPECIFIC_CONST_0);
+const float4 cBaseTexCoordTransform[3]	: register(SHADER_SPECIFIC_CONST_0);
 const float4 cDetailTexCoordTransform[2]	: register( SHADER_SPECIFIC_CONST_6 );
 
 //-----------------------------------------------------------------------------
@@ -82,6 +85,10 @@ VS_OUTPUT main( const VS_INPUT v )
 
     o.projPos = vProjPos.xyz;
     o.fog = CalcFog(worldPos, vProjPos.xyz, g_FogType);
+
+#if ISDECAL == 1
+	worldPos += worldNormal * 0.05f * v.vLightmapTexCoordOffset.z;
+#endif
 
     // Needed for water fog alpha and diffuse lighting 
     o.worldPos = worldPos;

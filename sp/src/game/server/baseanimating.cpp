@@ -455,8 +455,12 @@ void CBaseAnimating::StudioFrameAdvanceInternal( CStudioHdr *pStudioHdr, float f
 			GetClassname(), gpGlobals->curtime, 
 			m_flAnimTime.Get(), m_flPrevAnimTime, flInterval, GetCycle() );
 	*/
+	float flmult = 1.0f;
+
+	if (IsNPC() && MyNPCPointer() && MyNPCPointer()->AmBeingBuffed())
+		flmult = 2.0f;
  
-	m_flGroundSpeed = GetSequenceGroundSpeed( pStudioHdr, GetSequence() ) * GetModelScale();
+	m_flGroundSpeed = GetSequenceGroundSpeed( pStudioHdr, GetSequence() ) * GetModelScale() * flmult;
 
 	// Msg("%s : %s : %5.1f\n", GetClassname(), GetSequenceName( GetSequence() ), GetCycle() );
 	InvalidatePhysicsRecursive( ANIMATION_CHANGED );
@@ -902,8 +906,13 @@ void CBaseAnimating::ResetSequenceInfo ( )
 		return;
 	}
 
+	float flmult = 1.0f;
+
+	if (IsNPC() && MyNPCPointer() && MyNPCPointer()->AmBeingBuffed())
+		flmult = 2.0f;
+
 	CStudioHdr *pStudioHdr = GetModelPtr();
-	m_flGroundSpeed = GetSequenceGroundSpeed( pStudioHdr, GetSequence() ) * GetModelScale();
+	m_flGroundSpeed = GetSequenceGroundSpeed( pStudioHdr, GetSequence() ) * GetModelScale() * flmult;
 	m_bSequenceLoops = ((GetSequenceFlags( pStudioHdr, GetSequence() ) & STUDIO_LOOPING) != 0);
 	// m_flAnimTime = gpGlobals->time;
 	m_flPlaybackRate = 1.0;
@@ -3037,7 +3046,7 @@ void CBaseAnimating::DrawServerHitboxes( float duration /*= 0.0f*/, bool monocol
 			b = ( int ) ( 255.0f * hullcolor[j][2] );
 		}
 
-		NDebugOverlay::BoxAngles( position, pbox->bbmin * GetModelScale(), pbox->bbmax * GetModelScale(), angles, r, g, b, 0 ,duration );
+		NDebugOverlay::BoxAngles(position, pbox->bbmin * GetModelScale(), pbox->bbmax * GetModelScale(), angles, r, g, b, 0, duration );
 	}
 }
 
@@ -3360,14 +3369,6 @@ void CBaseAnimating::RefreshCollisionBounds( void )
 	CollisionProp()->RefreshScaledCollisionBounds();
 }
 
-
-
-void CBaseAnimating::SetMuzzleLight(int r, int g, int b)
-{
-	m_iMuzzleR = r;
-	m_iMuzzleG = g;
-	m_iMuzzleB = b;
-}
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 void CBaseAnimating::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bool bCalledByLevelDesigner )

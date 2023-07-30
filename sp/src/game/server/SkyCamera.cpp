@@ -40,7 +40,7 @@ LINK_ENTITY_TO_CLASS( sky_camera, CSkyCamera );
 
 BEGIN_DATADESC( CSkyCamera )
 
-	DEFINE_KEYFIELD( m_skyboxData.scale, FIELD_INTEGER, "scale" ),
+	DEFINE_KEYFIELD( m_skyboxData.scale, FIELD_INTEGER, "skyboxscale" ),
 	DEFINE_FIELD( m_skyboxData.origin, FIELD_VECTOR ),
 	DEFINE_FIELD( m_skyboxData.area, FIELD_INTEGER ),
 	DEFINE_KEYFIELD(m_bUseAnglesForSky, FIELD_BOOLEAN, "use_angles_for_sky"),
@@ -113,6 +113,9 @@ CSkyCamera::CSkyCamera()
 {
 	g_SkyList.Insert( this );
 	m_skyboxData.fog.maxdensity = 1.0f;
+
+	if (m_skyboxData.scale <= 1)
+		m_skyboxData.scale = 16;
 }
 
 CSkyCamera::~CSkyCamera()

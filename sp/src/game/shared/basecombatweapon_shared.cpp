@@ -490,7 +490,14 @@ CHudTexture const *CBaseCombatWeapon::GetSpriteInactive(void) const
 {
 	return GetWpnData().iconInactive;
 }
-
+CHudTexture const* CBaseCombatWeapon::GetWheelIconActive(void) const
+{
+	return GetWpnData().iconWheelActive;
+}
+CHudTexture const* CBaseCombatWeapon::GetWheelIconInactive(void) const
+{
+	return GetWpnData().iconWheelInactive;
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -633,6 +640,17 @@ bool CBaseCombatWeapon::HasAmmo(void)
 	CBasePlayer *player = ToBasePlayer(GetOwner());
 	if (!player)
 		return false;
+
+	if (!Q_strcmp(GetClassname(), "weapon_357"))
+	{
+		if (player->GetAmmoCount(m_iPrimaryAmmoType) < 15)
+			return false;
+	}
+	if (!Q_strcmp(GetClassname(), "weapon_railgun"))
+	{
+		if (player->GetAmmoCount(m_iPrimaryAmmoType) < 15)
+			return false;
+	}
 	return (m_iClip1 > 0 || player->GetAmmoCount(m_iPrimaryAmmoType) || m_iClip2 > 0 || player->GetAmmoCount(m_iSecondaryAmmoType));
 }
 
@@ -2089,10 +2107,7 @@ void CBaseCombatWeapon::WeaponIdle(void)
 //=========================================================
 Activity CBaseCombatWeapon::GetPrimaryAttackActivity(void)
 {
-	if (g_classic_weapon_pos.GetBool() == false)
-		return ACT_VM_PRIMARYATTACK;
-	else
-		return ACT_VM_PRIMARYATTACK_SPECIAL;
+	return ACT_VM_PRIMARYATTACK;
 }
 
 //=========================================================

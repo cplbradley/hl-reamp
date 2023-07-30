@@ -178,17 +178,25 @@ void CWeapon357::PrimaryAttack(void)
 	Vector vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT); //autoaiming for lower difficulties
 	AngleVectors(pPlayer->EyeAngles(), &vecDir);//convert angle into vector
 
+	float downvel = pPlayer->GetAbsVelocity().z; //get downward velocity
+	float dot = DotProduct(pPlayer->GetAbsVelocity(), vecDir); //get dot product of shoot angle and movement angle
 	Vector vecRev = -vecDir;
+
+	float push = sk_plr_357_pushamount.GetFloat();
+
+	if ((dot > 0.8f) && (downvel < 0)) //if we're falling and looking down
+		push += abs(downvel); //add the abs of downard velocity
+
 	if (pPlayer->HasOverdrive())
 	{
-		pPlayer->VelocityPunch(vecRev * (sk_plr_357_pushamount.GetFloat() * 2));
+		pPlayer->VelocityPunch(vecRev * (push * 2));
 		DrawLargeBeam(); //trigger beam draw
 		pPlayer->FireBullets(30, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0); //shoot 15 bullets as 1 bullet
 		EmitSound("railgun.overdrive");
 	}
 	else
 	{
-		pPlayer->VelocityPunch(vecRev * sk_plr_357_pushamount.GetFloat());
+		pPlayer->VelocityPunch(vecRev * push);
 		DrawBeam(); //trigger beam draw
 		pPlayer->FireBullets(10, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0); //shoot 15 bullets as 1 bullet
 		if (mat_classic_render.GetInt() == 0)

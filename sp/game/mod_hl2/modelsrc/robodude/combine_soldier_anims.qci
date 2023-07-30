@@ -34,14 +34,6 @@ $poseparameter "aim_pitch" -81.22229 50 loop 0
 $poseparameter "aim_yaw" -60 60 loop 0
 $poseparameter "casual" 0 1 loop 0
 
-$ikchain "rhand" "ValveBiped.Bip01_R_Hand" knee 0.707 0.707 0
-$ikchain "lhand" "ValveBiped.Bip01_L_Hand" knee 0.707 0.707 0
-$ikchain "rfoot" "ValveBiped.Bip01_R_Foot" knee 0.707 -0.707 0
-$ikchain "lfoot" "ValveBiped.Bip01_L_Foot" knee 0.707 -0.707 0
-
-$ikautoplaylock "rfoot" 1 0.1
-$ikautoplaylock "lfoot" 1 0.1
-
 $weightlist "weights_gesture_reloadspine" {
 	 "ValveBiped.Bip01_Pelvis" 0
 	 "ValveBiped.Bip01_L_Thigh" 0
@@ -294,10 +286,10 @@ $animation "a_flinch_rarm_gesture" "combine_soldier_anims_anims\a_flinch_rarm_ge
 
 $animation "a_aim_stand_neutral" "combine_soldier_anims_anims\a_aim_stand_neutral.smd" {
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $animation "a_aim_stand_down_left" "combine_soldier_anims_anims\a_aim_stand_down_left.smd" {
@@ -342,10 +334,10 @@ $animation "a_aim_stand_straightup" "combine_soldier_anims_anims\a_aim_stand_str
 
 $animation "a_aim_stand_neutral_SG" "combine_soldier_anims_anims\a_aim_stand_neutral_SG.smd" {
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $animation "a_aim_stand_down_left_SG" "combine_soldier_anims_anims\a_aim_stand_down_left_SG.smd" {
@@ -390,10 +382,10 @@ $animation "a_aim_stand_straightup_SG" "combine_soldier_anims_anims\a_aim_stand_
 
 $animation "a_aim_crouch_neutral" "combine_soldier_anims_anims\a_aim_crouch_neutral.smd" {
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $animation "a_aim_crouch_down_left" "combine_soldier_anims_anims\a_aim_crouch_down_left.smd" {
@@ -439,258 +431,258 @@ $animation "a_aim_crouch_straightup" "combine_soldier_anims_anims\a_aim_crouch_s
 $animation "a_Crouch_runN" "combine_soldier_anims_anims\a_Crouch_runN.smd" {
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 19 LX
 }
 
 $animation "a_Crouch_walkS" "combine_soldier_anims_anims\a_Crouch_walkS.smd" {
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 20 LX LY
 }
 
 $animation "a_Crouch_walkSE" "combine_soldier_anims_anims\a_Crouch_walkSE.smd" {
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 23 LX LY
 }
 
 $animation "a_Crouch_walkE" "combine_soldier_anims_anims\a_Crouch_walkE.smd" {
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 20 LX LY
 }
 
 $animation "a_Crouch_walkNE" "combine_soldier_anims_anims\a_Crouch_walkNE.smd" {
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 22 LX LY
 }
 
 $animation "a_Crouch_walkN" "combine_soldier_anims_anims\a_Crouch_walkN.smd" {
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 23 LX LY
 }
 
 $animation "a_Crouch_walkNW" "combine_soldier_anims_anims\a_Crouch_walkNW.smd" {
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 22 LX LY
 }
 
 $animation "a_Crouch_walkW" "combine_soldier_anims_anims\a_Crouch_walkW.smd" {
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 20 LX LY
 }
 
 $animation "a_Crouch_walkSW" "combine_soldier_anims_anims\a_Crouch_walkSW.smd" {
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 20 LX LY
 }
 
 $animation "a_RunS" "combine_soldier_anims_anims\a_RunS.smd" {
 	fps 27
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 18 LX LY
 }
 
 $animation "a_RunSE" "combine_soldier_anims_anims\a_RunSE.smd" {
 	fps 28
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 18 LX LY
 }
 
 $animation "a_RunE" "combine_soldier_anims_anims\a_RunE.smd" {
 	fps 29
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 18 LX LY
 }
 
 $animation "a_RunNE" "combine_soldier_anims_anims\a_RunNE.smd" {
 	fps 28
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 18 LX LY
 }
 
 $animation "a_RunN" "combine_soldier_anims_anims\a_RunN.smd" {
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 18 LX LY
 }
 
 $animation "a_RunNW" "combine_soldier_anims_anims\a_RunNW.smd" {
 	fps 29
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 18 LX LY
 }
 
 $animation "a_RunW" "combine_soldier_anims_anims\a_RunW.smd" {
 	fps 28
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 18 LX LY
 }
 
 $animation "a_RunSW" "combine_soldier_anims_anims\a_RunSW.smd" {
 	fps 27
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 18 LX LY
 }
 
 $animation "a_Run_turretCarry_Upperbody" "combine_soldier_anims_anims\a_Run_turretCarry_Upperbody.smd" {
 	fps 30
 	loop
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	weightlist "weights_Run_turretCarry_Upperbody"
 }
 
 $animation "a_WalkS" "combine_soldier_anims_anims\a_WalkS.smd" {
 	fps 28
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 30 LX LY
 }
 
 $animation "a_WalkSE" "combine_soldier_anims_anims\a_WalkSE.smd" {
 	fps 29
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 30 LX LY
 }
 
 $animation "a_WalkE" "combine_soldier_anims_anims\a_WalkE.smd" {
 	fps 29
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 30 LX LY
 }
 
 $animation "a_WalkNE" "combine_soldier_anims_anims\a_WalkNE.smd" {
 	fps 31
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 30 LX LY
 }
 
 $animation "a_WalkN" "combine_soldier_anims_anims\a_WalkN.smd" {
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 30 LX LY
 }
 
 $animation "a_WalkNW" "combine_soldier_anims_anims\a_WalkNW.smd" {
 	fps 29
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 30 LX LY
 }
 
 $animation "a_WalkW" "combine_soldier_anims_anims\a_WalkW.smd" {
 	fps 28
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 30 LX LY
 }
 
 $animation "a_WalkSW" "combine_soldier_anims_anims\a_WalkSW.smd" {
 	fps 29
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 30 LX LY
 }
 
@@ -704,98 +696,98 @@ $animation "a_shootShotgun" "combine_soldier_anims_anims\a_shootShotgun.smd" {
 
 $animation "a_jump_holding_hit" "combine_soldier_anims_anims\a_jump_holding_hit.smd" {
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $animation "a_WalkEasy_S" "combine_soldier_anims_anims\a_WalkEasy_S.smd" {
 	fps 28
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 30 LX LY
 }
 
 $animation "a_WalkEasy_SE" "combine_soldier_anims_anims\a_WalkEasy_SE.smd" {
 	fps 29
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 27 LX LY
 }
 
 $animation "a_WalkEasy_E" "combine_soldier_anims_anims\a_WalkEasy_E.smd" {
 	fps 29
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 30 LX LY
 }
 
 $animation "a_WalkEasy_NE" "combine_soldier_anims_anims\a_WalkEasy_NE.smd" {
 	fps 31
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 30 LX LY
 }
 
 $animation "a_WalkEasy_N" "combine_soldier_anims_anims\a_WalkEasy_N.smd" {
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 30 LX LY
 }
 
 $animation "a_WalkEasy_NW" "combine_soldier_anims_anims\a_WalkEasy_NW.smd" {
 	fps 29
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 30 LX LY
 }
 
 $animation "a_WalkEasy_W" "combine_soldier_anims_anims\a_WalkEasy_W.smd" {
 	fps 28
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 30 LX LY
 }
 
 $animation "a_WalkEasy_SW" "combine_soldier_anims_anims\a_WalkEasy_SW.smd" {
 	fps 29
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	walkframe 27 LX LY
 }
 
 $animation "Man_Gun_neutral" "combine_soldier_anims_anims\Man_Gun_neutral.smd" {
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $animation "Man_Gun_down_left" "combine_soldier_anims_anims\Man_Gun_down_left.smd" {
@@ -841,10 +833,10 @@ $sequence "LH_attachment_Init" {
 	hidden
 	fps 30
 	loop
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $sequence "Idle1" {
@@ -854,10 +846,10 @@ $sequence "Idle1" {
 	fadeout 0.2
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
-	ikrule "rhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
+	//ikrule "rhand" release
 }
 
 $sequence "Idle1_SMG1" {
@@ -867,10 +859,10 @@ $sequence "Idle1_SMG1" {
 	fadeout 0.2
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
-	ikrule "rhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
+	//ikrule "rhand" release
 }
 
 $sequence "CombatIdle1" {
@@ -882,10 +874,10 @@ $sequence "CombatIdle1" {
 	addlayer "Aim_stand_delta_all"
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
-	ikrule "rhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
+	//ikrule "rhand" release
 }
 
 $sequence "CombatIdle1_SG" {
@@ -897,10 +889,10 @@ $sequence "CombatIdle1_SG" {
 	addlayer "Aim_stand_delta_all_SG"
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
-	ikrule "rhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
+	//ikrule "rhand" release
 }
 
 $sequence "CombatIdle1_SMG1" {
@@ -912,10 +904,10 @@ $sequence "CombatIdle1_SMG1" {
 	addlayer "Aim_stand_delta_all"
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
-	ikrule "rhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
+	//ikrule "rhand" release
 }
 
 $sequence "cower" {
@@ -924,10 +916,10 @@ $sequence "cower" {
 	fadein 0.2
 	fadeout 0.2
 	fps 35
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "CrouchIdle" {
@@ -939,10 +931,10 @@ $sequence "CrouchIdle" {
 	addlayer "Aim_crouch_delta_all"
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
-	ikrule "rhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
+	//ikrule "rhand" release
 }
 
 $sequence "crouch_aim_ar2" {
@@ -953,10 +945,10 @@ $sequence "crouch_aim_ar2" {
 	addlayer "Aim_crouch_delta_all"
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
-	ikrule "rhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
+	//ikrule "rhand" release
 }
 
 $sequence "crouch_aim_sm1" {
@@ -967,10 +959,10 @@ $sequence "crouch_aim_sm1" {
 	addlayer "Aim_crouch_delta_all"
 	fps 18
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
-	ikrule "rhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
+	//ikrule "rhand" release
 }
 
 $sequence "flinchhead" {
@@ -979,10 +971,10 @@ $sequence "flinchhead" {
 	fadein 0.2
 	fadeout 0.2
 	fps 20
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "flinchchest" {
@@ -991,10 +983,10 @@ $sequence "flinchchest" {
 	fadein 0.2
 	fadeout 0.2
 	fps 20
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "flinchgut" {
@@ -1003,10 +995,10 @@ $sequence "flinchgut" {
 	fadein 0.2
 	fadeout 0.2
 	fps 20
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "flinchleft" {
@@ -1015,10 +1007,10 @@ $sequence "flinchleft" {
 	fadein 0.2
 	fadeout 0.2
 	fps 20
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "flinchright" {
@@ -1027,10 +1019,10 @@ $sequence "flinchright" {
 	fadein 0.2
 	fadeout 0.2
 	fps 20
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "flinchbig" {
@@ -1039,10 +1031,10 @@ $sequence "flinchbig" {
 	fadein 0.2
 	fadeout 0.2
 	fps 20
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "flinchsmall" {
@@ -1051,10 +1043,10 @@ $sequence "flinchsmall" {
 	fadein 0.2
 	fadeout 0.2
 	fps 20
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "flinch_gesture" {
@@ -1103,10 +1095,10 @@ $sequence "deathpose_front" {
 	fadein 0.2
 	fadeout 0.2
 	fps 1
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $sequence "deathpose_back" {
@@ -1115,10 +1107,10 @@ $sequence "deathpose_back" {
 	fadein 0.2
 	fadeout 0.2
 	fps 1
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $sequence "deathpose_right" {
@@ -1127,10 +1119,10 @@ $sequence "deathpose_right" {
 	fadein 0.2
 	fadeout 0.2
 	fps 1
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $sequence "deathpose_left" {
@@ -1139,10 +1131,10 @@ $sequence "deathpose_left" {
 	fadein 0.2
 	fadeout 0.2
 	fps 1
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $sequence "bugbait_hit" {
@@ -1151,10 +1143,10 @@ $sequence "bugbait_hit" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $sequence "cover_crouch" {
@@ -1165,10 +1157,10 @@ $sequence "cover_crouch" {
 	addlayer "Aim_crouch_delta_all"
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
-	ikrule "rhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
+	//ikrule "rhand" release
 }
 
 $sequence "cover_crouch_low" {
@@ -1179,10 +1171,10 @@ $sequence "cover_crouch_low" {
 	addlayer "Aim_crouch_delta_all"
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
-	ikrule "rhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
+	//ikrule "rhand" release
 }
 
 $sequence "cover_crouch_med" {
@@ -1193,10 +1185,10 @@ $sequence "cover_crouch_med" {
 	addlayer "Aim_crouch_delta_all"
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
-	ikrule "rhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
+	//ikrule "rhand" release
 }
 
 $sequence "grenThrow" {
@@ -1206,10 +1198,10 @@ $sequence "grenThrow" {
 	fadein 0.2
 	fadeout 0.2
 	fps 45
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "grenDrop" {
@@ -1219,10 +1211,10 @@ $sequence "grenDrop" {
 	fadein 0.2
 	fadeout 0.2
 	fps 35
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "grenPlace" {
@@ -1232,10 +1224,10 @@ $sequence "grenPlace" {
 	fadein 0.2
 	fadeout 0.2
 	fps 35
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "reload_low" {
@@ -1245,10 +1237,10 @@ $sequence "reload_low" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "reload" {
@@ -1258,10 +1250,10 @@ $sequence "reload" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "gesture_reloadspine" {
@@ -1280,8 +1272,8 @@ $sequence "gesture_reloadarms" {
 	fadeout 0.2
 	hidden
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	weightlist "weights_gesture_reloadarms"
 }
 
@@ -1291,13 +1283,13 @@ $sequence "gesture_reload" {
 	{ event 2 28 "" }
 	fadein 0.2
 	fadeout 0.2
-	iklock "rfoot" 1 0
-	iklock "lfoot" 1 0
+	//iklock "rfoot" 1 0
+	//iklock "lfoot" 1 0
 	blendlayer "gesture_reloadarms" 0 10 50 59 spline
 	blendlayer "gesture_reloadspine" 0 10 50 59 spline
 	fps 30
-	ikrule "lhand" touch "ValveBiped.Bip01_Spine"
-	ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
+	//ikrule "lhand" touch "ValveBiped.Bip01_Spine"
+	//ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
 	weightlist "weights_gesture_reload"
 }
 
@@ -1317,8 +1309,8 @@ $sequence "gesture_reload_SMG1arms" {
 	fadeout 0.2
 	hidden
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	weightlist "weights_gesture_reloadarms"
 }
 
@@ -1328,13 +1320,13 @@ $sequence "gesture_reload_SMG1" {
 	{ event 2 28 "" }
 	fadein 0.2
 	fadeout 0.2
-	iklock "rfoot" 1 0
-	iklock "lfoot" 1 0
+	//iklock "rfoot" 1 0
+	//iklock "lfoot" 1 0
 	blendlayer "gesture_reload_SMG1arms" 0 10 50 59 spline
 	blendlayer "gesture_reload_SMG1spine" 0 10 50 59 spline
 	fps 30
-	ikrule "lhand" touch "ValveBiped.Bip01_Spine"
-	ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
+	//ikrule "lhand" touch "ValveBiped.Bip01_Spine"
+	//ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
 	weightlist "weights_gesture_reload"
 }
 
@@ -1345,10 +1337,10 @@ $sequence "melee_gunhit" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "rappelloop" {
@@ -1358,10 +1350,10 @@ $sequence "rappelloop" {
 	fadeout 0.2
 	fps 30
 	loop
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $sequence "shootSMG1s" {
@@ -1372,10 +1364,10 @@ $sequence "shootSMG1s" {
 	fadeout 0.2
 	addlayer "Aim_stand_delta_all"
 	fps 30
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
-	ikrule "rhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
+	//ikrule "rhand" release
 }
 
 $sequence "shootSMG1c" {
@@ -1386,10 +1378,10 @@ $sequence "shootSMG1c" {
 	fadeout 0.2
 	addlayer "Aim_crouch_delta_all"
 	fps 30
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
-	ikrule "rhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
+	//ikrule "rhand" release
 }
 
 $sequence "shootAR2s" {
@@ -1400,10 +1392,10 @@ $sequence "shootAR2s" {
 	fadeout 0.2
 	addlayer "Aim_stand_delta_all"
 	fps 30
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
-	ikrule "rhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
+	//ikrule "rhand" release
 }
 
 $sequence "shootAR2c" {
@@ -1414,10 +1406,10 @@ $sequence "shootAR2c" {
 	fadeout 0.2
 	addlayer "Aim_crouch_delta_all"
 	fps 30
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
-	ikrule "rhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
+	//ikrule "rhand" release
 }
 
 $sequence "shootAR2g" {
@@ -1427,10 +1419,10 @@ $sequence "shootAR2g" {
 	fadein 0.2
 	fadeout 0.2
 	fps 6
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
-	ikrule "rhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
+	//ikrule "rhand" release
 }
 
 $sequence "shootAR2alt" {
@@ -1442,10 +1434,10 @@ $sequence "shootAR2alt" {
 	fadeout 0.2
 	addlayer "Aim_stand_delta_all"
 	fps 30
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
-	ikrule "rhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "lhand" touch "ValveBiped.Bip01_R_Hand"
+	//ikrule "rhand" release
 }
 
 $sequence "shootSGs" {
@@ -1456,10 +1448,10 @@ $sequence "shootSGs" {
 	fadeout 0.2
 	addlayer "Aim_stand_delta_all_SG"
 	fps 30
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "shootSGc" {
@@ -1470,10 +1462,10 @@ $sequence "shootSGc" {
 	fadeout 0.2
 	addlayer "Aim_crouch_delta_all"
 	fps 30
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "signal_advance" {
@@ -1482,10 +1474,10 @@ $sequence "signal_advance" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "signal_forward" {
@@ -1494,10 +1486,10 @@ $sequence "signal_forward" {
 	fadein 0.2
 	fadeout 0.2
 	fps 48
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "signal_group" {
@@ -1506,10 +1498,10 @@ $sequence "signal_group" {
 	fadein 0.2
 	fadeout 0.2
 	fps 48
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "signal_halt" {
@@ -1518,10 +1510,10 @@ $sequence "signal_halt" {
 	fadein 0.2
 	fadeout 0.2
 	fps 48
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "signal_left" {
@@ -1530,10 +1522,10 @@ $sequence "signal_left" {
 	fadein 0.2
 	fadeout 0.2
 	fps 48
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "signal_right" {
@@ -1542,10 +1534,10 @@ $sequence "signal_right" {
 	fadein 0.2
 	fadeout 0.2
 	fps 48
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "signal_takecover" {
@@ -1554,10 +1546,10 @@ $sequence "signal_takecover" {
 	fadein 0.2
 	fadeout 0.2
 	fps 48
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "Combat_stand_to_crouch" {
@@ -1565,10 +1557,10 @@ $sequence "Combat_stand_to_crouch" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $sequence "Crouch_to_combat_stand" {
@@ -1576,10 +1568,10 @@ $sequence "Crouch_to_combat_stand" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	walkframe 7 LX
 }
 
@@ -1603,8 +1595,8 @@ $sequence "Aim_stand_delta_all" {
 	fadein 0.2
 	fadeout 0.2
 	hidden
-	iklock "lfoot" 1 0
-	iklock "rfoot" 1 0
+	//iklock "lfoot" 1 0
+	//iklock "rfoot" 1 0
 }
 
 $sequence "Aim_stand_delta_all_SG" {
@@ -1627,8 +1619,8 @@ $sequence "Aim_stand_delta_all_SG" {
 	fadein 0.2
 	fadeout 0.2
 	hidden
-	iklock "lfoot" 1 0
-	iklock "rfoot" 1 0
+	//iklock "lfoot" 1 0
+	//iklock "rfoot" 1 0
 }
 
 $sequence "Aim_crouch_delta_all" {
@@ -1651,8 +1643,8 @@ $sequence "Aim_crouch_delta_all" {
 	fadein 0.2
 	fadeout 0.2
 	hidden
-	iklock "lfoot" 1 0
-	iklock "rfoot" 1 0
+	//iklock "lfoot" 1 0
+	//iklock "rfoot" 1 0
 }
 
 $sequence "Crouch_RunALL" {
@@ -1705,8 +1697,8 @@ $sequence "Aim_all" {
 	fadein 0.2
 	fadeout 0.2
 	hidden
-	iklock "lfoot" 1 0
-	iklock "rfoot" 1 0
+	//iklock "lfoot" 1 0
+	//iklock "rfoot" 1 0
 }
 
 $sequence "Aim_all_SG" {
@@ -1725,8 +1717,8 @@ $sequence "Aim_all_SG" {
 	fadein 0.2
 	fadeout 0.2
 	hidden
-	iklock "lfoot" 1 0
-	iklock "rfoot" 1 0
+	//iklock "lfoot" 1 0
+	//iklock "rfoot" 1 0
 }
 
 $sequence "RunALL" {
@@ -1757,8 +1749,8 @@ $sequence "layer_run_aiming" {
 	worldspace
 	fps 30
 	loop
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	weightlist "weights_layer_run_aiming"
 }
 
@@ -1791,8 +1783,8 @@ $sequence "layer_run_aiming_SG" {
 	worldspace
 	fps 30
 	loop
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	weightlist "weights_layer_run_aiming"
 }
 
@@ -1848,10 +1840,10 @@ $sequence "Turret_Drop" {
 	fadein 0.2
 	fadeout 0.2
 	fps 24
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	walkframe 33 LX LY
 }
 
@@ -1883,8 +1875,8 @@ $sequence "layer_walk_aiming" {
 	worldspace
 	fps 30
 	loop
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	weightlist "weights_layer_run_aiming"
 }
 
@@ -1915,8 +1907,8 @@ $sequence "layer_walk_aiming_SG" {
 	worldspace
 	fps 30
 	loop
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	weightlist "weights_layer_run_aiming"
 }
 
@@ -1992,10 +1984,10 @@ $sequence "physflinch1" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "physflinch2" {
@@ -2004,10 +1996,10 @@ $sequence "physflinch2" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "turnleft" {
@@ -2016,8 +2008,8 @@ $sequence "turnleft" {
 	fadein 0.2
 	fadeout 0.2
 	fps 20
-	ikrule "lfoot" unlatch
-	ikrule "rfoot" unlatch
+	//ikrule "lfoot" unlatch
+	//ikrule "rfoot" unlatch
 	weightlist "weights_gesture_reload"
 }
 
@@ -2027,8 +2019,8 @@ $sequence "turnright" {
 	fadein 0.2
 	fadeout 0.2
 	fps 20
-	ikrule "lfoot" unlatch
-	ikrule "rfoot" unlatch
+	//ikrule "lfoot" unlatch
+	//ikrule "rfoot" unlatch
 	weightlist "weights_gesture_reload"
 }
 
@@ -2069,8 +2061,8 @@ $sequence "gesture_turn_left_45" {
 	blendlayer "gesture_turn_left_45inDelta" 0 0 20 20
 	blendlayer "gesture_turn_left_45outDelta" 20 20 20 50 spline
 	fps 60
-	ikrule "lfoot" release
-	ikrule "rfoot" release
+	//ikrule "lfoot" release
+	//ikrule "rfoot" release
 	weightlist "weights_gesture_reload"
 }
 
@@ -2111,8 +2103,8 @@ $sequence "gesture_turn_left_90" {
 	blendlayer "gesture_turn_left_90inDelta" 0 0 20 20
 	blendlayer "gesture_turn_left_90outDelta" 20 20 20 57 spline
 	fps 60
-	ikrule "lfoot" release
-	ikrule "rfoot" release
+	//ikrule "lfoot" release
+	//ikrule "rfoot" release
 	weightlist "weights_gesture_reload"
 }
 
@@ -2153,8 +2145,8 @@ $sequence "gesture_turn_right_45" {
 	blendlayer "gesture_turn_right_45inDelta" 0 0 20 20
 	blendlayer "gesture_turn_right_45outDelta" 20 20 20 50 spline
 	fps 60
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	weightlist "weights_gesture_reload"
 }
 
@@ -2195,8 +2187,8 @@ $sequence "gesture_turn_right_90" {
 	blendlayer "gesture_turn_right_90inDelta" 0 0 20 20
 	blendlayer "gesture_turn_right_90outDelta" 20 20 20 50 spline
 	fps 60
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	weightlist "weights_gesture_reload"
 }
 
@@ -2206,10 +2198,10 @@ $sequence "jump_holding_jump" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	walkframe 13 LX LY LZ
 }
 
@@ -2219,10 +2211,10 @@ $sequence "jump_holding_glide" {
 	fadein 0.2
 	fadeout 0.2
 	fps 5
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	walkframe 5 LX LY LZ
 }
 
@@ -2234,10 +2226,10 @@ $sequence "jump_holding_land" {
 	fadein 0.15
 	fadeout 0.2
 	fps 45
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "binoculars_idle" {
@@ -2246,10 +2238,10 @@ $sequence "binoculars_idle" {
 	fadeout 0.2
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "Dropship_Deploy" {
@@ -2257,10 +2249,10 @@ $sequence "Dropship_Deploy" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	walkframe 12 LX LY LZ
 	walkframe 34 LX LY LZ
 	walkframe 60 LX LY LZ
@@ -2273,10 +2265,10 @@ $sequence "leanwall_right_idle" {
 	fadeout 0.2
 	fps 30
 	loop
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $sequence "leanwall_right_exit" {
@@ -2290,10 +2282,10 @@ $sequence "leanwall_right_exit" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	walkframe 11 LX LY
 }
 
@@ -2303,10 +2295,10 @@ $sequence "leanwall_corner_right_idle" {
 	fadeout 0.2
 	fps 30
 	loop
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $sequence "leanwall_corner_right_exit" {
@@ -2318,10 +2310,10 @@ $sequence "leanwall_corner_right_exit" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	walkframe 11 LX LY
 }
 
@@ -2331,10 +2323,10 @@ $sequence "leanwall_Left_idle" {
 	fadeout 0.2
 	fps 30
 	loop
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $sequence "leanwall_Left_exit" {
@@ -2342,10 +2334,10 @@ $sequence "leanwall_Left_exit" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	walkframe 3 LX LY
 }
 
@@ -2355,10 +2347,10 @@ $sequence "leanwall_Left_B_idle" {
 	fadeout 0.2
 	fps 30
 	loop
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $sequence "leanwall_Left_B_exit" {
@@ -2380,10 +2372,10 @@ $sequence "leanwall_Left_B_exit" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	walkframe 26 LX LY
 }
 
@@ -2393,10 +2385,10 @@ $sequence "leanwall_CrouchLeft_A_idle" {
 	fadeout 0.2
 	fps 30
 	loop
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $sequence "leanwall_CrouchLeft_A_exit" {
@@ -2414,10 +2406,10 @@ $sequence "leanwall_CrouchLeft_A_exit" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	walkframe 20 LX LY
 }
 
@@ -2427,10 +2419,10 @@ $sequence "leanwall_CrouchLeft_B_idle" {
 	fadeout 0.2
 	fps 30
 	loop
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $sequence "leanwall_CrouchLeft_B_exit" {
@@ -2448,10 +2440,10 @@ $sequence "leanwall_CrouchLeft_B_exit" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	walkframe 20 LX LY
 }
 
@@ -2461,10 +2453,10 @@ $sequence "crouchidle_AB" {
 	fadeout 0.2
 	fps 30
 	loop
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $sequence "crouchidle_ABexit" {
@@ -2488,10 +2480,10 @@ $sequence "crouchidle_ABexit" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	walkframe 47 LX LY
 }
 
@@ -2501,10 +2493,10 @@ $sequence "leanwall_CrouchLeft_C_idle" {
 	fadeout 0.2
 	fps 30
 	loop
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $sequence "leanwall_CrouchLeft_C_exit" {
@@ -2512,10 +2504,10 @@ $sequence "leanwall_CrouchLeft_C_exit" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	walkframe 31 LX LY
 }
 
@@ -2525,10 +2517,10 @@ $sequence "leanwall_CrouchLeft_D_idle" {
 	fadeout 0.2
 	fps 30
 	loop
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $sequence "leanwall_CrouchLeft_D_exit" {
@@ -2536,10 +2528,10 @@ $sequence "leanwall_CrouchLeft_D_exit" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	walkframe 31 LX LY
 }
 
@@ -2548,10 +2540,10 @@ $sequence "breen_grav_grab" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $sequence "breen_gravCarry_Idle" {
@@ -2561,10 +2553,10 @@ $sequence "breen_gravCarry_Idle" {
 	fadeout 0.2
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "breen_grav_placeDesk" {
@@ -2573,10 +2565,10 @@ $sequence "breen_grav_placeDesk" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $sequence "WalkEasy_all" {
@@ -2603,10 +2595,10 @@ $sequence "Idle_Unarmed" {
 	fadeout 0.2
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "layer_walk_unarmed" {
@@ -2617,8 +2609,8 @@ $sequence "layer_walk_unarmed" {
 	worldspace
 	fps 30
 	loop
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	weightlist "weights_layer_run_aiming"
 }
 
@@ -2663,8 +2655,8 @@ $sequence "layer_walk_GravCarry" {
 	worldspace
 	fps 30
 	loop
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 	weightlist "weights_layer_run_aiming"
 }
 
@@ -2707,7 +2699,7 @@ $sequence "Man_Gun_Aim_all" {
 	fadein 0.2
 	fadeout 0.2
 	hidden
-	iklock "lfoot" 1 0
+	//iklock "lfoot" 1 0
 }
 
 $sequence "Man_Gun" {
@@ -2718,10 +2710,10 @@ $sequence "Man_Gun" {
 	addlayer "Man_Gun_Aim_all"
 	fps 30
 	loop
-	ikrule "lhand" attachment "L_hand"
-	ikrule "rhand" attachment "R_hand"
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
+	//ikrule "lhand" attachment "L_hand"
+	//ikrule "rhand" attachment "R_hand"
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
 }
 
 $sequence "d3_c17_07_Kidnap" {
@@ -2730,10 +2722,10 @@ $sequence "d3_c17_07_Kidnap" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	walkframe 101 LX LY LZR
 }
 
@@ -2742,10 +2734,10 @@ $sequence "CS_Jump" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $sequence "rappel_a_preIdle" {
@@ -2754,10 +2746,10 @@ $sequence "rappel_a_preIdle" {
 	fadeout 0.2
 	fps 30
 	loop
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $sequence "Rappel_a" {
@@ -2769,10 +2761,10 @@ $sequence "Rappel_a" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	walkframe 30 LX LY LZ
 	walkframe 54 LX LY LZ
 	walkframe 71 LX LY LZ
@@ -2791,10 +2783,10 @@ $sequence "Rappel_a_noturn" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	walkframe 30 LX LY LZ
 	walkframe 54 LX LY LZ
 	walkframe 71 LX LY LZ
@@ -2813,10 +2805,10 @@ $sequence "Rappel_b" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	walkframe 15 LX LY LZ
 	walkframe 30 LX LY LZ
 	walkframe 44 LX LY LZ
@@ -2835,10 +2827,10 @@ $sequence "Rappel_c" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	walkframe 15 LX LY LZ
 	walkframe 30 LX LY LZ
 	walkframe 50 LX LY LZ
@@ -2856,10 +2848,10 @@ $sequence "Rappel_d" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	walkframe 15 LX LY LZ
 	walkframe 30 LX LY LZ
 	walkframe 44 LX LY LZ
@@ -2880,10 +2872,10 @@ $sequence "Rappel_e" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	walkframe 15 LX LY LZ
 	walkframe 30 LX LY LZ
 	walkframe 44 LX LY LZ
@@ -2902,10 +2894,10 @@ $sequence "Rappel_f" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	walkframe 20 LX LY LZ
 	walkframe 40 LX LY LZ
 	walkframe 60 LX LY LZ
@@ -2922,10 +2914,10 @@ $sequence "Rappel_f_noturn" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 	walkframe 20 LX LY LZ
 	walkframe 40 LX LY LZ
 	walkframe 60 LX LY LZ
@@ -2940,10 +2932,10 @@ $sequence "antlion_soldier_DI_01" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $sequence "antlion_soldier_DI_02" {
@@ -2954,10 +2946,10 @@ $sequence "antlion_soldier_DI_02" {
 	fadein 0.2
 	fadeout 0.2
 	fps 30
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }
 
 $sequence "console_type" {
@@ -2966,10 +2958,10 @@ $sequence "console_type" {
 	fadeout 0.2
 	fps 35
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "console_type_entry" {
@@ -2977,10 +2969,10 @@ $sequence "console_type_entry" {
 	fadein 0.2
 	fadeout 0.2
 	fps 35
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "console_type_loop" {
@@ -2989,10 +2981,10 @@ $sequence "console_type_loop" {
 	fadeout 0.2
 	fps 30
 	loop
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "console_type_exit" {
@@ -3000,10 +2992,10 @@ $sequence "console_type_exit" {
 	fadein 0.2
 	fadeout 0.2
 	fps 45
-	ikrule "lfoot" footstep
-	ikrule "rfoot" footstep
-	ikrule "rhand" release
-	ikrule "lhand" release
+	//ikrule "lfoot" footstep
+	//ikrule "rfoot" footstep
+	//ikrule "rhand" release
+	//ikrule "lhand" release
 }
 
 $sequence "gman_freeze_pose" {
@@ -3012,8 +3004,8 @@ $sequence "gman_freeze_pose" {
 	fadeout 0.2
 	fps 30
 	loop
-	ikrule "rhand" release
-	ikrule "lhand" release
-	ikrule "rfoot" release
-	ikrule "lfoot" release
+	//ikrule "rhand" release
+	//ikrule "lhand" release
+	//ikrule "rfoot" release
+	//ikrule "lfoot" release
 }

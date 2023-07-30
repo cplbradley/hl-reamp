@@ -28,6 +28,21 @@
     <Filter Include="Source Files\HLR">
       <UniqueIdentifier>{259FD58E-C512-A856-BF28-485EA0DE62BA}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\HLR\Entities">
+      <UniqueIdentifier>{74076A30-47C2-A2C4-32A6-06FB27FBFD71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\HLR\NPC">
+      <UniqueIdentifier>{0D6C7563-3D49-0E60-0EF8-BF5C92F6663C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\HLR\Player">
+      <UniqueIdentifier>{85FF8AA2-CE14-F6A9-ABF1-CEF1FEEBBD63}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\HLR\Util">
+      <UniqueIdentifier>{ED4D39EA-8F54-5D09-5975-6F542DC15FE4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\HLR\Weapons">
+      <UniqueIdentifier>{44DCE327-1B6B-E15A-F145-6BF7B48EFCF6}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source Files\Precompiled Header">
       <UniqueIdentifier>{A7D26A13-21F4-C6B5-5922-8A4FB05AF07D}</UniqueIdentifier>
     </Filter>
@@ -1649,9 +1664,6 @@
     <ClInclude Include="hl2\npc_alyx_episodic.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
-    <ClInclude Include="hl2\npc_antlion.h">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClInclude>
     <ClInclude Include="hl2\npc_attackchopper.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
@@ -1670,25 +1682,13 @@
     <ClInclude Include="hl2\npc_citizen17.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
-    <ClInclude Include="hl2\npc_combine.h">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClInclude>
-    <ClInclude Include="hl2\npc_combines.h">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClInclude>
     <ClInclude Include="hl2\npc_crow.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
     <ClInclude Include="hl2\npc_headcrab.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
-    <ClInclude Include="episodic\npc_hunter.h">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClInclude>
     <ClInclude Include="hl2\npc_manhack.h">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClInclude>
-    <ClInclude Include="hl2\npc_metropolice.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
     <ClInclude Include="hl2\npc_playercompanion.h">
@@ -1715,9 +1715,6 @@
     <ClInclude Include="hl2\npc_turret_ground.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
-    <ClInclude Include="hl2\npc_vortigaunt_episodic.h">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClInclude>
     <ClInclude Include="hl2\prop_combine_ball.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
@@ -1736,9 +1733,6 @@
     <ClInclude Include="hl2\weapon_alyxgun.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
-    <ClInclude Include="hl2\weapon_ar2.h">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClInclude>
     <ClInclude Include="hl2\weapon_citizenpackage.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
@@ -1746,9 +1740,6 @@
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
     <ClInclude Include="hl2\weapon_physcannon.h">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClInclude>
-    <ClInclude Include="hl2\weapon_rpg.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
     <ClInclude Include="episodic\weapon_striderbuster.h">
@@ -1769,29 +1760,56 @@
     <ClInclude Include="hl2\weapon_flaregun.h">
       <Filter>Source Files\HL2 DLL\Unused</Filter>
     </ClInclude>
-    <ClInclude Include="hl2\hlr\actual_bullet.h">
-      <Filter>Source Files\HLR</Filter>
+    <ClInclude Include="hlr\entity\hlr_keycard.h">
+      <Filter>Source Files\HLR\Entities</Filter>
     </ClInclude>
-    <ClInclude Include="hl2\hlr\hlr_floorsprite.h">
-      <Filter>Source Files\HLR</Filter>
+    <ClInclude Include="hlr\entity\hlr_powerups.h">
+      <Filter>Source Files\HLR\Entities</Filter>
     </ClInclude>
-    <ClInclude Include="hl2\hlr\hlr_keycard.h">
-      <Filter>Source Files\HLR</Filter>
+    <ClInclude Include="hl2\npc_antlion.h">
+      <Filter>Source Files\HLR\NPC</Filter>
     </ClInclude>
-    <ClInclude Include="hl2\hlr\hlr_powerups.h">
-      <Filter>Source Files\HLR</Filter>
+    <ClInclude Include="hlr\npc\npc_antlionwarrior.h">
+      <Filter>Source Files\HLR\NPC</Filter>
     </ClInclude>
-    <ClInclude Include="hl2\hlr\hlr_projectile.h">
-      <Filter>Source Files\HLR</Filter>
+    <ClInclude Include="hl2\npc_combine.h">
+      <Filter>Source Files\HLR\NPC</Filter>
+    </ClInclude>
+    <ClInclude Include="hl2\npc_combines.h">
+      <Filter>Source Files\HLR\NPC</Filter>
+    </ClInclude>
+    <ClInclude Include="episodic\npc_hunter.h">
+      <Filter>Source Files\HLR\NPC</Filter>
+    </ClInclude>
+    <ClInclude Include="hl2\npc_metropolice.h">
+      <Filter>Source Files\HLR\NPC</Filter>
+    </ClInclude>
+    <ClInclude Include="hl2\npc_vortigaunt_episodic.h">
+      <Filter>Source Files\HLR\NPC</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\player\hlr_floorsprite.h">
+      <Filter>Source Files\HLR\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\util\hlr_projectile.h">
+      <Filter>Source Files\HLR\Util</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\hl2\hlr\hlr_shareddefs.h">
-      <Filter>Source Files\HLR</Filter>
+      <Filter>Source Files\HLR\Util</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\singleplayer_animstate.h">
-      <Filter>Source Files\HLR</Filter>
+      <Filter>Source Files\HLR\Util</Filter>
     </ClInclude>
-    <ClInclude Include="hl2\hlr\weapon_npc_chaingun.h">
-      <Filter>Source Files\HLR</Filter>
+    <ClInclude Include="hlr\weapons\actual_bullet.h">
+      <Filter>Source Files\HLR\Weapons</Filter>
+    </ClInclude>
+    <ClInclude Include="hl2\weapon_ar2.h">
+      <Filter>Source Files\HLR\Weapons</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\weapons\weapon_npc_chaingun.h">
+      <Filter>Source Files\HLR\Weapons</Filter>
+    </ClInclude>
+    <ClInclude Include="hl2\weapon_rpg.h">
+      <Filter>Source Files\HLR\Weapons</Filter>
     </ClInclude>
     <ClInclude Include="plasma.h">
       <Filter>Source Files\temporary entities</Filter>
@@ -3082,9 +3100,6 @@
     <ClCompile Include="hl2\npc_alyx.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\npc_antlion.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
     <ClCompile Include="hl2\npc_antlionguard.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
@@ -3118,9 +3133,6 @@
     <ClCompile Include="hl2\npc_citizen17.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\npc_combine.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
     <ClCompile Include="hl2\npc_combinecamera.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
@@ -3128,9 +3140,6 @@
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
     <ClCompile Include="hl2\npc_combinegunship.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\npc_combines.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
     <ClCompile Include="hl2\npc_cranedriver.cpp">
@@ -3160,9 +3169,6 @@
     <ClCompile Include="hl2\npc_headcrab.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
-    <ClCompile Include="episodic\npc_hunter.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
     <ClCompile Include="hl2\npc_ichthyosaur.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
@@ -3173,9 +3179,6 @@
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
     <ClCompile Include="hl2\npc_manhack.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\npc_metropolice.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
     <ClCompile Include="hl2\npc_monk.cpp">
@@ -3212,12 +3215,6 @@
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
     <ClCompile Include="hl2\npc_turret_ground.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\npc_vortigaunt_episodic.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\npc_zombie.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
     <ClCompile Include="hl2\point_apc_controller.cpp">
@@ -3262,16 +3259,10 @@
     <ClCompile Include="hl2\vehicle_viewcontroller.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\weapon_357.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
     <ClCompile Include="hl2\weapon_alyxgun.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
     <ClCompile Include="hl2\weapon_annabelle.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\weapon_ar2.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
     <ClCompile Include="hl2\weapon_bugbait.cpp">
@@ -3289,22 +3280,7 @@
     <ClCompile Include="weapon_cubemap.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\weapon_frag.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
     <ClCompile Include="hl2\weapon_physcannon.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\weapon_pistol.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\weapon_rpg.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\weapon_shotgun.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\weapon_smg1.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
     <ClCompile Include="episodic\weapon_striderbuster.cpp">
@@ -3334,110 +3310,158 @@
     <ClCompile Include="hl2\weapon_flaregun.cpp">
       <Filter>Source Files\HL2 DLL\Unused</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\actual_bullet.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\entity\hlr_environmental_resistance.cpp">
+      <Filter>Source Files\HLR\Entities</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\hlr_environmental_resistance.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\entity\hlr_hud_healthbar.cpp">
+      <Filter>Source Files\HLR\Entities</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\hlr_floorsprite.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\entity\hlr_jumppad.cpp">
+      <Filter>Source Files\HLR\Entities</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\hlr_hud_healthbar.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\entity\hlr_jumpreset.cpp">
+      <Filter>Source Files\HLR\Entities</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\hlr_jumppad.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\entity\hlr_keycard.cpp">
+      <Filter>Source Files\HLR\Entities</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\hlr_jumpreset.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\entity\hlr_megamelon.cpp">
+      <Filter>Source Files\HLR\Entities</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\hlr_keycard.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\entity\hlr_powerups.cpp">
+      <Filter>Source Files\HLR\Entities</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\hlr_megamelon.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\entity\hlr_skullkey.cpp">
+      <Filter>Source Files\HLR\Entities</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\hlr_powerups.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\entity\item_armor.cpp">
+      <Filter>Source Files\HLR\Entities</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\hlr_projectile.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\entity\item_custom.cpp">
+      <Filter>Source Files\HLR\Entities</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\hlr_screen_flipper.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hl2\npc_antlion.cpp">
+      <Filter>Source Files\HLR\NPC</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\hlr_skullkey.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\npc\npc_antlionwarrior.cpp">
+      <Filter>Source Files\HLR\NPC</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\hlr_speedmod.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\npc\npc_baddog.cpp">
+      <Filter>Source Files\HLR\NPC</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\item_armor.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\npc\npc_bloat.cpp">
+      <Filter>Source Files\HLR\NPC</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\item_custom.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\npc\npc_chopperdrone.cpp">
+      <Filter>Source Files\HLR\NPC</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\logic_difficulty.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hl2\npc_combine.cpp">
+      <Filter>Source Files\HLR\NPC</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\npc_combines.cpp">
+      <Filter>Source Files\HLR\NPC</Filter>
+    </ClCompile>
+    <ClCompile Include="episodic\npc_hunter.cpp">
+      <Filter>Source Files\HLR\NPC</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\npc\npc_legs.cpp">
+      <Filter>Source Files\HLR\NPC</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\npc\npc_mechubus.cpp">
+      <Filter>Source Files\HLR\NPC</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\npc_metropolice.cpp">
+      <Filter>Source Files\HLR\NPC</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\npc\npc_vortboss.cpp">
+      <Filter>Source Files\HLR\NPC</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\npc\npc_vortbrute.cpp">
+      <Filter>Source Files\HLR\NPC</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\npc_vortigaunt_episodic.cpp">
+      <Filter>Source Files\HLR\NPC</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\npc_zombie.cpp">
+      <Filter>Source Files\HLR\NPC</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\player\hlr_floorsprite.cpp">
+      <Filter>Source Files\HLR\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\util\env_weather_controller.cpp">
+      <Filter>Source Files\HLR\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\util\hlr_projectile.cpp">
+      <Filter>Source Files\HLR\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\util\hlr_screen_flipper.cpp">
+      <Filter>Source Files\HLR\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\util\hlr_speedmod.cpp">
+      <Filter>Source Files\HLR\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\util\logic_difficulty.cpp">
+      <Filter>Source Files\HLR\Util</Filter>
     </ClCompile>
     <ClCompile Include="movie_display.cpp">
-      <Filter>Source Files\HLR</Filter>
+      <Filter>Source Files\HLR\Util</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\npc_antlionwarrior.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\hlr\npc_baddog.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\hlr\npc_bloat.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\hlr\npc_chopperdrone.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\hlr\npc_legs.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\hlr\npc_memory_manager.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\hlr\npc_vortboss.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\hlr\npc_vortbrute.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\util\npc_memory_manager.cpp">
+      <Filter>Source Files\HLR\Util</Filter>
     </ClCompile>
     <ClCompile Include="..\..\game\shared\singleplayer_animstate.cpp">
-      <Filter>Source Files\HLR</Filter>
+      <Filter>Source Files\HLR\Util</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\weapon_bfg.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\weapons\actual_bullet.cpp">
+      <Filter>Source Files\HLR\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\weapon_furybar.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hl2\weapon_357.cpp">
+      <Filter>Source Files\HLR\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\weapon_gluon.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hl2\weapon_ar2.cpp">
+      <Filter>Source Files\HLR\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\weapon_npc_chaingun.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\weapons\weapon_bfg.cpp">
+      <Filter>Source Files\HLR\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\weapon_npcfrag.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hl2\weapon_frag.cpp">
+      <Filter>Source Files\HLR\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\weapon_plasma.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\weapons\weapon_furybar.cpp">
+      <Filter>Source Files\HLR\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\weapon_plasmarifle.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\weapons\weapon_gluon.cpp">
+      <Filter>Source Files\HLR\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\weapon_pumpshotgun.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\weapons\weapon_npc_chaingun.cpp">
+      <Filter>Source Files\HLR\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\hlr\weapon_rifle.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\weapons\weapon_npcfrag.cpp">
+      <Filter>Source Files\HLR\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\weapon_pistol.cpp">
+      <Filter>Source Files\HLR\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\weapons\weapon_plasma.cpp">
+      <Filter>Source Files\HLR\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\weapons\weapon_plasmarifle.cpp">
+      <Filter>Source Files\HLR\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\weapons\weapon_pumpshotgun.cpp">
+      <Filter>Source Files\HLR\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\weapons\weapon_rifle.cpp">
+      <Filter>Source Files\HLR\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\weapon_rpg.cpp">
+      <Filter>Source Files\HLR\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\weapon_shotgun.cpp">
+      <Filter>Source Files\HLR\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\weapon_smg1.cpp">
+      <Filter>Source Files\HLR\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files\Precompiled Header</Filter>

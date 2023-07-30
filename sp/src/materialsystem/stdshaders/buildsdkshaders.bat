@@ -30,6 +30,7 @@ set ARG_EXTRA=
 //%BUILD_SHADER% alphacable			-game %GAMEDIR% -source %SOURCEDIR% -dx9_20b
 //%BUILD_SHADER% taa_dx9_30			-game %GAMEDIR% -source %SOURCEDIR% -dx9_30 -force30
 //%BUILD_SHADER% simplemotionblur			-game %GAMEDIR% -source %SOURCEDIR% -dx9_30 -force30
+//%BUILD_SHADER% nightvision_enemyoverlay		-game %GAMEDIR% -source %SOURCEDIR% -dx9_30 -force30
 
 
 rem echo.

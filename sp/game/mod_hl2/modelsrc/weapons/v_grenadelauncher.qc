@@ -4,7 +4,7 @@
 // http://dev.wallworm.com 
 
 $scale 1.0
-$modelname	"weapons/v_grenadelauncher_hands.mdl"
+$modelname	"weapons/v_grenadelauncher.mdl"
 $body v_grenadelauncher "v_grenadelauncherv2.smd"
 $body hands "v_hands_mark6.smd"
 $origin 0 5 65

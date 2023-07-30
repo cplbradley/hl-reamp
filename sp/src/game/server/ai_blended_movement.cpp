@@ -537,10 +537,9 @@ AIMotorMoveResult_t CAI_BlendedMotor::MoveGroundExecute( const AILocalMoveGoal_t
 
 	// reset actual "sequence" ground speed based current movement sequence, orientation
 
-	// FIXME: this should be based on 
+	// FIXME: this should be based on
 
 	GetOuter()->m_flGroundSpeed = GetSequenceGroundSpeed( GetSequence());
-
 
 
 	/*

@@ -309,8 +309,15 @@ void ClientPrecache( void )
 	CBaseEntity::PrecacheModel( "cable/rope.vmt" );	
 	CBaseEntity::PrecacheModel( "sprites/blueglow1.vmt" );	
 	CBaseEntity::PrecacheModel( "sprites/purpleglow1.vmt" );	
-	CBaseEntity::PrecacheModel( "sprites/purplelaser1.vmt" );	
-	
+	CBaseEntity::PrecacheModel( "sprites/purplelaser1.vmt" );
+
+
+	/// Precache HUD Textures
+	CBaseEntity::PrecacheModel("hud/weaponwheel_background.vmt");
+	CBaseEntity::PrecacheModel("hud/health_background.vmt");
+	CBaseEntity::PrecacheModel("hud/health_background_mono.vmt");
+
+
 #ifndef HL2MP
 	CBaseEntity::PrecacheScriptSound( "Hud.Hint" );
 #endif // HL2MP

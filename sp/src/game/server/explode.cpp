@@ -239,30 +239,30 @@ void CEnvExplosion::Spawn( void )
 //-----------------------------------------------------------------------------
 // Purpose: Input handler for making the explosion explode.
 //-----------------------------------------------------------------------------
-void CEnvExplosion::InputExplode( inputdata_t &inputdata )
-{ 
+void CEnvExplosion::InputExplode(inputdata_t& inputdata)
+{
 	trace_t tr;
 
-	SetModelName( NULL_STRING );//invisible
-	SetSolid( SOLID_NONE );// intangible
+	SetModelName(NULL_STRING);//invisible
+	SetSolid(SOLID_NONE);// intangible
 
-	Vector vecSpot = GetAbsOrigin() + Vector( 0 , 0 , 8 );
-	UTIL_TraceLine( vecSpot, vecSpot + Vector( 0, 0, -40 ), (MASK_SOLID_BRUSHONLY | MASK_WATER), this, COLLISION_GROUP_NONE, &tr );
-	
+	Vector vecSpot = GetAbsOrigin() + Vector(0, 0, 8);
+	UTIL_TraceLine(vecSpot, vecSpot + Vector(0, 0, -40), (MASK_SOLID_BRUSHONLY | MASK_WATER), this, COLLISION_GROUP_NONE, &tr);
+
 	// Pull out of the wall a bit. We used to move the explosion origin itself, but that seems unnecessary, not to mention a
 	// little weird when you consider that it might be in hierarchy. Instead we just calculate a new virtual position at
 	// which to place the explosion. We don't use that new position to calculate radius damage because according to Steve's
 	// comment, that adversely affects the force vector imparted on explosion victims when they ragdoll.
 	Vector vecExplodeOrigin = GetAbsOrigin();
-	if ( tr.fraction != 1.0 )
+	if (tr.fraction != 1.0)
 	{
-		vecExplodeOrigin = tr.endpos + (tr.plane.normal * 24 );
+		vecExplodeOrigin = tr.endpos + (tr.plane.normal * 24);
 	}
 
 	// draw decal
-	if (! ( m_spawnflags & SF_ENVEXPLOSION_NODECAL))
+	if (!(m_spawnflags & SF_ENVEXPLOSION_NODECAL))
 	{
-		UTIL_DecalTrace( &tr, "Scorch" );
+		UTIL_DecalTrace(&tr, "Scorch");
 	}
 
 	// It's stupid that this entity's spawnflags and the flags for the
@@ -271,43 +271,48 @@ void CEnvExplosion::InputExplode( inputdata_t &inputdata )
 	// flags to pass to the temp ent.
 	int nFlags = TE_EXPLFLAG_NONE;
 
-	if( m_spawnflags & SF_ENVEXPLOSION_NOFIREBALL )
+	if (m_spawnflags & SF_ENVEXPLOSION_NOFIREBALL)
 	{
 		nFlags |= TE_EXPLFLAG_NOFIREBALL;
 	}
-	
-	if( m_spawnflags & SF_ENVEXPLOSION_NOSOUND )
+
+	if (m_spawnflags & SF_ENVEXPLOSION_NOSOUND)
 	{
 		nFlags |= TE_EXPLFLAG_NOSOUND;
 	}
-	
-	if ( m_spawnflags & SF_ENVEXPLOSION_RND_ORIENT )
+
+	if (m_spawnflags & SF_ENVEXPLOSION_RND_ORIENT)
 	{
 		nFlags |= TE_EXPLFLAG_ROTATE;
 	}
 
-	if ( m_nRenderMode == kRenderTransAlpha )
+	if (m_nRenderMode == kRenderTransAlpha)
 	{
 		nFlags |= TE_EXPLFLAG_DRAWALPHA;
 	}
-	else if ( m_nRenderMode != kRenderTransAdd )
+	else if (m_nRenderMode != kRenderTransAdd)
 	{
 		nFlags |= TE_EXPLFLAG_NOADDITIVE;
 	}
 
-	if( m_spawnflags & SF_ENVEXPLOSION_NOPARTICLES )
+	if (m_spawnflags & SF_ENVEXPLOSION_NOPARTICLES)
 	{
 		nFlags |= TE_EXPLFLAG_NOPARTICLES;
 	}
 
-	if( m_spawnflags & SF_ENVEXPLOSION_NODLIGHTS )
+	if (m_spawnflags & SF_ENVEXPLOSION_NODLIGHTS)
 	{
 		nFlags |= TE_EXPLFLAG_NODLIGHTS;
 	}
 
-	if ( m_spawnflags & SF_ENVEXPLOSION_NOFIREBALLSMOKE )
+	if (m_spawnflags & SF_ENVEXPLOSION_NOFIREBALLSMOKE)
 	{
 		nFlags |= TE_EXPLFLAG_NOFIREBALLSMOKE;
+	}
+
+	if (m_spawnflags & SF_ENVEXPLOSION_SMALL)
+	{
+		nFlags |= TE_EXPLFLAG_SMALL;
 	}
 
 	//Get the damage override if specified

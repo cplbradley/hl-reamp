@@ -43,6 +43,17 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+
+
+enum {
+	CURVE_LINEAR = 0,
+	CURVE_QUADRATIC,
+	CURVE_CUBIC,
+	CURVE_SIGMOID,
+	CURVE_LOGIT,
+	CURVE_SQRT,
+};
+
 // Control like a joystick
 #define JOY_ABSOLUTE_AXIS	0x00000000		
 // Control like a mouse, spinner, trackball
@@ -107,6 +118,10 @@ static ConVar joy_movement_stick("joy_movement_stick", "0", FCVAR_ARCHIVE | FCVA
 
 static ConVar joy_xcontroller_cfg_loaded( "joy_xcontroller_cfg_loaded", "0", FCVAR_ARCHIVE, "If 0, the 360controller.cfg file will be executed on startup & option changes." );
 
+
+static ConVar joy_viewaccel_max("joy_viewaccel_max", "3", FCVAR_ARCHIVE, "How high to scale the view value when accelerating view.");
+static ConVar joy_controller_type("joy_controller_type", "1", FCVAR_ARCHIVE, "Controller type. 0 = Xbox/Xbox 360, 1 = Xbox One, 2 = Playstation");
+
 extern ConVar lookspring;
 extern ConVar cl_forwardspeed;
 extern ConVar lookstrafe;
@@ -123,6 +138,17 @@ extern ConVar cam_idealpitch;
 extern ConVar cam_idealyaw;
 extern ConVar thirdperson_platformer;
 extern ConVar thirdperson_screenspace;
+
+
+
+static float SigmoidResponse(float x)
+{
+	return ((x - 0.5f) * 4.0f) / (1.0f + abs(x - 0.5f) * 6.0f) + 0.5f;
+}
+static float LogitResponse(float x)
+{
+	return ((x - 0.5f) * 0.25f) / (1.0f - abs(x - 0.5f) * 1.5f) + 0.5f;
+}
 
 //-----------------------------------------------------------------
 // Purpose: Returns true if there's an active joystick connected.
@@ -281,6 +307,7 @@ envelope_t	controlEnvelope;
 //-----------------------------------------------
 ConVar joy_pegged("joy_pegged", "0.9");// Once the stick is pushed this far, it's assumed pegged.
 ConVar joy_virtual_peg("joy_virtual_peg", "0");
+
 static float ResponseCurveLookDefault( float x, int axis, float otherAxis, float dist, float frametime )
 {
 	float input = x;
@@ -367,13 +394,47 @@ static float ResponseCurveLookDefault( float x, int axis, float otherAxis, float
 }
 
 ConVar joy_accel_filter("joy_accel_filter", "0.2");// If the non-accelerated axis is pushed farther than this, then accelerate it, too.
+
+
+static float AcceleratedViewResponseCurve(float x, int axis, float otherAxis, float dist, float frametime)
+{
+	//float input = x;
+
+	float flJoyDist = Vector(x, otherAxis, 0).Length();
+	bool bIsPegged = (flJoyDist >= joy_pegged.GetFloat());
+
+	// Make X positive to make arithmetic easier for the rest of this function, and
+	// remember whether we have to flip it back!
+	bool negative = false;
+	if (x < 0.0f)
+	{
+		negative = true;
+	}
+
+
+	float scalar = 1.0f;
+
+	if (bIsPegged)
+	{
+		scalar += 0.01f;
+	}
+	else
+		scalar = 1.0f;
+
+	if (scalar > joy_viewaccel_max.GetFloat())
+		scalar = joy_viewaccel_max.GetFloat();
+
+
+	return x * scalar;
+}
 static float ResponseCurveLookAccelerated( float x, int axis, float otherAxis, float dist, float frametime )
 {
 	float input = x;
 
-	float flJoyDist = ( sqrt(x*x + otherAxis * otherAxis) );
-	bool bIsPegged = ( flJoyDist>= joy_pegged.GetFloat() );
+	float flJoyDist = Vector(x, otherAxis, 0).Length();
+	bool bIsPegged = ( flJoyDist >= joy_pegged.GetFloat() );
 
+	
 	// Make X positive to make arithmetic easier for the rest of this function, and
 	// remember whether we have to flip it back!
 	bool negative = false;
@@ -434,19 +495,70 @@ static float ResponseCurveLookAccelerated( float x, int axis, float otherAxis, f
 	return x;
 }
 
-//-----------------------------------------------
-//-----------------------------------------------
-static float ResponseCurveLook( int curve, float x, int axis, float otherAxis, float dist, float frametime )
-{
-	switch( curve )
-	{
-	case 1://Promotion of acceleration
-		return ResponseCurveLookAccelerated( x, axis, otherAxis, dist, frametime );
-		break;
 
-	default:
-		return ResponseCurveLookDefault( x, axis, otherAxis, dist, frametime );
-		break;
+static ConVar joy_new_response_curves("joy_new_response_curves", "0", FCVAR_ARCHIVE, "Use the new response curve formulas. joy_response_look sets the formula. 0 = linear, 1 = quadratic, 2 = cubic, 3 = sigmoid, 4 = logit, 5 = square root");
+
+//-----------------------------------------------
+//-----------------------------------------------
+static float ResponseCurveLook( int curve, float x, int axis, float otherAxis, float dist, float frametime, float sensitivity )
+{
+
+	if (joy_new_response_curves.GetBool())
+	{
+		float outVal;
+		Vector vecDist = Vector(x, otherAxis, 0);
+		float dist = MIN(vecDist.Length(),1.0f);
+		float processedX = RemapVal(abs(x), 0, abs(x), 0, 1);
+		DevMsg("LENGTH = %f\n", dist);
+		
+		switch (curve)
+		{
+		case CURVE_LINEAR:
+			outVal = x * sensitivity;
+			break;
+		case CURVE_QUADRATIC:
+			if (x < 0)
+				outVal = -(x * x) * sensitivity;
+			else
+				outVal = x * x * sensitivity;
+			break;
+		case CURVE_CUBIC:
+			outVal = x * x * x * sensitivity;
+			break;
+		case CURVE_SIGMOID:
+			if (x < 0)
+				outVal = (SigmoidResponse(dist)) * processedX * sensitivity;
+			else
+				outVal = SigmoidResponse(dist)* processedX * sensitivity;
+			break;
+		case CURVE_LOGIT:
+			if (x < 0)
+				outVal = -(LogitResponse(abs(x))) * sensitivity;
+			else
+				outVal = LogitResponse(abs(x)) * sensitivity;
+			break;
+		case CURVE_SQRT:
+			outVal = sqrtf(x) * sensitivity;
+			break;
+		default:
+			outVal = x * sensitivity;
+			break;
+		}
+
+		return ResponseCurveLookAccelerated(outVal, axis, otherAxis, dist, frametime);
+	}
+	else
+	{
+		switch (curve)
+		{
+		case 1:
+			return ResponseCurveLookAccelerated(x, axis, otherAxis, dist, frametime);
+			break;
+
+		default:
+			return ResponseCurveLookDefault(x, axis, otherAxis, dist, frametime);
+			break;
+		}
 	}
 }
 
@@ -611,20 +723,18 @@ void CInput::ControllerCommands( void )
 //-----------------------------------------------------------------------------
 float CInput::ScaleAxisValue( const float axisValue, const float axisThreshold )
 {
-	// Xbox scales the range of all axes in the inputsystem. PC can't do that because each axis mapping
-	// has a (potentially) unique threshold value.  If all axes were restricted to a single threshold
-	// as they are on the Xbox, this function could move to inputsystem and be slightly more optimal.
 	float result = 0.f;
+
 	if ( IsPC() )
 	{
-		if ( axisValue < -axisThreshold )
-		{
-			result = ( axisValue + axisThreshold ) / ( MAX_BUTTONSAMPLE - axisThreshold );
-		}
-		else if ( axisValue > axisThreshold )
-		{
-			result = ( axisValue - axisThreshold ) / ( MAX_BUTTONSAMPLE - axisThreshold );
-		}
+			if (axisValue < -axisThreshold)
+			{
+				result = (axisValue + axisThreshold) / (MAX_BUTTONSAMPLE - axisThreshold);
+			}
+			else if (axisValue > axisThreshold)
+			{
+				result = (axisValue - axisThreshold) / (MAX_BUTTONSAMPLE - axisThreshold);
+			}
 	}
 	else
 	{
@@ -756,11 +866,10 @@ void CInput::JoyStickMove( float frametime, CUserCmd *cmd )
 		gameAxes[GAME_AXIS_SIDE] = gameAxes[GAME_AXIS_YAW];
 		gameAxes[GAME_AXIS_YAW].value = 0;
 	}
-
-	m_flPreviousJoystickForward	= ScaleAxisValue( gameAxes[GAME_AXIS_FORWARD].value, MAX_BUTTONSAMPLE * joy_forwardthreshold.GetFloat() );
-	m_flPreviousJoystickSide	= ScaleAxisValue( gameAxes[GAME_AXIS_SIDE].value, MAX_BUTTONSAMPLE * joy_sidethreshold.GetFloat()  );
-	m_flPreviousJoystickPitch	= ScaleAxisValue( gameAxes[GAME_AXIS_PITCH].value, MAX_BUTTONSAMPLE * joy_pitchthreshold.GetFloat()  );
-	m_flPreviousJoystickYaw		= ScaleAxisValue( gameAxes[GAME_AXIS_YAW].value, MAX_BUTTONSAMPLE * joy_yawthreshold.GetFloat()  );
+	m_flPreviousJoystickForward = ScaleAxisValue(gameAxes[GAME_AXIS_FORWARD].value, MAX_BUTTONSAMPLE * joy_forwardthreshold.GetFloat());
+	m_flPreviousJoystickSide = ScaleAxisValue(gameAxes[GAME_AXIS_SIDE].value, MAX_BUTTONSAMPLE * joy_sidethreshold.GetFloat());
+	m_flPreviousJoystickPitch = ScaleAxisValue(gameAxes[GAME_AXIS_PITCH].value, MAX_BUTTONSAMPLE * joy_pitchthreshold.GetFloat());
+	m_flPreviousJoystickYaw = ScaleAxisValue(gameAxes[GAME_AXIS_YAW].value, MAX_BUTTONSAMPLE * joy_yawthreshold.GetFloat());
 
 	// Skip out if vgui is active
 	if ( vgui::surface()->IsCursorVisible() )
@@ -835,37 +944,33 @@ void CInput::JoyStickMove( float frametime, CUserCmd *cmd )
 	float dist = move.Length();
 
 	// apply turn control
-	float angle = 0.f;
+	float yawangle = 0.f;
+	float pitchangle = 0.f;
+	Vector vecViewangle;
 
 	if ( JOY_ABSOLUTE_AXIS == gameAxes[GAME_AXIS_YAW].controlType )
 	{
-		float fAxisValue = ResponseCurveLook( joy_response_look.GetInt(), m_flPreviousJoystickYaw, YAW, m_flPreviousJoystickPitch, dist, frametime );
-		angle = fAxisValue * joy_yawsensitivity.GetFloat() * aspeed * cl_yawspeed.GetFloat();
+		float fAxisValue = ResponseCurveLook( joy_response_look.GetInt(), m_flPreviousJoystickYaw, YAW, m_flPreviousJoystickPitch,dist,frametime,joy_yawsensitivity.GetFloat());
+		vecViewangle[YAW] = fAxisValue;
 	}
 	else
 	{
-		angle = m_flPreviousJoystickYaw * joy_yawsensitivity.GetFloat() * aspeed * 180.0;
+		yawangle = m_flPreviousJoystickYaw * joy_yawsensitivity.GetFloat() * aspeed * 180.0;
 	}
-
-	angle = JoyStickAdjustYaw( angle );
-	viewangles[YAW] += angle;
-	cmd->mousedx = angle;
+	
 
 	// apply look control
 	if ( IsX360() || in_jlook.state & 1 )
 	{
-		float angle = 0;
 		if ( JOY_ABSOLUTE_AXIS == gameAxes[GAME_AXIS_PITCH].controlType )
 		{
-			float fAxisValue = ResponseCurveLook( joy_response_look.GetInt(), m_flPreviousJoystickPitch, PITCH, m_flPreviousJoystickYaw, dist, frametime );
-			angle = fAxisValue * joy_pitchsensitivity.GetFloat() * aspeed * cl_pitchspeed.GetFloat();
+			float fAxisValue = ResponseCurveLook( joy_response_look.GetInt(), m_flPreviousJoystickPitch, PITCH, m_flPreviousJoystickYaw,dist,frametime,joy_pitchsensitivity.GetFloat() );
+			vecViewangle[PITCH] = fAxisValue;
 		}
 		else
 		{
-			angle = m_flPreviousJoystickPitch * joy_pitchsensitivity.GetFloat() * aspeed * 180.0;
+			pitchangle = m_flPreviousJoystickPitch * joy_pitchsensitivity.GetFloat() * aspeed * 180.0;
 		}
-		viewangles[PITCH] += angle;
-		cmd->mousedy = angle;
 		view->StopPitchDrift();
 		if( m_flPreviousJoystickPitch == 0.f && lookspring.GetFloat() == 0.f )
 		{
@@ -876,6 +981,25 @@ void CInput::JoyStickMove( float frametime, CUserCmd *cmd )
 			view->StopPitchDrift();
 		}
 	}
+
+	
+	//float vecDist = vecViewangle.Length();
+
+/*	if (vecDist > 1.0f)
+	{
+		vecViewangle[PITCH] /= vecDist;
+		vecViewangle[YAW] /= vecDist;
+	}*/
+	DevMsg("X = %f Y = %f \n", vecViewangle[YAW], vecViewangle[PITCH]);
+	pitchangle = vecViewangle[PITCH] * joy_pitchsensitivity.GetFloat() * aspeed * cl_pitchspeed.GetFloat();
+	yawangle = vecViewangle[YAW] * joy_yawsensitivity.GetFloat() * aspeed * cl_yawspeed.GetFloat();
+
+
+	QAngle ang = QAngle(vecViewangle[PITCH], vecViewangle[YAW], 0);
+	//viewangles[YAW] += yawangle;
+	//cmd->mousedx = yawangle;
+	//cmd->mousedy = pitchangle;
+
 
 	// apply player motion relative to screen space
 	if ( CAM_IsThirdPerson() && thirdperson_screenspace.GetInt() )
@@ -910,5 +1034,7 @@ void CInput::JoyStickMove( float frametime, CUserCmd *cmd )
 	// Bound pitch
 	viewangles[PITCH] = clamp( viewangles[ PITCH ], -cl_pitchup.GetFloat(), cl_pitchdown.GetFloat() );
 
-	engine->SetViewAngles( viewangles );
+	QAngle viewang;
+	engine->GetViewAngles(viewang);
+	engine->SetViewAngles( viewang + ang );
 }

@@ -537,6 +537,10 @@ Color CHud::GetDefaultColor()
 	int clrB = MIN(hud_color_b.GetFloat(), 255);
 	int clrA = MIN(hud_color_a.GetFloat(), 255);
 	m_clrNormal = Color(clrR, clrG, clrB, clrA);
+
+	if (hud_rainbow.GetBool())
+		return GetRainbowColor();
+
 	return m_clrNormal;
 }
 
@@ -546,6 +550,10 @@ Color CHud::GetDefaultBGColor()
 	int clrG = MIN(hud_color_g.GetFloat() * 0.6f, 200);
 	int clrB = MIN(hud_color_b.GetFloat() * 0.6f, 200);
 	int clrA = MIN(hud_color_a.GetFloat() * 0.6f, 200);
+
+	if (hud_rainbow.GetBool())
+		return GetRainbowBGColor();
+
 	return Color(clrR, clrG, clrB, clrA);
 }
 

@@ -313,7 +313,7 @@ void CViewRender::Init(void)
 	
 
 	materials->CreateNamedRenderTargetTextureEx("_rt_PrevFrameFB", iW, iH, RT_SIZE_NO_CHANGE, materials->GetBackBufferFormat(), MATERIAL_RT_DEPTH_NONE, flags, 0);
-	materials->CreateNamedRenderTargetTextureEx("_rt_TrueDepth", iW, iH, RT_SIZE_NO_CHANGE, materials->GetBackBufferFormat(), MATERIAL_RT_DEPTH_NONE, TEXTUREFLAGS_CLAMPS | TEXTUREFLAGS_CLAMPT | TEXTUREFLAGS_POINTSAMPLE, 0);
+	materials->CreateNamedRenderTargetTextureEx("_rt_TrueDepth", iW, iH, RT_SIZE_FULL_FRAME_BUFFER, IMAGE_FORMAT_RGBA16161616, MATERIAL_RT_DEPTH_SEPARATE, flags, 0);
 
 	//materials->EndRenderTargetAllocation();
 
@@ -326,6 +326,8 @@ void CViewRender::Init(void)
 	QAngle angles;
 	engine->GetViewAngles( angles );
 	AngleVectors( angles, &m_vecLastFacing );
+
+	m_fLastRealTime = -1;
 
 #if defined( REPLAY_ENABLED )
 	m_pReplayScreenshotTaker = NULL;

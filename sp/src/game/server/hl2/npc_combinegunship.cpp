@@ -2474,7 +2474,7 @@ void CNPC_CombineGunship::SelfDestruct( void )
 	 	for ( int i = 0; i < 20; i++ )
 		{
 			Vector gibVelocity = RandomVector(-100,100) * 10;
-			int iModelIndex = modelinfo->GetModelIndex( g_PropDataSystem.GetRandomChunkModel( "MetalChunks" ) );	
+			int iModelIndex = modelinfo->GetModelIndex( g_PropDataSystem.GetRandomChunkModel( "MetalChunks" ) );
 			te->BreakModel( filter, 0.0, GetAbsOrigin(), vec3_angle, Vector(40,40,40), gibVelocity, iModelIndex, 400, 1, 2.5, BREAK_METAL );
 		}
 

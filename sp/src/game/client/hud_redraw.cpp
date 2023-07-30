@@ -29,6 +29,8 @@ using namespace vgui;
 const int CHud::HUDPB_HORIZONTAL = 0;
 const int CHud::HUDPB_VERTICAL = 1;
 const int CHud::HUDPB_HORIZONTAL_INV = 2;
+const int CHud::HUDPB_HORIZONTAL_INV_NOBG = 3;
+const int CHud::HUDPB_VERTICAL_NOBG = 4;
 
 // Called when a ConVar changes value
 static void FovChanged_Callback( IConVar *pConVar, const char *pOldString, float flOldValue )
@@ -152,6 +154,19 @@ void CHud::DrawProgressBar( int x, int y, int width, int height, float percentag
 
 		surface()->DrawSetColor( lowColor );
 		surface()->DrawFilledRect( x + barOfs, y, x + width, y +  height );
+	}
+	else if (type == HUDPB_HORIZONTAL_INV_NOBG)
+	{
+		int	barOfs = width * percentage;
+
+		surface()->DrawSetColor(clr);
+		surface()->DrawFilledRect(x, y, x + barOfs, y + height);
+	}
+	else if (type == HUDPB_VERTICAL_NOBG)
+	{
+		int	barOfs = height * percentage;
+		surface()->DrawSetColor(clr);
+		surface()->DrawFilledRect(x, y + height - barOfs, x + width, y + height);
 	}
 }
 

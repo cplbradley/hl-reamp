@@ -25,7 +25,7 @@
 #include "te_effect_dispatch.h"
 #include "weapon_grapple.h"
 #include "particle_parse.h"
-#include "actual_bullet.h"
+#include "hlr/weapons/actual_bullet.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -746,11 +746,13 @@ void CWeaponShotgun::PrimaryAttack( void )
 	pPlayer->SetAnimation( PLAYER_ATTACK1 );
 
 	// Don't fire again until fire animation has completed
-	
+	ConVarRef classicpos("r_classic_weapon_pos");
+
 		// Shotgun uses same clip for primary and secondary attacks
 	Vector	vForward, vRight, vUp;
 	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
-	Vector vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * 3.0f + vUp * -2.0f;
+	int right = classicpos.GetBool() ? 0 : 3;
+	Vector vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * right + vUp * -2.0f;
 	
 	Vector vecAiming = pPlayer->GetAutoaimVector( AUTOAIM_SCALE_DEFAULT );
 	FireBulletsInfo_t info;

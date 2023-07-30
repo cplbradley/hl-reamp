@@ -55,7 +55,9 @@ $hbox 0 "ValveBiped.arm1_L"	    -6.48  -17.25  -12.38    47.15   15.06   13.85
 $hbox 0 "ValveBiped.arm2_L"	    -7.63  -11.61   -7.16    30.59   10.24   12.48
 $hbox 0 "ValveBiped.hand1_L"	     0.00   -6.45   -4.70     8.43    3.40    4.34
 $hbox 0 "ValveBiped.neck1"	   -12.49  -17.89  -14.94    15.11   16.00   14.26
-$hbox 0 "ValveBiped.head"	    -8.84   -8.74  -13.61    18.61   14.43   14.20
+$hbox 1 "ValveBiped.head"	    -8.84   -8.74  -13.61    18.61   14.43   14.20
+$hbox 0 "ValveBiped.hips"	   -40.00  -40.00  -22.50    40.00   40.00    2.50
+$hbox 0 "ValveBiped.hand1_R"	   -32.00  -12.00  -12.00    32.00   12.00   12.00
 
 $surfaceprop "alienflesh"
 

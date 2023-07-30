@@ -595,6 +595,10 @@ void CNPC_MetroPolice::Precache( void )
 	PrecacheScriptSound( "NPC_MetroPolice.HidingSpeech" );
 	enginesound->PrecacheSentenceGroup( "METROPOLICE" );
 
+	
+
+	
+
 	BaseClass::Precache();
 }
 
@@ -630,6 +634,7 @@ void CNPC_MetroPolice::Spawn( void )
 
 	SetHullType(HULL_HUMAN);
 	SetHullSizeNormal();
+	SetSkin(RandomInt(0, 2));
 
 	SetSolid( SOLID_BBOX );
 	AddSolidFlags( FSOLID_NOT_STANDABLE );
@@ -686,15 +691,15 @@ void CNPC_MetroPolice::Spawn( void )
 
 		pWeapon = GetActiveWeapon();
 
-		if( !FClassnameIs( pWeapon, "weapon_pistol" ) )
-		{
-			m_fWeaponDrawn = true;
-		}
-		
-		if( !m_fWeaponDrawn ) 
-		{
-			GetActiveWeapon()->AddEffects( EF_NODRAW );
-		}
+		if (FClassnameIs(pWeapon, "weapon_pistol"))
+			SetSkin(2);
+
+		if (FClassnameIs(pWeapon, "weapon_smg1"))
+			SetSkin(0);
+		if (FClassnameIs(pWeapon, "weapon_shotgun"))
+			SetSkin(1);
+
+		m_fWeaponDrawn = true;
 	}
 
 
@@ -749,6 +754,18 @@ void CNPC_MetroPolice::DrawEyes(void)
 			m_pSprite->SetTransparency(kRenderGlow, 0, 100, 255, 255, kRenderFxNoDissipation);
 			m_pSprite->SetGlowProxySize(4.0f);
 			m_pSprite->SetAttachment(this, iAttachment);
+		}
+		if (GetActiveWeapon())
+		{
+			CBaseCombatWeapon* pWeapon;
+			pWeapon = GetActiveWeapon();
+			if (FClassnameIs(pWeapon, "weapon_pistol"))
+				m_pSprite->SetTransparency(kRenderGlow, 0, 100, 255, 255, kRenderFxNoDissipation);
+			if (FClassnameIs(pWeapon, "weapon_smg1"))
+				m_pSprite->SetTransparency(kRenderGlow, 255, 200, 0, 255, kRenderFxNoDissipation);
+			if (FClassnameIs(pWeapon, "weapon_shotgun"))
+				m_pSprite->SetTransparency(kRenderGlow, 255, 0, 0, 255, kRenderFxNoDissipation);
+
 		}
 }
 //-----------------------------------------------------------------------------
@@ -3114,7 +3131,6 @@ void CNPC_MetroPolice::Event_Killed( const CTakeDamageInfo &info )
 	}
 
 	DispatchParticleEffect("hlr_base_explosion2", WorldSpaceCenter(), vec3_angle, this);
-	RemoveDeferred();
 	BaseClass::Event_Killed( info );
 }
 

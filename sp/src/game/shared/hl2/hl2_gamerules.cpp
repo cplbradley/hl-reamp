@@ -87,7 +87,6 @@ ConVar	sk_dmg_take_scale2( "sk_dmg_take_scale2", "1.00", FCVAR_REPLICATED );
 #else
 	ConVar	sk_dmg_take_scale3( "sk_dmg_take_scale3", "1.2", FCVAR_REPLICATED );
 #endif//HL2_EPISODIC
-ConVar sk_quaddmg_scale("sk_quaddmg_scale", "1.0", FCVAR_REPLICATED);
 ConVar	sk_allow_autoaim( "sk_allow_autoaim", "1", FCVAR_REPLICATED | FCVAR_ARCHIVE_XBOX );
 
 // Autoaim scale
@@ -1616,15 +1615,15 @@ float CHalfLife2::AdjustPlayerDamageInflicted( float damage )
 	switch( GetSkillLevel() )
 	{
 	case SKILL_EASY:
-		return damage * (sk_dmg_inflict_scale1.GetFloat() * sk_quaddmg_scale.GetFloat());
+		return damage * (sk_dmg_inflict_scale1.GetFloat());
 		break;
 
 	case SKILL_MEDIUM:
-		return damage * (sk_dmg_inflict_scale2.GetFloat() * sk_quaddmg_scale.GetFloat());
+		return damage * (sk_dmg_inflict_scale2.GetFloat());
 		break;
 
 	case SKILL_HARD:
-		return damage * (sk_dmg_inflict_scale3.GetFloat() * sk_quaddmg_scale.GetFloat());
+		return damage * (sk_dmg_inflict_scale3.GetFloat());
 		break;
 
 	default:

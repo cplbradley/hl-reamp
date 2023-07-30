@@ -14,6 +14,7 @@
 #include "tier1/callqueue.h"
 #include "colorcorrectionmgr.h"
 #include "view_scene.h"
+#include "viewrender.h"
 #include "c_world.h"
 #include "bitmap/tgawriter.h"
 #include "filesystem.h"
@@ -35,6 +36,8 @@ float g_flCustomAutoExposureMin = 0;
 float g_flCustomAutoExposureMax = 0;
 float g_flCustomBloomScale = 0.0f;
 float g_flCustomBloomScaleMinimum = 0.0f;
+
+bool g_bInNightvision = false;
 
 bool g_bFlashlightIsOn = false;
 
@@ -62,6 +65,8 @@ ConVar mat_colorcorrection( "mat_colorcorrection", "0" );
 
 ConVar mat_accelerate_adjust_exposure_down( "mat_accelerate_adjust_exposure_down", "3.0", FCVAR_CHEAT );
 ConVar mat_hdr_manual_tonemap_rate( "mat_hdr_manual_tonemap_rate", "1.0" );
+
+ConVar mat_nightvision_bloomscale("mat_nightvision_bloomscale", "3");
 
 // fudge factor to make non-hdr bloom more closely match hdr bloom. Because of auto-exposure, high
 // bloomscales don't blow out as much in hdr. this factor was derived by comparing images in a
@@ -768,11 +773,18 @@ static float GetCurrentBloomScale( void )
 {
 	// Use the appropriate bloom scale settings.  Mapmakers's overrides the convar settings.
 	float flCurrentBloomScale = 1.0f;
-	if ( g_bUseCustomBloomScale )
+	if (g_bInNightvision)
+	{
+		if (g_bUseCustomBloomScale && g_flCustomBloomScale < mat_nightvision_bloomscale.GetFloat())
+			flCurrentBloomScale = mat_nightvision_bloomscale.GetFloat();
+		else
+			flCurrentBloomScale = g_flCustomBloomScale;
+	}
+	else if ( g_bUseCustomBloomScale )
 	{
 		flCurrentBloomScale = g_flCustomBloomScale;
 	}
-	else
+	else 
 	{
 		flCurrentBloomScale = mat_bloomscale.GetFloat();
 	}
@@ -2639,6 +2651,7 @@ void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, b
 	static IMaterial* pTAA = materials->FindMaterial("engine/taa", TEXTURE_GROUP_OTHER);
 	static IMaterial* pSMB = materials->FindMaterial("engine/smb", TEXTURE_GROUP_OTHER);
 	static IMaterial* pBDK = materials->FindMaterial("engine/blurdarken", TEXTURE_GROUP_OTHER);
+	static IMaterial* pNV = materials->FindMaterial("engine/nightvision", TEXTURE_GROUP_OTHER);
 
 	ConVarRef smb("mat_simplemotionblur");
 
@@ -2681,6 +2694,7 @@ void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, b
 			pRenderContext->DrawScreenSpaceRectangle(pFlipMat, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
 		}
 	}
+
 	ConVarRef furyfx("g_draw_fury_effects");
 	if (pPlayer->m_HL2Local.m_bIsFurious && furyfx.GetBool())
 	{
@@ -2691,6 +2705,19 @@ void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, b
 			pRenderContext->DrawScreenSpaceRectangle(pFurious, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
 		}
 	}
+	if (pPlayer->IsEffectActive(EF_DIMLIGHT))
+	{
+		if (pNV)
+		{
+			pNV->AddRef();
+			UpdateScreenEffectTexture();
+			pRenderContext->DrawScreenSpaceRectangle(pNV, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
+			g_bInNightvision = true;
+		}
+	}
+	else
+		g_bInNightvision = false;
+
 	ConVarRef blurdarken("mat_blurdarken");
 	if (blurdarken.GetBool())
 	{

@@ -16,7 +16,7 @@
 #include "ai_behavior_standoff.h"
 #include "ai_behavior_assault.h"
 #include "npc_playercompanion.h"
-#include "hlr/hlr_projectile.h"
+#include "hlr/util/hlr_projectile.h"
 
 #define		VORTIGAUNT_MAX_BEAMS				8
 

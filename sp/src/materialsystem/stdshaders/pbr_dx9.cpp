@@ -27,13 +27,13 @@ const Sampler_t SAMPLER_LIGHTMAP = SHADER_SAMPLER7;
 const Sampler_t SAMPLER_MRAO = SHADER_SAMPLER10;
 const Sampler_t SAMPLER_EMISSIVE = SHADER_SAMPLER11;
 const Sampler_t SAMPLER_DETAIL = SHADER_SAMPLER12;
+const Sampler_t SAMPLER_DETAILMASK = SHADER_SAMPLER13;
 
 // Convars
 static ConVar mat_fullbright("mat_fullbright", "0", FCVAR_CHEAT);
 static ConVar mat_specular("mat_specular", "1", FCVAR_CHEAT);
 static ConVar mat_pbr_force_20b("mat_pbr_force_20b", "0", FCVAR_CHEAT);
 static ConVar mat_pbr_parallaxmap("mat_pbr_parallaxmap", "1");
-static ConVar mat_pbr_show_mrao("mat_pbr_show_mrao", "0", FCVAR_CHEAT);
 static ConVar mat_pbr_force_enabled("mat_pbr_force_enabled", "0");
 
 // Variables for this shader
@@ -54,6 +54,8 @@ struct PBR_Vars_t
     int useParallax;
     int parallaxDepth;
     int parallaxCenter;
+    int parallaxSteps;
+    int parallaxQuality;
     int alphaTestReference;
     int flashlightTexture;
     int flashlightTextureFrame;
@@ -62,9 +64,15 @@ struct PBR_Vars_t
     int lightmapTexture;
 
     int m_nDetail;
+    int m_nDetailMask;
     int m_nDetailFrame;
     int m_nDetailScale;
-    //int m_nDetailTextureCombineMode;
+    int m_bMultiDetail;
+    int m_bDetailInMRAO;
+
+    int decalScale;
+
+    int flatMRAO;
     int m_nDetailTextureBlendFactor;
 };
 
@@ -83,14 +91,18 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
         SHADER_PARAM(PARALLAX, SHADER_PARAM_TYPE_BOOL, "0", "Use Parallax Occlusion Mapping.");
         SHADER_PARAM(PARALLAXDEPTH, SHADER_PARAM_TYPE_FLOAT, "0.0030", "Depth of the Parallax Map");
         SHADER_PARAM(PARALLAXCENTER, SHADER_PARAM_TYPE_FLOAT, "0.5", "Center depth of the Parallax Map");
+        SHADER_PARAM(PARALLAXSTEPS,SHADER_PARAM_TYPE_INTEGER,"20","How many steps i should use when parallaxing")
+        SHADER_PARAM(PARALLAXQUALITY, SHADER_PARAM_TYPE_FLOAT, "1", "Quality of submapping")
         SHADER_PARAM(LIGHTMAP, SHADER_PARAM_TYPE_TEXTURE, "shadertest/BaseTexture", "lightmap texture--will be bound by the engine")
-
+        SHADER_PARAM(MULTIDETAIL,SHADER_PARAM_TYPE_BOOL,"0","Use multiple details")
+        SHADER_PARAM(DETAILMASK,SHADER_PARAM_TYPE_TEXTURE,"","detail mask with mask for detail1 in red, mask for detail2 in green, mask for detail3 in blue")
         SHADER_PARAM(DETAIL, SHADER_PARAM_TYPE_TEXTURE, "shadertest/detail", "detail texture")
         SHADER_PARAM(DETAILFRAME, SHADER_PARAM_TYPE_INTEGER, "0", "frame number for $detail")
         SHADER_PARAM(DETAILSCALE, SHADER_PARAM_TYPE_FLOAT, "4", "scale of the detail texture")
-
-       // SHADER_PARAM(DETAILBLENDMODE, SHADER_PARAM_TYPE_INTEGER, "0", "mode for combining detail texture with base. 0=normal, 1= additive, 2=alpha blend detail over base, 3=crossfade")
+        SHADER_PARAM(DETAILINMRAO,SHADER_PARAM_TYPE_BOOL,"0","put the detail into the mrao")
         SHADER_PARAM(DETAILBLENDFACTOR, SHADER_PARAM_TYPE_FLOAT, "1", "blend amount for detail texture.")
+        SHADER_PARAM(FLATMRAO,SHADER_PARAM_TYPE_TEXTURE,"","flat mrao for fullbright")
+        
     END_SHADER_PARAMS;
 
     // Setting up variables for this shader
@@ -111,14 +123,17 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
         info.useParallax = PARALLAX;
         info.parallaxDepth = PARALLAXDEPTH;
         info.parallaxCenter = PARALLAXCENTER;
+        info.parallaxSteps = PARALLAXSTEPS;
+        info.parallaxQuality = PARALLAXQUALITY;
         info.lightmapTexture = LIGHTMAP;
-		
-
-
+        info.flatMRAO = FLATMRAO;
+        info.m_nDetailMask = DETAILMASK;
         info.m_nDetail = DETAIL;
         info.m_nDetailFrame = DETAILFRAME;
         info.m_nDetailScale = DETAILSCALE;
-        //info.m_nDetailTextureCombineMode = 0;
+        info.m_bMultiDetail = MULTIDETAIL;
+        info.m_bDetailInMRAO = DETAILINMRAO;
+
         info.m_nDetailTextureBlendFactor = DETAILBLENDFACTOR;
     };
     // Initializing parameters
@@ -135,10 +150,12 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
         if (!params[NORMALMAP]->IsDefined())
             params[NORMALMAP]->SetStringValue("dev/flat_normal");
 
+        if(!params[FLATMRAO]->IsDefined())
+            params[FLATMRAO]->SetStringValue("tools/mrao_flat");
 
         // Set a good default mrao texture
         if (!params[MRAOTEXTURE]->IsDefined())
-            params[MRAOTEXTURE]->SetStringValue("dev/pbr_mraotexture");
+            params[MRAOTEXTURE]->SetStringValue("tools/mraoempty");
 
         // PBR relies heavily on envmaps
         if (!params[ENVMAP]->IsDefined())
@@ -154,6 +171,16 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
             params[FLASHLIGHTTEXTURE]->SetStringValue("effects/flashlight001");
         }
 		
+        size_t iLength = Q_strlen(pMaterialName);
+        if (iLength > 6)
+        {
+            const char* path = "models";
+            if (memicmp(path, pMaterialName, 6) == 0)
+            {
+                if (!IS_FLAG_SET(MATERIAL_VAR_MODEL))
+                    SET_FLAGS(MATERIAL_VAR_MODEL);
+            }
+        }
 		
 		if (IS_FLAG_SET(MATERIAL_VAR_DECAL))
 		{
@@ -215,6 +242,8 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
         Assert(info.mraoTexture >= 0);
         LoadTexture(info.mraoTexture, 0);
 
+        LoadTexture(info.flatMRAO);
+
 
         if (params[info.baseTexture]->IsDefined())
         {
@@ -225,18 +254,24 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
             LoadTexture(info.lightmapTexture);
         }
 
-
+        InitIntParam(info.m_bMultiDetail, params, 0);
+        InitIntParam(info.m_bDetailInMRAO, params, 0);
         InitFloatParam(info.m_nDetailTextureBlendFactor, params, 1.0);
         InitFloatParam(info.m_nDetailScale, params, 4.0f);
         InitFloatParam(info.m_nDetailFrame, params, 0);
+        InitFloatParam(info.decalScale, params, 0.25f);
+        InitIntParam(info.parallaxSteps, params, 20);
+        InitIntParam(info.parallaxQuality, params, 1);
 
         if (info.m_nDetail != -1 && params[info.m_nDetail]->IsDefined())
         {
-            /*int nDetailBlendMode = (info.m_nDetailTextureCombineMode == -1) ? 0 : params[info.m_nDetailTextureCombineMode]->GetIntValue();
-            if (nDetailBlendMode == 0) //Mod2X*/
-                LoadTexture(info.m_nDetail);
-           // else
-                //LoadTexture(info.m_nDetail, TEXTUREFLAGS_SRGB);
+            LoadTexture(info.m_nDetail);
+        }
+
+        if (info.m_nDetailMask != -1 && params[info.m_nDetailMask]->IsDefined())
+        {
+            LoadTexture(info.m_nDetailMask);
+            Msg("DetailMask is defined\n");
         }
 
         if (IS_FLAG_SET(MATERIAL_VAR_MODEL)) // Set material var2 flags specific to models
@@ -276,17 +311,29 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
         bool bLightMapped = !IS_FLAG_SET(MATERIAL_VAR_MODEL);
         bool bLightMappedModel = info.lightmapTexture != -1 && params[info.lightmapTexture]->IsDefined();
 
-
-        
-
         // Determining whether we're dealing with a fully opaque material
         BlendType_t nBlendType = EvaluateBlendRequirements(info.baseTexture, true);
         bool bFullyOpaque = (nBlendType != BT_BLENDADD) && (nBlendType != BT_BLEND) && !bIsAlphaTested;
+
+
+        bool bDecal = IS_FLAG_SET(MATERIAL_VAR_DECAL);
+
+
+
+        int iParallaxQuality;
+        if (params[info.parallaxQuality]->GetIntValue() <= 0)
+            iParallaxQuality = 1;
+        else
+          iParallaxQuality = MIN(params[info.parallaxQuality]->GetIntValue(), 5) * 32;
 		
 
 
         //float fBlendFactor = GetFloatParam(info.m_nDetailTextureBlendFactor, params, 1.0);
         bool bHasDetailTexture = IsTextureSet(info.m_nDetail, params);
+        bool bHasDetailMask = IsTextureSet(info.m_nDetailMask, params);
+        bool bMultiDetail = IsBoolSet(info.m_bMultiDetail, params);
+        bool bDetailInMrao = IsBoolSet(info.m_bDetailInMRAO, params);
+
         //int nDetailBlendMode = bHasDetailTexture ? GetIntParam(info.m_nDetailTextureCombineMode, params) : 0;
         //int nDetailTranslucencyTexture = -1;
 
@@ -335,9 +382,9 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
             if (bHasDetailTexture)
             {
                 pShaderShadow->EnableTexture(SAMPLER_DETAIL, true);
-                /*if (nDetailBlendMode != 0) //Not Mod2X
-                    pShaderShadow->EnableSRGBRead(SAMPLER_DETAIL, true);*/
             }
+            if (bHasDetailMask)
+                pShaderShadow->EnableTexture(SAMPLER_DETAILMASK, true);
 
 
             // If the flashlight is on, set up its textures
@@ -390,6 +437,7 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
             }
                 // Setting up static vertex shader
                 DECLARE_STATIC_VERTEX_SHADER(pbr_vs30);
+                SET_STATIC_VERTEX_SHADER_COMBO(ISDECAL, bDecal);
                 SET_STATIC_VERTEX_SHADER(pbr_vs30);
 
                 // Setting up static pixel shader
@@ -411,10 +459,12 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
         else // Not snapshotting -- begin dynamic state
         {
             bool bLightingOnly = mat_fullbright.GetInt() == 2 && !IS_FLAG_SET(MATERIAL_VAR_NO_DEBUG_OVERRIDE);
+            bool bFullbright = mat_fullbright.GetInt() == 1;
+#if 0
             int iMraoDebug = mat_pbr_show_mrao.GetInt();
             if (iMraoDebug > 4)
                 iMraoDebug = 4;
-			
+#endif			
 			if (bHasBaseTexture)
             {
                 BindTexture(SAMPLER_BASETEXTURE, info.baseTexture, info.baseTextureFrame);
@@ -425,6 +475,9 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
             }
             if (bHasDetailTexture)
                 BindTexture(SAMPLER_DETAIL, info.m_nDetail, info.m_nDetailFrame);
+
+            if (bHasDetailMask)
+                BindTexture(SAMPLER_DETAILMASK, info.m_nDetailMask, info.m_nDetailFrame);
 
             Vector color;
             if (bHasColor)
@@ -546,11 +599,11 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
             }
 
             // Dealing with very high and low resolution cubemaps
-            /*if (iEnvMapLOD > 12)
+            if (iEnvMapLOD > 12)
                 iEnvMapLOD = 12;
             if (iEnvMapLOD < 2)
                 iEnvMapLOD = 2;
-			*/
+			
             // This has some spare space
             vEyePos_SpecExponent[3] = iEnvMapLOD;
             pShaderAPI->SetPixelShaderConstant(PSREG_EYEPOS_SPEC_EXPONENT, vEyePos_SpecExponent, 1);
@@ -577,12 +630,13 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
                 SET_DYNAMIC_PIXEL_SHADER_COMBO(PIXELFOGTYPE, pShaderAPI->GetPixelFogCombo());
                 SET_DYNAMIC_PIXEL_SHADER_COMBO(FLASHLIGHTSHADOWS, bFlashlightShadows);
                 SET_DYNAMIC_PIXEL_SHADER_COMBO(LIGHTMAPPED_MODEL, bLightMappedModel);
-                SET_DYNAMIC_PIXEL_SHADER_COMBO(MRAO_DEBUG, iMraoDebug);
+               // SET_DYNAMIC_PIXEL_SHADER_COMBO(MRAO_DEBUG, iMraoDebug);
                 SET_DYNAMIC_PIXEL_SHADER(pbr_ps30);
 
             // Setting up base texture transform
             SetVertexShaderTextureTransform(VERTEX_SHADER_SHADER_SPECIFIC_CONST_0, info.baseTextureTransform);
             SetVertexShaderTextureScaledTransform(VERTEX_SHADER_SHADER_SPECIFIC_CONST_6, info.baseTextureTransform, info.m_nDetailScale);
+
 
            
 
@@ -599,6 +653,13 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
             if (bLightingOnly)
             {
                 pShaderAPI->BindStandardTexture(SAMPLER_BASETEXTURE, TEXTURE_GREY); // Basecolor
+            }
+
+            if (bFullbright)
+            {
+                pShaderAPI->BindStandardTexture(SAMPLER_ENVMAP, TEXTURE_BLACK);
+                pShaderAPI->BindStandardTexture(SAMPLER_NORMAL, TEXTURE_NORMALMAP_FLAT);
+                BindTexture(SAMPLER_MRAO, info.flatMRAO);
             }
 
             // Handle mat_specular 0 (no envmap reflections)
@@ -658,10 +719,18 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
             // Parallax Center (the height at which it's not moved)
             flParams[1] = GetFloatParam(info.parallaxCenter, params, 3.0f);
             pShaderAPI->SetPixelShaderConstant(27, flParams, 1);
-            float flBlend[3] = { 0.0f, 0.0f, 0.0f };
-            flBlend[0] = GetFloatParam(info.m_nDetailTextureBlendFactor, params, 0.5f);
-            pShaderAPI->SetPixelShaderConstant(26, flBlend, 1);
-            
+
+
+            float flDetailParams[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+            //blend factor
+            flDetailParams[0] = GetFloatParam(info.m_nDetailTextureBlendFactor, params, 0.5f);
+            //detail mask
+            flDetailParams[1] = bHasDetailMask ? 1 : 0;
+            //multidetail
+            flDetailParams[2] = bMultiDetail ? 1 : 0;
+            //detail in mrao *DEPRECATED*
+            flDetailParams[3] = bDetailInMrao ? 1 : 0;
+            pShaderAPI->SetPixelShaderConstant(26, flDetailParams, 1);
 
         }
 

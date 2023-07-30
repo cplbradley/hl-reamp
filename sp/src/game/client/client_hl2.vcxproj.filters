@@ -37,6 +37,24 @@
     <Filter Include="Source Files\HLR">
       <UniqueIdentifier>{259FD58E-C512-A856-BF28-485EA0DE62BA}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\HLR\Entity">
+      <UniqueIdentifier>{FB80047C-8E30-5B1F-7578-30187F066014}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\HLR\HUD">
+      <UniqueIdentifier>{E2DB5847-6BCF-6D40-D75C-7F21E3153BE0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\HLR\NPC">
+      <UniqueIdentifier>{0D6C7563-3D49-0E60-0EF8-BF5C92F6663C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\HLR\Util">
+      <UniqueIdentifier>{ED4D39EA-8F54-5D09-5975-6F542DC15FE4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\HLR\VGUI">
+      <UniqueIdentifier>{E827AC0A-38BD-2059-EC66-1C45E1E9AD42}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\HLR\Weapons">
+      <UniqueIdentifier>{44DCE327-1B6B-E15A-F145-6BF7B48EFCF6}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source Files\Precompiled Header">
       <UniqueIdentifier>{A7D26A13-21F4-C6B5-5922-8A4FB05AF07D}</UniqueIdentifier>
     </Filter>
@@ -1898,50 +1916,50 @@
     <ClInclude Include="hl2\hud_suitpower.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
+    <ClInclude Include="hlr\hud\hud_bluekey.h">
+      <Filter>Source Files\HLR\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\hud\hud_deathskull.h">
+      <Filter>Source Files\HLR\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\hud\hud_environmental_resistance.h">
+      <Filter>Source Files\HLR\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\hud\hud_healthbar.h">
+      <Filter>Source Files\HLR\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\hud\hud_itempickup.h">
+      <Filter>Source Files\HLR\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\hud\hud_poweruptime.h">
+      <Filter>Source Files\HLR\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\hud\hud_purplekey.h">
+      <Filter>Source Files\HLR\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\hud\hud_redkey.h">
+      <Filter>Source Files\HLR\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\hud\hud_skullkey.h">
+      <Filter>Source Files\HLR\HUD</Filter>
+    </ClInclude>
     <ClInclude Include="c_movie_display.h">
-      <Filter>Source Files\HLR</Filter>
+      <Filter>Source Files\HLR\Util</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\hl2\hlr\hlr_shareddefs.h">
-      <Filter>Source Files\HLR</Filter>
-    </ClInclude>
-    <ClInclude Include="hlr\hud_bluekey.h">
-      <Filter>Source Files\HLR</Filter>
-    </ClInclude>
-    <ClInclude Include="hlr\hud_deathskull.h">
-      <Filter>Source Files\HLR</Filter>
-    </ClInclude>
-    <ClInclude Include="hlr\hud_environmental_resistance.h">
-      <Filter>Source Files\HLR</Filter>
-    </ClInclude>
-    <ClInclude Include="hlr\hud_healthbar.h">
-      <Filter>Source Files\HLR</Filter>
-    </ClInclude>
-    <ClInclude Include="hlr\hud_itempickup.h">
-      <Filter>Source Files\HLR</Filter>
-    </ClInclude>
-    <ClInclude Include="hlr\hud_poweruptime.h">
-      <Filter>Source Files\HLR</Filter>
-    </ClInclude>
-    <ClInclude Include="hlr\hud_purplekey.h">
-      <Filter>Source Files\HLR</Filter>
-    </ClInclude>
-    <ClInclude Include="hlr\hud_redkey.h">
-      <Filter>Source Files\HLR</Filter>
-    </ClInclude>
-    <ClInclude Include="hlr\hud_skullkey.h">
-      <Filter>Source Files\HLR</Filter>
-    </ClInclude>
-    <ClInclude Include="hlr\IBonusOptions.h">
-      <Filter>Source Files\HLR</Filter>
-    </ClInclude>
-    <ClInclude Include="hlr\ISM30panel.h">
-      <Filter>Source Files\HLR</Filter>
-    </ClInclude>
-    <ClInclude Include="hlr\mapload_background.h">
-      <Filter>Source Files\HLR</Filter>
+      <Filter>Source Files\HLR\Util</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\singleplayer_animstate.h">
-      <Filter>Source Files\HLR</Filter>
+      <Filter>Source Files\HLR\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\vgui\IBonusOptions.h">
+      <Filter>Source Files\HLR\VGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\vgui\ISM30panel.h">
+      <Filter>Source Files\HLR\VGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\vgui\mapload_background.h">
+      <Filter>Source Files\HLR\VGUI</Filter>
     </ClInclude>
     <ClInclude Include="ShaderEditor\ISEdit_ModelRender.h">
       <Filter>Source Files\Shader Editor\Header Files</Filter>
@@ -1969,6 +1987,9 @@
     </ClInclude>
     <ClInclude Include="toolframework_client.h">
       <Filter>Tool Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="hlr\vgui\IArmorCustomization.h">
+      <Filter>Source Files\HLR\VGUI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -3262,80 +3283,95 @@
     <ClCompile Include="hl2\vgui_rootpanel_hl2.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
-    <ClCompile Include="hlr\c_actual_bullet.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\entities\c_hlr_environmental_resistance.cpp">
+      <Filter>Source Files\HLR\Entity</Filter>
     </ClCompile>
-    <ClCompile Include="hlr\c_hlr_environmental_resistance.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\entities\c_hlr_keycard.cpp">
+      <Filter>Source Files\HLR\Entity</Filter>
     </ClCompile>
-    <ClCompile Include="hlr\c_hlr_floorsprite.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\entities\c_hlr_powerups.cpp">
+      <Filter>Source Files\HLR\Entity</Filter>
     </ClCompile>
-    <ClCompile Include="hlr\c_hlr_keycard.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\entities\c_hlr_skullkey.cpp">
+      <Filter>Source Files\HLR\Entity</Filter>
     </ClCompile>
-    <ClCompile Include="hlr\c_hlr_powerups.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\hud\hud_bluekey.cpp">
+      <Filter>Source Files\HLR\HUD</Filter>
     </ClCompile>
-    <ClCompile Include="hlr\c_hlr_skullkey.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\hud\hud_chaingun.cpp">
+      <Filter>Source Files\HLR\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\hud\hud_deathskull.cpp">
+      <Filter>Source Files\HLR\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\hud\hud_environmental_resistance.cpp">
+      <Filter>Source Files\HLR\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\hud\hud_fraglaunch.cpp">
+      <Filter>Source Files\HLR\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\hud\hud_healthbar.cpp">
+      <Filter>Source Files\HLR\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\hud\hud_itempickup.cpp">
+      <Filter>Source Files\HLR\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\hud\hud_poweruptime.cpp">
+      <Filter>Source Files\HLR\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\hud\hud_purplekey.cpp">
+      <Filter>Source Files\HLR\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\hud\hud_railgun_screen.cpp">
+      <Filter>Source Files\HLR\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\hud\hud_redkey.cpp">
+      <Filter>Source Files\HLR\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\hud\hud_skullkey.cpp">
+      <Filter>Source Files\HLR\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\hud\hud_weaponwheel.cpp">
+      <Filter>Source Files\HLR\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\npc\c_npc_antlionwarrior.cpp">
+      <Filter>Source Files\HLR\NPC</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\npc\c_npc_vortboss.cpp">
+      <Filter>Source Files\HLR\NPC</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\util\c_hlr_floorsprite.cpp">
+      <Filter>Source Files\HLR\Util</Filter>
     </ClCompile>
     <ClCompile Include="c_movie_display.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hlr\c_npc_antlionwarrior.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hlr\c_npc_vortboss.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hlr\hlr_bonusoptions.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hlr\hlr_masochistmode.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hlr\hud_bluekey.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hlr\hud_deathskull.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hlr\hud_environmental_resistance.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hlr\hud_healthbar.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hlr\hud_itempickup.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hlr\hud_poweruptime.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hlr\hud_purplekey.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hlr\hud_railgun_screen.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hlr\hud_redkey.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hlr\hud_skullkey.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hlr\hud_weaponwheel.cpp">
-      <Filter>Source Files\HLR</Filter>
-    </ClCompile>
-    <ClCompile Include="hlr\mapload_background.cpp">
-      <Filter>Source Files\HLR</Filter>
+      <Filter>Source Files\HLR\Util</Filter>
     </ClCompile>
     <ClCompile Include="..\..\game\shared\singleplayer_animstate.cpp">
-      <Filter>Source Files\HLR</Filter>
+      <Filter>Source Files\HLR\Util</Filter>
     </ClCompile>
-    <ClCompile Include="hlr\vgui_sm30error.cpp">
-      <Filter>Source Files\HLR</Filter>
+    <ClCompile Include="hlr\vgui\hlr_armorcustomization.cpp">
+      <Filter>Source Files\HLR\VGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\vgui\hlr_bonusoptions.cpp">
+      <Filter>Source Files\HLR\VGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\vgui\hlr_masochistmode.cpp">
+      <Filter>Source Files\HLR\VGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\vgui\mapload_background.cpp">
+      <Filter>Source Files\HLR\VGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\vgui\vgui_sm30error.cpp">
+      <Filter>Source Files\HLR\VGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\weapons\c_actual_bullet.cpp">
+      <Filter>Source Files\HLR\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\weapons\c_weapon_frag.cpp">
+      <Filter>Source Files\HLR\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\weapons\c_weapon_plasmarifle.cpp">
+      <Filter>Source Files\HLR\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files\Precompiled Header</Filter>

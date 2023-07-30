@@ -46,8 +46,8 @@ float MIN_SCREENSPACE_RAIN_WIDTH = 1;
 
 #ifndef _XBOX
 ConVar r_RainHack( "r_RainHack", "0", FCVAR_CHEAT );
-ConVar r_RainRadius( "r_RainRadius", "1500", FCVAR_CHEAT );
-ConVar r_RainSideVel( "r_RainSideVel", "400", FCVAR_CHEAT, "How much sideways velocity rain gets." );
+ConVar r_RainRadius( "r_RainRadius", "1500", FCVAR_NONE);
+ConVar r_RainSideVel( "r_RainSideVel", "400", FCVAR_NONE,"How much sideways velocity rain gets." );
 
 ConVar r_RainSimulate( "r_RainSimulate", "1", FCVAR_CHEAT, "Enable/disable rain simulation." );
 ConVar r_DrawRain( "r_DrawRain", "0", FCVAR_NONE, "Enable/disable rain rendering." );
@@ -252,12 +252,12 @@ static bool IsInAir( const Vector& position )
 // Globals
 //-----------------------------------------------------------------------------
 
-ConVar CClient_Precipitation::s_raindensity( "r_raindensity","0.001", FCVAR_CHEAT);
-ConVar CClient_Precipitation::s_rainwidth( "r_rainwidth", "0.6", FCVAR_CHEAT );
-ConVar CClient_Precipitation::s_rainlength( "r_rainlength", "0.005f", FCVAR_CHEAT );
-ConVar CClient_Precipitation::s_rainspeed( "r_rainspeed", "1500.0f", FCVAR_CHEAT );
-ConVar r_rainalpha( "r_rainalpha", "0.9", FCVAR_CHEAT );
-ConVar r_rainalphapow( "r_rainalphapow", "0.8", FCVAR_CHEAT );
+ConVar CClient_Precipitation::s_raindensity( "r_raindensity","0.001");
+ConVar CClient_Precipitation::s_rainwidth( "r_rainwidth", "0.6");
+ConVar CClient_Precipitation::s_rainlength( "r_rainlength", "0.005f");
+ConVar CClient_Precipitation::s_rainspeed( "r_rainspeed", "1500.0f");
+ConVar r_rainalpha( "r_rainalpha", "0.9");
+ConVar r_rainalphapow( "r_rainalphapow", "0.8");
 
 
 Vector CClient_Precipitation::s_WindVector;		// Stores the wind speed vector
@@ -269,13 +269,14 @@ void CClient_Precipitation::OnDataChanged( DataUpdateType_t updateType )
 	if ( updateType == DATA_UPDATE_CREATED )
 	{
 		SetNextClientThink( CLIENT_THINK_ALWAYS );
+
 		if ( m_nPrecipType == PRECIPITATION_TYPE_SNOWFALL )
 		{
 			SnowFallManagerCreate( this );
 		}
 	}
 
-	m_flDensity = RemapVal( m_clrRender->a, 0, 255, 0, 0.001 );
+	m_flDensity = RemapVal( m_clrRender->a, 0, 255, 0, s_raindensity.GetFloat());
 
 	BaseClass::OnDataChanged( updateType );
 }

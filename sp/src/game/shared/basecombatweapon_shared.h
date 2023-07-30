@@ -396,6 +396,9 @@ public:
 	virtual CHudTexture const	*GetSpriteZoomedAutoaim( void ) const;
 	virtual CHudTexture const	*GetSpriteHUDAmmo(void) const;
 
+	virtual CHudTexture const* GetWheelIconActive(void) const;
+	virtual CHudTexture const* GetWheelIconInactive(void) const;
+
 	virtual Activity		ActivityOverride( Activity baseAct, bool *pRequired );
 	virtual	acttable_t*		ActivityList( void ) { return NULL; }
 	virtual	int				ActivityListCount( void ) { return 0; }

@@ -19,6 +19,7 @@
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "util_shared.h"
 #include "hlr/player/hlr_floorsprite.h"
+#include "experimental/climbable_rope.h"
 
 #if defined USES_ECON_ITEMS
 #include "game_item_schema.h"
@@ -280,7 +281,7 @@ public:
 	void					GroundPound(void);
 	void					DoubleJump(void);
 
-	void					CreateMuzzleLight(int r, int g, int b);
+	void					CreateMuzzleLight(int r, int g, int b, Vector vecSrc);
 
 	virtual void			DrawDebugGeometryOverlays(void);
 	
@@ -757,10 +758,16 @@ public:
 	CNetworkVar(bool, m_bGibbed);
 
 
+	CNetworkVector(m_vecRopeSegmentNormal);
+	CNetworkVector(m_vecRopeSegmentVelocity);
+	CNetworkVector(m_vecRopeSegmentPosition);
+
 	bool m_bInCinematicCamera;
 
 
-	bool m_bClimbingRope;
+	CNetworkVar(bool, m_bClimbingRope);
+	CHandle<CClimbableRope> curRope;
+
 public:
 	// Suicide...
 	virtual void CommitSuicide( bool bExplode = false, bool bForce = false );

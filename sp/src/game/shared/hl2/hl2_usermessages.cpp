@@ -61,7 +61,6 @@ void RegisterUserMessages( void )
 	usermessages->Register("SuitPickup", 1);
 	usermessages->Register("HudChaingun", -1);
 	usermessages->Register("FragLaunch", -1);
-	usermessages->Register("MuzzleLight", -1);
 
 #ifndef _X360
 	// NVNT register haptic user messages

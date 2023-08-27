@@ -34,7 +34,7 @@
 #include "eventqueue.h"
 #include "fmtstr.h"
 #include "gameweaponmanager.h"
-
+#include "ai_basenpc.h"
 #ifdef HL2MP
 #include "hl2mp_gamerules.h"
 #endif
@@ -2391,7 +2391,7 @@ void CBaseCombatWeapon::MaintainIdealActivity(void)
 
 //-----------------------------------------------------------------------------
 // Purpose: Sets the ideal activity for the weapon to be in, allowing for transitional animations inbetween
-// Input  : ideal - activity to end up at, ideally
+// Input  : ideal - activity to end up at, ideally	
 //-----------------------------------------------------------------------------
 bool CBaseCombatWeapon::SetIdealActivity(Activity ideal)
 {

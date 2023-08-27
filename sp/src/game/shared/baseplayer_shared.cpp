@@ -1426,14 +1426,12 @@ void CBasePlayer::ViewPunch( const QAngle &angleOffset )
 
 void CBasePlayer::AbsViewPunch(const QAngle& angleOffset)
 {
-	if (sv_suppress_viewpunch.GetBool())
-		return;
-
-	// We don't allow view kicks in the vehicle
-	if (IsInAVehicle())
-		return;
-
-	m_Local.m_vecAbsPunchAngleVel += angleOffset * 20;
+#ifdef GAME_DLL
+	EntityMessageBegin(this);
+	WRITE_BYTE(3);
+	WRITE_ANGLES(angleOffset);
+	MessageEnd();
+#endif
 }
 //-----------------------------------------------------------------------------
 // Purpose: 

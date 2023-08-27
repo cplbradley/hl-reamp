@@ -91,10 +91,16 @@
     <ClCompile Include="coreball_dx9.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="hlr_player_dx9.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\public\tier0\memoverride.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="nightvision_enemyoverlay_dx9.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nightvision_postprocess_dx9.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="pbr_dx9.cpp">
@@ -140,6 +146,12 @@
       <Filter>Shader Source\fxc</Filter>
     </None>
     <None Include="coreball_vs20.fxc">
+      <Filter>Shader Source\fxc</Filter>
+    </None>
+    <None Include="hlr_player_ps30.fxc">
+      <Filter>Shader Source\fxc</Filter>
+    </None>
+    <None Include="hlr_player_vs30.fxc">
       <Filter>Shader Source\fxc</Filter>
     </None>
     <None Include="nightvision_enemyoverlay_ps30.fxc">

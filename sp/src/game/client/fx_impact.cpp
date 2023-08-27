@@ -302,9 +302,8 @@ static void PerformNewCustomEffects( const Vector &vecOrigin, trace_t &tr, const
 	}
 	QAngle angForward;
 	VectorAngles(vecReflect, angForward);
-	angForward[0] += 90;
 	pEffect->SetControlPoint(5, vecImpactPoint);
-	pEffect->SetControlPointUpVector(5, tr.plane.normal);
+	pEffect->SetControlPointForwardVector(5, tr.plane.normal);
 	//UTIL_TraceLine(vecOrigin, tr.plane.normal * 500, MASK_SHOT, NULL, &tr);
 	//DebugDrawLine(vecImpactPoint, vecReflect * 500, 255, 0, 0, false, 3.0f);
 }

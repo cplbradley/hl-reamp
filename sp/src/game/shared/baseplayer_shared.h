@@ -34,6 +34,8 @@
 // entity messages
 #define PLAY_PLAYER_JINGLE	1
 #define UPDATE_PLAYER_RADAR	2
+#define ABS_VIEWPUNCH 3
+#define MUZZLE_LIGHT 4
 
 #define DEATH_ANIMATION_TIME	3.0f
 

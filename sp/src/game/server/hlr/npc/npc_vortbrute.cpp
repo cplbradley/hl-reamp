@@ -38,6 +38,7 @@
 #include "SpriteTrail.h"
 #include "particle_parse.h"
 #include "weapon_rpg.h"
+#include "npc_vortbrute.h"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -51,6 +52,7 @@ enum //Schedules
 	SCHED_VORTBRUTE_MELEE,
 	SCHED_VORTBRUTE_RANGED_ATTACK,
 	SCHED_VORTBRUTE_CHASE_ENEMY,
+	SCHED_VORTBRUTE_RAGESLAM,
 };
 
 enum //Tasks
@@ -61,6 +63,7 @@ enum //Tasks
 	TASK_VORTBRUTE_RIGHTTHROW,
 	TASK_VORTBRUTE_LEFTTHROW,
 	TASK_VORTBRUTE_FACE_ENEMY_LEAD,
+	TASK_VORTBRUTE_RAGESLAM,
 };
 
 enum
@@ -77,6 +80,7 @@ Activity ACT_VORTBRUTE_LEFTHOOK;
 Activity ACT_VORTBRUTE_RIGHTTHROW;
 Activity ACT_VORTBRUTE_LEFTTHROW;
 Activity ACT_VORTBRUTE_RUN;
+Activity ACT_VORTBRUTE_RAGESLAM;
 
 int nRingTexture = -1;
 
@@ -87,6 +91,7 @@ int AE_VORTBRUTE_LEFTTHROW_THROW;
 int AE_VORTBRUTE_LEAPATTACK_TELEPORT;
 int AE_VORTBRUTE_LEAPATTACK_LAND;
 int AE_VORTBRUTE_SWING_SOUND;
+int AE_VORTBRUTE_RAGESLAM_IMPACT;
 
 ConVar sk_vortbrute_health("sk_vortbrute_health", "0");
 ConVar ai_vortbrute_legacy_face("ai_vortbrute_legacy_face", "0");
@@ -95,20 +100,6 @@ ConVar sk_vortbrute_leap_frequency("sk_vortbrute_leap_frequency", "10");
 ConVar sk_vortbrute_throw_frequency("sk_vortbrute_throw_frequency", "5");
 ConVar sk_vortbrute_projectile_dmg("sk_vortbrute_projectile_dmg", "0");
 
-class CBruteProjectile : public CBaseAnimating
-{
-	DECLARE_CLASS(CBruteProjectile, CBaseAnimating);
-public:
-	void Spawn();
-	void Precache();
-	void CreateParticles();
-	void Touch(CBaseEntity* pOther);
-	
-
-	static CBruteProjectile* Create(const Vector& vecOrigin, const QAngle& angAngle, CBaseEntity* pOwner = NULL);
-
-	DECLARE_DATADESC();
-};
 
 LINK_ENTITY_TO_CLASS(brute_projectile, CBruteProjectile);
 BEGIN_DATADESC(CBruteProjectile)
@@ -175,6 +166,13 @@ void CBruteProjectile::Touch(CBaseEntity* pOther)
 		//DispatchParticleEffect("smg_plasmaball_core", GetAbsOrigin(), GetAbsAngles(), this);
 		ApplyMultiDamage(); //zap!
 	}
+
+	if (!pOther->IsPlayer() && GetOwnerEntity())
+	{
+		CNPC_VortBrute* brute = dynamic_cast<CNPC_VortBrute*>(GetOwnerEntity());
+		if(brute)
+			brute->m_iMissCount++;
+	}
 	SetMoveType(MOVETYPE_NONE); //stop moving completely
 	SetSolid(SOLID_NONE); //get rid of my collision model
 	SetSolidFlags(FSOLID_NOT_SOLID); //alert the game i'm not solid anymore
@@ -182,56 +180,16 @@ void CBruteProjectile::Touch(CBaseEntity* pOther)
 	SetTouch(NULL); //i can't touch anything anymore
 }
 
-class CNPC_VortBrute : public CAI_BlendedNPC
-{
-	DECLARE_CLASS(CNPC_VortBrute, CAI_BlendedNPC);
-	//DECLARE_SERVERCLASS();
-public:
-	void Precache();
-	void Spawn();
-	Class_T Classify() { return CLASS_VORTIGAUNT; }
 
-	Vector GetLeapDestination();
-	void LeapTeleport(void);
-	void TestTeleport(inputdata_t& inputdata);
-	bool IsLeapAttackValid();
-
-	bool ShouldThrowProjectile();
-	bool ShouldPunch();
-	float GetEnemyDistance();
-
-	void MeleeAttack();
-
-	int SelectCombatSchedule(void);
-	int SelectSchedule(void);
-	
-	void	HandleAnimEvent(animevent_t* pEvent);
-	void	StartTask(const Task_t* pTask);
-	void	RunTask(const Task_t* pTask);
-	void	GatherConditions(void);
-
-	void BuildScheduleTestBits(void);
-
-	void		PostNPCInit();
-
-	float	MaxYawSpeed(void);
-
-	Vector FaceEnemyLead();
-
-private:
-	float flNextLeap;
-	float flNextThrow;
-
-protected:
-	DEFINE_CUSTOM_AI;
-	DECLARE_DATADESC();
-};
 LINK_ENTITY_TO_CLASS(npc_vortbrute, CNPC_VortBrute);
 
 
 BEGIN_DATADESC(CNPC_VortBrute)
 
 DEFINE_INPUTFUNC(FIELD_VOID,"TestTeleport", TestTeleport),
+DEFINE_FIELD(flNextLeap,FIELD_FLOAT),
+DEFINE_FIELD(flNextThrow,FIELD_FLOAT),
+DEFINE_FIELD(m_iMissCount,FIELD_INTEGER),
 
 END_DATADESC()
 
@@ -251,7 +209,9 @@ void CNPC_VortBrute::Spawn()
 	AddSolidFlags(FSOLID_NOT_STANDABLE);
 
 	NPCInit();
-	
+	flNextLeap = flNextThrow = gpGlobals->curtime;
+
+	m_iMissCount = 0;
 
 	m_flFieldOfView = -0.9f;
 }
@@ -271,6 +231,7 @@ void CNPC_VortBrute::Precache()
 	PrecacheParticleSystem("vortigaunt_teleout");
 	PrecacheParticleSystem("vortigaunt_telein");
 	PrecacheParticleSystem("vortbrute_handflames");
+	PrecacheParticleSystem("vortbrute_groundslam");
 	PrecacheScriptSound("NPC_Vortigaunt.Swing");
 	PrecacheScriptSound("Punch.Impact");
 	PrecacheScriptSound("Vortbrute.Teleport");
@@ -408,6 +369,9 @@ int CNPC_VortBrute::SelectSchedule(void)
 }
 int CNPC_VortBrute::SelectCombatSchedule(void)
 {
+	if (m_iMissCount >= 3)
+		return SCHED_VORTBRUTE_RAGESLAM;
+
 	if (HasCondition(COND_IN_RANGE_TO_PUNCH))
 		return SCHED_VORTBRUTE_MELEE;
 
@@ -557,6 +521,14 @@ void CNPC_VortBrute::HandleAnimEvent(animevent_t* pEvent)
 		EmitSound("NPC_Vortigaunt.Swing");
 		return;
 	}
+	if (pEvent->event == AE_VORTBRUTE_RAGESLAM_IMPACT)
+	{
+		Vector vecForward;
+		AngleVectors(GetAbsAngles(), &vecForward);
+		VectorNormalize(vecForward);
+		Vector vecPos = GetAbsOrigin() + (vecForward * 16);
+		DispatchParticleEffect("vortbrute_groundslam", vecPos, GetAbsAngles());
+	}
 }
 
 
@@ -564,6 +536,12 @@ void CNPC_VortBrute::StartTask(const Task_t* pTask)
 {
 	switch (pTask->iTask)
 	{
+	case TASK_VORTBRUTE_RAGESLAM:
+	{
+		SetActivity(ACT_VORTBRUTE_RAGESLAM);
+		m_iMissCount = 0;
+		break;
+	}
 	case TASK_VORTBRUTE_LEAPATTACK:
 	{
 		float adjustedfreq = g_pGameRules->SkillAdjustValueInverted(sk_vortbrute_leap_frequency.GetFloat());
@@ -619,6 +597,12 @@ void CNPC_VortBrute::RunTask(const Task_t* pTask)
 			TaskComplete();
 			SetPlaybackRate(1.0f);
 		}
+		break;
+	}
+	case TASK_VORTBRUTE_RAGESLAM:
+	{
+		if (IsActivityFinished())
+			TaskComplete();
 		break;
 	}
 	case TASK_VORTBRUTE_RIGHTTHROW:
@@ -679,6 +663,7 @@ AI_BEGIN_CUSTOM_NPC(npc_vortbrute,CNPC_VortBrute)
 	DECLARE_ACTIVITY(ACT_VORTBRUTE_RIGHTTHROW)
 	DECLARE_ACTIVITY(ACT_VORTBRUTE_LEFTTHROW)
 	DECLARE_ACTIVITY(ACT_VORTBRUTE_RUN)
+	DECLARE_ACTIVITY(ACT_VORTBRUTE_RAGESLAM)
 
 	DECLARE_ANIMEVENT(AE_VORTBRUTE_RIGHTHOOK_CONNECT)
 	DECLARE_ANIMEVENT(AE_VORTBRUTE_LEFTHOOK_CONNECT)
@@ -687,6 +672,7 @@ AI_BEGIN_CUSTOM_NPC(npc_vortbrute,CNPC_VortBrute)
 	DECLARE_ANIMEVENT(AE_VORTBRUTE_LEAPATTACK_TELEPORT)
 	DECLARE_ANIMEVENT(AE_VORTBRUTE_LEAPATTACK_LAND)
 	DECLARE_ANIMEVENT(AE_VORTBRUTE_SWING_SOUND)
+	DECLARE_ANIMEVENT(AE_VORTBRUTE_RAGESLAM_IMPACT)
 
 	DECLARE_CONDITION(COND_IN_RANGE_TO_PUNCH)
 	DECLARE_CONDITION(COND_IN_RANGE_TO_LEAP)
@@ -699,6 +685,7 @@ AI_BEGIN_CUSTOM_NPC(npc_vortbrute,CNPC_VortBrute)
 	DECLARE_TASK(TASK_VORTBRUTE_RIGHTTHROW)
 	DECLARE_TASK(TASK_VORTBRUTE_LEFTTHROW)
 	DECLARE_TASK(TASK_VORTBRUTE_FACE_ENEMY_LEAD)
+	DECLARE_TASK(TASK_VORTBRUTE_RAGESLAM)
 
 
 	DEFINE_SCHEDULE
@@ -757,6 +744,19 @@ AI_BEGIN_CUSTOM_NPC(npc_vortbrute,CNPC_VortBrute)
 			"		TASK_VORTBRUTE_RIGHTHOOK			0"
 			"		TASK_VORTBRUTE_FACE_ENEMY_LEAD		0"
 			"		TASK_VORTBRUTE_LEFTHOOK				0"
+			"	"
+			"	Interrupts"
+			"		COND_TASK_FAILED"
+			"		COND_ENEMY_DEAD"
+		)
+		DEFINE_SCHEDULE
+		(
+			SCHED_VORTBRUTE_RAGESLAM,
+
+			"	Tasks"
+			"		TASK_STOP_MOVING					0"
+			"		TASK_FACE_ENEMY						0"
+			"		TASK_VORTBRUTE_RAGESLAM				0"
 			"	"
 			"	Interrupts"
 			"		COND_TASK_FAILED"

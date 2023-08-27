@@ -255,6 +255,8 @@ void CWeaponRifle::PrimaryAttack(void)
 	info.m_iDamageType = DMG_BULLET | DMG_DIRECT;
 	FireActualBullet(info, 12000, GetTracerType());
 
+	pOwner->CreateMuzzleLight(255, 200, 0,vecSrc);
+
 	//pOwner->FireBullets(2, vecSrc, vecDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false);
 	
 	SendWeaponAnim(GetPrimaryAttackActivity());

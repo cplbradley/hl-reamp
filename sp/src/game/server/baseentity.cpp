@@ -3490,6 +3490,7 @@ void CBaseEntity::SetMoveType( MoveType_t val, MoveCollide_t moveCollide )
 
 void CBaseEntity::Spawn( void ) 
 {
+	
 }
 
 

@@ -34,6 +34,9 @@
     <Filter Include="Source Files\HLR\NPC">
       <UniqueIdentifier>{0D6C7563-3D49-0E60-0EF8-BF5C92F6663C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\HLR\NPC\Modded HL2 NPCs">
+      <UniqueIdentifier>{92991B14-C40A-E67B-5B6E-EF104D5C8D1A}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source Files\HLR\Player">
       <UniqueIdentifier>{85FF8AA2-CE14-F6A9-ABF1-CEF1FEEBBD63}</UniqueIdentifier>
     </Filter>
@@ -1766,26 +1769,29 @@
     <ClInclude Include="hlr\entity\hlr_powerups.h">
       <Filter>Source Files\HLR\Entities</Filter>
     </ClInclude>
-    <ClInclude Include="hl2\npc_antlion.h">
-      <Filter>Source Files\HLR\NPC</Filter>
-    </ClInclude>
     <ClInclude Include="hlr\npc\npc_antlionwarrior.h">
       <Filter>Source Files\HLR\NPC</Filter>
     </ClInclude>
-    <ClInclude Include="hl2\npc_combine.h">
+    <ClInclude Include="hlr\npc\npc_vortbrute.h">
       <Filter>Source Files\HLR\NPC</Filter>
+    </ClInclude>
+    <ClInclude Include="hl2\npc_antlion.h">
+      <Filter>Source Files\HLR\NPC\Modded HL2 NPCs</Filter>
+    </ClInclude>
+    <ClInclude Include="hl2\npc_combine.h">
+      <Filter>Source Files\HLR\NPC\Modded HL2 NPCs</Filter>
     </ClInclude>
     <ClInclude Include="hl2\npc_combines.h">
-      <Filter>Source Files\HLR\NPC</Filter>
+      <Filter>Source Files\HLR\NPC\Modded HL2 NPCs</Filter>
     </ClInclude>
     <ClInclude Include="episodic\npc_hunter.h">
-      <Filter>Source Files\HLR\NPC</Filter>
+      <Filter>Source Files\HLR\NPC\Modded HL2 NPCs</Filter>
     </ClInclude>
     <ClInclude Include="hl2\npc_metropolice.h">
-      <Filter>Source Files\HLR\NPC</Filter>
+      <Filter>Source Files\HLR\NPC\Modded HL2 NPCs</Filter>
     </ClInclude>
     <ClInclude Include="hl2\npc_vortigaunt_episodic.h">
-      <Filter>Source Files\HLR\NPC</Filter>
+      <Filter>Source Files\HLR\NPC\Modded HL2 NPCs</Filter>
     </ClInclude>
     <ClInclude Include="hlr\player\hlr_floorsprite.h">
       <Filter>Source Files\HLR\Player</Filter>
@@ -1802,7 +1808,7 @@
     <ClInclude Include="hlr\weapons\actual_bullet.h">
       <Filter>Source Files\HLR\Weapons</Filter>
     </ClInclude>
-    <ClInclude Include="hl2\weapon_ar2.h">
+    <ClInclude Include="hlr\weapons\weapon_chaingun.h">
       <Filter>Source Files\HLR\Weapons</Filter>
     </ClInclude>
     <ClInclude Include="hlr\weapons\weapon_npc_chaingun.h">
@@ -3340,8 +3346,8 @@
     <ClCompile Include="hlr\entity\item_custom.cpp">
       <Filter>Source Files\HLR\Entities</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\npc_antlion.cpp">
-      <Filter>Source Files\HLR\NPC</Filter>
+    <ClCompile Include="hlr\entity\light_strobe.cpp">
+      <Filter>Source Files\HLR\Entities</Filter>
     </ClCompile>
     <ClCompile Include="hlr\npc\npc_antlionwarrior.cpp">
       <Filter>Source Files\HLR\NPC</Filter>
@@ -3355,22 +3361,10 @@
     <ClCompile Include="hlr\npc\npc_chopperdrone.cpp">
       <Filter>Source Files\HLR\NPC</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\npc_combine.cpp">
-      <Filter>Source Files\HLR\NPC</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\npc_combines.cpp">
-      <Filter>Source Files\HLR\NPC</Filter>
-    </ClCompile>
-    <ClCompile Include="episodic\npc_hunter.cpp">
-      <Filter>Source Files\HLR\NPC</Filter>
-    </ClCompile>
     <ClCompile Include="hlr\npc\npc_legs.cpp">
       <Filter>Source Files\HLR\NPC</Filter>
     </ClCompile>
     <ClCompile Include="hlr\npc\npc_mechubus.cpp">
-      <Filter>Source Files\HLR\NPC</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\npc_metropolice.cpp">
       <Filter>Source Files\HLR\NPC</Filter>
     </ClCompile>
     <ClCompile Include="hlr\npc\npc_vortboss.cpp">
@@ -3379,11 +3373,26 @@
     <ClCompile Include="hlr\npc\npc_vortbrute.cpp">
       <Filter>Source Files\HLR\NPC</Filter>
     </ClCompile>
+    <ClCompile Include="hl2\npc_antlion.cpp">
+      <Filter>Source Files\HLR\NPC\Modded HL2 NPCs</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\npc_combine.cpp">
+      <Filter>Source Files\HLR\NPC\Modded HL2 NPCs</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\npc_combines.cpp">
+      <Filter>Source Files\HLR\NPC\Modded HL2 NPCs</Filter>
+    </ClCompile>
+    <ClCompile Include="episodic\npc_hunter.cpp">
+      <Filter>Source Files\HLR\NPC\Modded HL2 NPCs</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\npc_metropolice.cpp">
+      <Filter>Source Files\HLR\NPC\Modded HL2 NPCs</Filter>
+    </ClCompile>
     <ClCompile Include="hl2\npc_vortigaunt_episodic.cpp">
-      <Filter>Source Files\HLR\NPC</Filter>
+      <Filter>Source Files\HLR\NPC\Modded HL2 NPCs</Filter>
     </ClCompile>
     <ClCompile Include="hl2\npc_zombie.cpp">
-      <Filter>Source Files\HLR\NPC</Filter>
+      <Filter>Source Files\HLR\NPC\Modded HL2 NPCs</Filter>
     </ClCompile>
     <ClCompile Include="hlr\player\hlr_floorsprite.cpp">
       <Filter>Source Files\HLR\Player</Filter>
@@ -3409,6 +3418,9 @@
     <ClCompile Include="hlr\util\npc_memory_manager.cpp">
       <Filter>Source Files\HLR\Util</Filter>
     </ClCompile>
+    <ClCompile Include="hlr\util\prop_armor_controller.cpp">
+      <Filter>Source Files\HLR\Util</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\game\shared\singleplayer_animstate.cpp">
       <Filter>Source Files\HLR\Util</Filter>
     </ClCompile>
@@ -3418,10 +3430,10 @@
     <ClCompile Include="hl2\weapon_357.cpp">
       <Filter>Source Files\HLR\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\weapon_ar2.cpp">
+    <ClCompile Include="hlr\weapons\weapon_bfg.cpp">
       <Filter>Source Files\HLR\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="hlr\weapons\weapon_bfg.cpp">
+    <ClCompile Include="hlr\weapons\weapon_chaingun.cpp">
       <Filter>Source Files\HLR\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="hl2\weapon_frag.cpp">

@@ -3,33 +3,27 @@
 #include "experimental/climbable_rope.h"
 #include "physconstraint.h"
 #include "physobj.h"
+
+#include "gamemovement.h"
+#include "in_buttons.h"
+
 #include "tier0/memdbgon.h"
 
 #define DEFAULT_ROPE "cable/rope.vmt"
-#define DEFAULT_MODEL "models/items/boxsrounds.mdl"
+#define DEFAULT_MODEL "models/utils/rope_joint.mdl"
+#define ROPE_KNOT "models/utils/rope_knot.mdl"
 
 
+extern IGameMovement* g_pGameMovement;
 
-
-LINK_ENTITY_TO_CLASS(climb_rope_motor, CClimbRopeMotor);
-BEGIN_DATADESC(CClimbRopeMotor)
-END_DATADESC()
-
-
-void CClimbRopeMotor::Spawn()
-{
-	PrecacheModel(DEFAULT_MODEL);
-	SetModel(DEFAULT_MODEL);
-	SetRenderColor(255, 0, 0, 255);
-}
-
-void CClimbRopeMotor::UpdatePosition(Vector vecPos)
-{
-	SetAbsOrigin(vecPos);
-}
 LINK_ENTITY_TO_CLASS(climb_rope_segment, CClimbRopeSegment);
 BEGIN_DATADESC(CClimbRopeSegment)
 END_DATADESC()
+
+IMPLEMENT_SERVERCLASS_ST(CClimbRopeSegment,DT_RopeSegment)
+SendPropEHandle(SENDINFO(hNextSegment)),
+SendPropFloat(SENDINFO(fWidth)),
+END_SEND_TABLE()
 
 
 CClimbRopeSegment* CClimbRopeSegment::Create(const Vector& vecOrigin, const QAngle& angAngles, bool bAnchor)
@@ -49,65 +43,95 @@ void CClimbRopeSegment::Spawn()
 	SetModel(DEFAULT_MODEL);
 	SetMoveType(MOVETYPE_VPHYSICS);
 	SetSolid(SOLID_VPHYSICS);
-	//SetRenderMode(kRenderNone);
+	//AddEffects(EF_NODRAW);
 	VPhysicsCreate();
+	SetTransmitState(FL_EDICT_ALWAYS);
+	ConColorMsg(Color(255, 255, 0, 255), "Rope Segment Server Spawn\n");
 }
 bool CClimbRopeSegment::VPhysicsCreate()
 {
-	/*if (bAmAnchor)
-	{
-		Msg("I am an anchor\n");
-			
-		if (VPhysicsInitStatic())
-			Msg("Creating Static VPhysics\n");
-		else
-			Msg("Failed to create Static VPhysics\n");
-	}
-	else
-	{
-		if (VPhysicsInitNormal(SOLID_VPHYSICS, FSOLID_NOT_STANDABLE, false))
-		{
-			Msg("Creating Dynamic VPhysics\n");
-		}
-	}*/
-	
 	return VPhysicsInitNormal(SOLID_VPHYSICS, FSOLID_NOT_SOLID, false);
 }
 void CClimbRopeSegment::Precache()
 {
 	PrecacheModel(DEFAULT_MODEL);
+	PrecacheModel(ROPE_KNOT);
+}
+
+int CClimbRopeSegment::UpdateTransmitState()
+{
+	return SetTransmitState(FL_EDICT_ALWAYS);
 }
 
 LINK_ENTITY_TO_CLASS(climbable_rope, CClimbableRope);
 BEGIN_DATADESC(CClimbableRope)
+DEFINE_AUTO_ARRAY(rpSegment,FIELD_EHANDLE),
+DEFINE_FIELD(rpNearestSegment,FIELD_EHANDLE),
+DEFINE_KEYFIELD(m_fRopeWidth,FIELD_FLOAT,"RopeWidth"),
+DEFINE_KEYFIELD(m_iRopeSegments,FIELD_INTEGER,"RopeSegments"),
+DEFINE_KEYFIELD(szEndEntity,FIELD_STRING,"EndPointEnt"),
+DEFINE_FIELD(bCanBeGrabbed,FIELD_BOOLEAN),
+DEFINE_THINKFUNC(UpdateTraces),
+
+
 END_DATADESC()
+
+IMPLEMENT_SERVERCLASS_ST(CClimbableRope,DT_ClimbableRope)
+SendPropArray3(SENDINFO_ARRAY3(rpSegment),SendPropEHandle(SENDINFO_ARRAY(rpSegment))),
+SendPropEHandle(SENDINFO(rpNearestSegment)),
+SendPropInt(SENDINFO(m_iRopeSegments)),
+SendPropFloat(SENDINFO(m_fRopeWidth)),
+END_SEND_TABLE()
 
 void CClimbableRope::Spawn()
 {
 	Precache();
-	SpawnSegements();
-	CreateBeams();
+	SpawnSegments();
 	CreateConstraints();
+	SetChildren();
 	SetThink(&CClimbableRope::UpdateTraces);
 	SetNextThink(gpGlobals->curtime);
+	SetTransmitState(FL_EDICT_ALWAYS);
+	RegisterThinkContext("GrabEnable");
+	bCanBeGrabbed = true;
+	SetModel(DEFAULT_MODEL);
 }
 
 void CClimbableRope::Precache()
 {
-	PrecacheMaterial(DEFAULT_ROPE);
+	PrecacheModel(DEFAULT_MODEL);
 }
 
-void CClimbableRope::SpawnSegements()
+void CClimbableRope::OnRestore()
 {
+	BaseClass::OnRestore();
+	Spawn();
+}
+int CClimbableRope::UpdateTransmitState()
+{
+	return SetTransmitState(FL_EDICT_ALWAYS);
+}
+
+void CClimbableRope::SpawnSegments()
+{
+	CBaseEntity* pTarget = gEntList.FindEntityByName(NULL, szEndEntity);
+
+	if (!pTarget)
+		return;
+
+	Vector vecEnd = pTarget->GetAbsOrigin();
 	Vector vecOrigin = GetAbsOrigin();
+	Vector vecDir = (vecEnd - vecOrigin).Normalized();
 
-	float length = m_fRopeLength / 8.0f;
+	float absLength = (vecEnd - vecOrigin).Length();
+	
 
-	for (int i = 0; i < 8; i++)
+	float length = absLength / ((float)m_iRopeSegments - 1);
+
+	for (int i = 0; i < m_iRopeSegments; i++)
 	{
-		
 		float offset = length * i;
-		Vector offsetPos = Vector(vecOrigin.x, vecOrigin.y, vecOrigin.z - offset);
+		Vector offsetPos = vecOrigin + (vecDir * offset);
 		bool anchor;
 
 		if (i == 0)
@@ -118,40 +142,26 @@ void CClimbableRope::SpawnSegements()
 		else
 			anchor = false;
 
-		rpSegment[i] = CClimbRopeSegment::Create(offsetPos, vec3_angle, anchor);
-		vecSegmentPos[i] = rpSegment[i]->GetAbsOrigin();
-		
-			
-		// = pSegment;
-
-	//	m_vSegmentList.AddToTail(rpSegment[i]);
-	}
-}
-
-bool CClimbableRope::CreateBeams()
-{
-	for (int i = 0; i < 8; i++)
-	{
-		if (!ropeBeam[i])
-			ropeBeam[i] = CBeam::BeamCreate(DEFAULT_ROPE, 8.0f);
-
-		ropeBeam[i]->SetStartEntity(rpSegment[i].Get());
-		ropeBeam[i]->SetEndEntity(rpSegment[i + 1].Get());
-		ropeBeam[i]->RelinkBeam();
-		ropeBeam[i]->Activate();
+		if (!rpSegment.Get(i))
+		{
+			CClimbRopeSegment* segment = CClimbRopeSegment::Create(offsetPos, vec3_angle, anchor);
+			rpSegment.Set(i, segment);
+			rpSegment[i]->fWidth = m_fRopeWidth;
+		}
 	}
 
-	return true;
+	rpSegment[m_iRopeSegments - 1]->SetModel(ROPE_KNOT);
+	rpSegment[m_iRopeSegments - 1]->ClearEffects();
 }
 
 void CClimbableRope::CreateConstraints()
 {
 	constraint_groupparams_t group;
 	group.Defaults();
-	group.additionalIterations = 8;
+	group.additionalIterations = m_iRopeSegments * 2;
 	IPhysicsConstraintGroup* pGroup = physenv->CreateConstraintGroup(group);
 
-	for (int i = 0; i < 8; i++)
+	for (int i = 0; i < m_iRopeSegments; i++)
 	{
 		hl_constraint_info_t info;
 
@@ -159,8 +169,8 @@ void CClimbableRope::CreateConstraints()
 		constraint_ballsocketparams_t params;
 		params.Defaults();
 
-		CClimbRopeSegment* ropeseg1 = rpSegment[i].Get();
-		CClimbRopeSegment* ropeseg2 = rpSegment[i + 1].Get();
+		CClimbRopeSegment* ropeseg1 = rpSegment.Get(i);
+		CClimbRopeSegment* ropeseg2 = rpSegment.Get(i+1);
 
 		if (!ropeseg1 || !ropeseg2)
 		{
@@ -174,9 +184,6 @@ void CClimbableRope::CreateConstraints()
 		ropeseg1->VPhysicsGetObject()->EnableMotion(motion);
 		ropeseg1->VPhysicsGetObject()->Wake();
 
-		float drag = 0.8f;
-		ropeseg1->VPhysicsGetObject()->SetDragCoefficient(&drag, &drag);
-
 		IPhysicsObject* pObject2 = ropeseg2->VPhysicsGetObject();
 	
 
@@ -189,10 +196,6 @@ void CClimbableRope::CreateConstraints()
 		info.pObjects[0] = ropeseg1->VPhysicsGetObject();
 		info.pObjects[1] = ropeseg2->VPhysicsGetObject();
 
-		
-		
-		
-
 		info.pObjects[0]->WorldToLocal(&params.constraintPosition[0], ropeseg1->GetAbsOrigin());
 		info.pObjects[1]->WorldToLocal(&params.constraintPosition[1], ropeseg2->GetAbsOrigin());
 
@@ -203,123 +206,223 @@ void CClimbableRope::CreateConstraints()
 		Msg("i should be working now\n");
 		pConstraint = physenv->CreateBallsocketConstraint(info.pObjects[0],info.pObjects[1], pGroup, params);
 		pConstraint->Activate();
+		info.pObjects[0]->Wake();
+		info.pObjects[1]->Wake();
+
 
 	}
-
 	pGroup->Activate();
 }
 
-
 void CClimbableRope::UpdateTraces()
 {
-
 	CBasePlayer* pPlayer = UTIL_GetLocalPlayer();
 	if (!pPlayer)
 		return;
 
-	for (int i = 0; i < 8; i++)
-	{
-		trace_t tr;
-		CClimbRopeSegment* segment1 = rpSegment[i];
-		CClimbRopeSegment* segment2 = rpSegment[i + 1];
+	if (!bCanBeGrabbed)
+		return;
 
-		vecSegmentPos[i] = segment1->GetAbsOrigin();
+	for (int i = 0; i < m_iRopeSegments; i++)
+	{
+		trace_t tr, tr2;
+		CClimbRopeSegment* segment1 = rpSegment.Get(i);
+		CClimbRopeSegment* segment2 = rpSegment.Get(i + 1);
 
 		if (!segment2)
-			return;
+			break;
 
-		UTIL_TraceHull(segment1->GetAbsOrigin(), segment2->GetAbsOrigin(), pPlayer->GetPlayerMins(), pPlayer->GetPlayerMaxs(), MASK_PLAYERSOLID_BRUSHONLY, NULL, &tr);
-		DebugDrawLine(tr.startpos, tr.endpos, 0, 255, 0, false, 0.1f);
+		Vector scale = Vector(0.5, 0.5, 1);
+		int red = 0;
+		int green = 255;
 
-		if (tr.m_pEnt && tr.m_pEnt->IsPlayer())
+		if (segment1->bAmGrabbed)
 		{
-			if (!pMotor)
-			{
-				pMotor = CreateMotor(FindNearestPointAlongPath(pPlayer->GetAbsOrigin()), GetProgressOnPath(pPlayer->GetAbsOrigin()));
-			}
+			red = 255;
+			green = 0;
+		}
+		UTIL_TraceHull(segment1->GetAbsOrigin(), segment2->GetAbsOrigin(), Vector(-48,-48,-48), Vector(48, 48, 48), MASK_PLAYERSOLID_BRUSHONLY, NULL, &tr);
+		UTIL_TraceLine(segment1->GetAbsOrigin(), segment2->GetAbsOrigin(), MASK_ALL, NULL, &tr2);
+
+		if (tr2.m_pEnt && tr2.m_pEnt->IsPlayer())
+		{
 			if (!pPlayer->m_bClimbingRope)
 			{
-				rpSegment[i]->VPhysicsGetObject()->ApplyForceCenter(pPlayer->GetAbsVelocity());
-				pPlayer->SetAbsVelocity(pPlayer->GetAbsVelocity() * 0);
+				rpSegment[i]->VPhysicsGetObject()->ApplyForceCenter(pPlayer->GetAbsVelocity() * 10);
 				pPlayer->m_bClimbingRope = true;
-				pPlayer->SetGravity(0.0f);
-			//	pPlayer->SetMoveType(MOVETYPE_FLY);
-			//	pPlayer->SetParent(pMotor);
+				pPlayer->SetMoveType(MOVETYPE_ROPE);
 			}
+		}
+		if (tr.m_pEnt && tr.m_pEnt->IsPlayer() && pPlayer->m_bClimbingRope)
+		{
+			rpSegment.Get(i)->bAmGrabbed = true;
+			pPlayer->curRope = this;
+		}
+		else
+			rpSegment.Get(i)->bAmGrabbed = false;
+	}
+	Vector viewAng, flatAng;
+	AngleVectors(pPlayer->EyeAngles(), &viewAng);
+	flatAng = viewAng;
+	flatAng[2] = 0;
+	float fDot = DotProduct(flatAng, viewAng);
 
-			MoveMotorAlongPath(pMotor, FindNearestPointAlongPath(pMotor->GetAbsOrigin()),1.0f);
+	bool viewAngShouldClimb = (fDot < 0.1f);
+
+
+	if (pPlayer->GetGroundEntity() != NULL)
+	{
+		pPlayer->m_bClimbingRope = false;
+		pPlayer->curRope = nullptr;
+	}
+
+
+	if (pPlayer->m_bClimbingRope)
+	{
+		for (int i = 0; i < m_iRopeSegments; i++)
+		{
+			bPlayerConnected = rpSegment.Get(i)->bAmGrabbed;
+		}
+	}
+
+	CBaseEntity* pEnt = GetNearestRopePoint(pPlayer);
+
+	if (pEnt)
+	{
+		rpNearestSegment = dynamic_cast<CClimbRopeSegment*>(pEnt);
+		if (rpNearestSegment->VPhysicsGetObject())
+		{
+			Vector vecVel, vecPos;
+			rpNearestSegment->VPhysicsGetObject()->GetVelocity(&vecVel, NULL);
+			rpNearestSegment->VPhysicsGetObject()->GetPosition(&vecPos, NULL);
+			pPlayer->m_vecRopeSegmentVelocity = vecVel;
+		}
+	}
+
+	CClimbRopeSegment* nextsegmentup = nullptr;
+	CClimbRopeSegment* nextsegmentdown = nullptr;
+
+	for (int i = 0; i < m_iRopeSegments; i++)
+	{
+		if (rpSegment.Get(i) && pEnt && rpSegment[i]->entindex() == pEnt->entindex())
+		{
+			nextsegmentup = rpSegment[i - 1];
+			nextsegmentdown = rpSegment[i + 1];
+		}
+	}
+	if (viewAng[2] > 0)
+	{
+		if (pPlayer->m_nButtons & IN_BACK)
+		{
+			if (!nextsegmentdown)
+			{
+				pPlayer->m_vecRopeSegmentNormal = vec3_origin;
+			}
+			else
+			{
+				pPlayer->m_vecRopeSegmentNormal = pPlayer->WorldSpaceCenter() - nextsegmentdown->GetAbsOrigin();
+				//DebugDrawLine(pPlayer->WorldSpaceCenter(), nextsegmentdown->GetAbsOrigin(), 255, 255, 0, false, 0.05f);
+			}
 		}
 		else
 		{
-			pPlayer->SetParent(NULL);
-			pPlayer->m_bClimbingRope = false;
+			if (nextsegmentup && nextsegmentup->bAmAnchor)
+			{
+				pPlayer->m_vecRopeSegmentNormal = vec3_origin;
+			}
+			else if(nextsegmentup)
+			{
+				pPlayer->m_vecRopeSegmentNormal = -(pPlayer->WorldSpaceCenter() - nextsegmentup->GetAbsOrigin());
+				//DebugDrawLine(pPlayer->WorldSpaceCenter(), nextsegmentup->GetAbsOrigin(), 255, 255, 0, false, 0.05f);
+			}
 		}
+	}
+	else
+	{
+		if (pPlayer->m_nButtons & IN_BACK)
+		{
+			if (nextsegmentup && nextsegmentup->bAmAnchor)
+			{
+				pPlayer->m_vecRopeSegmentNormal = vec3_origin;
+			}
+			else if(nextsegmentup)
+			{
+				pPlayer->m_vecRopeSegmentNormal = pPlayer->WorldSpaceCenter() - nextsegmentup->GetAbsOrigin();
+				DebugDrawLine(pPlayer->WorldSpaceCenter(), nextsegmentup->GetAbsOrigin(), 255, 255, 0, false, 0.05f);
+			}
+		}
+		else
+		{
+			if (!nextsegmentdown)
+			{
+				pPlayer->m_vecRopeSegmentNormal = vec3_origin;
+			}
+			else if (nextsegmentdown)
+			{
+				pPlayer->m_vecRopeSegmentNormal = -(pPlayer->WorldSpaceCenter() - nextsegmentdown->GetAbsOrigin());
+				DebugDrawLine(pPlayer->WorldSpaceCenter(), nextsegmentdown->GetAbsOrigin(), 255, 255, 0, false, 0.05f);
+			}
+		}
+	}
+
+	if (!viewAngShouldClimb && pEnt && pEnt->VPhysicsGetObject())
+	{
+		Vector vForward, vRight, vUp, vPushDir;
+		int right, forward;
+		AngleVectors(pPlayer->EyeAngles(), &vForward, &vRight, &vUp);
+
+		if (pPlayer->m_nButtons & IN_FORWARD || pPlayer->m_nButtons & IN_BACK || pPlayer->m_nButtons & IN_RIGHT || pPlayer->m_nButtons & IN_LEFT)
+		{
+			if (pPlayer->m_nButtons & IN_FORWARD)
+				forward = 1;
+			else if (pPlayer->m_nButtons & IN_BACK)
+				forward = -1;
+			else
+				forward = 0;
+
+			if (pPlayer->m_nButtons & IN_RIGHT)
+				right = 1;
+			else if (pPlayer->m_nButtons & IN_LEFT)
+				right = -1;
+			else
+				right = 0;
+
+			Vector vecPushDir = vForward * (40 * forward) + vRight * (40 * right);
+			if (!pPlayer->curRope)
+				vecPushDir *= 0.001f;
+			pEnt->VPhysicsGetObject()->ApplyForceCenter(vecPushDir);
+		}
+
+	}
+
+	if (pPlayer->curRope && pPlayer->curRope == this && pPlayer->m_nButtons & IN_JUMP)
+	{
+		bCanBeGrabbed = false;
+		SetContextThink(&CClimbableRope::ReenableGrab, gpGlobals->curtime + 1.0f, "GrabEnable");
 	}
 
 	SetNextThink(gpGlobals->curtime);
+
 }
 
-void CClimbableRope::MoveMotorAlongPath(CClimbRopeMotor* motor, int nearestIndex, float flProgress)
+void CClimbableRope::ReenableGrab()
 {
-	Vector vecPos = secretlerpfunction(vecSegmentPos[nearestIndex], vecSegmentPos[nearestIndex + 1], flProgress);
-
-	motor->UpdatePosition(vecPos);
+	bCanBeGrabbed = true;
+	SetThink(&CClimbableRope::UpdateTraces);
+	SetNextThink(gpGlobals->curtime);
+}
+CBaseEntity* CClimbableRope::GetNearestRopePoint(CBasePlayer* player)
+{
+	CBaseEntity* pSearch = NULL;
+	pSearch = gEntList.FindEntityByClassnameNearest("climb_rope_segment", player->WorldSpaceCenter(), 256.0f);
+	return pSearch;
 }
 
-CClimbRopeMotor* CClimbableRope::CreateMotor(int nearestIndex, float flProgress)
+void CClimbableRope::SetChildren()
 {
-	Vector spawnPos = secretlerpfunction(vecSegmentPos[nearestIndex], vecSegmentPos[nearestIndex + 1], flProgress);
-
-	CClimbRopeMotor* pMotor = (CClimbRopeMotor*)CreateEntityByName("climb_rope_motor");
-	UTIL_SetOrigin(pMotor, spawnPos);
-	pMotor->Spawn();
-
-	return pMotor;
-}
-
-Vector secretlerpfunction(Vector a, Vector b, float t)
-{
-	return a + (b - a) * t;
-}
-
-int CClimbableRope::FindNearestPointAlongPath(Vector vecNearPos)
-{
-	int nearestIndex = 0;
-	float nearestDistance = FLT_MAX;
-
-	for (int i = 0; i < 8; i++)
+	for (int i = 0; i < m_iRopeSegments; i++)
 	{
-		float distance = (vecSegmentPos[i] - vecNearPos).Length();
-
-		if (distance < nearestDistance)
-		{
-			nearestDistance = distance;
-			nearestIndex = i;
-		}
+		if (rpSegment[i] && rpSegment[i + 1])
+			rpSegment[i]->hNextSegment.Set(rpSegment[i + 1]);
 	}
-
-	return nearestIndex;
-}
-
-float CClimbableRope::GetProgressOnPath(Vector vecNearPos)
-{
-	int nearestIndex = FindNearestPointAlongPath(vecNearPos);
-	float nearestDistance = (vecSegmentPos[nearestIndex] - vecNearPos).Length();
-
-	float remainingDistance = 0.0f;
-
-	for (int i = 0; i < 8; i++)
-	{
-		remainingDistance += (vecSegmentPos[i + 1] - vecSegmentPos[i]).Length();
-	}
-
-	float totalLength = 0.0f;
-	for (int i = 0; i < 8; i++)
-	{
-		totalLength += (vecSegmentPos[i + 1] - vecSegmentPos[i]).Length();
-	}
-
-	float progress = 1.0f - ((nearestDistance + remainingDistance) / totalLength);
-
-	return progress;
 }

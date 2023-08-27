@@ -368,6 +368,7 @@ void ApplyShaderConstantHack()
 	Wrapper.SetNumBooleanPixelConstants(225);
 	Wrapper.SetNumIntegerPixelConstants(225);
 	Wrapper.PrintPixelConstants();
+
 }
 
 //-----------------------------------------------------------------------------

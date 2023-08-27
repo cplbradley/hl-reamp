@@ -807,8 +807,6 @@ void CNPC_MetroPolice::SpeakFuncTankSentence( int nSentenceType )
 		break;
 	}
 }
-
-
 //-----------------------------------------------------------------------------
 // Standoff Behavior-related sentences
 //-----------------------------------------------------------------------------
@@ -4972,16 +4970,6 @@ void CNPC_MetroPolice::BuildScheduleTestBits( void )
 //-----------------------------------------------------------------------------
 WeaponProficiency_t CNPC_MetroPolice::CalcWeaponProficiency( CBaseCombatWeapon *pWeapon )
 {
-	if( FClassnameIs( pWeapon, "weapon_pistol" ) )
-	{
-		return WEAPON_PROFICIENCY_POOR;
-	}
-
-	if( FClassnameIs( pWeapon, "weapon_smg1" ) )
-	{
-		return WEAPON_PROFICIENCY_VERY_GOOD;
-	}
-
 	return BaseClass::CalcWeaponProficiency( pWeapon );
 }
 

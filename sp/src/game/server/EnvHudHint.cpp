@@ -61,7 +61,7 @@ void CEnvHudHint::Spawn( void )
 
 	SetSolid( SOLID_NONE );
 	SetMoveType( MOVETYPE_NONE );
-	m_vecWorldPos = vec3_origin;
+	m_vecWorldPos = GetAbsOrigin();
 }
 
 

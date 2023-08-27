@@ -17,12 +17,12 @@
 #include "basegrenade_shared.h"
 #include "basehlcombatweapon.h"
 
-class CWeaponChaingun : public CHLSelectFireMachineGun
+class CWeaponNPCChaingun : public CHLSelectFireMachineGun
 {
 public:
-	DECLARE_CLASS(CWeaponChaingun, CHLSelectFireMachineGun);	
+	DECLARE_CLASS(CWeaponNPCChaingun, CHLSelectFireMachineGun);
 	
-	CWeaponChaingun();
+	CWeaponNPCChaingun();
 
 	DECLARE_SERVERCLASS();
 

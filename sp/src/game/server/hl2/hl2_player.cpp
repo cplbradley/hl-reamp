@@ -81,7 +81,7 @@ extern int gEvilImpulse101;
 
 ConVar sv_autojump( "sv_autojump", "0" );
 
-ConVar hl2_walkspeed( "hl2_walkspeed", "250" );
+ConVar hl2_walkspeed( "hl2_walkspeed", "160" );
 ConVar hl2_normspeed( "hl2_normspeed", "450" );
 ConVar hl2_sprintspeed( "hl2_sprintspeed", "700" );
 
@@ -2011,14 +2011,14 @@ void CHL2_Player::SuitPower_Update( void )
 			}
 		}
 
-		if( SuitPower_IsDeviceActive(SuitDeviceFlashlight) )
+		/*if (SuitPower_IsDeviceActive(SuitDeviceFlashlight))
 		{
 			float factor;
 
 			factor = 1.0f / m_flFlashlightPowerDrainScale;
 
 			flPowerLoad -= ( SuitDeviceFlashlight.GetDeviceDrainRate() * (1.0f - factor) );
-		}
+		}*/
 
 		if( !SuitPower_Drain( flPowerLoad * gpGlobals->frametime ) )
 		{
@@ -2296,9 +2296,16 @@ void CHL2_Player::FlashlightTurnOn( void )
 	AddEffects( EF_DIMLIGHT );
 	EmitSound( "HL2Player.FlashLightOn" );
 
-	variant_t flashlighton;
-	flashlighton.SetFloat( m_HL2Local.m_flSuitPower / 100.0f );
-	FirePlayerProxyOutput( "OnFlashlightOn", flashlighton, this, this );
+	color32 clr;
+	clr.r = 0;
+	clr.g = 0;
+	clr.b = 0;
+	clr.a = 200;
+	UTIL_ScreenFade(this, clr, 0.2f, 0.0f, FFADE_IN);
+
+	//variant_t flashlighton;
+	//flashlighton.SetFloat( m_HL2Local.m_flSuitPower / 100.0f );
+	//FirePlayerProxyOutput( "OnFlashlightOn", flashlighton, this, this );
 }
 
 
@@ -2315,9 +2322,16 @@ void CHL2_Player::FlashlightTurnOff( void )
 	RemoveEffects( EF_DIMLIGHT );
 	EmitSound( "HL2Player.FlashLightOff" );
 
-	variant_t flashlightoff;
-	flashlightoff.SetFloat( m_HL2Local.m_flSuitPower / 100.0f );
-	FirePlayerProxyOutput( "OnFlashlightOff", flashlightoff, this, this );
+	color32 clr;
+	clr.r = 0;
+	clr.g = 0;
+	clr.b = 0;
+	clr.a = 200;
+	UTIL_ScreenFade(this, clr, 0.2f, 0.0f, FFADE_IN);
+
+	//variant_t flashlightoff;
+	//flashlightoff.SetFloat( m_HL2Local.m_flSuitPower / 100.0f );
+	//FirePlayerProxyOutput( "OnFlashlightOff", flashlightoff, this, this );
 }
 
 //-----------------------------------------------------------------------------

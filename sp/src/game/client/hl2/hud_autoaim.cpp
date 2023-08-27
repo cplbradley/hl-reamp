@@ -384,7 +384,6 @@ void CHUDAutoAim::OnThink()
 				//InterpolateVector(0.1, vecAngles, vecDir, vecResult);
 				//VectorAngles(vecResult, viewangles );
 				InterpolateAngles(viewangles, fuckidk, fuckthis, (hud_autoaim_interp_frac.GetFloat() * 0.1f));
-				
 				//viewangles[PITCH] = clamp( viewangles[ PITCH ], -cl_pitchup.GetFloat(), cl_pitchdown.GetFloat() );
 				fuckthis[ROLL] = 0.0f;
 				engine->SetViewAngles(fuckthis);

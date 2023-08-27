@@ -145,7 +145,7 @@ enum Interruptability_t
 #define SF_NPC_DROP_HEALTHKIT			( 1 << 3  )	// Drop a healthkit upon death
 #define SF_NPC_START_EFFICIENT			( 1 << 4  ) // Set into efficiency mode from spawn
 //										( 1 << 5  )
-//										( 1 << 6  )
+#define SF_NPC_SHORT_RANGE				( 1 << 6  ) // makes npc only attack at short ranges
 #define SF_NPC_WAIT_FOR_SCRIPT			( 1 << 7  )	// spawnflag that makes npcs wait to check for attacking until the script is done or they've been attacked
 #define SF_NPC_LONG_RANGE				( 1 << 8  )	// makes npcs look far and relaxes weapon range limit 
 #define SF_NPC_FADE_CORPSE				( 1 << 9  )	// Fade out corpse after death
@@ -1820,6 +1820,8 @@ public:
 	virtual Vector		GetActualShootTrajectory( const Vector &shootOrigin );
 	virtual	Vector		GetAttackSpread( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget = NULL );
 	virtual	float		GetSpreadBias( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget );
+
+	virtual Vector		GetSkillAdjustedShootTrajectory(const Vector shootOrigin, Vector shootTarget, float adjustedSpeed);
 #endif //HL2_DLL
 	virtual void		CollectShotStats( const Vector &vecShootOrigin, const Vector &vecShootDir );
 	virtual Vector		BodyTarget( const Vector &posSrc, bool bNoisy = true );

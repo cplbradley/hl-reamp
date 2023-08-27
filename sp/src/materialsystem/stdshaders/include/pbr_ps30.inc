@@ -18,13 +18,6 @@
 // defined $LIGHTING_PREVIEW && defined $FASTPATHENVMAPCONTRAST && $LIGHTING_PREVIEW && $FASTPATHENVMAPCONTRAST
 // defined $LIGHTING_PREVIEW && defined $FASTPATH && $LIGHTING_PREVIEW && $FASTPATH
 // ($FLASHLIGHT || $FLASHLIGHTSHADOWS) && $LIGHTING_PREVIEW
-// defined $HDRTYPE && defined $HDRENABLED && !$HDRTYPE && $HDRENABLED
-// defined $PIXELFOGTYPE && defined $WRITEWATERFOGTODESTALPHA && ( $PIXELFOGTYPE != 1 ) && $WRITEWATERFOGTODESTALPHA
-// defined $LIGHTING_PREVIEW && defined $HDRTYPE && $LIGHTING_PREVIEW && $HDRTYPE != 0
-// defined $LIGHTING_PREVIEW && defined $FASTPATHENVMAPTINT && $LIGHTING_PREVIEW && $FASTPATHENVMAPTINT
-// defined $LIGHTING_PREVIEW && defined $FASTPATHENVMAPCONTRAST && $LIGHTING_PREVIEW && $FASTPATHENVMAPCONTRAST
-// defined $LIGHTING_PREVIEW && defined $FASTPATH && $LIGHTING_PREVIEW && $FASTPATH
-// ($FLASHLIGHT || $FLASHLIGHTSHADOWS) && $LIGHTING_PREVIEW
 
 #ifndef PBR_PS30_H
 #define PBR_PS30_H
@@ -41,6 +34,7 @@ class pbr_ps30_Static_Index
 	unsigned int m_nEMISSIVE : 2;
 	unsigned int m_nPARALLAXOCCLUSION : 2;
 	unsigned int m_nDETAILTEXTURE : 2;
+	unsigned int m_nLERPENVMAP : 2;
 #ifdef _DEBUG
 	bool m_bFLASHLIGHT : 1;
 	bool m_bFLASHLIGHTDEPTHFILTERMODE : 1;
@@ -48,6 +42,7 @@ class pbr_ps30_Static_Index
 	bool m_bEMISSIVE : 1;
 	bool m_bPARALLAXOCCLUSION : 1;
 	bool m_bDETAILTEXTURE : 1;
+	bool m_bLERPENVMAP : 1;
 #endif	// _DEBUG
 public:
 	void SetFLASHLIGHT( int i )
@@ -104,6 +99,15 @@ public:
 #endif	// _DEBUG
 	}
 
+	void SetLERPENVMAP( int i )
+	{
+		Assert( i >= 0 && i <= 1 );
+		m_nLERPENVMAP = i;
+#ifdef _DEBUG
+		m_bLERPENVMAP = true;
+#endif	// _DEBUG
+	}
+
 	pbr_ps30_Static_Index( IShaderShadow* pShaderShadow, IMaterialVar** params )
 	{
 		m_nFLASHLIGHT = 0;
@@ -112,6 +116,7 @@ public:
 		m_nEMISSIVE = 0;
 		m_nPARALLAXOCCLUSION = 0;
 		m_nDETAILTEXTURE = 0;
+		m_nLERPENVMAP = 0;
 #ifdef _DEBUG
 		m_bFLASHLIGHT = false;
 		m_bFLASHLIGHTDEPTHFILTERMODE = false;
@@ -119,17 +124,18 @@ public:
 		m_bEMISSIVE = false;
 		m_bPARALLAXOCCLUSION = false;
 		m_bDETAILTEXTURE = false;
+		m_bLERPENVMAP = false;
 #endif	// _DEBUG
 	}
 
 	int GetIndex() const
 	{
-		Assert( m_bFLASHLIGHT && m_bFLASHLIGHTDEPTHFILTERMODE && m_bLIGHTMAPPED && m_bEMISSIVE && m_bPARALLAXOCCLUSION && m_bDETAILTEXTURE );
-		return ( 160 * m_nFLASHLIGHT ) + ( 320 * m_nFLASHLIGHTDEPTHFILTERMODE ) + ( 960 * m_nLIGHTMAPPED ) + ( 1920 * m_nEMISSIVE ) + ( 3840 * m_nPARALLAXOCCLUSION ) + ( 7680 * m_nDETAILTEXTURE ) + 0;
+		Assert( m_bFLASHLIGHT && m_bFLASHLIGHTDEPTHFILTERMODE && m_bLIGHTMAPPED && m_bEMISSIVE && m_bPARALLAXOCCLUSION && m_bDETAILTEXTURE && m_bLERPENVMAP );
+		return ( 160 * m_nFLASHLIGHT ) + ( 320 * m_nFLASHLIGHTDEPTHFILTERMODE ) + ( 960 * m_nLIGHTMAPPED ) + ( 1920 * m_nEMISSIVE ) + ( 3840 * m_nPARALLAXOCCLUSION ) + ( 7680 * m_nDETAILTEXTURE ) + ( 15360 * m_nLERPENVMAP ) + 0;
 	}
 };
 
-#define shaderStaticTest_pbr_ps30 psh_forgot_to_set_static_FLASHLIGHT + psh_forgot_to_set_static_FLASHLIGHTDEPTHFILTERMODE + psh_forgot_to_set_static_LIGHTMAPPED + psh_forgot_to_set_static_EMISSIVE + psh_forgot_to_set_static_PARALLAXOCCLUSION + psh_forgot_to_set_static_DETAILTEXTURE
+#define shaderStaticTest_pbr_ps30 psh_forgot_to_set_static_FLASHLIGHT + psh_forgot_to_set_static_FLASHLIGHTDEPTHFILTERMODE + psh_forgot_to_set_static_LIGHTMAPPED + psh_forgot_to_set_static_EMISSIVE + psh_forgot_to_set_static_PARALLAXOCCLUSION + psh_forgot_to_set_static_DETAILTEXTURE + psh_forgot_to_set_static_LERPENVMAP
 
 
 class pbr_ps30_Dynamic_Index

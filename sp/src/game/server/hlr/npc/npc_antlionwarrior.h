@@ -21,6 +21,7 @@ static ConVar	g_debug_antlionwarrior("g_debug_antlionwarrior", "0");
 static ConVar	sk_antlionwarrior_dmg_charge("sk_antlionwarrior_dmg_charge", "0");
 static ConVar	sk_antlionwarrior_dmg_shove("sk_antlionwarrior_dmg_shove", "0");
 static ConVar	sk_antlionwarrior_barrage_freq("sk_antlionwarrior_barrage_freq", "0");
+static ConVar	sk_antlionwarrior_health("sk_antlionwarrior_health", "0");
 
 #define ANTLIONWARRIOR_BLOOD_EFFECTS 2
 static ConVar	g_antlionwarrior_hemorrhage("g_antlionwarrior_hemorrhage", "1", FCVAR_NONE, "If 1, guard will emit a bleeding particle effect when wounded.");
@@ -61,7 +62,7 @@ static ConVar  sk_antlion_warrior_spit_speed("sk_antlion_warrior_spit_speed", "0
 #define	ANTLIONWARRIOR_CHARGE_MIN			128
 #define	ANTLIONWARRIOR_CHARGE_MAX			99999
 
-static ConVar	sk_antlionwarrior_health("sk_antlionwarrior_health", "0");
+
 
 int	g_interactionAntlionWarriorFoundPhysicsObject = 0;	// We're moving to a physics object to shove it, don't all choose the same object
 int	g_interactionAntlionWarriorShovedPhysicsObject = 0;	// We've punted an object, it is now clear to be chosen by others

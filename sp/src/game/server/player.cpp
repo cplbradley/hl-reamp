@@ -1088,17 +1088,14 @@ bool CBasePlayer::ShouldTakeDamageInCommentaryMode( const CTakeDamageInfo &input
 	return true;
 }
 
-void CBasePlayer::CreateMuzzleLight(int r, int g, int b)
+void CBasePlayer::CreateMuzzleLight(int r, int g, int b, Vector vecSrc)
 {
-	float red = r;
-	float green = g;
-	float blue = b;
-	CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
-	user.MakeReliable();
-	UserMessageBegin(user, "MuzzleLight");
-	WRITE_FLOAT(red);
-	WRITE_FLOAT(green);
-	WRITE_FLOAT(blue);
+	EntityMessageBegin(this);
+	WRITE_BYTE(4);
+	WRITE_BYTE(r);
+	WRITE_BYTE(g);
+	WRITE_BYTE(b);
+	WRITE_VEC3COORD(vecSrc);
 	MessageEnd();
 }
 int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
@@ -6204,33 +6201,20 @@ ImpulseCommands
 void CBasePlayer::ImpulseCommands( )
 {
 	trace_t	tr;
-		
 	int iImpulse = (int)m_nImpulse;
+
 	switch (iImpulse)
 	{
 	case 100:
-        // temporary flashlight for level designers
-		if ( FlashlightIsOn() )
-		{
-			color32 clr;
-			clr.r = 0;
-			clr.g = 0;
-			clr.b = 0;
-			clr.a = 200;
-			UTIL_ScreenFade(this, clr, 0.2f, 0.0f, FFADE_IN);
+	{
+		// temporary flashlight for level designers
+		if (FlashlightIsOn())
+
 			FlashlightTurnOff();
-		}
-        else 
-		{
-			color32 clr;
-			clr.r = 0;
-			clr.g = 0;
-			clr.b = 0;
-			clr.a = 200;
-			UTIL_ScreenFade(this, clr, 0.2f, 0.0f, FFADE_IN);
+		else
 			FlashlightTurnOn();
-		}
 		break;
+	}
 
 	case 200:
 		if ( sv_cheats->GetBool() )
@@ -8345,6 +8329,10 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropBool(SENDINFO(m_bUseAltCrosshair)),
 		SendPropBool(SENDINFO(m_bGibbed)),
 
+
+		SendPropVector(SENDINFO(m_vecRopeSegmentNormal)),
+		SendPropVector(SENDINFO(m_vecRopeSegmentVelocity)),
+		SendPropBool(SENDINFO(m_bClimbingRope)),
 
 		SendPropInt		(SENDINFO(m_iFOVStart), 8, SPROP_UNSIGNED ),
 		SendPropFloat	(SENDINFO(m_flFOVTime) ),

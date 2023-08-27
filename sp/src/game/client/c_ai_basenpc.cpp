@@ -80,7 +80,6 @@ int C_AI_BaseNPC::InternalDrawModel(int flags)
 		C_BasePlayer* player = CBasePlayer::GetLocalPlayer();
 		int ret = BaseClass::InternalDrawModel(flags);
 
-
 		ConVarRef depthfarz("r_depthbuffer_farz");
 		float fDist = (GetAbsOrigin() - player->GetAbsOrigin()).Length();
 		bool bNightVision = ((player && player->IsEffectActive(EF_DIMLIGHT) && fDist < depthfarz.GetFloat()) || testnvoverlay.GetBool());
@@ -89,7 +88,7 @@ int C_AI_BaseNPC::InternalDrawModel(int flags)
 		{
 			if (CurrentViewID() != VIEW_DEPTHBUFFER)
 			{
-				if (m_bShouldDrawShieldOverlay || bNightVision)
+				if (m_bShouldDrawShieldOverlay)
 				{
 					// Cyanide; So we basically need to redraw the model but scaled up slightly
 					UpdateBoneAttachments();
@@ -122,7 +121,7 @@ int C_AI_BaseNPC::InternalDrawModel(int flags)
 					// Set override material for glow color
 					IMaterial* pMatGlowColor = NULL;
 
-					pMatGlowColor = bNightVision ? GetNightVisionOverlay() : GetShieldType(m_iVortEffectType);
+					pMatGlowColor = GetShieldType(m_iVortEffectType);
 
 					if (pMatGlowColor)
 					{
@@ -155,8 +154,8 @@ int C_AI_BaseNPC::InternalDrawModel(int flags)
 					// Now draw the model
 					DrawModelState_t state;
 					matrix3x4_t* pBoneToWorld = NULL;
-					bool bMarkAsDrawn = modelrender->DrawModelSetup(*pInfo, &state, NULL, &pBoneToWorld);
-					DoInternalDrawModel(pInfo, (bMarkAsDrawn && (pInfo->flags & STUDIO_RENDER)) ? &state : NULL, pBoneToWorld);
+					modelrender->DrawModelSetup(*pInfo, &state, NULL, &pBoneToWorld);
+					DoInternalDrawModel(pInfo, ((pInfo->flags & STUDIO_RENDER)) ? &state : NULL, pBoneToWorld);
 					OnPostInternalDrawModel(pInfo);
 
 
@@ -175,7 +174,7 @@ int C_AI_BaseNPC::InternalDrawModel(int flags)
 						}
 					}
 
-					return bMarkAsDrawn;
+					return true;
 				}
 			}
 		}

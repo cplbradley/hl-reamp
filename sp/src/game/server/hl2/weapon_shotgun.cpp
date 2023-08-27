@@ -336,9 +336,8 @@ void CWeaponShotgun::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool
 	ASSERT( npc != NULL );
 	WeaponSound( SINGLE_NPC );
 	pOperator->DoMuzzleFlash();
-	m_iClip1 = m_iClip1 - 2;
 
-	float adjustedspeed = g_pGameRules->SkillAdjustValue(1400.0f);
+	float adjustedspeed = g_pGameRules->SkillAdjustValue(1400.0f);	
 
 	QAngle	angShootDir;
 	vecShootOrigin = pOperator->Weapon_ShootPosition();
@@ -666,6 +665,7 @@ void CWeaponShotgun::SecondaryAttack( void )
 	else
 		WeaponSound(SPECIAL2);
 	pPlayer->DoMuzzleFlash();
+	
 	SendWeaponAnim(GetPrimaryAttackActivity());
 	m_flNextPrimaryAttack = gpGlobals->curtime + 0.75;
 	m_flNextSecondaryAttack = gpGlobals->curtime + 0.75;
@@ -673,6 +673,7 @@ void CWeaponShotgun::SecondaryAttack( void )
 	m_iClip1--;
 	Vector vecSrc = pPlayer->Weapon_ShootPosition();
 	Vector vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT);
+
 	//We will not shoot bullets anymore
 
 	/*FireBulletsInfo_t info;
@@ -702,6 +703,7 @@ void CWeaponShotgun::SecondaryAttack( void )
 	VectorAngles(vecAiming, angAiming);
 	DispatchParticleEffect("muzzleflash_orange_large_core", vecSrc, angAiming, this);
 	pPlayer->SetMuzzleFlashTime(gpGlobals->curtime + 0.5);
+	pPlayer->CreateMuzzleLight(255, 200, 0, vecSrc);
 	CSoundEnt::InsertSound(SOUND_COMBAT, GetAbsOrigin(), 600, 0.2, GetOwner());
 	if (!m_iClip1 && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
 	{
@@ -737,8 +739,6 @@ void CWeaponShotgun::PrimaryAttack( void )
 		WeaponSound(WPN_DOUBLE);
 	else
 		WeaponSound(SPECIAL1);
-
-	pPlayer->DoMuzzleFlash();
 
 	SendWeaponAnim( GetPrimaryAttackActivity() );
 
@@ -783,6 +783,7 @@ void CWeaponShotgun::PrimaryAttack( void )
 	QAngle angAiming;
 	VectorAngles(vecAiming, angAiming);
 	pPlayer->SetMuzzleFlashTime( gpGlobals->curtime + 1.0 );
+	pPlayer->CreateMuzzleLight(255, 200, 0,vecSrc);
 	DispatchParticleEffect("muzzleflash_orange_large_core", vecSrc, angAiming, this);
 	CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), SOUNDENT_VOLUME_SHOTGUN, 0.2 );
 

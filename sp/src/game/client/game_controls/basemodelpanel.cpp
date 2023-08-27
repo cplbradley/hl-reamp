@@ -641,11 +641,6 @@ void CModelPanel::Paint()
 	render->PopView( dummyFrustum );
 
 	pRenderContext->BindLocalCubemap( NULL );
-
-	/*
-	vgui::surface()->DrawSetColor( Color(0,0,0,255) );
-	vgui::surface()->DrawOutlinedRect( 0,0, GetWide(), GetTall() );
-	*/
 	
 }
 

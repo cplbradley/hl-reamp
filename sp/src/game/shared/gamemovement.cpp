@@ -688,6 +688,8 @@ int CGameMovement::GetCheckInterval( IntervalType_t type )
 	case LADDER:
 		tickInterval = CHECK_LADDER_TICK_INTERVAL;
 		break;
+	case ROPE:
+		tickInterval = CHECK_LADDER_TICK_INTERVAL;
 	}
 	return tickInterval;
 }
@@ -2699,7 +2701,26 @@ void CGameMovement::FullLadderMove()
 	TryPlayerMove();
 	VectorSubtract (mv->m_vecVelocity, player->GetBaseVelocity(), mv->m_vecVelocity);
 }
+void CGameMovement::FullRopeMove()
+{
+	//CheckWater();
+	CheckInterval(ROPE);
 
+	if (mv->m_nButtons & IN_JUMP)
+	{
+		CheckJumpButton();
+	}
+	else
+	{
+		mv->m_nOldButtons &= ~IN_JUMP;
+	}
+	
+	RopeMove();
+
+	VectorAdd(mv->m_vecVelocity, player->GetBaseVelocity(), mv->m_vecVelocity);
+	TryPlayerMove();
+	VectorSubtract(mv->m_vecVelocity, player->GetBaseVelocity(), mv->m_vecVelocity);
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Output : int
@@ -2728,7 +2749,7 @@ int CGameMovement::TryPlayerMove( Vector *pFirstDest, trace_t *pFirstTrace )
 	VectorCopy (mv->m_vecVelocity, primal_velocity);
 	
 	allFraction = 0;
-	time_left = gpGlobals->frametime;   // Total time for this movement operation.
+	time_left = gpGlobals->frametime;   // Total time for this mo`z	vement operation.
 
 	new_velocity.Init();
 
@@ -2989,9 +3010,78 @@ inline bool CGameMovement::OnLadder( trace_t &trace )
 //=============================================================================
 ConVar sv_ladder_dampen ( "sv_ladder_dampen", "0.2", FCVAR_REPLICATED, "Amount to dampen perpendicular movement on a ladder", true, 0.0f, true, 1.0f );
 ConVar sv_ladder_angle( "sv_ladder_angle", "-0.707", FCVAR_REPLICATED, "Cos of angle of incidence to ladder perpendicular for applying ladder_dampen", true, -1.0f, true, 1.0f );
+
+
+
+ConVar sv_rope_climb_speed("sv_rope_climb_speed", "200", FCVAR_REPLICATED, "How fast to climb ropes");
 //=============================================================================
 // HPE_END
 //=============================================================================
+
+bool CGameMovement::RopeMove()
+{
+	trace_t pm;
+	Vector wishdir;
+	bool viewAngShouldClimb;
+
+	if (player->GetMoveType() == MOVETYPE_NOCLIP)
+		return false;
+
+	if (player->GetMoveType() == MOVETYPE_ROPE)
+	{
+		Vector norm = player->m_vecRopeSegmentNormal;
+		wishdir = norm.Normalized();
+	}
+	else
+		return false;
+
+	Vector viewAng, flatAng;
+	AngleVectors(player->EyeAngles(), &viewAng);
+	flatAng = viewAng;
+	flatAng[2] = 0;
+	float fDot = DotProduct(flatAng, viewAng);
+
+	viewAngShouldClimb = (fDot < 0.5f);
+
+	if (player->m_nButtons & IN_JUMP)
+	{
+		player->SetMoveType(MOVETYPE_WALK);
+		mv->m_vecVelocity.Init();
+		mv->m_vecVelocity = viewAng * 350 + Vector(0,0,350);
+		player->m_bClimbingRope = false;
+	}
+	else
+	{
+		player->SetGravity(0);
+
+		float climbSpeed = sv_rope_climb_speed.GetFloat();
+		float forwardSpeed = 0;
+
+		if ((mv->m_nButtons & IN_BACK) && viewAngShouldClimb)
+			forwardSpeed -= climbSpeed;
+
+		if ((mv->m_nButtons & IN_FORWARD) && viewAngShouldClimb)
+			forwardSpeed += climbSpeed;
+
+		if (wishdir == vec3_origin)
+			forwardSpeed = 0.0f;
+
+		mv->m_vecVelocity = (wishdir * forwardSpeed) + player->m_vecRopeSegmentVelocity;
+		Vector vecOffset;
+		QAngle angOffset = player->EyeAngles();
+		angOffset[2] = 0;
+		AngleVectors(angOffset, &vecOffset);
+		player->SetAbsOrigin(player->m_vecRopeSegmentPosition + vecOffset * 64);
+
+		engine->Con_NPrintf(0, "wishdir: %f %f %f velocity %f %f %f climbspeed %f", wishdir.x, wishdir.y, wishdir.z, mv->m_vecVelocity.x, mv->m_vecVelocity.y, mv->m_vecVelocity.z, forwardSpeed);
+		engine->Con_NPrintf(1, "viewang %f %f %f viewflat %f %f %f fdot %f", viewAng.x, viewAng.y, viewAng.z, flatAng.x, flatAng.y, flatAng.z, fDot);
+		engine->Con_NPrintf(2, "ropeseg vel %f %f %f ropeseg pos %f %f %f", player->m_vecRopeSegmentVelocity[0], player->m_vecRopeSegmentVelocity[1], player->m_vecRopeSegmentVelocity[2], player->m_vecRopeSegmentPosition[0], player->m_vecRopeSegmentPosition[1], player->m_vecRopeSegmentPosition[2]);
+
+	}
+	
+	return true;
+
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -3013,7 +3103,7 @@ bool CGameMovement::LadderMove( void )
 	// If I'm already moving on a ladder, use the previous ladder direction
 	if ( player->GetMoveType() == MOVETYPE_LADDER )
 	{
-		wishdir = -player->m_vecLadderNormal;
+		wishdir = -(player->m_vecLadderNormal);
 	}
 	else
 	{
@@ -3948,11 +4038,12 @@ void CGameMovement::CategorizePosition( void )
 	CheckWater();
 
 	// If standing on a ladder we are not on ground.
-	if (player->GetMoveType() == MOVETYPE_LADDER)
+	if (player->GetMoveType() == MOVETYPE_LADDER || player->GetMoveType() == MOVETYPE_ROPE)
 	{
 		SetGroundEntity(NULL);
 		return;
 	}
+
 
 	// Check for a jump.
 	if (mv->m_vecVelocity.z > 250.0f)
@@ -4818,6 +4909,9 @@ void CGameMovement::PlayerMove( void )
 			FullObserverMove(); // clips against world&players
 			break;
 
+		case MOVETYPE_ROPE:
+			FullRopeMove();
+			break;
 		default:
 			DevMsg( 1, "Bogus pmove player movetype %i on (%i) 0=cl 1=sv\n", player->GetMoveType(), player->IsServer());
 			break;

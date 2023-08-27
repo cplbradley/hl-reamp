@@ -6,72 +6,66 @@
 
 #pragma once
 
+#define MAX_ROPE_SEGMENTS 32
 
 class CClimbRopeSegment : public CBaseAnimating
 {
 	DECLARE_CLASS(CClimbRopeSegment, CBaseAnimating);
 	DECLARE_DATADESC();
+	DECLARE_SERVERCLASS();
 public:
 
 	void Spawn();
-	
 	void Precache();
+
+	virtual int UpdateTransmitState();
 
 	bool VPhysicsCreate();
 
 	bool bAmAnchor;
+	bool bAmGrabbed;
 
+	CNetworkVar(float, fWidth);
+	CNetworkHandle(CClimbRopeSegment, hNextSegment);
 	static CClimbRopeSegment* Create(const Vector& vecOrigin, const QAngle& angAngles, bool bAnchor);
 
 };
 
-class CClimbRopeMotor : public CBaseAnimating
+class CClimbableRope : public CBaseAnimating
 {
-	DECLARE_CLASS(CClimbRopeMotor, CBaseAnimating);
+	DECLARE_CLASS(CClimbableRope, CBaseAnimating);
 	DECLARE_DATADESC();
-public:
-	void Spawn();
-	void UpdatePosition(Vector vecPos);
-};
-
-class CClimbableRope : public CBaseEntity
-{
-	DECLARE_CLASS(CClimbableRope, CBaseEntity);
-	DECLARE_DATADESC();
+	DECLARE_SERVERCLASS();
 
 public:
 	void Spawn();
 	void Precache();
-	void SpawnSegements();
-	bool CreateBeams();
-
+	void SpawnSegments();
 	void UpdateTraces();
+	void ReenableGrab();
+	void SetChildren();
 
-	void MoveMotorAlongPath(CClimbRopeMotor* motor, int nearestIndex, float flProgress);
-	int FindNearestPointAlongPath(Vector vecNearPos);
-	CClimbRopeMotor* CreateMotor(int nearestIndex, float flProgress);
+	virtual int UpdateTransmitState();
 
-	float GetProgressOnPath(Vector vecMearPos);
-	CClimbRopeMotor* pMotor;
-
-
-
-	CHandle<CClimbRopeSegment> rpSegment[8];
-	CHandle<CBeam> ropeBeam[7];
-	CHandle<CClimbRopeMotor*> m_hMotor;
+	virtual void OnRestore();
+	typedef CHandle<CClimbRopeSegment> CClimbRopeSegmentHandle;
+	CNetworkArray(CClimbRopeSegmentHandle, rpSegment, MAX_ROPE_SEGMENTS);
 
 	void CreateConstraints();
+
+	CBaseEntity* GetNearestRopePoint(CBasePlayer* player);
+	CNetworkHandle(CClimbRopeSegment, rpNearestSegment);
+
 	
-
 private:
-//	CUtlVector<CClimbRopeSegment*> m_vSegmentList;
-	float m_fRopeLength = 512.0f;
-	float m_fRopeWidth;
-	const char* szRopeName;
+	CNetworkVar(float, m_fRopeWidth);
+	CNetworkVar(int, m_iRopeSegments);
 
-	Vector vecSegmentPos[8];
-	CUtlVector<Vector*> m_vSegmentPos;
+
+	bool bPlayerConnected = false;
+
+	const char* szEndEntity;
+
+	bool bCanBeGrabbed;
 };
 
-
-Vector secretlerpfunction(Vector a, Vector b, float t);

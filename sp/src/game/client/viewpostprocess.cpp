@@ -1228,6 +1228,7 @@ private:
 	IMaterialVar *m_pMaterialParam_ColCorrectNumLookups;
 	IMaterialVar *m_pMaterialParam_ColCorrectDefaultWeight;
 	IMaterialVar *m_pMaterialParam_ColCorrectLookupWeights;
+	IMaterialVar* m_pMaterialParam_Static;
 
 public:
 	static IMaterial * SetupEnginePostMaterial( const Vector4D & fullViewportBloomUVs, const Vector4D & fullViewportFBUVs, const Vector2D & destTexSize,
@@ -2000,8 +2001,6 @@ static void DrawPyroVignette( int nDestX, int nDestY, int nWidth, int nHeight,	/
 
 	pRenderContext->PopRenderTargetAndViewport();
 }
-
-
 static void DrawPyroPost( IMaterial *pMaterial, 
 	int nDestX, int nDestY, int nWidth, int nHeight,	// Rect to draw into in screen space
 	float flSrcTextureX0, float flSrcTextureY0,		// which texel you want to appear at destx/y
@@ -2228,7 +2227,11 @@ static ConVar r_queued_post_processing( "r_queued_post_processing", "0" );
 static ConVar mat_postprocess_x( "mat_postprocess_x", "4" );
 static ConVar mat_postprocess_y( "mat_postprocess_y", "1" );
 
-
+void DrawNightVisionOverlay(IMaterial* mat, int destx, int desty, int width, int height, float srcx0, float srcy0, float srcx1, float srcy1, int wide, int tall)
+{
+	CMatRenderContextPtr pRenderContext(materials);
+	pRenderContext->DrawScreenSpaceRectangle(mat, destx, desty, width, height, srcx0, srcy0, srcx1, srcy1, wide, tall);
+}
 
 void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, bool bPostVGui )
 {
@@ -2709,9 +2712,13 @@ void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, b
 	{
 		if (pNV)
 		{
+			ICallQueue* pCallQueue = pRenderContext->GetCallQueue();
+
+			if (pCallQueue)
+				pCallQueue->QueueCall(DrawNightVisionOverlay, pNV, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
+			else
+				DrawNightVisionOverlay(pNV, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
 			pNV->AddRef();
-			UpdateScreenEffectTexture();
-			pRenderContext->DrawScreenSpaceRectangle(pNV, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
 			g_bInNightvision = true;
 		}
 	}
@@ -2732,6 +2739,8 @@ void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, b
 	pRenderContext->PopVertexShaderGPRAllocation();
 #endif
 }
+
+
 
 // Motion Blur Material Proxy =========================================================================================
 static float g_vMotionBlurValues[4] = { 0.0f, 0.0f, 0.0f, 0.0f };

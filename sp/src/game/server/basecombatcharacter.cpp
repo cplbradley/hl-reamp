@@ -2150,6 +2150,11 @@ void CBaseCombatCharacter::Weapon_Equip(CBaseCombatWeapon *pWeapon)
 			m_hActiveWeapon->m_fMaxRange1 = 999999999;
 			m_hActiveWeapon->m_fMaxRange2 = 999999999;
 		}
+		else if (HasSpawnFlags(SF_NPC_SHORT_RANGE))
+		{
+			m_hActiveWeapon->m_fMaxRange1 *= 0.5f;
+			m_hActiveWeapon->m_fMaxRange2 *= 0.5f;
+		}
 	}
 
 	WeaponProficiency_t proficiency;
@@ -3300,7 +3305,8 @@ bool CBaseCombatCharacter::IsGlowEffectActive(void)
 //-----------------------------------------------------------------------------
 WeaponProficiency_t CBaseCombatCharacter::CalcWeaponProficiency(CBaseCombatWeapon *pWeapon)
 {
-	return WEAPON_PROFICIENCY_AVERAGE;
+	int skill = g_pGameRules->GetSkillLevel();
+	return static_cast<WeaponProficiency_t>(skill);
 }
 
 //-----------------------------------------------------------------------------

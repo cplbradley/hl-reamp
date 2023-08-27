@@ -256,7 +256,7 @@ void CSinglePlayerAnimState::ComputePoseParam_BodyYaw(void)
 //	DevMsg("Testing Parabolic Formula. Yaw = %f , Parabolic ratio is %f\n", flYaw, mult);
 	GetBasePlayer()->SetPoseParameter(iYaw, flYaw);
 
-	if (GetBasePlayer()->GetActiveWeapon() && !FClassnameIs(GetBasePlayer()->GetActiveWeapon(), "weapon_ar2"))
+	if (GetBasePlayer()->GetActiveWeapon() && !FClassnameIs(GetBasePlayer()->GetActiveWeapon(), "weapon_chaingun"))
 		GetBasePlayer()->SetPoseParameter(iRoll, ratio * mult); // HACKHACK - Don't apply body rolling when using the chaingun because it fucks with the animations
 	else
 		GetBasePlayer()->SetPoseParameter(iRoll, 0);

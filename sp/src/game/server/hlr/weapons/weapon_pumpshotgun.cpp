@@ -504,8 +504,8 @@ void CWeaponPumpShotgun::PrimaryAttack(void)
 
 	// player "shoot" animation
 	pPlayer->SetAnimation(PLAYER_ATTACK1);
-
 	
+
 	// Don't fire again until fire animation has completed
 	m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
 	Vector vecAtch;
@@ -519,7 +519,7 @@ void CWeaponPumpShotgun::PrimaryAttack(void)
 
 
 	pPlayer->SetMuzzleFlashTime(gpGlobals->curtime + 1.0);
-
+	pPlayer->CreateMuzzleLight(255, 200, 0, vecSrc);
 	// Fire the bullets, and force the first shot to be perfectly accuracy
 	// Fire the bullets
 	//pPlayer->FireBullets(8, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, true, false);

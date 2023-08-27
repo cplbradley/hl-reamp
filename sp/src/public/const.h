@@ -12,6 +12,9 @@
 #pragma once
 #endif
 
+
+#define CLIMBABLE_ROPE
+
 // the command line param that tells the engine to use steam
 #define STEAM_PARM					"-steam"
 // the command line param to tell dedicated server to restart 
@@ -193,11 +196,16 @@ enum MoveType_t
 	MOVETYPE_NOCLIP,			// No gravity, no collisions, still do velocity/avelocity
 	MOVETYPE_LADDER,			// Used by players only when going onto a ladder
 	MOVETYPE_OBSERVER,			// Observer movement, depends on player's observer mode
+
+	MOVETYPE_ROPE,
+
 	MOVETYPE_CUSTOM,			// Allows the entity to describe its own physics
+
+
+
 
 	// should always be defined as the last item in the list
 	MOVETYPE_LAST		= MOVETYPE_CUSTOM,
-
 	MOVETYPE_MAX_BITS	= 4
 };
 
@@ -383,6 +391,7 @@ enum RenderFx_t
 	kRenderFxSpotlight,			// TEST CODE for experimental spotlight
 	kRenderFxRagdoll,			// HACKHACK: TEST CODE for signalling death of a ragdoll character
 	kRenderFxPulseFastWider,
+
 	kRenderFxMax
 };
 

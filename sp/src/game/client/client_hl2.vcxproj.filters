@@ -25,6 +25,9 @@
     <Filter Include="Source Files">
       <UniqueIdentifier>{BA03E055-4FA2-FCE3-8A1C-D348547D379C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Experimental">
+      <UniqueIdentifier>{8BF4BF43-53D3-8FFB-3089-3005C0FD31CE}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source Files\FMOD">
       <UniqueIdentifier>{785A4591-10EE-51E3-B434-3DAE23D84992}</UniqueIdentifier>
     </Filter>
@@ -1988,9 +1991,6 @@
     <ClInclude Include="toolframework_client.h">
       <Filter>Tool Framework</Filter>
     </ClInclude>
-    <ClInclude Include="hlr\vgui\IArmorCustomization.h">
-      <Filter>Source Files\HLR\VGUI</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mp3player.cpp">
@@ -3028,6 +3028,9 @@
     <ClCompile Include="WorldDimsProxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="experimental\c_climbable_rope.cpp">
+      <Filter>Source Files\Experimental</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\game\shared\fmod\fmod_dynamic_player.cpp">
       <Filter>Source Files\FMOD</Filter>
     </ClCompile>
@@ -3293,6 +3296,9 @@
       <Filter>Source Files\HLR\Entity</Filter>
     </ClCompile>
     <ClCompile Include="hlr\entities\c_hlr_skullkey.cpp">
+      <Filter>Source Files\HLR\Entity</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\entities\c_light_strobe.cpp">
       <Filter>Source Files\HLR\Entity</Filter>
     </ClCompile>
     <ClCompile Include="hlr\hud\hud_bluekey.cpp">

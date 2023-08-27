@@ -73,6 +73,9 @@ public:
 	virtual bool HandleInteraction(int interactionType, void *data, CBaseCombatCharacter* sourceEnt);
 	virtual void Weapon_Equip( CBaseCombatWeapon *pWeapon );
 
+
+	WeaponProficiency_t CalcWeaponProficiency(CBaseCombatWeapon* pWeapon);
+
 	//virtual bool OverrideMoveFacing( const AILocalMoveGoal_t &move, float flInterval );
 	bool		OnObstructionPreSteer( AILocalMoveGoal_t *pMoveGoal, float distClear, AIMoveResult_t *pResult );
 	bool		ShouldBruteForceFailedNav()	{ return false; }
@@ -165,8 +168,6 @@ private:
 	void		IncrementPlayerCriminalStatus( void );
 
 	virtual bool		UseAttackSquadSlots()	{ return true; }
-
-	WeaponProficiency_t CalcWeaponProficiency( CBaseCombatWeapon *pWeapon );
 
 	// Inputs
 	void InputEnableManhackToss( inputdata_t &inputdata );

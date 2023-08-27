@@ -10,6 +10,7 @@
 // STATIC: "EMISSIVE"                   "0..1"
 // STATIC: "PARALLAXOCCLUSION"          "0..1"
 // STATIC: "DETAILTEXTURE"				"0..1"
+// STATIC: "LERPENVMAP"					"0..1"
 
 // DYNAMIC: "FLASHLIGHTSHADOWS"         "0..1"
 // DYNAMIC: "LIGHTMAPPED_MODEL"         "0..1"
@@ -45,11 +46,11 @@ const float4x4 g_FlashlightWorldToTexture       : register(PSREG_FLASHLIGHT_TO_W
 
 PixelShaderLightInfo cLightInfo[3]              : register(PSREG_LIGHT_INFO_ARRAY);         // 2 registers each - 6 registers total (4th light spread across w's)
 
-#if PARALLAXOCCLUSION
 const float4 g_ParallaxParms                    : register( c27 );
 #define PARALLAX_DEPTH                          g_ParallaxParms.r
-#define PARALLAX_CENTER                         g_ParallaxParms.g				
-#endif
+#define PARALLAX_CENTER                         g_ParallaxParms.g
+#define ENVMAPLERP								g_ParallaxParms.b
+
 const float4 g_DetailParams						: register(c26);
 
 sampler BaseTextureSampler          : register(s0);     // Base map, selfillum in alpha
@@ -65,6 +66,7 @@ sampler EmissionTextureSampler      : register(s11);    // Emission texture
 #endif
 sampler DetailSampler			: register( s12 );
 sampler DetailMaskSampler		: register( s13 );
+sampler EnvmapSampler2			: register( s14 );
 #define ENVMAPLOD (g_EyePos.a)
 
 struct PS_INPUT
@@ -185,9 +187,16 @@ float4 main(PS_INPUT i) : COLOR
         float3 diffuseContributionFactor = lerp(1 - ambientLightingFresnelTerm, 0, metalness); ; // kd
 #endif
         float3 diffuseIBL = diffuseContributionFactor * albedo.rgb * diffuseIrradiance;
+		
+
 
         float4 specularUV = float4(specularReflectionVector, roughness * ENVMAPLOD);
-        float3 lookupHigh = ENV_MAP_SCALE * texCUBElod(EnvmapSampler, specularUV).xyz;
+		
+#if LERPENVMAP
+		float3 lookupHigh = ENV_MAP_SCALE * lerp(texCUBElod(EnvmapSampler, specularUV).xyz,texCUBElod(EnvmapSampler2,specularUV).xyz,ENVMAPLERP);
+#else
+		float3 lookupHigh = ENV_MAP_SCALE * texCUBElod(EnvmapSampler, specularUV).xyz;
+#endif
         float3 lookupLow = PixelShaderAmbientLight(specularReflectionVector, EnvAmbientCube);
         float3 specularIrradiance = lerp(lookupHigh, lookupLow, roughness * roughness);
         float3 specularIBL = specularIrradiance * EnvBRDFApprox(fresnelReflectance, roughness, lightDirectionAngle);

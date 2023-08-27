@@ -39,6 +39,10 @@ $Project
 				$File	"$SRCDIR\game\client\ShaderEditor\SEdit_ModelRender.cpp"
 			}
 		}
+		$Folder "Experimental"
+		{
+			$File "experimental/c_climbable_rope.cpp"
+		}
 		$Folder "HLR"
 		{
 			$Folder "HUD"
@@ -103,6 +107,7 @@ $Project
 				$File "hlr/entities/c_hlr_keycard.cpp"
 				$File "hlr/entities/c_hlr_skullkey.cpp"
 				$File "hlr/entities/c_hlr_powerups.cpp"
+				$File "hlr/entities/c_light_strobe.cpp"
 			}
 		}
 		$Folder "FMOD"

@@ -44,7 +44,7 @@ CMasochistModeQBox::CMasochistModeQBox(vgui::Panel* parent) : BaseClass("#HLR_MA
 }
 /*void CMasochistModeQBox::OnCancelButtonPressed()
 {
-	//Close();
+	Close();
 	Warning("fuck me this sucks\n");
 }
 void CMasochistModeQBox::OnOkButtonPressed()
@@ -53,6 +53,8 @@ void CMasochistModeQBox::OnOkButtonPressed()
 	engine->ClientCmd_Unrestricted("map introtest_new\n");
 	engine->ClientCmd_Unrestricted("startmasochistmode\n");
 }*/
+
+static ConCommand startmasochistmode("startmasochistmode", CC_StartMasochistMode, "startmasochistmode");
 
 void CMasochistModeQBox::OnCommand(const char* command)
 {
@@ -63,8 +65,7 @@ void CMasochistModeQBox::OnCommand(const char* command)
 	else if (!stricmp(command, "OK"))
 	{
 		Close();
-		engine->ClientCmd_Unrestricted("map introtest_new\n");
-		engine->ClientCmd_Unrestricted("g_masochist_mode 1\n");
+		engine->ClientCmd_Unrestricted("startmashochistmode\n");
 	}
 	else
 		return;

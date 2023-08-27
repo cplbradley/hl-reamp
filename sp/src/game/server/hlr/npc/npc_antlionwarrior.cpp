@@ -486,7 +486,6 @@ void CNPC_AntlionWarrior::Spawn(void)
 	SetHullSizeNormal();
 	SetDefaultEyeOffset();
 
-
 	//m_hSpitEffect = (CParticleSystem *)CreateEntityByName("info_particle_system");
 	//DispatchFlame();
 	SetSolid(SOLID_BBOX);

@@ -60,7 +60,7 @@ public:
 	void	AddViewKick(void);
 	void	DryFire(void);
 	void	Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator);
-
+	virtual void Equip(CBaseCombatCharacter* pOwner);
 	void	UpdatePenaltyTime(void);
 
 	const char *GetTracerType(void) { return "PistolTracer"; }
@@ -169,7 +169,7 @@ CWeaponPistol::CWeaponPistol(void)
 	//m_flSoonestSecondaryAttack = gpGlobals->curtime;
 	m_flAccuracyPenalty = 0.0f;
 
-	m_fMinRange1 = 24;
+	m_fMinRange1 = 0;
 	m_fMaxRange1 = 1500;
 	m_fMinRange2 = 24;
 	m_fMaxRange2 = 200;
@@ -188,6 +188,10 @@ void CWeaponPistol::Precache(void)
 	BaseClass::Precache();
 }
 
+void CWeaponPistol::Equip(CBaseCombatCharacter* pOwner)
+{
+	BaseClass::Equip(pOwner);
+}
 //-----------------------------------------------------------------------------
 // Purpose:
 // Input  :
@@ -205,8 +209,6 @@ void CWeaponPistol::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCha
 		CAI_BaseNPC *npc = pOperator->MyNPCPointer();
 		ASSERT(npc != NULL);
 
-		vecShootDir = npc->GetActualShootTrajectory(vecShootOrigin);
-
 		CSoundEnt::InsertSound(SOUND_COMBAT | SOUND_CONTEXT_GUNFIRE, pOperator->GetAbsOrigin(), SOUNDENT_VOLUME_PISTOL, 0.2, pOperator, SOUNDENT_CHANNEL_WEAPON, pOperator->GetEnemy());
 		QAngle angAiming;
 		WeaponSound(SINGLE_NPC);
@@ -216,6 +218,8 @@ void CWeaponPistol::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCha
 		UTIL_SetOrigin(pPew, vecShootOrigin);
 		float basespd = 2000.0f;
 		float adjustedspeed = g_pGameRules->SkillAdjustValue(basespd);
+		vecShootDir = npc->GetSkillAdjustedShootTrajectory(vecShootOrigin, npc->GetEnemy()->WorldSpaceCenter(), adjustedspeed);
+
 		Vector vecVelocity = vecShootDir * adjustedspeed;
 
 		
@@ -224,7 +228,6 @@ void CWeaponPistol::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCha
 		DispatchParticleEffect("pistol_npc_core", vecShootOrigin, angAiming, pOperator);
 		//pOperator->FireBullets(0, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2);
 		pOperator->DoMuzzleFlash();
-		m_iClip1 = m_iClip1 - 1;
 	}
 	break;
 	default:
@@ -305,11 +308,8 @@ void CWeaponPistol::DelayedFire2(void)
 void CWeaponPistol::FireDelayed(void)
 {
 	FireProjectile();
-	//CSoundEnt::InsertSound(SOUND_COMBAT, GetAbsOrigin(), SOUNDENT_VOLUME_PISTOL, 0.2, GetOwner());
-	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
 	SendWeaponAnim(GetPrimaryAttackActivity());
 	WeaponSound(SINGLE);
-	pPlayer->DoMuzzleFlash();
 }
 void CWeaponPistol::FireProjectile(void)
 {
@@ -350,6 +350,7 @@ void CWeaponPistol::FireProjectile(void)
 		QAngle(random->RandomFloat(-250, -500),
 		random->RandomFloat(-250, -500),
 		random->RandomFloat(-250, -500)));
+	pPlayer->CreateMuzzleLight(255, 50, 0,vecSrc);
 	
 }
 //-----------------------------------------------------------------------------

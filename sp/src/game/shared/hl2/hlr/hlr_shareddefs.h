@@ -24,6 +24,7 @@ static ConVar g_rocket_jump_mania("g_rocket_jump_mania", "0", FCVAR_REPLICATED |
 static ConVar mat_blurdarken("mat_blurdarken", "0");
 
 static ConVar mat_taa("mat_taa", "0", FCVAR_REPLICATED | FCVAR_CLIENTDLL, "");
+static ConVar g_custom_nightvision("g_custom_nightvision", "0", FCVAR_ARCHIVE | FCVAR_CLIENTDLL | FCVAR_GAMEDLL);
 
 static void CC_TestKillSave(void)
 {
@@ -131,10 +132,8 @@ static void CC_StartMasochistMode(void)
 	if (!pPlayer)
 		return;
 	pPlayer->m_HL2Local.m_bMasochistMode = true;
-	
+	engine->ClientCommand(pPlayer->edict(), "map introtest_newnew\n");
 #endif
 }
-
-static ConCommand startmashochistmode("startmasochistmode", CC_StartMasochistMode, "startmasochistmode", FCVAR_REPLICATED | FCVAR_HIDDEN | FCVAR_GAMEDLL | FCVAR_CLIENTDLL | FCVAR_CLIENTCMD_CAN_EXECUTE);
 
 static ConCommand testkillsave("testkillsave", CC_TestKillSave, "testkillsave", FCVAR_REPLICATED | FCVAR_HIDDEN | FCVAR_CLIENTCMD_CAN_EXECUTE);

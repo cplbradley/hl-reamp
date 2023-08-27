@@ -31,7 +31,7 @@ $sequence walk {
 }
 $sequence fire "mechubus_v2_shootcannon" fps 30.0 activity ACT_MECHUBUS_SHOOT -1.0 { event AE_MECHUBUS_CANNON_SHOOT 10 "" } fadein 0.2 fadeout 0.2 
 $sequence warn "mechubus_v2_warn" fps 30.0 activity ACT_MECHUBUS_WARN -1.0 fadein 0.2 fadeout 0.2 
-$sequence kick "mechubus_v2_kick" fps 30.0 activity ACT_MECHUBUS_KICK -1.0 fadein 0.2 fadeout 0.2 
+$sequence kick "mechubus_v2_kick" fps 30.0 activity ACT_MECHUBUS_KICK -1.0 { event AE_MECHUBUS_KICK_LAND 4 "" } fadein 0.2 fadeout 0.2 
 $sequence jump "mechubus_v2_jump" fps 30.0 activity ACT_JUMP -1.0 fadein 0.2 fadeout 0.2 walkframe 5 LX LY LZ
 $sequence glide "mechubus_v2_glide" fps 30.0 activity ACT_GLIDE -1.0 fadein 0.2 fadeout 0.2 walkframe 5 LX LY LZ
 $sequence land "mechubus_v2_land" fps 30.0 activity ACT_LAND -1.0 fadein 0.2 fadeout 0.2 

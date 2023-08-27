@@ -43,6 +43,8 @@ enum
 {
 	SCHEDULE_MECHUBUS_SHOOT = LAST_SHARED_SCHEDULE,
 	SCHEDULE_MECHUBUS_KICK,
+	SCHEDULE_MECHUBUS_GETCLOSER,
+	SCHEDULE_MECHUBUS_GETCLOSER_FALLBACK,
 };
 
 enum
@@ -54,8 +56,9 @@ enum
 
 enum
 {
-	COND_MECHUBUS_SHOULDSHOOT = LAST_SHARED_CONDITION,
-	COND_MECHUBUS_SHOULDKICK,
+	COND_MECHUBUS_IN_RANGE_TO_SHOOT = LAST_SHARED_CONDITION,
+	COND_MECHUBUS_TOO_FAR_TO_SHOOT,
+	COND_MECHUBUS_IN_RANGE_TO_KICK,
 };
 
 int AE_MECHUBUS_CANNON_SHOOT;
@@ -89,6 +92,8 @@ public:
 	bool AllowedToShoot();
 	bool EnemyTooFar();
 
+	void CheckEnemyDistance();
+
 	float GetEnemyDistance();
 
 	virtual void HandleAnimEvent(animevent_t* pEvent);
@@ -100,6 +105,8 @@ public:
 
 	void	StartTask(const Task_t* pTask);
 	void	RunTask(const Task_t* pTask);
+	int TranslateSchedule(int scheduleType);
+	virtual void RunAI(void);
 
 	void ShootProjectile();
 	void Kick();
@@ -148,7 +155,10 @@ void CNPCMechubus::Precache()
 	PrecacheScriptSound("NPC_Vortigaunt.Swing");
 	PrecacheScriptSound("Punch.Impact");
 }
-
+void CNPCMechubus::RunAI(void)
+{
+	BaseClass::RunAI();
+}
 float CNPCMechubus::GetEnemyDistance()
 {
 	if (!GetEnemy())
@@ -168,33 +178,22 @@ bool CNPCMechubus::EnemyTooFar()
 }
 bool CNPCMechubus::ShouldShoot()
 {
-	return GetEnemy() && GetEnemyDistance() > MIN_SHOOT_RANGE && GetEnemyDistance() < MAX_SHOOT_RANGE && fNextShoot < gpGlobals->curtime;
+	return GetEnemy() && !ShouldKick() && !EnemyTooFar() && AllowedToShoot();
 }
 
 bool CNPCMechubus::ShouldKick()
 {
 	return GetEnemy() && GetEnemyDistance() < MIN_SHOOT_RANGE;
 }
-
+void CNPCMechubus::CheckEnemyDistance()
+{
+	ShouldKick() ? SetCondition(COND_MECHUBUS_IN_RANGE_TO_KICK) : ClearCondition(COND_MECHUBUS_IN_RANGE_TO_KICK);
+	EnemyTooFar() ? SetCondition(COND_MECHUBUS_TOO_FAR_TO_SHOOT) : ClearCondition(COND_MECHUBUS_TOO_FAR_TO_SHOOT);
+	ShouldShoot() ? SetCondition(COND_MECHUBUS_IN_RANGE_TO_SHOOT) : ClearCondition(COND_MECHUBUS_IN_RANGE_TO_SHOOT);
+}
 void CNPCMechubus::GatherConditions()
 {
-	if (ShouldKick())
-	{
-		SetCondition(COND_MECHUBUS_SHOULDKICK);
-		ClearCondition(COND_MECHUBUS_SHOULDSHOOT);
-	}
-	
-	if (EnemyTooFar())
-	{
-		SetCondition(COND_ENEMY_TOO_FAR);
-		ClearCondition(COND_MECHUBUS_SHOULDSHOOT);
-	}
-	else if (!EnemyTooFar() && AllowedToShoot())
-	{
-		SetCondition(COND_MECHUBUS_SHOULDSHOOT);
-		ClearCondition(COND_ENEMY_TOO_FAR);
-	}
-
+	CheckEnemyDistance();
 	BaseClass::GatherConditions();
 }
 
@@ -203,7 +202,7 @@ int CNPCMechubus::SelectSchedule()
 	if (GetEnemy() && m_NPCState == NPC_STATE_COMBAT)
 		return SelectCombatSchedule();
 
-	return BaseClass::SelectSchedule();
+	return SCHED_IDLE_WANDER;
 }
 
 int CNPCMechubus::SelectCombatSchedule()
@@ -211,16 +210,16 @@ int CNPCMechubus::SelectCombatSchedule()
 	if (HasCondition(COND_ENEMY_OCCLUDED))
 		return SCHED_ESTABLISH_LINE_OF_FIRE;
 
-	if (HasCondition(COND_ENEMY_TOO_FAR))
-		return SCHED_CHASE_ENEMY;
+	if (EnemyTooFar())
+		return SCHED_ESTABLISH_LINE_OF_FIRE;
 
-	if (HasCondition(COND_MECHUBUS_SHOULDKICK))
+	if (ShouldKick())
 		return SCHEDULE_MECHUBUS_KICK;
 
-	if (HasCondition(COND_MECHUBUS_SHOULDSHOOT))
+	if (ShouldShoot())
 		return SCHEDULE_MECHUBUS_SHOOT;
 
-	return SCHED_IDLE_WANDER;
+	return SCHED_ESTABLISH_LINE_OF_FIRE;
 }
 
 void CNPCMechubus::HandleAnimEvent(animevent_t* pEvent)
@@ -266,7 +265,7 @@ void CNPCMechubus::ShootProjectile()
 
 void CNPCMechubus::Kick()
 {
-	CBaseEntity* pHurt = CheckTraceHullAttack(150, GetHullMins(), GetHullMaxs(), 0, DMG_CLUB);
+	CBaseEntity* pHurt = CheckTraceHullAttack(100, -Vector(32, 32, 32), Vector(32, 32, 32), 0, DMG_CLUB);
 	CBaseCombatCharacter* pBCC = ToBaseCombatCharacter(pHurt);
 	if (pBCC)
 	{
@@ -287,20 +286,25 @@ void CNPCMechubus::BuildScheduleTestBits(void)
 {
 	BaseClass::BuildScheduleTestBits();
 
-	if (IsCurSchedule(SCHED_CHASE_ENEMY))
+	if (IsCurSchedule(SCHEDULE_MECHUBUS_GETCLOSER) || IsCurSchedule(SCHEDULE_MECHUBUS_GETCLOSER_FALLBACK))
 	{
-		SetCustomInterruptCondition(COND_MECHUBUS_SHOULDKICK);
-		SetCustomInterruptCondition(COND_MECHUBUS_SHOULDSHOOT);
+		SetCustomInterruptCondition(COND_MECHUBUS_IN_RANGE_TO_KICK);
+		SetCustomInterruptCondition(COND_MECHUBUS_IN_RANGE_TO_SHOOT);
 	}
 
 	if (IsCurSchedule(SCHEDULE_MECHUBUS_SHOOT))
-		SetCustomInterruptCondition(COND_MECHUBUS_SHOULDKICK);
+		SetCustomInterruptCondition(COND_MECHUBUS_IN_RANGE_TO_KICK);
+}
 
-	if (IsCurSchedule(SCHED_ESTABLISH_LINE_OF_FIRE))
-	{
-		SetCustomInterruptCondition(COND_MECHUBUS_SHOULDKICK);
-		SetCustomInterruptCondition(COND_MECHUBUS_SHOULDSHOOT);
-	}
+int CNPCMechubus::TranslateSchedule(int scheduleType)
+{
+	if (scheduleType == SCHED_MOVE_TO_WEAPON_RANGE)
+		return SCHEDULE_MECHUBUS_GETCLOSER;
+
+	if (scheduleType == SCHED_CHASE_ENEMY || scheduleType == SCHED_ESTABLISH_LINE_OF_FIRE)
+		return SCHEDULE_MECHUBUS_GETCLOSER;
+
+	return BaseClass::TranslateSchedule(scheduleType);
 }
 
 void CNPCMechubus::StartTask(const Task_t* pTask)
@@ -309,10 +313,14 @@ void CNPCMechubus::StartTask(const Task_t* pTask)
 	{
 	case TASK_MECHUBUS_WARN:
 		SetActivity(ACT_MECHUBUS_WARN);
+		if (AmBeingBuffed())
+			SetPlaybackRate(2.0f);
 		break;
 	case TASK_MECHUBUS_SHOOT:
 		SetActivity(ACT_MECHUBUS_SHOOT);
 		fNextShoot = gpGlobals->curtime + RandomFloat(1.0f, 3.0f);
+		if (AmBeingBuffed())
+			SetPlaybackRate(2.0f);
 		break;
 	case TASK_MECHUBUS_KICK:
 		SetActivity(ACT_MECHUBUS_KICK);
@@ -332,12 +340,19 @@ void CNPCMechubus::RunTask(const Task_t* pTask)
 	{
 		if (IsActivityFinished())
 			TaskComplete();
+		else
+			GetMotor()->SetIdealYawToTargetAndUpdate(GetEnemy()->GetAbsOrigin(), MaxYawSpeed());
 		break;
 	}
 	case TASK_MECHUBUS_SHOOT:
 	{
+		
 		if (IsActivityFinished())
+		{
 			TaskComplete();
+		}
+		else
+			GetMotor()->SetIdealYawToTargetAndUpdate(GetEnemy()->GetAbsOrigin(), MaxYawSpeed());
 		break;
 	}
 	case TASK_MECHUBUS_KICK:
@@ -366,8 +381,9 @@ AI_BEGIN_CUSTOM_NPC(npc_mechubus,CNPCMechubus)
 	DECLARE_ANIMEVENT(AE_MECHUBUS_FOOTSTEP)
 	DECLARE_ANIMEVENT(AE_MECHUBUS_KICK_LAND)
 	
-	DECLARE_CONDITION(COND_MECHUBUS_SHOULDKICK)
-	DECLARE_CONDITION(COND_MECHUBUS_SHOULDSHOOT)
+	DECLARE_CONDITION(COND_MECHUBUS_TOO_FAR_TO_SHOOT)
+	DECLARE_CONDITION(COND_MECHUBUS_IN_RANGE_TO_KICK)
+	DECLARE_CONDITION(COND_MECHUBUS_IN_RANGE_TO_SHOOT)
 
 	DEFINE_SCHEDULE
 	(
@@ -390,11 +406,49 @@ AI_BEGIN_CUSTOM_NPC(npc_mechubus,CNPCMechubus)
 		"		TASK_STOP_MOVING				0"
 		"		TASK_FACE_IDEAL					0"
 		"		TASK_MECHUBUS_WARN				0"
-		"		TASK_FACE_IDEAL					0"
+		"		TASK_FACE_ENEMY					0"
 		"		TASK_MECHUBUS_SHOOT				0"
 		"	"
 		"	Interrupts"
 		"		COND_TASK_FAILED"
 		"		COND_ENEMY_DEAD"
 	)
+		DEFINE_SCHEDULE
+		(
+			SCHEDULE_MECHUBUS_GETCLOSER,
+
+			"	Tasks"
+			"		TASK_STOP_MOVING				0"
+			"		TASK_SET_FAIL_SCHEDULE			SCHEDULE:SCHEDULE_MECHUBUS_GETCLOSER_FALLBACK"
+			//	"		TASK_SET_TOLERANCE_DISTANCE		24"
+			"		TASK_GET_CHASE_PATH_TO_ENEMY	300"
+			"		TASK_RUN_PATH					0"
+			"		TASK_WAIT_FOR_MOVEMENT			0"
+			"		TASK_FACE_ENEMY			0"
+			"	"	
+			"	Interrupts"
+			"		COND_TASK_FAILED"
+			"		COND_ENEMY_DEAD"
+			"		COND_MECHUBUS_IN_RANGE_TO_SHOOT"
+		)
+		DEFINE_SCHEDULE
+		(
+			SCHEDULE_MECHUBUS_GETCLOSER_FALLBACK,
+
+			"	Tasks"
+			"		TASK_STOP_MOVING				0"
+			"		TASK_SET_FAIL_SCHEDULE			SCHEDULE:SCHED_IDLE_WANDER"
+			//	"		TASK_SET_TOLERANCE_DISTANCE		24"
+			"		TASK_GET_PATH_TO_ENEMY_LKP		300"
+			"		TASK_RUN_PATH					0"
+			"		TASK_WAIT_FOR_MOVEMENT			0"
+			"		TASK_FACE_ENEMY			0"
+			"	"
+			"	Interrupts"
+			"		COND_TASK_FAILED"
+			"		COND_ENEMY_DEAD"
+			"		COND_MECHUBUS_IN_RANGE_TO_SHOOT"
+		)
+
+		
 AI_END_CUSTOM_NPC()

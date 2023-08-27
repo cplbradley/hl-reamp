@@ -199,6 +199,7 @@ public:
 	bool GetAttachment( int iAttachment, Vector &absOrigin, Vector *forward = NULL, Vector *right = NULL, Vector *up = NULL );
 
 	void SetBodygroup( int iGroup, int iValue );
+	void InputSetBodyGroup(inputdata_t& inputdata);
 	int GetBodygroup( int iGroup );
 
 	const char *GetBodygroupName( int iGroup );

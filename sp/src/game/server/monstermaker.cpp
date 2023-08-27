@@ -47,6 +47,9 @@ END_DATADESC()
 CNPCSpawnDestination::CNPCSpawnDestination()
 {
 	// Available right away, the first time.
+	if (m_ReuseDelay == -1)
+		bDontReuse = true;
+
 	m_TimeNextAvailable = gpGlobals->curtime;
 }
 
@@ -54,7 +57,7 @@ CNPCSpawnDestination::CNPCSpawnDestination()
 //---------------------------------------------------------
 bool CNPCSpawnDestination::IsAvailable()
 {
-	if (m_TimeNextAvailable > gpGlobals->curtime)
+	if (m_TimeNextAvailable > gpGlobals->curtime || bDontReuse)
 	{
 		return false;
 	}
@@ -73,7 +76,8 @@ void CNPCSpawnDestination::OnSpawnedNPC(CAI_BaseNPC *pNPC)
 	}
 
 	m_OnSpawnNPC.FireOutput(pNPC, this);
-	m_TimeNextAvailable = gpGlobals->curtime + m_ReuseDelay;
+	if(!bDontReuse)
+		m_TimeNextAvailable = gpGlobals->curtime + m_ReuseDelay;
 }
 
 //-------------------------------------
@@ -537,6 +541,7 @@ void CNPCMaker::MakeNPC(void)
 	{
 		DevMsg("Instant or No Particle\n");
 		SpawnNPC();
+
 		if ((m_spawnflags & SF_NPCMAKER_NOPARTICLE) == 0)
 		{
 			MakeInstantParticle(pent->WorldSpaceCenter());

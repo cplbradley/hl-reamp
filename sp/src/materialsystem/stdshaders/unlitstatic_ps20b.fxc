@@ -1,0 +1,15 @@
+#include "common_ps_fxc.h"
+
+sampler BaseTexture	: register( s0 );
+
+struct PS_INPUT
+{
+	float2 vTexCoord0	: TEXCOORD0;
+};
+
+float4 main( PS_INPUT i ) : COLOR
+{
+	float4 result = tex2D( BaseTexture, i.vTexCoord0 );
+	
+	return FinalOutput( result, 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_NONE );
+}

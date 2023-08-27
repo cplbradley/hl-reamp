@@ -883,7 +883,7 @@ $animation "a_runSW_pistol_aim_delta" "police_animations_anims\a_runSW_pistol_ai
 }
 
 $animation "a_runN_hold_pistol" "police_animations_anims\a_runN_hold_pistol.smd" {
-	fps 30
+	fps 40
 	loop
 	////ikrule "lfoot" footstep contact 8 fakeorigin 10.25 6.08 0 fakerotate 0 0 0 floor 0 height 18 radius 2.5 range 18 7 10 18 target 3
 	////ikrule "rfoot" footstep contact 18 fakeorigin 11.04 -1.4 0 fakerotate 0 0 0 floor 0 height 18 radius 2.5 range 8 16 1 8 target 2
@@ -893,7 +893,7 @@ $animation "a_runN_hold_pistol" "police_animations_anims\a_runN_hold_pistol.smd"
 }
 
 $animation "a_runN_aim_pistol" "police_animations_anims\a_runN_aim_pistol.smd" {
-	fps 30
+	fps 40
 	loop
 	////ikrule "lfoot" footstep contact 8 fakeorigin 10.25 6.08 0 fakerotate 0 0 0 floor 0 height 18 radius 2.5 range 18 7 10 18 target 3
 	////ikrule "rfoot" footstep contact 18 fakeorigin 11.04 -1.4 0 fakerotate 0 0 0 floor 0 height 18 radius 2.5 range 8 16 1 8 target 2
@@ -1275,11 +1275,12 @@ $sequence "layer_run_aiming_pistol" {
 	fadeout 0.2
 	hidden
 	addlayer "WalkN_pistol_Aim_all"
-	fps 30
+	fps 40
 	loop
 	////ikrule "rhand" release contact 0 fakeorigin 0 0 0 fakerotate 0 0 0 floor 0 height 0 radius 0 range 0 0 20 20 target 0
 	////ikrule "lhand" release contact 0 fakeorigin 0 0 0 fakerotate 0 0 0 floor 0 height 0 radius 0 range 0 0 20 20 target 1
 	weightlist "weights_layer_walk_hold_baton_angry"
+	
 }
 
 $sequence "run_aiming_pistol_all" {
@@ -1300,4 +1301,5 @@ $sequence "run_aiming_pistol_all" {
 	fadein 0.2
 	fadeout 0.2
 	addlayer "layer_run_aiming_pistol"
+	
 }

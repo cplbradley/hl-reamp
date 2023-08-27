@@ -2,7 +2,7 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>D:\Steam\steamapps\common\sourcesdk_content\sdk\hl-reamp\sp\src\game\client\Debug_mod_hl2\client.dll</FullPath>
+      <FullPath>D:\Steam\steamapps\sourcemods\hlr\bin\client.dll</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles />

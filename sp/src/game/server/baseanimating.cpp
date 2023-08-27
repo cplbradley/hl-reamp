@@ -164,6 +164,7 @@ BEGIN_DATADESC( CBaseAnimating )
 	DEFINE_INPUT( m_nSkin, FIELD_INTEGER, "skin" ),
 	DEFINE_KEYFIELD( m_nBody, FIELD_INTEGER, "body" ),
 	DEFINE_INPUT( m_nBody, FIELD_INTEGER, "SetBodyGroup" ),
+	DEFINE_INPUTFUNC(FIELD_VECTOR,"InputSetBodyGroupBody", InputSetBodyGroup),
 	DEFINE_KEYFIELD( m_nHitboxSet, FIELD_INTEGER, "hitboxset" ),
 	DEFINE_KEYFIELD( m_nSequence, FIELD_INTEGER, "sequence" ),
 	DEFINE_ARRAY( m_flPoseParameter, FIELD_FLOAT, CBaseAnimating::NUM_POSEPAREMETERS ),
@@ -2153,6 +2154,15 @@ int CBaseAnimating::GetExitNode( int iSequence )
 //=========================================================
 //=========================================================
 
+
+void CBaseAnimating::InputSetBodyGroup(inputdata_t& inputdata)
+{
+	Vector vecIn;
+	inputdata.value.Vector3D(vecIn);
+
+	if (vecIn[0] != -1 && vecIn[1] != -1)
+		SetBodygroup(vecIn[0], vecIn[1]);
+}
 void CBaseAnimating::SetBodygroup( int iGroup, int iValue )
 {
 	// SetBodygroup is not supported on pending dynamic models. Wait for it to load!

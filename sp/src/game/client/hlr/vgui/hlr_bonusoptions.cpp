@@ -29,7 +29,6 @@
 using namespace vgui;
 
 ConVar r_videoquality("r_videoquality", "2", FCVAR_CLIENTDLL | FCVAR_HIDDEN | FCVAR_ARCHIVE);
-
 //////////////////////////////////////////////////////////////
 ////////// BONUS OPTIONS GRAPHICS PAGE //////////////////
 //////////////////////////////////////////////////////
@@ -42,6 +41,7 @@ public:
 	CHLRSubBonusOptionsGraphics(vgui::Panel* parent);
 
 	virtual void OnResetData();
+	virtual void OnThink();
 	virtual void OnApplyChanges();
 	void ApplyVideoQuality();
 	virtual void OnDataChanged();
@@ -54,6 +54,9 @@ private:
 	ComboBox* m_pVideoQuality;
 	CheckButton* m_pVSync;
 	CheckButton* m_pMulticore;
+	CheckButton* m_pMuzzleLights;
+	Label* m_pRainValue;
+
 };
 
 CHLRSubBonusOptionsGraphics::CHLRSubBonusOptionsGraphics(vgui::Panel* parent) : BaseClass(parent, NULL)
@@ -64,6 +67,7 @@ CHLRSubBonusOptionsGraphics::CHLRSubBonusOptionsGraphics(vgui::Panel* parent) : 
 	m_pMulticore = new CheckButton(this, "Multicore", "Multicore");
 	m_pRainSlider = new Slider(this, "RainDensity");
 	m_pRainSlider->SetRange(0, 100);
+	m_pRainValue = new Label(this, "RainDensityValue", "NULL");
 
 	m_pVideoQuality = new ComboBox(this, "VideoQuality",4,false);
 	m_pVideoQuality->AddItem("Low", NULL);
@@ -71,7 +75,8 @@ CHLRSubBonusOptionsGraphics::CHLRSubBonusOptionsGraphics(vgui::Panel* parent) : 
 	m_pVideoQuality->AddItem("High", NULL);
 	m_pVideoQuality->AddItem("Max", NULL);
 
-
+	m_pMuzzleLights = new CheckButton(this, "MuzzleLights", "Muzzle Flash Lights");
+	
 
 	LoadControlSettings("resource/ui/bonusoptionsgraphics.res");
 }
@@ -83,7 +88,9 @@ void CHLRSubBonusOptionsGraphics::OnResetData()
 	ConVarRef furyFX("g_draw_fury_effects");
 	ConVarRef vsync("mat_vsync");
 	ConVarRef multicore("mat_queue_mode");
+	ConVarRef muzzlelights("r_muzzleflash_lights");
 
+	m_pMuzzleLights->SetSelected(muzzlelights.GetBool());
 	m_pRainSlider->SetValue(raindensity.GetFloat());
 
 	m_pParallax->SetSelected(parallax.GetBool());
@@ -91,10 +98,25 @@ void CHLRSubBonusOptionsGraphics::OnResetData()
 
 	m_pFuryEffects->SetSelected(furyFX.GetBool());
 	m_pVideoQuality->ActivateItem(r_videoquality.GetInt());
-	m_pMulticore->SetSelected(multicore.GetInt() - 1);
-	
-}
+	m_pMulticore->SetSelected(multicore.GetInt() == 2);
 
+	wchar_t tempstring[128];
+	char str[128];
+	sprintf(str, "%i", m_pRainSlider->GetValue());
+	g_pVGuiLocalize->ConvertANSIToUnicode(str, tempstring, sizeof(tempstring));
+	m_pRainValue->SetText(tempstring);
+}
+void CHLRSubBonusOptionsGraphics::OnThink()
+{
+	BaseClass::OnThink();
+
+	wchar_t tempstring[128];
+	char str[128];
+	sprintf(str, "%i", m_pRainSlider->GetValue());
+	g_pVGuiLocalize->ConvertANSIToUnicode(str, tempstring, sizeof(tempstring));
+	m_pRainValue->SetText(tempstring);
+
+}
 void CHLRSubBonusOptionsGraphics::ApplyVideoQuality()
 {
 	ConVarRef r_rootlod("r_rootlod");
@@ -169,12 +191,15 @@ void CHLRSubBonusOptionsGraphics::OnApplyChanges()
 	ConVarRef raindensity("r_RainSplashPercentage");
 	ConVarRef furyFX("g_draw_fury_effects");
 	ConVarRef vsync("mat_vsync");
-	ConVarRef multicore("mat_queue_mode");
+	ConVarRef muzzlelights("r_muzzleflash_lights");
 	vsync.SetValue(m_pVSync->IsSelected());
 	raindensity.SetValue(m_pRainSlider->GetValue());
 	parallax.SetValue(m_pParallax->IsSelected());
 	furyFX.SetValue(m_pFuryEffects->IsSelected());
-	multicore.SetValue(m_pMulticore->IsSelected() + 1);
+	muzzlelights.SetValue(m_pMuzzleLights->IsSelected());
+
+
+	m_pMulticore->IsSelected() ? engine->ClientCmd_Unrestricted("mat_queue_mode 2") : engine->ClientCmd_Unrestricted("mat_queue_mode 0");
 
 	if(m_pVideoQuality->GetActiveItem() != r_videoquality.GetInt())
 		ApplyVideoQuality();
@@ -311,6 +336,7 @@ private:
 	vgui::CheckButton* m_pautoaim;
 	vgui::CheckButton* m_pthirdperson;
 	vgui::CheckButton* m_pslowmo;
+	vgui::CheckButton* m_pcustomnv;
 	vgui::Slider* m_sHudR;
 	vgui::Slider* m_sHudG;
 	vgui::Slider* m_sHudB;
@@ -345,6 +371,7 @@ CHLRSubBonusOptionsGameplay::CHLRSubBonusOptionsGameplay(vgui::Panel* parent) : 
 	m_pautoaimscale->SetNumTicks(10);
 
 	m_pthirdperson = new CheckButton(this, "ThirddPerson", "Third-Person");
+	m_pcustomnv = new CheckButton(this, "customNV", "custom nightvision");
 
 
 	LoadControlSettings("resource/ui/bonusoptionsgameplay.res");
@@ -361,6 +388,7 @@ void CHLRSubBonusOptionsGameplay::OnResetData()
 	ConVarRef hudg("hud_color_g");
 	ConVarRef hudb("hud_color_b");
 	ConVarRef haoverride("hud_override_healtharmor_color");
+	ConVarRef customnv("g_custom_nightvision");
 
 	iautoaimscale = autoaimscale.GetFloat() * 10;
 
@@ -375,6 +403,8 @@ void CHLRSubBonusOptionsGameplay::OnResetData()
 	m_sHudB->SetValue(hudb.GetFloat());
 
 	m_poverride->SetSelected(haoverride.GetBool());
+
+	m_pcustomnv->SetSelected(customnv.GetBool());
 }
 void CHLRSubBonusOptionsGameplay::OnApplyChanges()
 {
@@ -387,6 +417,7 @@ void CHLRSubBonusOptionsGameplay::OnApplyChanges()
 	ConVarRef hudg("hud_color_g");
 	ConVarRef hudb("hud_color_b");
 	ConVarRef haoverride("hud_override_healtharmor_color");
+	ConVarRef customnv("g_custom_nightvision");
 
 	iautoaimscale = m_pautoaimscale->GetValue();
 
@@ -416,6 +447,8 @@ void CHLRSubBonusOptionsGameplay::OnApplyChanges()
 	hudr.SetValue(m_sHudR->GetValue());
 	hudg.SetValue(m_sHudG->GetValue());
 	hudb.SetValue(m_sHudB->GetValue());
+
+	customnv.SetValue(m_pcustomnv->IsSelected());
 
 	DevMsg("changing bonus option data\n");
 

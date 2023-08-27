@@ -1,0 +1,85 @@
+#include "common_ps_fxc.h"
+
+
+sampler FBSampler : register(s0);
+sampler NoiseSampler: register(s1);
+sampler DepthSampler : register(s2);
+sampler DetailSampler : register(s3);
+
+float3 randNoise : register(c0);
+float3 c_hudColor : register(c1);
+float3 texSize : register(c2);
+
+struct PS_INPUT
+{
+	float2 texCoord : TEXCOORD0;
+};
+
+
+float3 EdgeDetect(float2 texCoord, float2 texelSize, sampler Depth, float edgeStrength)
+{
+	static float3x3 sobelYMatrix = float3x3 (
+	1,2,1,
+	0,0,0,
+	-1,-2,-1
+	);
+	static float3x3 sobelXMatrix = float3x3 (
+	1,0,-1,
+	2,0,-2,
+	1,0,-1
+	);
+	
+	float gradientX = 0;
+	float gradientY = 0;
+	
+	for (int y = -1; y <= 1; y++)
+    {
+        for (int x = -1; x <= 1; x++)
+        {
+            float depth = tex2D(DepthSampler, texCoord + float2(x, y) * texelSize).r;
+            gradientX += depth * sobelXMatrix[y + 1][x + 1];
+            gradientY += depth * sobelYMatrix[y + 1][x + 1];
+        }
+    }
+    
+    // Calculate magnitude of the gradient
+    float gradient = sqrt(gradientX * gradientX + gradientY * gradientY);
+    
+    // Threshold the gradient to get the edges
+    float threshold = 0.5;
+    
+     float edge = gradient * edgeStrength;
+	 
+	return float3(edge,edge,edge);
+};
+
+float4 main(PS_INPUT i) : COLOR
+{
+	float2 randUV = randNoise.xy;
+	float fTime = randNoise.z;
+	float4 randNoiseTex = tex2D(NoiseSampler,i.texCoord + randUV);
+	float4 staticNoiseTex = tex2D(NoiseSampler,i.texCoord.xy * 10);
+	float noiselayer = abs(staticNoiseTex.g - randNoiseTex.r) + 0.5;
+	float fTimeScalar = fTime / 10;
+	
+	float2 movementUV = i.texCoord;
+	movementUV.x += fTimeScalar;
+	movementUV.y -= fTimeScalar;
+	
+	float4 detailTex = tex2D(DetailSampler,movementUV);
+	
+	float detaillayer = noiselayer.r - dot(detailTex.g,detailTex.b);
+	
+	
+	float3 edge = EdgeDetect(i.texCoord,texSize.xy,DepthSampler,texSize.z);
+	
+	float3 hudColor = c_hudColor / 255;
+	
+	float3 additivelayer = edge * detaillayer * hudColor;
+	
+	float4 fbColor = tex2D(FBSampler,i.texCoord);
+	
+	return float4(fbColor.rgb + additivelayer.rgb,1);
+	
+};
+	

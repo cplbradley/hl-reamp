@@ -5,7 +5,7 @@
 //==================================================================================================
 
 
-//	STATIC: "ISDECAL"						"0..1"
+//	STATIC: "ISDECAL"					"0..1"
 
 //  DYNAMIC: "COMPRESSED_VERTS"         "0..1"
 //  DYNAMIC: "DOWATERFOG"               "0..1"
@@ -87,7 +87,7 @@ VS_OUTPUT main( const VS_INPUT v )
     o.fog = CalcFog(worldPos, vProjPos.xyz, g_FogType);
 
 #if ISDECAL == 1
-	worldPos += worldNormal * 0.05f * v.vLightmapTexCoordOffset.z;
+	worldPos += worldNormal * 1.00f * v.vLightmapTexCoordOffset.z;
 #endif
 
     // Needed for water fog alpha and diffuse lighting 

@@ -14,8 +14,6 @@
 #include "include/pbr_ps30.inc"
 #include "view_shared.h"
 
-
-
 // Defining samplers
 const Sampler_t SAMPLER_BASETEXTURE = SHADER_SAMPLER0;
 const Sampler_t SAMPLER_NORMAL = SHADER_SAMPLER1;
@@ -28,6 +26,7 @@ const Sampler_t SAMPLER_MRAO = SHADER_SAMPLER10;
 const Sampler_t SAMPLER_EMISSIVE = SHADER_SAMPLER11;
 const Sampler_t SAMPLER_DETAIL = SHADER_SAMPLER12;
 const Sampler_t SAMPLER_DETAILMASK = SHADER_SAMPLER13;
+const Sampler_t SAMPLER_ENVMAP2 = SHADER_SAMPLER14;
 
 // Convars
 static ConVar mat_fullbright("mat_fullbright", "0", FCVAR_CHEAT);
@@ -74,6 +73,7 @@ struct PBR_Vars_t
 
     int flatMRAO;
     int m_nDetailTextureBlendFactor;
+    int lerpEnvMaps;
 };
 
 // Beginning the shader
@@ -102,6 +102,7 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
         SHADER_PARAM(DETAILINMRAO,SHADER_PARAM_TYPE_BOOL,"0","put the detail into the mrao")
         SHADER_PARAM(DETAILBLENDFACTOR, SHADER_PARAM_TYPE_FLOAT, "1", "blend amount for detail texture.")
         SHADER_PARAM(FLATMRAO,SHADER_PARAM_TYPE_TEXTURE,"","flat mrao for fullbright")
+        SHADER_PARAM(LERPENVMAP,SHADER_PARAM_TYPE_BOOL,"0","lerp between cubemaps")
         
     END_SHADER_PARAMS;
 
@@ -135,6 +136,7 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
         info.m_bDetailInMRAO = DETAILINMRAO;
 
         info.m_nDetailTextureBlendFactor = DETAILBLENDFACTOR;
+        info.lerpEnvMaps = LERPENVMAP;
     };
     // Initializing parameters
     SHADER_INIT_PARAMS()
@@ -199,7 +201,6 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
         
         if (g_pHardwareConfig->GetDXSupportLevel() < 95)
         {
-            
             dxerror.SetValue(0);
             if (IS_FLAG_SET(MATERIAL_VAR_MODEL))
                 return "VertexLitGeneric";
@@ -215,6 +216,7 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
             else
                 return "LightmappedGeneric";
         }
+
         sm30error.SetValue(1);
         dxerror.SetValue(1);
         return 0;
@@ -243,6 +245,7 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
         LoadTexture(info.mraoTexture, 0);
 
         LoadTexture(info.flatMRAO);
+
 
 
         if (params[info.baseTexture]->IsDefined())
@@ -311,6 +314,8 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
         bool bLightMapped = !IS_FLAG_SET(MATERIAL_VAR_MODEL);
         bool bLightMappedModel = info.lightmapTexture != -1 && params[info.lightmapTexture]->IsDefined();
 
+        bool bLerpEnvMap = (info.lerpEnvMaps != -1) && params[info.lerpEnvMaps]->GetIntValue() == 1;
+
         // Determining whether we're dealing with a fully opaque material
         BlendType_t nBlendType = EvaluateBlendRequirements(info.baseTexture, true);
         bool bFullyOpaque = (nBlendType != BT_BLENDADD) && (nBlendType != BT_BLEND) && !bIsAlphaTested;
@@ -377,6 +382,7 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
             pShaderShadow->EnableSRGBRead(SAMPLER_MRAO, false);         // MRAO isn't sRGB
             pShaderShadow->EnableTexture(SAMPLER_NORMAL, true);         // Normal texture
             pShaderShadow->EnableSRGBRead(SAMPLER_NORMAL, false);       // Normals aren't sRGB
+            
 
 
             if (bHasDetailTexture)
@@ -405,6 +411,14 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
                 if (g_pHardwareConfig->GetHDRType() == HDR_TYPE_NONE)
                 {
                     pShaderShadow->EnableSRGBRead(SAMPLER_ENVMAP, true); // Envmap is only sRGB with HDR disabled?
+                }
+
+                if (bLerpEnvMap)
+                {
+                    pShaderShadow->EnableTexture(SAMPLER_ENVMAP2, true);
+                    if (g_pHardwareConfig->GetHDRType() == HDR_TYPE_NONE)
+                        pShaderShadow->EnableSRGBRead(SAMPLER_ENVMAP2, true);
+
                 }
             }
 
@@ -448,6 +462,7 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
                 SET_STATIC_PIXEL_SHADER_COMBO(EMISSIVE, bHasEmissionTexture);
                 SET_STATIC_PIXEL_SHADER_COMBO(PARALLAXOCCLUSION, useParallax);
                 SET_STATIC_PIXEL_SHADER_COMBO(DETAILTEXTURE, bHasDetailTexture);
+                SET_STATIC_PIXEL_SHADER_COMBO(LERPENVMAP, bLerpEnvMap);
                 SET_STATIC_PIXEL_SHADER(pbr_ps30);
 
             // Setting up fog
@@ -458,6 +473,7 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
         }
         else // Not snapshotting -- begin dynamic state
         {
+            ClientRender_Globals_t* defGlobals = (ClientRender_Globals_t*)pShaderAPI->GetIntRenderingParameter(INT_RENDERPARM_GLOBALS_PTR);
             bool bLightingOnly = mat_fullbright.GetInt() == 2 && !IS_FLAG_SET(MATERIAL_VAR_NO_DEBUG_OVERRIDE);
             bool bFullbright = mat_fullbright.GetInt() == 1;
 #if 0
@@ -495,6 +511,13 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
             if (bHasEnvTexture)
             {
                 BindTexture(SAMPLER_ENVMAP, info.envMap, 0);
+                
+                if (bLerpEnvMap && defGlobals != nullptr && defGlobals->pPrevEnvMap != nullptr)
+                {
+                    BindTexture(SAMPLER_ENVMAP2, defGlobals->pPrevEnvMap);
+                }
+                else
+                    BindTexture(SAMPLER_ENVMAP2, info.envMap, 0);
             }
             else
             {
@@ -718,6 +741,10 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
             flParams[0] = GetFloatParam(info.parallaxDepth, params, 3.0f);
             // Parallax Center (the height at which it's not moved)
             flParams[1] = GetFloatParam(info.parallaxCenter, params, 3.0f);
+            if(!pShaderAPI->InEditorMode() && defGlobals)
+                flParams[2] = defGlobals->m_flCubemapLerp;
+            else
+                flParams[2] = 0.0f;
             pShaderAPI->SetPixelShaderConstant(27, flParams, 1);
 
 

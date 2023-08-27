@@ -88,6 +88,8 @@ void CNPCPlasmaBall::Spawn(void)
 	SetSolidFlags(FSOLID_NOT_SOLID | FSOLID_TRIGGER);
 	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 	//SetSolidFlags(FSOLID_TRIGGER);
+	SetModel(PLASMA_MODEL_NPC);
+	SetRenderColor(255, 0, 0);
 	CreateTrail();
 	SetTouch(&CNPCPlasmaBall::PlasmaTouch);
 
@@ -109,6 +111,7 @@ bool CNPCPlasmaBall::CreateTrail(void)
 		m_pGlowTrail->SetStartWidth(6.0f);
 		m_pGlowTrail->SetEndWidth(0.2f);
 		m_pGlowTrail->SetLifeTime(0.05f);
+		m_pGlowTrail->SetTransparency(kRenderWorldGlow, 255, 0, 0, 200, kRenderFxNone);
 	}
 	return true;
 }
@@ -312,7 +315,7 @@ IMPLEMENT_ACTTABLE(CWeaponSMG1);
 CWeaponSMG1::CWeaponSMG1( )
 {
 	m_fMinRange1		= 0;// No minimum range. 
-	m_fMaxRange1		= 9600;
+	m_fMaxRange1		= 1024;
 
 	m_bAltFiresUnderwater = false;
 	//m_iClip1 = 50;
@@ -352,15 +355,6 @@ int CWeaponSMG1::GetMinBurst()
 //-----------------------------------------------------------------------------
 void CWeaponSMG1::Equip( CBaseCombatCharacter *pOwner )
 {
-	if( pOwner->Classify() == CLASS_PLAYER_ALLY )
-	{
-		m_fMaxRange1 = 3000;
-	}
-	else
-	{
-		m_fMaxRange1 = 3000;
-	}
-
 	BaseClass::Equip( pOwner );
 }
 
@@ -372,18 +366,12 @@ void CWeaponSMG1::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, Vector 
 	// FIXME: use the returned number of bullets to account for >10hz firerate
 	WeaponSound( SINGLE_NPC );	//call weapon sound
 	CSoundEnt::InsertSound( SOUND_COMBAT|SOUND_CONTEXT_GUNFIRE, pOperator->GetAbsOrigin(), SOUNDENT_VOLUME_MACHINEGUN, 0.2, pOperator, SOUNDENT_CHANNEL_WEAPON, pOperator->GetEnemy() ); //emit with properties
-	pOperator->FireBullets( 0, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED,
-		MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2, entindex(), 0 ); //don't fire bullet, but register bullet as being fired
-	QAngle angAiming;
-	GetAttachment(LookupAttachment("muzzle"), vecShootOrigin, angAiming);
-	VectorAngles(vecShootDir, angAiming);
-	VectorNormalize(vecShootDir);
-	float m_fProjectileSpeed = 1500;
-	float adjustspeed = g_pGameRules->SkillAdjustValue(m_fProjectileSpeed);
-	CNPCPlasmaBall *pBall = CNPCPlasmaBall::Create(vecShootOrigin, angAiming, pOperator); //create plasmaball
-	pBall->SetModel(PLASMA_MODEL_NPC);
-	pBall->SetAbsVelocity(vecShootDir * adjustspeed);
-	pBall->m_pGlowTrail->SetTransparency(kRenderTransAdd, 255, 45, 45, 100, kRenderFxNone);
+
+	CNPCPlasmaBall* pBall = CNPCPlasmaBall::Create(vecShootOrigin, RandomAngle(0, 100), pOperator);
+
+	float fSpeed = g_pGameRules->SkillAdjustValue(1500.0f);
+
+	pBall->SetAbsVelocity(vecShootDir * fSpeed);
 	
 	pOperator->DoMuzzleFlash();
 }
@@ -415,15 +403,15 @@ void CWeaponSMG1::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatChar
 			Vector vecShootOrigin, vecShootDir;
 			QAngle angDiscard;
 
-			// Support old style attachment point firing
-			if ((pEvent->options == NULL) || (pEvent->options[0] == '\0') || (!pOperator->GetAttachment(pEvent->options, vecShootOrigin, angDiscard)))
-			{
-				vecShootOrigin = pOperator->Weapon_ShootPosition();
-			}
+			GetAttachment(LookupAttachment("muzzle"), vecShootOrigin, angDiscard);
 
 			CAI_BaseNPC *npc = pOperator->MyNPCPointer();
 			ASSERT(npc != NULL);
-			vecShootDir = npc->GetActualShootTrajectory(vecShootOrigin);
+			Vector vecTarget = vec3_origin;
+			if (npc->GetEnemy())
+				vecTarget = npc->GetEnemy()->WorldSpaceCenter();
+			vecShootDir = npc->GetSkillAdjustedShootTrajectory(vecShootOrigin, vecTarget, g_pGameRules->SkillAdjustValue(1500.0f));
+
 
 			FireNPCPrimaryAttack(pOperator, vecShootOrigin, vecShootDir);
 		}

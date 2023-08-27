@@ -22,7 +22,7 @@ $Configuration	"Debug"
 {
 	$General
 	{
-		$OutputDirectory			".\Debug_$GAMENAME"			[$WIN32]
+		$OutputDirectory			"..\..\..\..\..\..\..\..\sourcemods\hlr\bin"			[$WIN32]
 		$IntermediateDirectory		".\Debug_$GAMENAME"			[$WIN32]
 
 		$OutputDirectory			".\Debug_$GAMENAME_360"		[$X360]

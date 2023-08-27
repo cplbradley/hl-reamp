@@ -20,6 +20,7 @@
 #include "engine/IEngineSound.h"
 #include "c_soundscape.h"
 #include "usercmd.h"
+#include "hud.h"
 #include "c_playerresource.h"
 #include "iclientvehicle.h"
 #include "view_shared.h"
@@ -127,6 +128,8 @@ ConVar cl_armor_thighs("cl_armor_thighs", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
 ConVar cl_armor_boots("cl_armor_boots", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
 ConVar cl_armor_upperarm("cl_armor_upperarm", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
 ConVar cl_armor_forearm("cl_armor_forearm", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+
+ConVar r_muzzleflash_lights("r_muzzleflash_lights", "1");
 
 // This only needs to be approximate - it just controls the distance to the pivot-point of the head ("the neck") of the in-game character, not the player's real-world neck length.
 // Ideally we would find this vector by subtracting the neutral-pose difference between the head bone (the pivot point) and the "eyes" attachment point.
@@ -300,6 +303,9 @@ END_RECV_TABLE()
 		RecvPropBool(RECVINFO(m_bUseAltCrosshair)),
 		RecvPropBool(RECVINFO(m_bGibbed)),
 
+		RecvPropVector(RECVINFO(m_vecRopeSegmentNormal)),
+		RecvPropVector(RECVINFO(m_vecRopeSegmentVelocity)),
+		RecvPropBool(RECVINFO(m_bClimbingRope)),
 
 		RecvPropEHandle( RECVINFO(m_hVehicle) ),
 		RecvPropEHandle( RECVINFO(m_hUseEntity) ),
@@ -472,6 +478,8 @@ C_BasePlayer::C_BasePlayer() : m_iv_vecViewOffset( "C_BasePlayer::m_iv_vecViewOf
 	m_bFiredWeapon = false;
 
 	m_nForceVisionFilterFlags = 0;
+
+	m_vPrevViewangle = m_vDestViewangle = pl.v_angle;
 
 	ListenForGameEvent( "base_player_teleported" );
 }
@@ -982,15 +990,48 @@ void C_BasePlayer::ReceiveMessage( int classID, bf_read &msg )
 	}
 
 	int messageType = msg.ReadByte();
+	
+	QAngle msgangle;
 
 	switch( messageType )
 	{
 		case PLAY_PLAYER_JINGLE:
 			PlayPlayerJingle();
 			break;
+		case ABS_VIEWPUNCH:
+			msg.ReadBitAngles(msgangle);
+			DoAbsViewPunch(msgangle);
+			break;
+		case MUZZLE_LIGHT:
+			int red = msg.ReadByte();
+			int green = msg.ReadByte();
+			int blue = msg.ReadByte();
+			Vector vecsrc;
+			msg.ReadBitVec3Coord(vecsrc);
+
+			CreateMuzzleLight(red + RandomInt(-5,5), green + RandomInt(-5, 5), blue + RandomInt(-5, 5),vecsrc);
+			break;
+
 	}
 }
 
+void C_BasePlayer::DoAbsViewPunch(QAngle addAng)
+{
+	m_vPrevViewangle = pl.v_angle;
+	m_vDestViewangle = m_vPrevViewangle + addAng;
+	m_fAbsviewangleInterpFrac = 1.0f;
+}
+void C_BasePlayer::UpdateAbsViewPunch()
+{
+	QAngle angOutput;
+	m_fAbsviewangleInterpFrac -= 0.2f;
+	m_fAbsviewangleInterpFrac = MIN(m_fAbsviewangleInterpFrac, 1.0f);
+	m_fAbsviewangleInterpFrac = MAX(0, m_fAbsviewangleInterpFrac);
+	InterpolateAngles(m_vPrevViewangle, m_vDestViewangle, angOutput, m_fAbsviewangleInterpFrac);
+
+	SetViewAngles(angOutput);
+
+}
 void C_BasePlayer::OnRestore()
 {
 	BaseClass::OnRestore();
@@ -1058,29 +1099,36 @@ void C_BasePlayer::OnDataChanged( DataUpdateType_t updateType )
 		}
 	}
 }
-
-void C_BasePlayer::MsgFunc_MuzzleLight(bf_read& msg)
+void C_BasePlayer::CreateMuzzleLight(int r, int g, int b, Vector vecSrc)
 {
-	float red = msg.ReadFloat();
-	float green = msg.ReadFloat();
-	float blue = msg.ReadFloat();
-	CreateMuzzleLight((int)red, (int)green, (int)blue);
-}
+	if (!r_muzzleflash_lights.GetBool())
+		return;
 
-void C_BasePlayer::CreateMuzzleLight(int r, int g, int b)
-{
+	if (IsEffectActive(EF_DIMLIGHT))
+		return;
+	int red = r;
+	red = MIN(red, 255);
+	red = MAX(0, red);
+
+	int green = g;
+	green = MIN(green, 255);
+	green = MAX(0, green);
+
+	int blue = b;
+	blue = MIN(blue, 255);
+	blue = MAX(0, blue);
+
 	dlight_t* dl = effects->CL_AllocDlight(index);
-	QAngle eyeang = EyeAngles();
-	Vector vForward, vRight, vUp;
-	AngleVectors(eyeang, &vForward, &vRight, &vUp);
 
-	dl->origin = EyePosition() + vForward * 32.0f;
-	dl->color.r = r;
-	dl->color.g = g;
-	dl->color.b = b;
+	Msg("Creating Muzzle Light color %i %i %i at %f %f %f\n", red,green,blue,vecSrc.x, vecSrc.y, vecSrc.z);
+
+	dl->origin = vecSrc;
+	dl->color.r = red;
+	dl->color.g = green;
+	dl->color.b = blue;
 	dl->die = gpGlobals->curtime + 0.05f;
-	dl->radius = random->RandomFloat(200.0f, 256.0f);
-	dl->decay = 512.0f;
+	dl->radius = random->RandomFloat(256.0f, 512.0f);
+	dl->decay = dl->radius * 0.05f;
 }
 
 //-----------------------------------------------------------------------------
@@ -1283,6 +1331,8 @@ ConVar r_nightvision_scan_speed("r_nightvision_scan_speed", "10");
 //-----------------------------------------------------------------------------
 void C_BasePlayer::UpdateFlashlight()
 {
+	ConVarRef customnv("g_custom_nightvision");
+	Color nvcolor = customnv.GetBool() ? gHUD.GetDefaultColor() : Color(100, 255, 0);
 	// The dim light is the flashlight.
 	if (IsEffectActive(EF_DIMLIGHT))
 	{
@@ -1290,9 +1340,9 @@ void C_BasePlayer::UpdateFlashlight()
 		{
 			dbfarz = 128;
 			nvLight = effects->CL_AllocDlight(index);
-			nvLight->color.r = 100;
-			nvLight->color.g = 255;
-			nvLight->color.b = 0;
+			nvLight->color.r = nvcolor[0];
+			nvLight->color.g = nvcolor[1];
+			nvLight->color.b = nvcolor[2];
 			nvLight->radius = 512;
 			nvLight->origin = EyePosition();
 		}
@@ -2234,6 +2284,7 @@ void C_BasePlayer::PreThink( void )
 		m_Local.m_flFallVelocity = -GetAbsVelocity().z;
 	}
 #endif
+	//UpdateAbsViewPunch();
 }
 
 void C_BasePlayer::PostThink( void )
@@ -2272,7 +2323,7 @@ void C_BasePlayer::PostThink( void )
 
 		StudioFrameAdvance();
 	}
-
+	
 	// Even if dead simulate entities
 	SimulatePlayerSimulatedEntities();
 #endif

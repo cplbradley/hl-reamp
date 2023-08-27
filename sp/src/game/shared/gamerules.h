@@ -312,9 +312,9 @@ public:
 	virtual void  AdjustPlayerDamageTaken( CTakeDamageInfo *pInfo ) {}; // Base class does nothing.
 
 // Skill-based value adjustment
-	//Hard increases, Easy decreases
+	//Hard: output = input * 1.4, Easy: output = input * 0.8, Medium: output = input
 	virtual float SkillAdjustValue(float projspeed);
-	//Hard decreases, Easy increases
+	//Inverted skill adjustment. Hard: input = output * 0.8, Easy: output = input * 1.4, Medium: output = input;
 	virtual float SkillAdjustValueInverted(float projspeed);
 
 // Weapon retrieval

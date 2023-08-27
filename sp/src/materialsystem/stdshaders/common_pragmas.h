@@ -30,6 +30,12 @@
 //
 
 // Special pragmas silencing common warnings
+
+// ShiroDkxtro2: Bogus warnings.
+#pragma warning ( disable : 3206 ) // WARNING X3207: Implicit truncation of vector type
+#pragma warning ( disable : 3571 ) // WARNING X3571: pow(f,e) will not work with negative f
+#pragma warning ( disable : 4121 ) // warning X4121: gradient-based operations must be moved out of flow control to prevent divergence. Performance may improve by using a non-gradient operation
+
 #pragma warning ( disable : 3557 ) // warning X3557: Loop only executes for N iteration(s), forcing loop to unroll
 #pragma warning ( disable : 3595 ) // warning X3595: Microcode Compiler possible performance issue: pixel shader input semantic ___ is unused
 #pragma warning ( disable : 3596 ) // warning X3596: Microcode Compiler possible performance issue: pixel shader input semantic ___ is unused

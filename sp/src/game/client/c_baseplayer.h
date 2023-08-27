@@ -122,9 +122,9 @@ public:
 	
 	virtual void	ReceiveMessage( int classID, bf_read &msg );
 
-	void CreateMuzzleLight(int r, int g, int b);
+	void	CreateMuzzleLight(int r, int g, int b, Vector vecSrc);
+	void	DoAbsViewPunch(QAngle addang);
 
-	void	MsgFunc_MuzzleLight(bf_read& msg);
 	virtual void	OnRestore();
 
 	virtual void	AddEntity( void );
@@ -331,6 +331,7 @@ public:
 	virtual void				ViewPunch( const QAngle &angleOffset );
 	virtual void				AbsViewPunch(const QAngle& angleOffset);
 	void						ViewPunchReset( float tolerance = 0 );
+	void						UpdateAbsViewPunch();
 
 	void						UpdateButtonState( int nUserCmdButtonMask );
 	int							GetImpulse( void ) const;
@@ -482,6 +483,7 @@ public:
 	EHANDLE					m_hZoomOwner;		// This is a pointer to the entity currently controlling the player's zoom
 												// Only this entity can change the zoom state once it has ownership
 
+	dlight_t* nvLight;
 
 	int m_iDamageBlockerType;
 	int m_iToxicDamageLeft;
@@ -490,6 +492,12 @@ public:
 	int m_iMaxToxicDamage;
 	int m_iMaxFireDamage;
 	int m_iMaxElectricDamage;
+
+
+	Vector			m_vecRopeSegmentNormal;
+	Vector			m_vecRopeSegmentVelocity;
+	Vector			m_vecRopeSegmentPosition;
+	bool			m_bClimbingRope = false;
 
 	// For weapon prediction
 	bool			m_fOnTarget;		//Is the crosshair on a target?
@@ -582,8 +590,16 @@ private:
 
 	float			m_flSwimSoundTime;
 	Vector			m_vecLadderNormal;
+
+	/// <summary>
+	/// ROPES
+	/// </summary>
+
 	
 	QAngle			m_vecOldViewAngles;
+	QAngle			m_vPrevViewangle;
+	QAngle			m_vDestViewangle;
+	float			m_fAbsviewangleInterpFrac;
 
 	bool			m_bWasFrozen;
 	int				m_flPhysics;
@@ -599,7 +615,7 @@ private:
 	// Player flashlight dynamic light pointers
 	CFlashlightEffect *m_pFlashlight;
 
-	dlight_t* nvLight;
+	
 
 	typedef CHandle<C_BaseCombatWeapon> CBaseCombatWeaponHandle;
 	CNetworkVar( CBaseCombatWeaponHandle, m_hLastWeapon );

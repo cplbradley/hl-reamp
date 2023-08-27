@@ -773,8 +773,10 @@ void CAI_BaseNPC::GoreGib(CBaseEntity* pKiller)
 		gibcount = m_iGibCount;
 	CPVSFilter filter(WorldSpaceCenter());
 
+	QAngle eyeAng = -GetAbsAngles();
 	CBaseCombatCharacter* killer = ToBaseCombatCharacter(pKiller);
-	QAngle eyeAng = killer->EyeAngles();
+	if(killer)
+		eyeAng = killer->EyeAngles();
 	Vector vecAng;
 	AngleVectors(eyeAng, &vecAng);
 	VectorNormalize(vecAng);
@@ -10003,6 +10005,37 @@ Vector CAI_BaseNPC::GetAttackSpread( CBaseCombatWeapon *pWeapon, CBaseEntity *pT
 	return baseResult;
 }
 
+Vector GetInterpedShootTrajectory(Vector vecA, Vector vecB, float frac)
+{
+	Vector vecRet = vecA + frac * (vecB - vecA);
+	return vecRet.Normalized();
+}
+
+Vector CAI_BaseNPC::GetSkillAdjustedShootTrajectory(const Vector shootOrigin, Vector shootTarget, float adjustedSpeed)
+{
+	int iSkill = g_pGameRules->GetSkillLevel();
+	int skillVar = iSkill * iSkill;
+	int rand = RandomInt(0, 20);
+
+	Vector vecForward = shootTarget - shootOrigin;
+	float fLength = vecForward.Length();
+	Vector vecPerfect = vecForward.Normalized();
+	float fTimeDelta = fLength / adjustedSpeed;
+	Vector vecPredPos;
+	UTIL_PredictedPosition(GetEnemy(), fTimeDelta, &vecPredPos);
+	Vector vecPredDir = (vecPredPos - shootOrigin).Normalized();
+
+	if (rand <= skillVar)
+		return vecPredDir;
+
+	Vector vecInterp = GetInterpedShootTrajectory(vecPerfect, vecPredDir, RandomFloat(0,0.5f));
+	CShotManipulator manipulator(vecInterp);
+	manipulator.ApplySpread(GetAttackSpread(GetActiveWeapon(), GetEnemy()), GetSpreadBias(GetActiveWeapon(), GetEnemy()));
+	Vector vecResult = manipulator.GetResult();
+	
+	return vecResult.Normalized();
+	
+}
 //-----------------------------------------------------------------------------
 // Similar to calling GetShootEnemyDir, but returns the exact trajectory to 
 // fire the bullet along, after calculating for target speed, location, 

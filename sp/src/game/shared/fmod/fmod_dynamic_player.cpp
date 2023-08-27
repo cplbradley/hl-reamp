@@ -156,7 +156,7 @@ void CFMODDynamicPlayer::PostDataUpdate(DataUpdateType_t updateType)
 	 
 	if (updateType == DATA_UPDATE_CREATED)
 	{
-		SetNextClientThink(CLIENT_THINK_ALWAYS);
+		SetNextClientThink(CLIENT_THINK_ALWAYS); 
 		//ParseMusicScript("HeavyMusic");
 		Warning("CLIENTSIDE SCRIPTPATH = %s\n", scriptpath.Get());
 	}

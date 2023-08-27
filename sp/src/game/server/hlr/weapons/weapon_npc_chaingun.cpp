@@ -37,7 +37,7 @@
 
 ConVar sk_chaingun_maxburst("sk_chaingun_maxburst", "100", FCVAR_NONE);
 
-BEGIN_DATADESC(CWeaponChaingun)
+BEGIN_DATADESC(CWeaponNPCChaingun)
 
 DEFINE_FIELD(m_flDelayedFire, FIELD_TIME),
 DEFINE_FIELD(m_bShotDelayed, FIELD_BOOLEAN),
@@ -45,13 +45,13 @@ DEFINE_FIELD(m_bShotDelayed, FIELD_BOOLEAN),
 
 END_DATADESC()
 
-IMPLEMENT_SERVERCLASS_ST(CWeaponChaingun, DT_WeaponChaingun)
+IMPLEMENT_SERVERCLASS_ST(CWeaponNPCChaingun, DT_WeaponNPCChaingun)
 END_SEND_TABLE()
 
-LINK_ENTITY_TO_CLASS(weapon_npc_chaingun, CWeaponChaingun);
+LINK_ENTITY_TO_CLASS(weapon_npc_chaingun, CWeaponNPCChaingun);
 PRECACHE_WEAPON_REGISTER(weapon_npc_chaingun);
 
-acttable_t	CWeaponChaingun::m_acttable[] =
+acttable_t	CWeaponNPCChaingun::m_acttable[] =
 {
 	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_SMG1, true },
 	{ ACT_RELOAD, ACT_RELOAD_SMG1, true },
@@ -104,9 +104,9 @@ acttable_t	CWeaponChaingun::m_acttable[] =
 	//	{ ACT_RANGE_ATTACK2, ACT_RANGE_ATTACK_AR2_GRENADE, true },
 };
 
-IMPLEMENT_ACTTABLE(CWeaponChaingun);
+IMPLEMENT_ACTTABLE(CWeaponNPCChaingun);
 
-CWeaponChaingun::CWeaponChaingun()
+CWeaponNPCChaingun::CWeaponNPCChaingun()
 {
 	m_fMinRange1 = 65;
 	m_fMaxRange1 = 2048;
@@ -120,7 +120,7 @@ CWeaponChaingun::CWeaponChaingun()
 	m_bAltFiresUnderwater = false;
 }
 
-void CWeaponChaingun::Precache(void)
+void CWeaponNPCChaingun::Precache(void)
 {
 	BaseClass::Precache();
 
@@ -132,7 +132,7 @@ void CWeaponChaingun::Precache(void)
 //-----------------------------------------------------------------------------
 // Purpose: Handle grenade detonate in-air (even when no ammo is left)
 //-----------------------------------------------------------------------------
-void CWeaponChaingun::ItemPostFrame(void)
+void CWeaponNPCChaingun::ItemPostFrame(void)
 {
 	BaseClass::ItemPostFrame();
 }
@@ -141,7 +141,7 @@ void CWeaponChaingun::ItemPostFrame(void)
 // Purpose: 
 // Output : Activity
 //-----------------------------------------------------------------------------
-Activity CWeaponChaingun::GetPrimaryAttackActivity(void)
+Activity CWeaponNPCChaingun::GetPrimaryAttackActivity(void)
 {
 	if (m_nShotsFired < 2)
 		return ACT_VM_PRIMARYATTACK;
@@ -160,7 +160,7 @@ Activity CWeaponChaingun::GetPrimaryAttackActivity(void)
 // Input  : &tr - 
 //			nDamageType - 
 //-----------------------------------------------------------------------------
-void CWeaponChaingun::DoImpactEffect(trace_t &tr, int nDamageType)
+void CWeaponNPCChaingun::DoImpactEffect(trace_t &tr, int nDamageType)
 {
 	CEffectData data;
 
@@ -186,7 +186,7 @@ void CWeaponChaingun::DoImpactEffect(trace_t &tr, int nDamageType)
 // Purpose: Override if we're waiting to release a shot
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
-bool CWeaponChaingun::CanHolster(void)
+bool CWeaponNPCChaingun::CanHolster(void)
 {
 	if (m_bShotDelayed)
 		return false;
@@ -197,7 +197,7 @@ bool CWeaponChaingun::CanHolster(void)
 //-----------------------------------------------------------------------------
 // Purpose: Override if we're waiting to release a shot
 //-----------------------------------------------------------------------------
-bool CWeaponChaingun::Reload(void)
+bool CWeaponNPCChaingun::Reload(void)
 {
 	return BaseClass::Reload();
 }
@@ -206,7 +206,7 @@ bool CWeaponChaingun::Reload(void)
 // Purpose: 
 // Input  : *pOperator - 
 //-----------------------------------------------------------------------------
-void CWeaponChaingun::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bool bUseWeaponAngles)
+void CWeaponNPCChaingun::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bool bUseWeaponAngles)
 {
 	Vector vecShootOrigin, vecShootDir;
 	vecShootOrigin = pOperator->Weapon_ShootPosition();
@@ -240,7 +240,7 @@ void CWeaponChaingun::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bool
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CWeaponChaingun::Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary)
+void CWeaponNPCChaingun::Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary)
 {
 		m_iClip1++;
 		FireNPCPrimaryAttack(pOperator, true);
@@ -251,7 +251,7 @@ void CWeaponChaingun::Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, boo
 // Input  : *pEvent - 
 //			*pOperator - 
 //-----------------------------------------------------------------------------
-void CWeaponChaingun::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator)
+void CWeaponNPCChaingun::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator)
 {
 	switch (pEvent->event)
 	{
@@ -266,14 +266,14 @@ void CWeaponChaingun::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatC
 		break;
 	}
 }
-int CWeaponChaingun::GetMinBurst()
+int CWeaponNPCChaingun::GetMinBurst()
 {
 	return sk_chaingun_maxburst.GetInt();
 }
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CWeaponChaingun::AddViewKick(void)
+void CWeaponNPCChaingun::AddViewKick(void)
 {
 #define	EASY_DAMPEN			0.5f
 #define	MAX_VERTICAL_KICK	8.0f	//Degrees
@@ -300,7 +300,7 @@ void CWeaponChaingun::AddViewKick(void)
 }
 
 //-----------------------------------------------------------------------------
-const WeaponProficiencyInfo_t *CWeaponChaingun::GetProficiencyValues()
+const WeaponProficiencyInfo_t *CWeaponNPCChaingun::GetProficiencyValues()
 {
 	static WeaponProficiencyInfo_t proficiencyTable[] =
 	{

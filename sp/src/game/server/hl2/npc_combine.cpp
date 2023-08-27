@@ -3212,7 +3212,7 @@ WeaponProficiency_t CNPC_Combine::CalcWeaponProficiency( CBaseCombatWeapon *pWea
 		}
 		else
 		{
-			return WEAPON_PROFICIENCY_GOOD;
+			return WEAPON_PROFICIENCY_VERY_GOOD;
 		}
 	}
 	else if( FClassnameIs( pWeapon, "weapon_shotgun" )	)
@@ -3226,7 +3226,7 @@ WeaponProficiency_t CNPC_Combine::CalcWeaponProficiency( CBaseCombatWeapon *pWea
 	}
 	else if( FClassnameIs( pWeapon, "weapon_smg1" ) )
 	{
-		return WEAPON_PROFICIENCY_GOOD;
+		return WEAPON_PROFICIENCY_VERY_GOOD;
 	}
 
 	return BaseClass::CalcWeaponProficiency( pWeapon );

@@ -23,6 +23,7 @@
 #include "rendertexture.h"
 #include "c_rope.h"
 #include "model_types.h"
+#include "hud.h"
 #ifdef SWARM_DLL
 #include "modelrendersystem.h"
 #endif
@@ -212,9 +213,12 @@ struct CallbackData_t
 		player_pos.Init();
 		view_distance.Init();
 		resolution.Init();
+		hud_color.Init();
 	};
 	Vector4D sun_data;
 	Vector sun_dir;
+
+	Vector hud_color;
 
 	Vector4D player_speed;
 	Vector player_pos;
@@ -287,6 +291,21 @@ void ShaderEditorHandler::PrepareCallbackData()
 
 	clCallback_data.resolution[0] = ScreenWidth();
 	clCallback_data.resolution[1] = ScreenHeight();
+
+	ConVarRef customnv("g_custom_nightvision");
+	if (customnv.GetBool())
+	{
+		clCallback_data.hud_color[0] = gHUD.GetDefaultColor().r();
+		clCallback_data.hud_color[1] = gHUD.GetDefaultColor().g();
+		clCallback_data.hud_color[2] = gHUD.GetDefaultColor().b();
+	}
+	else
+	{
+		clCallback_data.hud_color[0] = 0;
+		clCallback_data.hud_color[1] = 255;
+		clCallback_data.hud_color[2] = 0;
+	}
+
 }
 
 pFnClCallback_Declare(ClCallback_Resolution)
@@ -329,6 +348,11 @@ pFnClCallback_Declare(ClCallback_PlayerViewDist)
 	Q_memcpy(pfl4, clCallback_data.view_distance.Base(), sizeof(float) * 3);
 }
 
+pFnClCallback_Declare(ClCallback_HudColor)
+{
+	m_Lock.Lock();
+	Q_memcpy(pfl4, clCallback_data.hud_color.Base(), sizeof(float) * 3);
+}
 void ShaderEditorHandler::RegisterCallbacks()
 {
 	if ( !IsReady() )
@@ -341,6 +365,7 @@ void ShaderEditorHandler::RegisterCallbacks()
 	shaderEdit->RegisterClientCallback( "local player velocity", ClCallback_PlayerVelocity, 4 );
 	shaderEdit->RegisterClientCallback( "local player position", ClCallback_PlayerPos, 3 );
 	shaderEdit->RegisterClientCallback("player view distance", ClCallback_PlayerViewDist, 3);
+	shaderEdit->RegisterClientCallback("hud color", ClCallback_HudColor, 3);
 
 	shaderEdit->LockClientCallbacks();
 }

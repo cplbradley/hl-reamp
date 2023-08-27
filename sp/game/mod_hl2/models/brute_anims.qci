@@ -8,7 +8,7 @@ $sequence "brute_run" {
 	fadein 0.2
 	fadeout 0.2
 	loop
-	fps 30
+	fps 32
 	walkframe 22 LX LY
 }
 $sequence "brute_idle" {
@@ -83,4 +83,14 @@ $sequence "brute_land" {
 	fps 30
 	fadein 0.2
 	fadeout 0.2
+}
+$sequence "brute_rageslam" {
+	"bruteanims/brute_rageslam.smd"
+	activity ACT_VORTBRUTE_RAGESLAM 1
+	fps 30
+	fadein 0.2
+	fadeout 0.2
+	{ event AE_VORTBRUTE_RAGESLAM_IMPACT 12 }
+	{ event AE_VORTBRUTE_RAGESLAM_IMPACT 25 }
+	{ event AE_VORTBRUTE_RAGESLAM_IMPACT 37 }
 }

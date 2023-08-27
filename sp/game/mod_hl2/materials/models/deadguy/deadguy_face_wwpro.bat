@@ -1,0 +1,2 @@
+cd /D "C:/Program Files/Wall Worm/Wall Worm Pro Pack/WallWorm.com/VTFLib/bin/x64"
+.\VTFCmd.exe -file "C:\Users\Computor Two\Documents\Allegorithmic\Substance Painter\export\deadguy_face.png" -output "D:\Steam\steamapps\sourcemods\hlr\materials\models\deadguy"  -version "7.4" -format "dxt5"  -alphaformat "dxt5" -mfilter "BOX" -msharpen "NONE" -bumpscale 1.0 -resize -rwidth 1024 -rheight 1024 -rmethod "NEAREST" -rfilter "TRIANGLE" -rsharpen "NONE"

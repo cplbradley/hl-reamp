@@ -809,7 +809,7 @@ void CWeaponPlasmaRifle::PrimaryAttack(void)
 	{
 		trace_t tr;
 		Vector vecDir;
-		pPlayer->CreateMuzzleLight(0, 200, 255);
+		
 		// Take the Player's EyeAngles and turn it into a direction
 		AngleVectors(pPlayer->EyeAngles(), &vecDir);
 		Vector vecAbsStart = pPlayer->EyePosition();
@@ -878,6 +878,7 @@ void CWeaponPlasmaRifle::PrimaryAttack(void)
 		}
 	}
 	
+	pPlayer->CreateMuzzleLight(0, 200, 255, vecSrc);
 	m_iPrimaryAttacks++;
 	gamestats->Event_WeaponFired(pPlayer, true, GetClassname());
 	if (!m_iClip1 && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)

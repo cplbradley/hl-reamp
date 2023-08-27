@@ -3474,7 +3474,7 @@ void C_BaseEntity::ComputeFxBlend( void )
 	case kRenderFxNone:
 	case kRenderFxClampMinScale:
 	default:
-		if (m_nRenderMode == kRenderNormal)
+		if ((m_nRenderMode == kRenderNormal))
 			blend = 255;
 		else
 			blend = m_clrRender->a;
@@ -5620,6 +5620,8 @@ RenderGroup_t C_BaseEntity::GetRenderGroup()
 	if ( m_nRenderMode == kRenderNone )
 		return RENDER_GROUP_OPAQUE_ENTITY;
 
+
+
 	// When an entity has a material proxy, we have to recompute
 	// translucency here because the proxy may have changed it.
 	if (modelinfo->ModelHasMaterialProxy( GetModel() ))
@@ -5643,6 +5645,7 @@ RenderGroup_t C_BaseEntity::GetRenderGroup()
 		// Figure out its RenderGroup.
 	int modelType = modelinfo->GetModelType( model );
 	RenderGroup_t renderGroup = (modelType == mod_brush) ? RENDER_GROUP_OPAQUE_BRUSH : RENDER_GROUP_OPAQUE_ENTITY;
+
 	if ( ( nFXBlend != 255 ) || IsTransparent() )
 	{
 		if ( m_nRenderMode != kRenderEnvironmental )
@@ -5660,7 +5663,6 @@ RenderGroup_t C_BaseEntity::GetRenderGroup()
 	{
 		renderGroup = RENDER_GROUP_TWOPASS;
 	}
-
 	return renderGroup;
 }
 

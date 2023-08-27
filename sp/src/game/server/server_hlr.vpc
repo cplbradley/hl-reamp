@@ -40,9 +40,9 @@ $Project
 				$File "hlr/weapons/weapon_plasmarifle.cpp"
 				$File "hlr/weapons/weapon_pumpshotgun.cpp"
 				$File "hlr/weapons/weapon_gluon.cpp"
+				$File "hlr/weapons/weapon_chaingun.cpp"
+				$File "hlr/weapons/weapon_chaingun.h"
 				$File	"hl2\weapon_357.cpp"
-				$File	"hl2\weapon_ar2.cpp"
-				$File	"hl2\weapon_ar2.h"
 				$File	"hl2\weapon_frag.cpp"
 				$File	"hl2\weapon_pistol.cpp"
 				$File	"hl2\weapon_rpg.cpp"
@@ -60,21 +60,27 @@ $Project
 				$File "hlr/npc/npc_antlionwarrior.h"
 				$File "hlr/npc/npc_antlionwarrior.cpp"
 				$File "hlr/npc/npc_vortbrute.cpp"
+				$File "hlr/npc/npc_vortbrute.h"
 				$File "hlr/npc/npc_mechubus.cpp"
-				$File	"hl2\npc_metropolice.cpp"
-				$File	"hl2\npc_metropolice.h"
-				$File	"hl2\npc_antlion.cpp"
-				$File	"hl2\npc_antlion.h"
-				$File	"hl2\npc_combines.cpp"
-				$File	"hl2\npc_combines.h"
-				$File	"hl2\npc_combine.cpp"
-				$File	"hl2\npc_combine.h"
-				$File	"episodic\npc_hunter.cpp"
-				$File	"episodic\npc_hunter.h"
-				$File	"hl2\npc_zombie.cpp"
-				$File	"hl2\npc_vortigaunt_episodic.cpp"
-				$File	"hl2\npc_vortigaunt_episodic.h"
+				
+				$Folder "Modded HL2 NPCs"
+				{
+					$File	"hl2\npc_metropolice.cpp"
+					$File	"hl2\npc_metropolice.h"
+					$File	"hl2\npc_antlion.cpp"
+					$File	"hl2\npc_antlion.h"
+					$File	"hl2\npc_combines.cpp"
+					$File	"hl2\npc_combines.h"
+					$File	"hl2\npc_combine.cpp"
+					$File	"hl2\npc_combine.h"
+					$File	"episodic\npc_hunter.cpp"
+					$File	"episodic\npc_hunter.h"
+					$File	"hl2\npc_zombie.cpp"
+					$File	"hl2\npc_vortigaunt_episodic.cpp"
+					$File	"hl2\npc_vortigaunt_episodic.h"
+				}
 			}
+			
 			$Folder "Util"
 			{
 				$File "hlr/util/logic_difficulty.cpp"
@@ -88,6 +94,7 @@ $Project
 				$File "hlr/util/hlr_speedmod.cpp"
 				$File "hlr/util/npc_memory_manager.cpp"
 				$File "hlr/util/env_weather_controller.cpp"
+				$File "hlr/util/prop_armor_controller.cpp"
 			}
 			$Folder "Player"
 			{
@@ -108,6 +115,7 @@ $Project
 				$File "hlr/entity/hlr_megamelon.cpp"
 				$File "hlr/entity/hlr_powerups.cpp"
 				$File "hlr/entity/hlr_powerups.h"
+				$File "hlr/entity/light_strobe.cpp"
 			}
 		}
 		$Folder "FMOD"

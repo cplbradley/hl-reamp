@@ -18,12 +18,12 @@
 #include "basehlcombatweapon.h"
 #include "soundenvelope.h"
 
-class CWeaponAR2 : public CHLMachineGun
+class CWeaponChaingun : public CHLMachineGun
 {
 public:
-	DECLARE_CLASS( CWeaponAR2, CHLMachineGun );
+	DECLARE_CLASS(CWeaponChaingun, CHLMachineGun );
 
-	CWeaponAR2();
+	CWeaponChaingun();
 
 	DECLARE_SERVERCLASS();
 
@@ -32,7 +32,6 @@ public:
 	void	WeaponIdle(void);
 	//void	PrimaryAttack(void);
 	void	SecondaryAttack( void );
-	void	DelayedAttack( void );
 
 	const char *GetTracerType( void ) { return "AirboatGunHeavyTracer"; }
 
@@ -45,21 +44,14 @@ public:
 	int m_iWeaponState;
 	void DestroyWeaponSound(void);
 	void Equip(CBaseCombatCharacter *pOwner);
-	void	FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool bUseWeaponAngles );
-	void	FireNPCSecondaryAttack( CBaseCombatCharacter *pOperator, bool bUseWeaponAngles );
-	void	Operator_ForceNPCFire( CBaseCombatCharacter  *pOperator, bool bSecondary );
-	void	Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator );
 
-	int		GetMinBurst( void ) { return 1; }
-	int		GetMaxBurst( void ) { return 2; }
 	float	GetFireRate(void) { return m_flfirerate;}
 
 	void	InitWoundSound(void);
 	void	ShutdownWoundSound(void);
 	
 	void	ItemHolsterFrame(void);
-	bool	CanHolster( void );
-	bool	Reload( void );
+
 	CSoundPatch *m_pWoundSound;
 	CSoundPatch* m_pChaingun;
 	CSoundPatch* m_pFocus;
@@ -75,7 +67,6 @@ public:
 
 	Activity	GetPrimaryAttackActivity( void );
 	
-	void	DoImpactEffect( trace_t &tr, int nDamageType );
 
 	bool AmFocusFiring(void);
 
@@ -93,9 +84,6 @@ public:
 protected:
 	bool					m_bNarrowfov;
 	float					m_flfirerate;
-	float					m_flDelayedFire;
-	bool					m_bShotDelayed;
-	int						m_nVentPose;
 	bool					bActive;
 	int						iNumShots;
 	

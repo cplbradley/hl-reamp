@@ -147,7 +147,8 @@ protected:
 	{
 		GROUND = 0,
 		STUCK,
-		LADDER
+		LADDER,
+		ROPE,
 	} IntervalType_t;
 
 	virtual int		GetCheckInterval( IntervalType_t type );
@@ -184,6 +185,9 @@ protected:
 
 	// Handle movement when in MOVETYPE_LADDER mode.
 	virtual void	FullLadderMove();
+
+	void FullRopeMove();
+	bool RopeMove();
 
 	// The basic solid body movement clip that slides along multiple planes
 	virtual int		TryPlayerMove( Vector *pFirstDest=NULL, trace_t *pFirstTrace=NULL );

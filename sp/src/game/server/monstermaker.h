@@ -45,6 +45,8 @@ public:
 
 	COutputEvent	m_OnSpawnNPC;
 
+	bool bDontReuse;
+
 	DECLARE_DATADESC();
 };
 

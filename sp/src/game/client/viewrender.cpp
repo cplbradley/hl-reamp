@@ -435,6 +435,21 @@ protected:
 };
 
 
+class CStaticMatView : public CRendering3dView
+{
+	DECLARE_CLASS(CStaticMatView, CRendering3dView);
+public:
+	CStaticMatView(CViewRender* view) : CRendering3dView(view)
+	{
+	}
+
+	bool Setup(const CViewSetup& view, ITexture* pRenderTarget = NULL, ITexture* pDepth = NULL);
+	void Draw();
+protected:
+	ITexture* pFrameBuffer;
+	ITexture* pDepthTexture;
+	void DrawInternal(view_id_t iViewID);
+};
 
 //-----------------------------------------------------------------------------
 // 3d skybox view when drawing portals
@@ -1058,8 +1073,6 @@ void CViewRender::DrawRenderablesInList(CUtlVector< IClientRenderable* >& list, 
 	}
 	m_pCurrentlyDrawingEntity = NULL;
 }
-
-
 //-----------------------------------------------------------------------------
 // Purpose: Actually draw the view model
 // Input  : drawViewModel - 
@@ -1979,6 +1992,8 @@ void CViewRender::FreezeFrame(float flFreezeTime)
 const char* COM_GetModDirectory();
 
 
+ConVar r_envmap_lerp_rate("r_envmap_lerp_rate", "0.02");
+
 inline int interpFPS(int prevframe, int curframe, float frac)
 {
 	return prevframe + (curframe - prevframe) * frac;
@@ -2129,7 +2144,36 @@ void CViewRender::RenderView(const CViewSetup& view, int nClearFlags, int whatTo
 			}
 		}
 
+		pRenderContext.GetFrom(materials);
+		g_pRenderGlobals.pCurrentEnvMap = pRenderContext->GetLocalCubemap();
+		pRenderContext.SafeRelease();
 
+		szCurCubemap = g_pRenderGlobals.pCurrentEnvMap->GetName();
+		g_pRenderGlobals.pCurrentEnvMap = materials->FindTexture(szCurCubemap, TEXTURE_GROUP_CUBE_MAP);
+
+		if (szPrevCubemap == NULL)
+			szPrevCubemap = szCurCubemap;
+
+		if (Q_strcmp(szPrevCubemap, szCurCubemap) != 0)
+		{
+			Msg("Cubemap isn't the same as before\n");
+			g_pRenderGlobals.m_flCubemapLerp = 1.0f;
+
+			g_pRenderGlobals.pPrevEnvMap = materials->FindTexture(szPrevCubemap, TEXTURE_GROUP_CUBE_MAP);
+			szPrevCubemap = szCurCubemap;
+
+		}
+
+		if (g_pRenderGlobals.m_flCubemapLerp == 0.0f)
+		{
+			g_pRenderGlobals.pPrevEnvMap = g_pRenderGlobals.pCurrentEnvMap;
+		}
+		else
+		{
+			g_pRenderGlobals.m_flCubemapLerp -= r_envmap_lerp_rate.GetFloat();
+			g_pRenderGlobals.m_flCubemapLerp = g_pRenderGlobals.m_flCubemapLerp < 0.0f ? 0.0f : g_pRenderGlobals.m_flCubemapLerp;
+		}
+		
 		// Render world and all entities, particles, etc.
 		if (!g_pIntroData)
 		{
@@ -2220,8 +2264,14 @@ void CViewRender::RenderView(const CViewSetup& view, int nClearFlags, int whatTo
 			}
 			pRenderContext.SafeRelease();
 		}
-
-
+		render->SceneBegin();
+		CStaticMatView* pStaticMats = new CStaticMatView(this);
+		pStaticMats->Setup(view);
+		{
+			AddViewToScene(pStaticMats);
+		}
+		SafeRelease(pStaticMats);
+		render->SceneEnd();
 
 		if (IsPC())
 		{
@@ -2233,6 +2283,8 @@ void CViewRender::RenderView(const CViewSetup& view, int nClearFlags, int whatTo
 
 		PerformScreenSpaceEffects(0, 0, view.width, view.height);
 
+		
+
 
 		if (g_pMaterialSystemHardwareConfig->GetHDRType() == HDR_TYPE_INTEGER)
 		{
@@ -2241,6 +2293,7 @@ void CViewRender::RenderView(const CViewSetup& view, int nClearFlags, int whatTo
 			pRenderContext.SafeRelease();
 		}
 
+		
 
 		CleanupMain3DView(view);
 
@@ -5830,6 +5883,52 @@ void CSimpleWorldView::Draw()
 	pRenderContext->PopVertexShaderGPRAllocation();
 #endif
 }
+
+
+bool CStaticMatView::Setup(const CViewSetup& view, ITexture* pRenderTarget, ITexture* pDepth)
+{
+	BaseClass::Setup(view);
+	m_ClearFlags = VIEW_CLEAR_COLOR | VIEW_CLEAR_FULL_TARGET | VIEW_CLEAR_DEPTH;
+
+	m_DrawFlags = DF_RENDER_UNDERWATER | DF_RENDER_ABOVEWATER | DF_RENDER_WATER | DF_DRAW_ENTITITES | DF_DRAW_SSAO;
+
+	pFrameBuffer = pRenderTarget;
+	pDepthTexture = pDepth;
+
+	return true;
+	
+}
+
+void CStaticMatView::Draw()
+{
+	VPROF_BUDGET("CViewRender::StaticMats", "Materials");
+
+	DrawInternal(VIEW_MAIN);
+}
+
+void CStaticMatView::DrawInternal(view_id_t iViewID)
+{
+	ITexture* FrameBufferTexture = materials->FindTexture("_rt_StaticFB", TEXTURE_GROUP_RENDER_TARGET);
+	if (pFrameBuffer == NULL)
+		render->Push3DView((*this), m_ClearFlags, FrameBufferTexture, GetFrustum());
+	else
+		render->Push3DView((*this), m_ClearFlags, pFrameBuffer, GetFrustum());
+
+	render->BeginUpdateLightmaps();
+	BuildWorldRenderLists(true, true, -1);
+	BuildRenderableRenderLists(iViewID);
+	render->EndUpdateLightmaps();
+
+	unsigned long engineFlags = BuildEngineDrawWorldListFlags(m_DrawFlags);
+
+	render->DrawWorldLists(m_pWorldRenderList, engineFlags, 0);
+	DrawTranslucentWorldInLeaves(true);
+	
+	render->PopView(GetFrustum());
+
+	//Msg("Attempting to draw static mats\n");
+}
+
 
 ConVar r_depthbuffer_nearz("r_depthbuffer_nearz", "1");
 ConVar r_depthbuffer_farz("r_depthbuffer_farz", "8192");

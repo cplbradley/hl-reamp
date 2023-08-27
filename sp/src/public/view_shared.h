@@ -137,6 +137,12 @@ struct ClientRender_Globals_t
 	VMatrix lastViewProjection;
 	VMatrix curViewProjection;
 	VMatrix inverseViewProjection;
+
+	ITexture* pCurrentEnvMap;
+	ITexture* pPrevEnvMap;
+
+	float m_flCubemapLerp;
+
 };
 
 

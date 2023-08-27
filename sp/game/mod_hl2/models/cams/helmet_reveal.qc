@@ -5,10 +5,15 @@
 
 $scale 1.0
 $modelname	"cams/helmet_reveal.mdl"
-$model helmet_reveal "helmettoss.smd"
 $model hands "v_hands_mark6_smol.smd"
+$bodygroup helmet
+{
+	studio "helmettoss.smd"
+	studio "helmettoss_cqb.smd"
+}
 $contents "solid"
 $cdmaterials "models/player/mark6"
+$cdmaterials "models/player/cqb"
 $cdmaterials "models/weapons/v_hands"
 $cdmaterials "tools"
 $sequence idle "helmettoss.smd"  activity ACT_IDLE -1 loop fps 30

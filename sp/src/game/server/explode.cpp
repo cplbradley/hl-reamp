@@ -480,6 +480,19 @@ void ExplosionCreate( const Vector &center, const QAngle &angles,
 	ExplosionCreate( center, angles, pOwner, magnitude, radius, nFlags, flExplosionForce, NULL, iCustomDamageType, ignoredEntity, ignoredClass );
 }
 
+
+void ZeroFalloffExplosionCreate(const Vector& center, const QAngle& angle, CBaseEntity* owner, int damage, int radius, int flags, float force, CBaseEntity* inflictor)
+{
+	ExplosionCreate(center, angle, owner, 0, radius, flags, 0.0f, inflictor);
+
+	if (!(flags & SF_ENVEXPLOSION_NODAMAGE))
+	{
+		CTakeDamageInfo info(inflictor, owner, damage, DMG_BLAST);
+		info.SetDamagePosition(center);
+		info.SetDamageForce(Vector(force, 0, 0));
+		g_pGameRules->RadiusDamage(info, center, radius, 0, false, true);
+	}
+}
 //-----------------------------------------------------------------------------
 // Purpose: Draw any debug text overlays
 // Output : Current text offset from the top

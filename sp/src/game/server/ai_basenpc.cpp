@@ -10022,7 +10022,7 @@ Vector CAI_BaseNPC::GetSkillAdjustedShootTrajectory(const Vector shootOrigin, Ve
 	Vector vecPerfect = vecForward.Normalized();
 	float fTimeDelta = fLength / adjustedSpeed;
 	Vector vecPredPos;
-	UTIL_PredictedPosition(GetEnemy(), fTimeDelta, &vecPredPos);
+	UTIL_PredictedWorldSpaceCenter(GetEnemy(), fTimeDelta, &vecPredPos);
 	Vector vecPredDir = (vecPredPos - shootOrigin).Normalized();
 
 	if (rand <= skillVar)

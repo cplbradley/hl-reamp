@@ -1066,7 +1066,7 @@ void CNPC_Antlion::HandleAnimEvent( animevent_t *pEvent )
 				// If our enemy is looking at us and far enough away, lead him
 				if ( HasCondition( COND_ENEMY_FACING_ME ) && UTIL_DistApprox( GetAbsOrigin(), GetEnemy()->GetAbsOrigin() ) > (40*12) )
 				{
-					UTIL_PredictedPosition( GetEnemy(), traveltime, &vTarget );
+					UTIL_PredictedWorldSpaceCenter( GetEnemy(), traveltime, &vTarget );
 					vTarget.z = GetEnemy()->GetAbsOrigin().z;
 				}
 				else

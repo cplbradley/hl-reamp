@@ -135,7 +135,7 @@ void CWeaponNPCFrag::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bool 
 
 	float dist = (vecShootDir - vecShootOrigin).Length2D();
 	float timedelta = (dist / adjustedspd);
-	UTIL_PredictedPosition(npc->GetEnemy(), timedelta, &vecTarget);
+	UTIL_PredictedWorldSpaceCenter(npc->GetEnemy(), timedelta, &vecTarget);
 	Vector vecMins = -Vector(4, 4, 4);
 	Vector vecMaxs = Vector(4, 4, 4);
 	//Vector vecLaunch = VecCheckToss(this, vecShootOrigin, vecTarget, -1, 1.0f, true, &vecMins, &vecMaxs);

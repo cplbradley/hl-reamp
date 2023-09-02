@@ -38,6 +38,13 @@ CSkyCamera*	GetSkyCameraList()
 
 LINK_ENTITY_TO_CLASS( sky_camera, CSkyCamera );
 
+
+IMPLEMENT_SERVERCLASS_ST(CSkyCamera,DT_SkyCamera)
+SendPropBool(SENDINFO(bParented)),
+SendPropBool(SENDINFO(bUseAngles)),
+SendPropBool(SENDINFO(bAmActiveSkyCamera)),
+END_SEND_TABLE()
+
 BEGIN_DATADESC( CSkyCamera )
 
 	DEFINE_KEYFIELD( m_skyboxData.scale, FIELD_INTEGER, "skyboxscale" ),
@@ -137,6 +144,9 @@ void CSkyCamera::Spawn( void )
 	if (m_bUseAnglesForSky)
 		m_skyboxData.angles = GetAbsAngles();
 	m_skyboxData.area = engine->GetArea( m_skyboxData.origin );
+
+	bParented = GetParent() != nullptr;
+	bUseAngles = m_bUseAnglesForSky;
 	
 	Precache();
 }
@@ -197,9 +207,6 @@ bool CSkyCamera::AcceptInput(const char *szInputName, CBaseEntity *pActivator, C
 //-----------------------------------------------------------------------------
 void CSkyCamera::Update()
 {
-	m_skyboxData.origin = GetAbsOrigin();
-	if (m_bUseAnglesForSky)
-		m_skyboxData.angles = GetAbsAngles();
 	// Getting into another area is unlikely, but if it's not expensive, I guess it's okay.
 	m_skyboxData.area = engine->GetArea(m_skyboxData.origin);
 	if (m_bUseAngles)
@@ -207,6 +214,9 @@ void CSkyCamera::Update()
 		AngleVectors(GetAbsAngles(), &m_skyboxData.fog.dirPrimary.GetForModify());
 		m_skyboxData.fog.dirPrimary.GetForModify() *= -1.0f;
 	}
+	
+	bAmActiveSkyCamera = (GetCurrentSkyCamera() == this);
+
 	// Updates client data, this completely ignores m_pOldSkyCamera
 	CBasePlayer *pPlayer = UTIL_PlayerByIndex(1);
 	if (pPlayer)
@@ -234,6 +244,7 @@ void CSkyCamera::InputStartUpdating(inputdata_t &inputdata)
 {
 	if (GetCurrentSkyCamera() == this)
 	{
+		bAmActiveSkyCamera = true;
 		SetThink(&CSkyCamera::Update);
 		SetNextThink(gpGlobals->curtime + TICK_INTERVAL);
 	}
@@ -252,13 +263,16 @@ void CSkyCamera::InputStopUpdating(inputdata_t &inputdata)
 void CSkyCamera::InputActivateSkybox(inputdata_t &inputdata)
 {
 	CSkyCamera *pActiveSky = GetCurrentSkyCamera();
+
 	if (pActiveSky && pActiveSky->GetNextThink() != TICK_NEVER_THINK && pActiveSky != this)
 	{
 		// Deactivate that skybox
+		pActiveSky->bAmActiveSkyCamera = false;
 		pActiveSky->SetThink(NULL);
 		pActiveSky->SetNextThink(TICK_NEVER_THINK);
 	}
 	g_hActiveSkybox = this;
+	bAmActiveSkyCamera = true;
 	if (HasSpawnFlags(SF_SKY_START_UPDATING))
 		InputStartUpdating(inputdata);
 }
@@ -270,6 +284,8 @@ void CSkyCamera::InputDeactivateSkybox(inputdata_t &inputdata)
 	if (GetCurrentSkyCamera() == this)
 	{
 		g_hActiveSkybox = NULL;
+		bAmActiveSkyCamera = false;
+
 		// ClientData doesn't catch this immediately
 		CBasePlayer *pPlayer = NULL;
 		for (int i = 1; i <= gpGlobals->maxClients; i++)

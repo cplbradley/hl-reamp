@@ -27,7 +27,11 @@ public:
 	bool bAmAnchor;
 	float fWidth;
 	CHandle<C_ClimbRopeSegment> hNextSegment;
+	int nearestindex;
 	virtual int DrawModel(int flags);
+	bool bDrawRopes;
+
+	virtual bool ShouldDraw() { return bDrawRopes; }
 
 	CBeam* beamrope;
 
@@ -50,8 +54,9 @@ void C_ClimbRopeSegment::OnDataChanged(DataUpdateType_t type)
 
 void C_ClimbRopeSegment::Spawn()
 {
-	ConColorMsg(Color(0,255,255,255),"Rope Segment Client Spawn\n");
+	ConDColorMsg(Color(0,255,255,255),"Rope Segment Client Spawn\n");
 	SetNextClientThink(CLIENT_THINK_ALWAYS);
+	bDrawRopes = true;
 	
 }
 
@@ -92,6 +97,10 @@ void C_ClimbRopeSegment::CreateBeams()
 	beamrope->SetEndPos(hNextSegment->GetAbsOrigin());
 	beamrope->RelinkBeam();
 
+	if (!bDrawRopes)
+		beamrope->AddEffects(EF_NODRAW);
+	else
+		beamrope->ClearEffects();
 #endif
 }
 
@@ -166,6 +175,8 @@ int C_ClimbRopeSegment::DrawModel(int flags)
 #if USE_MESH_ROPES
 	CreateBeams();
 #endif
+	if (!bDrawRopes)
+		return 0;
 	return BaseClass::DrawModel(flags);
 }
 
@@ -182,6 +193,8 @@ public:
 	virtual void OnDataChanged(DataUpdateType_t type);
 	void UpdateTraces();
 	virtual int DrawModel(int flags);
+
+
 	
 	virtual bool ShouldDraw() {
 		return true;
@@ -228,7 +241,7 @@ void C_ClimbableRope::OnDataChanged(DataUpdateType_t type)
 
 void C_ClimbableRope::Spawn()
 {
-	ConColorMsg(Color(0,255,0,255),"Rope Client Spawn\n");
+	ConDColorMsg(Color(0,255,0,255),"Rope Client Spawn\n");
 	PrecacheMaterial(DEFAULT_ROPE);
 }
 
@@ -259,6 +272,14 @@ void C_ClimbableRope::UpdateTraces()
 		{
 			return;
 		}
+		if (rpNearestSegment && rpSegment[i - 1] && rpSegment[i]->entindex() == rpNearestSegment->entindex())
+		{
+			if (player->m_bClimbingRope)
+				rpSegment[i - 1]->bDrawRopes = false;
+		}
+		else
+			rpSegment[i]->bDrawRopes = true;
+
 		UTIL_TraceHull(segment1->GetAbsOrigin(), segment2->GetAbsOrigin(), Vector(-48, -48, -48), Vector(48, 48, 48), MASK_PLAYERSOLID_BRUSHONLY, NULL, &tr);
 		UTIL_TraceLine(segment1->GetAbsOrigin(), segment2->GetAbsOrigin(), MASK_PLAYERSOLID_BRUSHONLY, NULL, &tr2);
 		int red = 0;

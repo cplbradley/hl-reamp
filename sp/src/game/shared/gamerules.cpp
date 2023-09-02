@@ -115,6 +115,7 @@ void CGameRulesProxy::NotifyNetworkStateChanged()
 
 
 ConVar	old_radius_damage( "old_radiusdamage", "0.0", FCVAR_REPLICATED );
+ConVar debug_radius_damage("debug_radius_damage", "0", FCVAR_REPLICATED);
 
 #ifdef CLIENT_DLL //{
 
@@ -381,6 +382,12 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 	float		flAdjustedDamage, falloff;
 	Vector		vecSpot;
 
+
+	if (debug_radius_damage.GetBool())
+	{
+		NDebugOverlay::Sphere(vecSrcIn, flRadius, 255, 0, 0, false, 1.0f);
+		NDebugOverlay::Sphere(vecSrcIn, flRadius * 0.5f, 255, 255, 0, false, 1.0f);
+	}
 	Vector vecSrc = vecSrcIn;
 
 	if ( flRadius )
@@ -609,7 +616,7 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 }
 
 
-void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, bool bIgnoreWorld ) ///radius damage that can ignore the world
+void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, bool bIgnoreWorld, bool bZeroFalloff ) ///radius damage that can ignore the world
 {
 	CBaseEntity *pEntity = NULL;
 	trace_t		tr;
@@ -617,6 +624,16 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 	Vector		vecSpot;
 	Vector		vecToTarget;
 	Vector		vecEndPos;
+
+
+
+	if (debug_radius_damage.GetBool())
+	{
+		NDebugOverlay::Sphere(vecSrcIn, flRadius, 255, 0, 0, false, 1.0f);
+		if(!bZeroFalloff)
+			NDebugOverlay::Sphere(vecSrcIn, flRadius * 0.5f, 255, 255, 0, false, 1.0f);
+
+	}
 
 	Vector vecSrc = vecSrcIn;
 
@@ -677,15 +694,20 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 				}
 			}
 
-			if ( bHit )
+			if (bHit)
 			{
 				// the explosion can 'see' this entity, so hurt them!
 				//vecToTarget = ( vecSrc - vecEndPos );
-				vecToTarget = ( vecEndPos - vecSrc );
+				vecToTarget = (vecEndPos - vecSrc);
 
 				// decrease damage for an ent that's farther from the bomb.
-				flAdjustedDamage = vecToTarget.Length() * falloff;
-				flAdjustedDamage = info.GetDamage() - flAdjustedDamage;
+				if (!bZeroFalloff)
+				{
+					flAdjustedDamage = vecToTarget.Length() * falloff;
+					flAdjustedDamage = info.GetDamage() - flAdjustedDamage;
+				}
+				else
+					flAdjustedDamage = info.GetDamage();
 
 				if ( flAdjustedDamage > 0 )
 				{

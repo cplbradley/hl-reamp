@@ -95,6 +95,7 @@ $Project
 				$File "hlr/util/npc_memory_manager.cpp"
 				$File "hlr/util/env_weather_controller.cpp"
 				$File "hlr/util/prop_armor_controller.cpp"
+				$File "hlr/util/trigger_destroy.cpp"
 			}
 			$Folder "Player"
 			{

@@ -3424,6 +3424,9 @@
     <ClCompile Include="..\..\game\shared\singleplayer_animstate.cpp">
       <Filter>Source Files\HLR\Util</Filter>
     </ClCompile>
+    <ClCompile Include="hlr\util\trigger_destroy.cpp">
+      <Filter>Source Files\HLR\Util</Filter>
+    </ClCompile>
     <ClCompile Include="hlr\weapons\actual_bullet.cpp">
       <Filter>Source Files\HLR\Weapons</Filter>
     </ClCompile>

@@ -1164,7 +1164,7 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	if ((info.GetDamageType() & DMG_BLAST) && (info.GetInflictor()->IsPlayer()))
 	{
 
-		float scale = g_pGameRules->SkillAdjustValue(0.4f);
+		float scale = g_pGameRules->SkillAdjustValue(0.25f);
 		float expscale;
 		ConVarRef mania("g_rocket_jump_mania");
 		mania.GetBool() ? expscale = 0.0f : expscale = scale;

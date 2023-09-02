@@ -34,7 +34,7 @@ void CHLRSpeedMod::Spawn()
 void CHLRSpeedMod::InputSetMaxSpeed(inputdata_t &data)
 {
 	SetPlayerSpeed(data.value.Float());
-	Msg("SpeedMod: %f\n", data.value.Float());
+	ConDColorMsg(Color(0, 255, 255), "SpeedMod Applied = %f\n", data.value.Float());
 }
 
 void CHLRSpeedMod::SetPlayerSpeed(float speed)

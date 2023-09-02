@@ -361,6 +361,7 @@ void		UTIL_AxisStringToPointPoint( Vector &start, Vector &end, const char *pStri
 void		UTIL_AxisStringToUnitDir( Vector &dir, const char *pString );
 void		UTIL_ClipPunchAngleOffset( QAngle &in, const QAngle &punch, const QAngle &clip );
 void		UTIL_PredictedPosition( CBaseEntity *pTarget, float flTimeDelta, Vector *vecPredictedPosition );
+void		UTIL_PredictedWorldSpaceCenter(CBaseEntity* pTarget, float flTimeDelta, Vector* vecPredictedPosition);
 void		UTIL_Beam( Vector &Start, Vector &End, int nModelIndex, int nHaloIndex, unsigned char FrameStart, unsigned char FrameRate,
 				float Life, unsigned char Width, unsigned char EndWidth, unsigned char FadeLength, unsigned char Noise, unsigned char Red, unsigned char Green,
 				unsigned char Blue, unsigned char Brightness, unsigned char Speed);

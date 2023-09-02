@@ -1393,7 +1393,7 @@ void CNPC_BadDog::LeapAttack(void)
 		float flCosTheta = DotProduct(vecToTarget, preCalc);
 		float flTime = (vSpitPos - vTarget).Length2D() / (flVelocity * flCosTheta);
 
-		Msg("Cosine Theta: %f, Time: %f, Velocity: %f\n", flCosTheta, flTime,flVelocity);
+		DevMsg("Cosine Theta: %f, Time: %f, Velocity: %f\n", flCosTheta, flTime,flVelocity);
 
 		if (HasCondition(COND_ENEMY_FACING_ME))
 		{

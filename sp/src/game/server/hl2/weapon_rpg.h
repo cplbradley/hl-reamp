@@ -47,7 +47,7 @@ class CMissile : public CBaseCombatCharacter
 	DECLARE_CLASS( CMissile, CBaseCombatCharacter );
 
 public:
-	static const int EXPLOSION_RADIUS = 200;
+	static const int EXPLOSION_RADIUS = 120;
 
 	CMissile();
 	~CMissile();
@@ -247,6 +247,9 @@ public:
 	void	Rocket2(void);
 	void	Rocket3(void);
 
+
+	void DetonateRockets();
+
 	bool	HasAnyAmmo( void );
 
 	void	SuppressGuiding( bool state = true );
@@ -286,6 +289,8 @@ protected:
 	CHandle<CMissile>	m_hMissile;
 	CHandle<CSprite>	m_hLaserMuzzleSprite;
 	CHandle<CBeam>		m_hLaserBeam;
+
+	int rocketnum;
 
 	
 };

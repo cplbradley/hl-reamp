@@ -1,3 +1,12 @@
+////////////////////////////////////////////////////////////////
+//                                                            //
+//                                                            //
+//                      Climbable Ropes                       //
+//               by just wax of Velocity Punch                //
+//                                                            //
+//                                                            //
+////////////////////////////////////////////////////////////////
+
 #include "cbase.h"
 #include "beam_shared.h"
 #include "experimental/climbable_rope.h"

@@ -705,8 +705,8 @@ void CNPC_VortBoss::CreateTargetBeam(void) //setup the target beam
 	float postAdjustedTimeDelta = g_pGameRules->SkillAdjustValue(preAdjustedTimeDelta); //adjust based on difficulty
 	timeDelta = 1 / postAdjustedTimeDelta; //this doesn't work, but it doesn't matter, because this is just the creation, the actual prediction happens in the update function
 
-	UTIL_PredictedPosition(GetEnemy(), timeDelta, &m_vTargetPos);
-	Vector vecAdjustedTargetPos = m_vTargetPos + Vector(0, 0, 32);
+	UTIL_PredictedWorldSpaceCenter(GetEnemy(), timeDelta, &m_vTargetPos);
+	Vector vecAdjustedTargetPos = m_vTargetPos;
 	m_vLaserDir = vecAdjustedTargetPos - vecEyePos;
 	VectorNormalize(m_vLaserDir);
 	trace_t tr;

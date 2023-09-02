@@ -737,7 +737,7 @@ void CWeaponPlasmaRifle::SecondaryAttack(void)
 		return;
 
 	Vector vecSrc = pPlayer->WorldSpaceCenter();
-	RadiusDamage(CTakeDamageInfo (this, pPlayer, 200, DMG_DISSOLVE),vecSrc,256,CLASS_PLAYER,NULL);
+	g_pGameRules->RadiusDamage(CTakeDamageInfo(this, pPlayer, 200, DMG_DISSOLVE), vecSrc, 256, pPlayer->Classify(), false, true);
 	EmitSound("NPC_CombineBall.Explosion");
 	DispatchParticleEffect("plasma_altfire_core", vecSrc, GetAbsAngles(), this);
 	m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
@@ -858,8 +858,6 @@ void CWeaponPlasmaRifle::PrimaryAttack(void)
 		else
 			fDrainTime = gpGlobals->curtime + 2.0f;
 
-		Msg("inumshots = %i\n", m_nShotsFired);
-		Msg("numshots = %i\n", iShots);
 		DoMuzzleFlash();
 		int iAttachment = LookupAttachment("barrel_vm");
 		if (g_thirdperson.GetBool() == false)

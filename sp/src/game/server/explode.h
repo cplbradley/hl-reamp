@@ -41,4 +41,6 @@ void ExplosionCreate( const Vector &center, const QAngle &angles,
 					 const EHANDLE *ignoredEntity, Class_T ignoredClass,
 					 float flExplosionForce = 0.0f, bool bSurfaceOnly = false, bool bSilent = false, int iCustomDamageType = -1 );
 
+void ZeroFalloffExplosionCreate(const Vector& center, const QAngle& angle, CBaseEntity* owner, int damage, int radius, int flags, float force, CBaseEntity* inflictor);
+
 #endif			//EXPLODE_H

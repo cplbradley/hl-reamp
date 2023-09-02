@@ -22,6 +22,7 @@ class CSkyCamera;
 class CSkyCamera : public CBaseEntity
 {
 	DECLARE_CLASS( CSkyCamera, CBaseEntity );
+	DECLARE_SERVERCLASS();
 
 public:
 
@@ -30,6 +31,7 @@ public:
 	~CSkyCamera();
 	virtual void Spawn( void );
 	virtual void Activate();
+	virtual int UpdateTransmitState() { return SetTransmitState(FL_EDICT_ALWAYS); }
 	bool AcceptInput(const char *szInputName, CBaseEntity *pActivator, CBaseEntity *pCaller, variant_t Value, int outputID);
 	void Update();
 	void InputForceUpdate(inputdata_t &inputdata);
@@ -51,6 +53,10 @@ public:
 	bool			m_bUseAngles;
 	bool			m_bUseAnglesForSky;
 	CSkyCamera		*m_pNext;
+
+	CNetworkVar(bool, bAmActiveSkyCamera);
+	CNetworkVar(bool, bParented);
+	CNetworkVar(bool, bUseAngles);
 };
 
 

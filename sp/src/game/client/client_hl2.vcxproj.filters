@@ -2257,6 +2257,9 @@
     <ClCompile Include="c_shadowcontrol.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="c_SkyCamera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="c_slideshow_display.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

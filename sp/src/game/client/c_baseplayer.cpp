@@ -14,6 +14,7 @@
 #include "input.h"
 #include "iefx.h"
 #include "view.h"
+#include "viewrender.h"
 #include "iviewrender.h"
 #include "iclientmode.h"
 #include "in_buttons.h"
@@ -1104,8 +1105,9 @@ void C_BasePlayer::CreateMuzzleLight(int r, int g, int b, Vector vecSrc)
 	if (!r_muzzleflash_lights.GetBool())
 		return;
 
-	if (IsEffectActive(EF_DIMLIGHT))
+	if (!GetActiveWeapon())
 		return;
+
 	int red = r;
 	red = MIN(red, 255);
 	red = MAX(0, red);
@@ -1118,7 +1120,8 @@ void C_BasePlayer::CreateMuzzleLight(int r, int g, int b, Vector vecSrc)
 	blue = MIN(blue, 255);
 	blue = MAX(0, blue);
 
-	dlight_t* dl = effects->CL_AllocDlight(index);
+
+	dlight_t* dl = effects->CL_AllocDlight(GetActiveWeapon()->index);
 
 	Msg("Creating Muzzle Light color %i %i %i at %f %f %f\n", red,green,blue,vecSrc.x, vecSrc.y, vecSrc.z);
 
@@ -1546,9 +1549,30 @@ bool C_BasePlayer::ShouldDraw()
 	return ShouldDrawThisPlayer() && BaseClass::ShouldDraw();
 }
 
+ConVar r_draw_playermodel_reflections("r_draw_playermodel_reflections", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+
 int C_BasePlayer::DrawModel( int flags )
 {
-#ifndef PORTAL
+#ifdef HLR_CLIENT
+
+	SetArmorPieces();
+	if (r_draw_playermodel_reflections.GetBool())
+	{
+		view_id_t id = CurrentViewID();
+		if (id == VIEW_MAIN || id == VIEW_INTRO_CAMERA)
+		{
+			if (!ShouldDrawThisPlayer())
+				return 0;
+		}
+		return BaseClass::DrawModel(flags);
+	}
+
+	if (!ShouldDrawThisPlayer())
+		return 0;
+
+	return BaseClass::DrawModel(flags);
+#else
+
 	// In Portal this check is already performed as part of
 	// C_Portal_Player::DrawModel()
 	if ( !ShouldDrawThisPlayer() )
@@ -1556,9 +1580,10 @@ int C_BasePlayer::DrawModel( int flags )
 		return 0;
 	}
 
-	SetArmorPieces();
-#endif
+	
+
 	return BaseClass::DrawModel( flags );
+#endif
 }
 
 //-----------------------------------------------------------------------------

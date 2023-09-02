@@ -2452,6 +2452,69 @@ void UTIL_PredictedPosition( CBaseEntity *pTarget, float flTimeDelta, Vector *ve
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Get the predicted postion of an entity of a certain number of seconds
+//			Use this function with caution, it has great potential for annoying the player, especially
+//			if used for target firing predition
+// Input  : *pTarget - target entity to predict
+//			timeDelta - amount of time to predict ahead (in seconds)
+//			&vecPredictedPosition - output
+//-----------------------------------------------------------------------------
+void UTIL_PredictedWorldSpaceCenter(CBaseEntity* pTarget, float flTimeDelta, Vector* vecPredictedPosition)
+{
+	if ((pTarget == NULL) || (vecPredictedPosition == NULL))
+		return;
+
+	Vector	vecPredictedVel;
+
+	//FIXME: Should we look at groundspeed or velocity for non-clients??
+
+	//Get the proper velocity to predict with
+	CBasePlayer* pPlayer = ToBasePlayer(pTarget);
+
+	//Player works differently than other entities
+	if (pPlayer != NULL)
+	{
+		if (pPlayer->IsInAVehicle())
+		{
+			//Calculate the predicted position in this vehicle
+			vecPredictedVel = pPlayer->GetVehicleEntity()->GetSmoothedVelocity();
+		}
+		else
+		{
+			//Get the player's stored velocity
+			vecPredictedVel = pPlayer->GetAbsVelocity();
+		}
+	}
+	else
+	{
+		// See if we're a combat character in a vehicle
+		CBaseCombatCharacter* pCCTarget = pTarget->MyCombatCharacterPointer();
+		if (pCCTarget != NULL && pCCTarget->IsInAVehicle())
+		{
+			//Calculate the predicted position in this vehicle
+			vecPredictedVel = pCCTarget->GetVehicleEntity()->GetSmoothedVelocity();
+		}
+		else
+		{
+			// See if we're an animating entity
+			CBaseAnimating* pAnimating = dynamic_cast<CBaseAnimating*>(pTarget);
+			if (pAnimating != NULL)
+			{
+				vecPredictedVel = pAnimating->GetGroundSpeedVelocity();
+			}
+			else
+			{
+				// Otherwise we're a vanilla entity
+				vecPredictedVel = pTarget->GetSmoothedVelocity();
+			}
+		}
+	}
+
+	//Get the result
+	(*vecPredictedPosition) = pTarget->WorldSpaceCenter() + (vecPredictedVel * flTimeDelta);
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Points the destination entity at the target entity
 // Input  : *pDest - entity to be pointed at the target
 //			*pTarget - target to point at

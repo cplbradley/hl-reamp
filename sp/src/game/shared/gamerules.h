@@ -280,8 +280,8 @@ public:
 	virtual int	GetAutoAimMode()	{ return AUTOAIM_ON; }
 
 	virtual bool ShouldUseRobustRadiusDamage(CBaseEntity *pEntity) { return false; }
-	virtual void  RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc, float flRadius, int iClassIgnore, CBaseEntity *pEntityIgnore );
-	virtual void  RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, bool bIgnoreWorld );
+	virtual void  RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc, float flRadius, int iClassIgnore, CBaseEntity *pEntityIgnore ); //Default radius damage
+	virtual void  RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, bool bIgnoreWorld, bool bZeroFalloff = false ); //Default radius damage that ignores the world
 	// Let the game rules specify if fall death should fade screen to black
 	virtual bool  FlPlayerFallDeathDoesScreenFade( CBasePlayer *pl ) { return TRUE; }
 

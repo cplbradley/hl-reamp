@@ -409,7 +409,7 @@ void CMissile::DoExplosion(void)
 		ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), GetDamage(), CMissile::EXPLOSION_RADIUS*0.4, SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS | SF_ENVEXPLOSION_NOSMOKE, 0.0f, this,-1,0, GetOwnerEntity()->Classify());
 	else
 	{
-		ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), GetDamage(), CMissile::EXPLOSION_RADIUS, SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS | SF_ENVEXPLOSION_NOSMOKE, 0.0f,GetOwnerEntity());
+		ZeroFalloffExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), GetDamage(), CMissile::EXPLOSION_RADIUS, SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS | SF_ENVEXPLOSION_NOSMOKE, 0.0f, GetOwnerEntity());
 		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 		if (!pPlayer)
 			return;
@@ -457,7 +457,8 @@ void CMissile::Explode(void)
 	if (m_hMissileTrail)
 	{
 		m_hMissileTrail->TimeOut();
-		m_hMissileTrail = NULL;
+		m_hMissileTrail->FollowEntity(NULL);
+		m_hMissileTrail->SetParent(NULL);
 	}
 	SetTouch(NULL);
 	StopSound("Missile.Ignite");
@@ -1796,6 +1797,7 @@ void CWeaponRPG::LaunchRocket(void)
 	m_hMissile = CMissile::Create(muzzlePoint, vecAngles, GetOwner()->edict());
 	m_hMissile->SetOwnerEntity(pPlayer);
 	m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
+	m_flNextSecondaryAttack = gpGlobals->curtime + 0.2f;
 	m_vMissileList.AddToTail(m_hMissile);
 	SuppressGuiding();
 	if (mat_classic_render.GetInt() == 0)
@@ -1811,17 +1813,30 @@ void CWeaponRPG::LaunchRocket(void)
 }
 void CWeaponRPG::SecondaryAttack(void)
 {
-	/*if (m_hMissile != NULL)
+	//SetThink(&CWeaponRPG::DetonateRockets);
+	//SetNextThink(gpGlobals->curtime);
+	DetonateRockets();
+}
+
+void CWeaponRPG::DetonateRockets()
+{
+	/*if (m_vMissileList.Element(rocketnum) != nullptr)
 	{
-		m_hMissile->Explode();
+		m_vMissileList.Element(rocketnum)->Explode();
+		rocketnum++;
+		SetNextThink(gpGlobals->curtime + 0.1f);
+	}
+	else
+	{
+		SetThink(NULL);
+		rocketnum = 0;
 	}*/
 
 	for (int i = 0; i < m_vMissileList.Count(); i++)
 	{
-		dynamic_cast<CMissile*>(m_vMissileList.Element(i))->Explode();
-		
+		if (m_vMissileList.Element(i) != nullptr)
+			m_vMissileList.Element(i)->Explode();
 	}
-	//m_flNextSecondaryAttack = gpGlobals->curtime + 0.5f;
 }
 //-----------------------------------------------------------------------------
 // Purpose: 

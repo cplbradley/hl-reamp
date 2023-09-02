@@ -920,7 +920,7 @@ void CTriggerHeal::Touch(CBaseEntity* pOther)
 	{
 		SetThink(&CTriggerHeal::HealThink);
 		SetNextThink(gpGlobals->curtime);
-		Msg("HealTrigger touched\n");
+		DevMsg("HealTrigger touched\n");
 		bAmHealing = true;
 	}
 }

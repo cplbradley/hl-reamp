@@ -91,6 +91,15 @@ int AE_ANTLIONWARRIOR_BURROW_OUT;
 int AE_ANTLIONWARRIOR_SPIT;
 int AE_ANTLIONWARRIOR_FIRE_ROCKET;
 
+
+ConVar	g_antlionwarrior_hemorrhage("g_antlionwarrior_hemorrhage", "1", FCVAR_NONE, "If 1, guard will emit a bleeding particle effect when wounded.");
+ConVar  sk_antlion_warrior_spit_speed("sk_antlion_warrior_spit_speed", "0", FCVAR_NONE, "Speed at which an antlion spit grenade travels.");
+ConVar	g_debug_antlionwarrior("g_debug_antlionwarrior", "0");
+ConVar	sk_antlionwarrior_dmg_charge("sk_antlionwarrior_dmg_charge", "0");
+ConVar	sk_antlionwarrior_dmg_shove("sk_antlionwarrior_dmg_shove", "0");
+ConVar	sk_antlionwarrior_barrage_freq("sk_antlionwarrior_barrage_freq", "0");
+ConVar	sk_antlionwarrior_health("sk_antlionwarrior_health", "0");
+
 //==================================================
 // CNPC_AntlionWarrior::m_DataDesc
 //==================================================
@@ -461,10 +470,8 @@ void CNPC_AntlionWarrior::CreateGlow(CSprite **pSprite, const char *pAttachName)
 //-----------------------------------------------------------------------------
 void CNPC_AntlionWarrior::Spawn(void)
 {
-	Msg("i spawned\n");
+	DevMsg("warrior spawned\n");
 	Precache();
-
-
 	SetModel(ANTLIONWARRIOR_MODEL);
 
 	// Switch our skin (for now), if we're the cavern guard
@@ -486,8 +493,6 @@ void CNPC_AntlionWarrior::Spawn(void)
 	SetHullSizeNormal();
 	SetDefaultEyeOffset();
 
-	//m_hSpitEffect = (CParticleSystem *)CreateEntityByName("info_particle_system");
-	//DispatchFlame();
 	SetSolid(SOLID_BBOX);
 	AddSolidFlags(FSOLID_NOT_STANDABLE);
 	SetMoveType(MOVETYPE_STEP);
@@ -495,8 +500,8 @@ void CNPC_AntlionWarrior::Spawn(void)
 	SetNavType(NAV_GROUND);
 	SetBloodColor(BLOOD_COLOR_YELLOW);
 
-	m_iHealth = sk_antlionwarrior_health.GetFloat();
-	m_iMaxHealth = m_iHealth;
+	SetHealth(sk_antlionwarrior_health.GetInt());
+	SetMaxHealth(sk_antlionwarrior_health.GetInt());
 	m_flFieldOfView = ANTLIONWARRIOR_FOV_NORMAL;
 
 	m_fNextBombard = gpGlobals->curtime + 20.0f;
@@ -582,6 +587,7 @@ void CNPC_AntlionWarrior::PostNPCInit(void)
 
 	}*/
 
+	SetHealth(sk_antlionwarrior_health.GetInt());
 	BaseClass::PostNPCInit();
 }
 //-----------------------------------------------------------------------------
@@ -2864,17 +2870,41 @@ bool CNPC_AntlionWarrior::HandleChargeImpact(Vector vecImpact, CBaseEntity *pEnt
 	}
 	if (pEntity->ClassMatches("rpg_missile"))
 	{
-		CMissile* pMissile = dynamic_cast<CMissile*>(pEntity);
-		if (pMissile)
-		{
-			pMissile->DefferExplosion(0.1f);
-			CBaseEntity* pOwner = pMissile->GetOwnerEntity();
-			Vector vecDir = pOwner->WorldSpaceCenter() - WorldSpaceCenter();
-			QAngle angDir;
+		
 
-			VectorAngles(vecDir, angDir);
-			pEntity->SetAbsAngles(-angDir);
-		}
+		CMissile* oldmissile = dynamic_cast<CMissile*>(pEntity);
+	
+		Vector vecDir = (UTIL_GetLocalPlayer()->WorldSpaceCenter() - WorldSpaceCenter()).Normalized();
+		Vector vecStart = WorldSpaceCenter() + (vecDir * 100);
+		QAngle angDir;
+		VectorAngles(vecDir, angDir);
+
+		Vector vecDest;
+		
+		float dist = (GetEnemy()->GetAbsOrigin() - GetAbsOrigin()).Length();
+		float delta = dist / 1000;
+
+		UTIL_PredictedPosition(GetEnemy(), delta, &vecDest);
+		Vector flailDir = VecCheckThrow(this, vecStart, vecDest, 1000,2.f);
+
+		
+
+		if (vecDir == vec3_origin)
+			return true;
+
+		oldmissile->RemoveSelf();
+
+		CMissile* pMissile = (CMissile*)CreateEntityByName("rpg_missile");
+		UTIL_SetOrigin(pMissile, vecStart);
+		pMissile->SetOwnerEntity(this);
+		pMissile->SetGravity(2.f);
+		pMissile->m_bSpawnFlailing = true;
+		pMissile->Spawn();
+		pMissile->CreateSmokeTrail();
+		pMissile->StartFlailing(flailDir.Normalized() * 1000);
+		
+		
+
 		return true;
 	}
 	// Hit anything we don't like

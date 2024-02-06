@@ -2434,7 +2434,7 @@ int CNPC_Antlion::SelectSchedule( void )
 				
 				// Back up, we're too near an enemy or can't see them
 				if ( HasCondition( COND_TOO_CLOSE_TO_ATTACK ) || HasCondition( COND_ENEMY_OCCLUDED ) )
-					return SCHED_ESTABLISH_LINE_OF_FIRE;
+					return SCHED_CHASE_ENEMY;
 
 				// See if we need to destroy breakable cover
 				if ( HasCondition( COND_WEAPON_SIGHT_OCCLUDED ) )

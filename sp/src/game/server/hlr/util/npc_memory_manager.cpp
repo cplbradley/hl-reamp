@@ -18,7 +18,7 @@ public:
 
 	bool m_bAmUpdating;
 
-
+	virtual void OnRestore();
 	void InputStartUpdate(inputdata_t& inputdata);
 	void InputStopUpdate(inputdata_t& inputdata);
 	void InputUpdateOnce(inputdata_t& inputdata);
@@ -37,6 +37,8 @@ DEFINE_INPUTFUNC(FIELD_FLOAT,"SetQueryRange", InputSetQueryRange),
 DEFINE_INPUTFUNC(FIELD_FLOAT,"SetUpdateFrequency", InputSetUpdateFrequency),
 DEFINE_KEYFIELD(m_fQueryRange,FIELD_FLOAT,"QueryRange"),
 DEFINE_KEYFIELD(m_fUpdateFrequency,FIELD_FLOAT,"UpdateFrequency"),
+DEFINE_FUNCTION(UpdateMemory),
+DEFINE_FIELD(m_bAmUpdating,FIELD_BOOLEAN),
 END_DATADESC()
 
 
@@ -108,4 +110,20 @@ void CNPCMemoryManager::InputSetQueryRange(inputdata_t& inputdata)
 void CNPCMemoryManager::InputSetUpdateFrequency(inputdata_t& inputdata)
 {
 	m_fUpdateFrequency = inputdata.value.Float();
+}
+
+void CNPCMemoryManager::OnRestore()
+{
+	BaseClass::OnRestore();
+
+	if (m_bAmUpdating)
+	{
+		SetThink(&CNPCMemoryManager::UpdateThink);
+		SetNextThink(gpGlobals->curtime);
+	}
+	else
+	{
+		SetThink(NULL);
+		SetNextThink(gpGlobals->curtime);
+	}
 }

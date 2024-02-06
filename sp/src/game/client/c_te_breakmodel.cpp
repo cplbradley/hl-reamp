@@ -40,6 +40,8 @@ public:
 	int				m_nCount;
 	float			m_fTime;
 	int				m_nFlags;
+	bool			m_bDecal;
+	int				m_iBloodColor;
 };
 
 
@@ -58,6 +60,8 @@ IMPLEMENT_CLIENTCLASS_EVENT_DT(C_TEBreakModel, DT_TEBreakModel, CTEBreakModel)
 	RecvPropInt( RECVINFO(m_nCount)),
 	RecvPropFloat( RECVINFO(m_fTime)),
 	RecvPropInt( RECVINFO(m_nFlags)),
+	RecvPropBool(RECVINFO(m_bDecal)),
+	RecvPropInt(RECVINFO(m_iBloodColor)),
 END_RECV_TABLE()
 
 
@@ -75,6 +79,8 @@ C_TEBreakModel::C_TEBreakModel( void )
 	m_nCount			= 0;
 	m_fTime				= 0.0;
 	m_nFlags			= 0;
+	m_bDecal = false;
+	m_iBloodColor = -1;
 }
 
 C_TEBreakModel::~C_TEBreakModel( void )
@@ -86,7 +92,7 @@ C_TEBreakModel::~C_TEBreakModel( void )
 // Recording
 //-----------------------------------------------------------------------------
 static inline void RecordBreakModel( const Vector &start, const QAngle &angles, const Vector &size,
-	const Vector &vel, int nModelIndex, int nRandomization, int nCount, float flDuration, int nFlags )
+	const Vector &vel, int nModelIndex, int nRandomization, int nCount, float flDuration, int nFlags, bool decal, int bloodcolor )
 {
 	if ( !ToolsEnabled() )
 		return;
@@ -118,6 +124,8 @@ static inline void RecordBreakModel( const Vector &start, const QAngle &angles, 
 		msg->SetInt( "count", nCount );
 		msg->SetFloat( "duration", flDuration );
 		msg->SetInt( "flags", nFlags );
+		msg->SetBool("decal", decal);
+		msg->SetInt("bloodcolor", bloodcolor);
 
 		ToolFramework_PostToolMessage( HTOOLHANDLE_INVALID, msg );
 		msg->deleteThis();
@@ -130,10 +138,10 @@ static inline void RecordBreakModel( const Vector &start, const QAngle &angles, 
 //-----------------------------------------------------------------------------
 void TE_BreakModel( IRecipientFilter& filter, float delay,
 	const Vector& pos, const QAngle &angles, const Vector& size, const Vector& vel, 
-	int modelindex, int randomization, int count, float time, int flags )
+	int modelindex, int randomization, int count, float time, int flags, bool decal, int bloodcolor )
 {
-	tempents->BreakModel( pos, angles, size, vel, randomization, time, count, modelindex, flags );
-	RecordBreakModel( pos, angles, size, vel, randomization, time, count, modelindex, flags ); 
+	tempents->BreakModel( pos, angles, size, vel, randomization, time, count, modelindex, flags, decal, bloodcolor );
+	RecordBreakModel( pos, angles, size, vel, randomization, time, count, modelindex, flags, decal, bloodcolor ); 
 }
 
 
@@ -145,9 +153,9 @@ void C_TEBreakModel::PostDataUpdate( DataUpdateType_t updateType )
 	VPROF( "C_TEBreakModel::PostDataUpdate" );
 
 	tempents->BreakModel( m_vecOrigin, m_angRotation, m_vecSize, m_vecVelocity,
-		m_nRandomization, m_fTime, m_nCount, m_nModelIndex, m_nFlags );
+		m_nRandomization, m_fTime, m_nCount, m_nModelIndex, m_nFlags, m_bDecal, m_iBloodColor);
 	RecordBreakModel( m_vecOrigin, m_angRotation, m_vecSize, m_vecVelocity,
-		m_nRandomization, m_fTime, m_nCount, m_nModelIndex, m_nFlags ); 
+		m_nRandomization, m_fTime, m_nCount, m_nModelIndex, m_nFlags, m_bDecal, m_iBloodColor ); 
 }
 
 void TE_BreakModel( IRecipientFilter& filter, float delay, KeyValues *pKeyValues )
@@ -173,7 +181,9 @@ void TE_BreakModel( IRecipientFilter& filter, float delay, KeyValues *pKeyValues
 	int nCount = pKeyValues->GetInt( "count" );
 	float flDuration = pKeyValues->GetFloat( "duration" );
 	int nFlags = pKeyValues->GetInt( "flags" );
+	bool bDecal = pKeyValues->GetBool("decal");
+	int nBloodColor = pKeyValues->GetInt("bloodcolor", -1);
 	TE_BreakModel( filter, 0.0f, vecOrigin, angles, vecSize, vecVel,
-		nModelIndex, nRandomization, nCount, flDuration, nFlags );
+		nModelIndex, nRandomization, nCount, flDuration, nFlags,bDecal,nBloodColor );
 }
 

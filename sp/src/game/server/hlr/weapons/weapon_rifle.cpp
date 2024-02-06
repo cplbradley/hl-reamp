@@ -92,6 +92,7 @@ public:
 private:
 	float	m_flSoonestPrimaryAttack;
 	float	m_flLastAttackTime;
+	int tracermodelindex;
 };
 
 
@@ -163,6 +164,8 @@ void CWeaponRifle::Precache(void)
 {
 	BaseClass::Precache();
 	PrecacheParticleSystem("muzzleflash_orange_core_model");
+	tracermodelindex = PrecacheModel("models/utils/player_heavytracer.mdl");
+	PrecacheParticleSystem("bullettrail");
 }
 
 //-----------------------------------------------------------------------------
@@ -220,9 +223,9 @@ void CWeaponRifle::PrimaryAttack(void)
 	Vector vUp, vRight, vForward;
 	pOwner->EyeVectors(&vForward, &vRight, &vUp);
 	if (!m_bInZoom)
-		vecSrc = pOwner->Weapon_ShootPosition() + vRight * 3.5f + vUp * -1.0f;
+		vecSrc = pOwner->Weapon_ShootPosition() + vRight * 5.5f + vUp * -6.0f;
 	else
-		vecSrc = pOwner->EyePosition() + vUp * -8;
+		vecSrc = pOwner->WorldSpaceCenter();
 	if (!m_bInZoom)
 	{
 		if(g_thirdperson.GetBool())
@@ -243,17 +246,17 @@ void CWeaponRifle::PrimaryAttack(void)
 	Vector vecAbsEnd = vecAbsStart + (vForward * MAX_TRACE_LENGTH);
 	Vector vecAiming = pOwner->GetAutoaimVector(AUTOAIM_SCALE_DIRECT_ONLY);
 	trace_t tr;
-	UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_ALL, pOwner, COLLISION_GROUP_NONE, &tr);
+	UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_SOLID_BRUSHONLY, pOwner, COLLISION_GROUP_NONE, &tr);
 	Vector vecDir = (tr.endpos - vecSrc).Normalized();
 	FireBulletsInfo_t info;
 	info.m_iAmmoType = m_iPrimaryAmmoType;
 	info.m_iShots = 1;
-	info.m_vecSrc = vecSrc;
-	info.m_vecDirShooting = vecDir;
+	info.m_vecSrc = vecAbsStart;
+	info.m_vecDirShooting = vecAiming;
 	info.m_vecSpread = GetBulletSpread();
 	info.m_pAttacker = GetOwnerEntity();
 	info.m_iDamageType = DMG_BULLET | DMG_DIRECT;
-	FireActualBullet(info, 12000, GetTracerType());
+	FireActualBullet(info, 12000, true, NULL, tracermodelindex,true,vecSrc,vecDir);
 
 	pOwner->CreateMuzzleLight(255, 200, 0,vecSrc);
 

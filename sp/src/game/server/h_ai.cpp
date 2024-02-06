@@ -211,9 +211,11 @@ Vector VecCheckToss( CBaseEntity *pEntity, Vector vecSpot1, Vector vecSpot2, flo
 // VecCheckThrow - returns the velocity vector at which an object should be thrown from vecspot1 to hit vecspot2.
 // returns vec3_origin if throw is not feasible.
 // 
+
+ConVar ai_debug_checkthrow("ai_debug_checkthrow", 0, FCVAR_CHEAT);
 Vector VecCheckThrow ( CBaseEntity *pEdict, const Vector &vecSpot1, Vector vecSpot2, float flSpeed, float flGravityAdj, Vector *vecMins, Vector *vecMaxs )
 {
-	float			flGravity = GetCurrentGravity() * flGravityAdj;
+	float flGravity = GetCurrentGravity() * flGravityAdj;
 
 	Vector vecGrenadeVel = (vecSpot2 - vecSpot1);
 
@@ -227,25 +229,73 @@ Vector VecCheckThrow ( CBaseEntity *pEdict, const Vector &vecSpot1, Vector vecSp
 	Vector vecApex = vecSpot1 + (vecSpot2 - vecSpot1) * 0.5;
 	vecApex.z += 0.5 * flGravity * (time * 0.5) * (time * 0.5);
 
+	Vector vecCorner1 = vecSpot1 + (vecApex - vecSpot1) * 0.5;
+	Vector vecCorner2 = vecApex + (vecSpot2 - vecApex) * 0.5;
+	vecCorner1.z += 0.5 * flGravity * (time * 0.25) * (time * 0.25);
+	vecCorner2.z += 0.5 * flGravity * (time * 0.25) * (time * 0.25);
+	if (ai_debug_checkthrow.GetBool())
+	{
+		NDebugOverlay::Cross3D(vecCorner1, 16, 0, 0, 255, false, 5.f);
+		NDebugOverlay::Cross3D(vecCorner2, 16, 0, 0, 255, false, 5.f);
+	}
 	
 	trace_t tr;
-	UTIL_TraceLine(vecSpot1, vecApex, MASK_SOLID, pEdict, COLLISION_GROUP_NONE, &tr);
+	UTIL_TraceLine(vecSpot1, vecCorner1, MASK_SOLID, pEdict, COLLISION_GROUP_NONE, &tr);
 	if (tr.fraction != 1.0)
 	{
-		// fail!
-		//NDebugOverlay::Line( vecSpot1, vecApex, 255, 0, 0, true, 5.0 );
+		if (ai_debug_checkthrow.GetBool())
+		{
+			Warning("CheckThrow failed due to collision between start and corner1\n");
+			NDebugOverlay::Line(vecSpot1, tr.endpos, 255, 0, 0, true, 5.0);
+		}
+
 		return vec3_origin;
 	}
+	else if (ai_debug_checkthrow.GetBool())
+		DebugDrawLine(vecSpot1, vecCorner1, 0, 255, 0, true, 3.f);
 
-	//NDebugOverlay::Line( vecSpot1, vecApex, 0, 255, 0, true, 5.0 );
 
-	UTIL_TraceLine(vecSpot2, vecApex, MASK_SOLID_BRUSHONLY, pEdict, COLLISION_GROUP_NONE, &tr);
+	UTIL_TraceLine(vecCorner1, vecApex, MASK_SOLID_BRUSHONLY, pEdict, COLLISION_GROUP_NONE, &tr);
 	if (tr.fraction != 1.0)
 	{
-		// fail!
-		//NDebugOverlay::Line( vecApex, vecSpot2, 255, 0, 0, true, 5.0 );
+		if (ai_debug_checkthrow.GetBool())
+		{
+			Warning("CheckThrow failed due to collision between corner1 and apex\n");
+			NDebugOverlay::Line(vecCorner1, tr.endpos, 255, 0, 0, true, 5.0);
+		}
 		return vec3_origin;
 	}
+	else if (ai_debug_checkthrow.GetBool())
+		DebugDrawLine(vecCorner1, vecApex, 0, 255, 0, true, 3.f);
+
+
+
+	UTIL_TraceLine(vecApex, vecCorner2, MASK_SOLID_BRUSHONLY, pEdict, COLLISION_GROUP_NONE, &tr);
+	if (tr.fraction != 1.0)
+	{
+		if (ai_debug_checkthrow.GetBool())
+		{
+			Warning("CheckThrow failed due to collision between apex and corner 2\n");
+			NDebugOverlay::Line(vecApex, tr.endpos, 255, 0, 0, true, 5.0);
+		}
+		return vec3_origin;
+	}
+	else if (ai_debug_checkthrow.GetBool())
+		DebugDrawLine(vecApex, vecCorner2, 0, 255, 0, true, 3.f);
+
+	UTIL_TraceLine(vecCorner2, vecSpot2, MASK_SOLID_BRUSHONLY, pEdict, COLLISION_GROUP_NONE, &tr);
+	if (tr.fraction != 1.0)
+	{
+		if (ai_debug_checkthrow.GetBool())
+		{
+			Warning("CheckThrow failed due to collision between corner2 and endpos\n");
+			NDebugOverlay::Line(vecCorner2, tr.endpos, 255, 0, 0, true, 5.0);
+		}
+		return vec3_origin;
+	}
+	else if (ai_debug_checkthrow.GetBool())
+		DebugDrawLine(vecCorner2, vecSpot2, 0, 255, 0, true, 3.f);
+
 
 	//NDebugOverlay::Line( vecApex, vecSpot2, 0, 255, 0, true, 5.0 );
 

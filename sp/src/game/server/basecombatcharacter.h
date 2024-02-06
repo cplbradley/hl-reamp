@@ -357,6 +357,8 @@ public:
 	virtual	float		GetSpreadBias(  CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget );
 	virtual void		DoMuzzleFlash();
 
+
+	virtual Vector		AutoAimTarget();
 	// Interactions
 	static void			InitInteractionSystem();
 

@@ -18,6 +18,7 @@
 #include "vgui_controls/Panel.h"
 #include "vgui/ISurface.h"
 #include "iviewrender.h"
+#include "c_ai_basenpc.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -374,11 +375,21 @@ void CHUDAutoAim::OnThink()
 			{
 				DevMsg("in_jlook.state = %i\n", in_jlook.state);
 				QAngle viewangles;
+				Vector vecTarget;
+
+				if (pLocalPlayer->m_HL2Local.m_hAutoAimTarget->IsNPC())
+				{
+					C_AI_BaseNPC* pNPC = pLocalPlayer->m_HL2Local.m_hAutoAimTarget->MyNPCPointer();
+					vecTarget = pNPC->AutoAimTarget();
+				}
+				else
+					vecTarget = pLocalPlayer->m_HL2Local.m_hAutoAimTarget->WorldSpaceCenter();
+
 
 				engine->GetViewAngles( viewangles );
 				Vector vecResult, vecAngles;
 				QAngle fuckidk, fuckthis;
-				Vector vecDir = pLocalPlayer->m_HL2Local.m_hAutoAimTarget->WorldChestPosition() - pLocalPlayer->EyePosition();
+				Vector vecDir = vecTarget - pLocalPlayer->EyePosition();
 				VectorAngles(vecDir, fuckidk);
 				AngleVectors(viewangles, &vecAngles);
 				//InterpolateVector(0.1, vecAngles, vecDir, vecResult);

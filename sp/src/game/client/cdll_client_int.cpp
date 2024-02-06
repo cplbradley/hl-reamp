@@ -6,6 +6,8 @@
 //===========================================================================//
 #include "cbase.h"
 #include <crtmemdebug.h>
+#include "winlite.h"
+#include <Psapi.h>
 #include "vgui_int.h"
 #include "clientmode.h"
 #include "iinput.h"
@@ -91,6 +93,9 @@
 #include "ihudlcd.h"
 #include "toolframework_client.h"
 #include "hltvcamera.h"
+
+#undef CreateEvent
+
 
 //#include "fmod/fmod_system.h"
 
@@ -356,9 +361,6 @@ static ConVar *g_pcv_ThreadMode = NULL;
 
 void ApplyShaderConstantHack()
 {
-	//CommandLine()->AppendParm("-forceallmips", "1");
-
-
 	CommandLine()->AppendParm("+mat_hdr_level", "2");
 
 	CMaterialConfigWrapper Wrapper;
@@ -370,7 +372,52 @@ void ApplyShaderConstantHack()
 	Wrapper.PrintPixelConstants();
 
 }
+template <typename T>
+inline T PatchMemory(void* Address, const T& Value)
+{
+	T PrevMemory = *(T*)Address;
+	unsigned long PrevProtect, Dummy;
+	VirtualProtect(Address, sizeof(T), PAGE_EXECUTE_READWRITE, &PrevProtect);
+	*(T*)Address = Value;
+	VirtualProtect(Address, sizeof(T), PrevProtect, &Dummy);
+	return PrevMemory;
+}
 
+bool Patch_Timescale() //Patch the engine.dll so that it stops checking timescale against cheats -Ficool2
+{
+	MODULEINFO modinfo = {0};
+	HMODULE module = GetModuleHandle("engine.dll");
+	if (!module)
+		return false;
+
+	GetModuleInformation(GetCurrentProcess(), module, &modinfo, sizeof(modinfo));
+
+	struct
+	{
+		const char* bytes;
+		size_t len;
+	} sig = { "\x75\x24\xE8\x2A\x2A\x2A\x2A\x84\xC0", 9 };
+
+	byte* start = (byte*)modinfo.lpBaseOfDll, * end = start + modinfo.SizeOfImage - sig.len;
+	byte* addr = NULL;
+	for (byte* i = start; i < end; i++)
+	{
+		bool found = true;
+		for (size_t j = 0; j < sig.len; j++)
+			found &= sig.bytes[j] == 0x2A || sig.bytes[j] == *(char*)(i + j);
+		if (found)
+		{
+			addr = i;
+			break;
+		}
+	}
+
+	if (!addr)
+		return false;
+
+	PatchMemory<uint8_t>(addr, 0xEB); // jmp
+	return true;
+}
 //-----------------------------------------------------------------------------
 // Purpose: interface for gameui to modify voice bans
 //-----------------------------------------------------------------------------
@@ -770,6 +817,9 @@ IBaseClientDLL *clientdll = &gHLClient;
 EXPOSE_SINGLE_INTERFACE_GLOBALVAR( CHLClient, IBaseClientDLL, CLIENT_DLL_INTERFACE_VERSION, gHLClient );
 
 
+
+
+
 //-----------------------------------------------------------------------------
 // Precaches a material
 //-----------------------------------------------------------------------------
@@ -1071,6 +1121,7 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 	IGameSystem::Add( MumbleSystem() );
 
 	ApplyShaderConstantHack(); //CLIENTSIDE SHADER HACK: Forces hardware config to allow for up to 225 shader constants -Ficool2/AnthonyPython
+	
 
 	#if defined( TF_CLIENT_DLL )
 	IGameSystem::Add( CustomTextureToolCacheGameSystem() );
@@ -1174,6 +1225,9 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 		discordPresence.largeImageKey = "satanicfreeman";
 		Discord_UpdatePresence(&discordPresence);
 	}
+
+	Patch_Timescale();
+
 	return true;
 }
 
@@ -1218,7 +1272,7 @@ bool CHLClient::ReplayPostInit()
 void CHLClient::PostInit()
 {
 	IGameSystem::PostInitAllSystems();
-
+	
 #ifdef SIXENSE
 	// allow sixnese input to perform post-init operations
 	g_pSixenseInput->PostInit();

@@ -51,6 +51,7 @@
 #define FTENT_CLIENTSIDEPARTICLES	0x08000000	// The object has a clientside particle system.
 #define FTENT_USEFASTCOLLISIONS		0x10000000	// Use fast collisions (cl_fasttempentcollision).
 #define FTENT_COLLIDEPROPS			0x20000000	// Collide with the world and props
+#define FTENT_DECAL					0x40000000
 
 class C_LocalTempEntity;
 
@@ -103,6 +104,9 @@ public:
 	float							bounceFactor;
 	int								hitSound;
 	int								priority;
+	int								bloodcolor;
+	float							m_fParticleInterval;
+
 	// if attached, this is the index of the client to stick to
 	// if COLLIDEALL, this is the index of the client to ignore
 	// TENTS with FTENT_PLYRATTACHMENT MUST set the clientindex! 

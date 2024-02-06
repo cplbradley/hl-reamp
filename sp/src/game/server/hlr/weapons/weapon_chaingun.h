@@ -17,7 +17,7 @@
 #include "basegrenade_shared.h"
 #include "basehlcombatweapon.h"
 #include "soundenvelope.h"
-
+	
 class CWeaponChaingun : public CHLMachineGun
 {
 public:
@@ -81,11 +81,14 @@ public:
 
 	const WeaponProficiencyInfo_t *GetProficiencyValues();
 
-protected:
+private:
 	bool					m_bNarrowfov;
 	float					m_flfirerate;
 	bool					bActive;
 	int						iNumShots;
+	int						tracermodelindex;
+	float					m_fScaleReductionTime;
+	
 	
 	DECLARE_ACTTABLE();
 	DECLARE_DATADESC();

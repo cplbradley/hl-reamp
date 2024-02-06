@@ -335,6 +335,10 @@ void CNPC_Combine::Spawn( void )
 	// JAY: Disabled jump for now - hard to compare to HL1
 	//CapabilitiesAdd( bits_CAP_TURN_HEAD | bits_CAP_MOVE_GROUND );
 
+	if(HasSpawnFlags(SF_NPC_NO_JUMP))
+		CapabilitiesRemove(bits_CAP_MOVE_JUMP);
+
+
 	CapabilitiesAdd( bits_CAP_AIM_GUN );
 
 	// Innate range attack for grenade

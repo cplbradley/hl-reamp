@@ -53,6 +53,9 @@ public:
 
 	virtual void Event_Killed( const CTakeDamageInfo &info );
 
+	bool		ShouldGib(const CTakeDamageInfo& info) { return BaseClass::ShouldGib(info); }
+	bool		CorpseGib(const CTakeDamageInfo& info);
+
 	virtual void OnScheduleChange();
 
 	float		GetIdealAccel( void ) const;

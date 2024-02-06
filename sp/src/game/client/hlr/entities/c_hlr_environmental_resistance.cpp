@@ -63,7 +63,6 @@ void C_HLREnvironmentalResistance::OnDataChanged(DataUpdateType_t type)
 			DevMsg("clientside electric damageleft = %i\n", m_iElectricDamageLeft);
 		}
 	}
-	DevMsg("idk lol");
 }
 void C_HLREnvironmentalResistance::InitHud()
 {

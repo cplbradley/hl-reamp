@@ -52,6 +52,10 @@ public:
 	CMissile();
 	~CMissile();
 
+
+
+	bool m_bSpawnFlailing;
+
 #ifdef HL1_DLL
 	Class_T Classify( void ) { return CLASS_NONE; }
 #else
@@ -62,6 +66,7 @@ public:
 	void	Precache( void );
 	void	MissileTouch( CBaseEntity *pOther );
 	void	Explode( void );
+	void	RemoveSelf(void);
 	void	ShotDown( void );
 	void	AccelerateThink( void );
 	bool	ActiveSteerMode(void);
@@ -78,6 +83,8 @@ public:
 
 	int		OnTakeDamage_Alive( const CTakeDamageInfo &info );
 	void	Event_Killed( const CTakeDamageInfo &info );
+
+	void StartFlailing(Vector& vecDir);
 	
 	virtual float	GetDamage() { return m_flDamage; }
 	virtual void	SetDamage(float flDamage) { m_flDamage = flDamage; }

@@ -55,8 +55,14 @@ CHLRArmorPanel::CHLRArmorPanel(vgui::Panel* parent) : BaseClass(parent, NULL)
 	m_bStartFramed = true;
 	SetProportional(true);
 	SetPaintBackgroundEnabled(false);
+	m_bRenderToTexture = false;
 
 }
+
+
+ConVar armorpanel_camx("armorpanel_camx", "-240");
+ConVar armorpanel_camy("armorpanel_camy", "0");
+ConVar armorpanel_camz("armorpanel_camy", "25");
 
 void CHLRArmorPanel::InitModel()
 {
@@ -67,13 +73,16 @@ void CHLRArmorPanel::InitModel()
 	CStudioHdr studiohdr(hdr, mdlcache);
 	int anim = LookupSequence(&studiohdr, "armor_custom_idle");
 	SetSequence(anim);
+	Vector campos = Vector(armorpanel_camx.GetFloat(), armorpanel_camy.GetFloat(), armorpanel_camz.GetFloat());
 	SetModelAnglesAndPosition(QAngle(0, -180, 0), vec3_origin);
-	SetCameraPositionAndAngles(Vector(-240, 0, 25), vec3_angle);
+	SetCameraPositionAndAngles(campos, vec3_angle);
 }
 
 void CHLRArmorPanel::Paint()
 {
 	BaseClass::Paint();
+	Vector campos = Vector(armorpanel_camx.GetFloat(), armorpanel_camy.GetFloat(), armorpanel_camz.GetFloat());
+	SetCameraPositionAndAngles(campos, vec3_angle);
 }
 
 void CHLRArmorPanel::SetArmorGroup(const char* szGroupName, int nValue)

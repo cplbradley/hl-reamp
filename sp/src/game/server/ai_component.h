@@ -65,6 +65,7 @@ protected:
 	const Vector&		WorldAlignMins() const;
 	const Vector&		WorldAlignMaxs() const;
 	Vector 				WorldSpaceCenter() const;
+	Vector				WorldChestPosition() const;
 	
 	int 				GetCollisionGroup() const;
 	

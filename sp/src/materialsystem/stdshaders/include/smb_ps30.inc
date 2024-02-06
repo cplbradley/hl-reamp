@@ -7,13 +7,8 @@
 // defined $LIGHTING_PREVIEW && defined $FASTPATH && $LIGHTING_PREVIEW && $FASTPATH
 // ($FLASHLIGHT || $FLASHLIGHTSHADOWS) && $LIGHTING_PREVIEW
 
-#ifndef SMB_PS30_H
-#define SMB_PS30_H
-
-#include "shaderapi/ishaderapi.h"
-#include "shaderapi/ishadershadow.h"
-#include "materialsystem/imaterialvar.h"
-
+#pragma once
+#include "shaderlib/cshader.h"
 class smb_ps30_Static_Index
 {
 public:
@@ -45,5 +40,3 @@ public:
 
 #define shaderDynamicTest_smb_ps30 1
 
-
-#endif	// SMB_PS30_H

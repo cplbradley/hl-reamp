@@ -11,9 +11,12 @@ $origin 0 0 64
 $contents "solid"
 $cdmaterials "models/weapons/v_hands"
 $cdmaterials "models/weapons/railgun"
+$attachment "chargepoint" "RD_101" 0.00 -7.00 -2.00 rotate -0 0 0
 $sequence draw "v_railgun_sequence_draw" fps 30.0 fadein 0.2 fadeout 0.2 
 $sequence fire "v_railgun_sequence_fire" fps 30.0 activity ACT_VM_PRIMARYATTACK -1.0 fadein 0.2 fadeout 0.2 snap 
-$sequence idle "v_railgun_sequence_idle" fps 3.0 loop  activity ACT_VM_IDLE -1.0 fadein 0.2 fadeout 0.2 
+$sequence idle "v_railgun_sequence_idle" fps 3.0 loop  activity ACT_VM_IDLE -1.0 fadein 0.2 fadeout 0.2
+$sequence charge "v_railgun_sequence_charge" fps 30 activity ACT_VM_PULLBACK -1 fadein 0.2 fadeout 0.2
+$sequence chargedloop "v_railgun_sequence_charged_loop" fps 60 loop activity ACT_VM_FIDGET -1 fadein 0.2 fadeout 0.2
 $Sequence "holster" {
 	"v_railgun_sequence_idle.smd"
 	activity "ACT_VM_HOLSTER" 1

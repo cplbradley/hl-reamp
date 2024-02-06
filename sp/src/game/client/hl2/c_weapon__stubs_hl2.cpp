@@ -44,6 +44,7 @@ STUB_WEAPON_CLASS( weapon_fraglauncher, WeaponNPCFrag, C_BaseHLCombatWeapon);
 STUB_WEAPON_CLASS(weapon_npc_chaingun, WeaponNPCChaingun, C_HLSelectFireMachineGun);
 STUB_WEAPON_CLASS(weapon_rifle, WeaponRifle, C_BaseHLCombatWeapon);
 STUB_WEAPON_CLASS(weapon_drill, WeaponDrill, C_BaseHLCombatWeapon);
+//STUB_WEAPON_CLASS(weapon_gluon, WeaponGluon, C_BaseCombatWeapon);
 
 #ifdef HL2_EPISODIC
 STUB_WEAPON_CLASS( weapon_hopwire, WeaponHopwire, C_BaseHLCombatWeapon );

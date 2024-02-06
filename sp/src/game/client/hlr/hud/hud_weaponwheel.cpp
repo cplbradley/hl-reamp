@@ -497,7 +497,6 @@ void CHudWeaponWheel::OpenWheel() //Opening the wheel
 	bHasBeenOpened = true;
 
 	engine->ClientCmd("mat_blurdarken 1\n");
-	engine->ClientCmd("sv_cheats 1\n");
 	engine->ClientCmd("host_timescale 0.3\n");
 	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("WeaponWheelOpen");
 }

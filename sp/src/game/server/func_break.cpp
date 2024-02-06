@@ -336,7 +336,9 @@ const char *CBreakable::MaterialSound( Materials precacheMaterial )
 	{
 	case matWood:
 		return "Breakable.MatWood";
-	case matFlesh:
+	case matRedFlesh:
+	case matGreenFlesh:
+	case matYellowFlesh:
 	case matWeb:
 		return "Breakable.MatFlesh";
 	case matComputer:
@@ -405,8 +407,14 @@ void CBreakable::Precache( void )
 	case matRocks:
 		pGibName = "ConcreteChunks";
 		break;
-	case matFlesh:
-		pGibName = "FleshChunks";
+	case matRedFlesh:
+		pGibName = "RedFleshChunks";
+		break;
+	case matGreenFlesh:
+		pGibName = "GreenFleshChunks";
+		break;
+	case matYellowFlesh:
+		pGibName = "YellowFleshChunks";
 		break;
 
 #ifdef HL1_DLL
@@ -970,7 +978,9 @@ void CBreakable::Die( void )
 		cFlag = BREAK_METAL;
 		break;
 
-	case matFlesh:
+	case matRedFlesh:
+	case matGreenFlesh:
+	case matYellowFlesh:
 	case matWeb:
 		soundname = "Breakable.Flesh";
 		cFlag = BREAK_FLESH;

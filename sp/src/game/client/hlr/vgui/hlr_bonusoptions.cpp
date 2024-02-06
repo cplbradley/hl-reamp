@@ -3,6 +3,7 @@
 #include "ienginevgui.h"
 
 #include "hlr/hlr_shareddefs.h"
+#include "basecombatweapon_shared.h"
 
 #include <vgui/IVGui.h>
 #include <vgui/ISurface.h>
@@ -28,12 +29,90 @@
 
 using namespace vgui;
 
+
+enum {
+	VQ_LOW,
+	VQ_MEDIUM,
+	VQ_HIGH,
+	VQ_MAX
+};
+
 ConVar r_videoquality("r_videoquality", "2", FCVAR_CLIENTDLL | FCVAR_HIDDEN | FCVAR_ARCHIVE);
+
+
 //////////////////////////////////////////////////////////////
 ////////// BONUS OPTIONS GRAPHICS PAGE //////////////////
 //////////////////////////////////////////////////////
 ///////////////////////////////////////////////
 
+/*const char* slotnames[10] =
+{
+	"Pistol",
+	"PumpShotgun",
+	"SuperShotgun",
+	"PlasmaRifle",
+	"Chaingun",
+	"Railgun",
+	"Rifle",
+	"GrenadeLauncher",
+	"RocketLauncher",
+	"BFG"
+};
+const char* slotweapons[10] =
+{
+	"weapon_pistol",
+	"weapon_pumpshotgun",
+	"weapon_shotgun",
+	"weapon_plasmarifle",
+	"weapon_chaingun",
+	"weapon_railgun",
+	"weapon_rifle",
+	"weapon_frag",
+	"weapon_rpg",
+	"weapon_bfg"
+};
+
+class CHLRSubBonusOptionsWeaponWheel : public PropertyPage
+{
+	DECLARE_CLASS_SIMPLE(CHLRSubBonusOptionsWeaponWheel, PropertyPage)
+public:
+	CHLRSubBonusOptionsWeaponWheel(Panel* parent);
+	virtual void OnResetData();
+	virtual void OnThink();
+	virtual void OnDataChanged();
+	virtual void OnApplyChanges();
+	virtual void OnPageShow();
+
+	void ApplyWeaponSlots();
+	ComboBox* wheelslot[10];
+
+};
+
+CHLRSubBonusOptionsWeaponWheel::CHLRSubBonusOptionsWeaponWheel(Panel* parent) : BaseClass(parent, NULL)
+{
+	for (int i = 0; i < 10; i++)
+	{
+		char str[16] = "wheelslot";
+		sprintf(str + strlen(str), "%i", i);
+		wheelslot[i] = new ComboBox(parent, str, 10, false);
+		if (wheelslot[i])
+		{
+			for (int j = 0; j < 10; j++)
+			{
+				wheelslot[i]->AddItem(slotnames[j], NULL);
+			}
+		}
+	}
+}
+
+
+void CHLRSubBonusOptionsWeaponWheel::ApplyWeaponSlots()
+{
+	for (int i = 0; i < 10; i++)
+	{
+		CBaseCombatWeapon* weapon = 
+	}
+}*/
 class CHLRSubBonusOptionsGraphics : public vgui::PropertyPage
 {
 	DECLARE_CLASS_SIMPLE(CHLRSubBonusOptionsGraphics, vgui::PropertyPage);
@@ -43,6 +122,7 @@ public:
 	virtual void OnResetData();
 	virtual void OnThink();
 	virtual void OnApplyChanges();
+	virtual void OnPageShow();
 	void ApplyVideoQuality();
 	virtual void OnDataChanged();
 	MESSAGE_FUNC(OnCheckButtonChecked, "CheckButtonChecked");
@@ -55,6 +135,7 @@ private:
 	CheckButton* m_pVSync;
 	CheckButton* m_pMulticore;
 	CheckButton* m_pMuzzleLights;
+	CheckButton* m_pEfficientParticles;
 	Label* m_pRainValue;
 
 };
@@ -76,6 +157,7 @@ CHLRSubBonusOptionsGraphics::CHLRSubBonusOptionsGraphics(vgui::Panel* parent) : 
 	m_pVideoQuality->AddItem("Max", NULL);
 
 	m_pMuzzleLights = new CheckButton(this, "MuzzleLights", "Muzzle Flash Lights");
+	m_pEfficientParticles = new CheckButton(this, "EfficientParticles", "Efficient Particles");
 	
 
 	LoadControlSettings("resource/ui/bonusoptionsgraphics.res");
@@ -90,6 +172,7 @@ void CHLRSubBonusOptionsGraphics::OnResetData()
 	ConVarRef multicore("mat_queue_mode");
 	ConVarRef muzzlelights("r_muzzleflash_lights");
 
+
 	m_pMuzzleLights->SetSelected(muzzlelights.GetBool());
 	m_pRainSlider->SetValue(raindensity.GetFloat());
 
@@ -100,11 +183,19 @@ void CHLRSubBonusOptionsGraphics::OnResetData()
 	m_pVideoQuality->ActivateItem(r_videoquality.GetInt());
 	m_pMulticore->SetSelected(multicore.GetInt() == 2);
 
+	m_pEfficientParticles->SetSelected(r_efficient_particles.GetBool());
+
 	wchar_t tempstring[128];
 	char str[128];
 	sprintf(str, "%i", m_pRainSlider->GetValue());
 	g_pVGuiLocalize->ConvertANSIToUnicode(str, tempstring, sizeof(tempstring));
 	m_pRainValue->SetText(tempstring);
+}
+
+
+void CHLRSubBonusOptionsGraphics::OnPageShow()
+{
+	OnResetData();
 }
 void CHLRSubBonusOptionsGraphics::OnThink()
 {
@@ -137,7 +228,7 @@ void CHLRSubBonusOptionsGraphics::ApplyVideoQuality()
 
 	switch (m_pVideoQuality->GetActiveItem())
 	{
-	case 0:
+	case VQ_LOW:
 		r_rootlod.SetValue(2);
 		mat_trilinear.SetValue(1);
 		mat_forceaniso.SetValue(0);
@@ -147,8 +238,9 @@ void CHLRSubBonusOptionsGraphics::ApplyVideoQuality()
 		r_flashlightdepthtexture.SetValue(0);
 		r_shadowrendertotexture.SetValue(0);
 		parallax.SetValue(0);
+		r_efficient_particles.SetValue(1);
 		break;
-	case 1:
+	case VQ_MEDIUM:
 		r_rootlod.SetValue(1);
 		mat_trilinear.SetValue(0);
 		mat_forceaniso.SetValue(2);
@@ -158,8 +250,9 @@ void CHLRSubBonusOptionsGraphics::ApplyVideoQuality()
 		r_flashlightdepthtexture.SetValue(0);
 		r_shadowrendertotexture.SetValue(1);
 		parallax.SetValue(0);
+		r_efficient_particles.SetValue(1);
 		break;
-	case 2:
+	case VQ_HIGH:
 		r_rootlod.SetValue(0);
 		mat_trilinear.SetValue(0);
 		mat_forceaniso.SetValue(8);
@@ -169,8 +262,9 @@ void CHLRSubBonusOptionsGraphics::ApplyVideoQuality()
 		r_flashlightdepthtexture.SetValue(1);
 		r_shadowrendertotexture.SetValue(1);
 		parallax.SetValue(1);
+		r_efficient_particles.SetValue(0);
 		break;
-	case 3:
+	case VQ_MAX:
 		r_rootlod.SetValue(0);
 		mat_trilinear.SetValue(0);
 		mat_forceaniso.SetValue(16);
@@ -180,6 +274,7 @@ void CHLRSubBonusOptionsGraphics::ApplyVideoQuality()
 		r_flashlightdepthtexture.SetValue(1);
 		r_shadowrendertotexture.SetValue(1);
 		parallax.SetValue(1);
+		r_efficient_particles.SetValue(0);
 		break;
 	default:
 		break;
@@ -197,12 +292,16 @@ void CHLRSubBonusOptionsGraphics::OnApplyChanges()
 	parallax.SetValue(m_pParallax->IsSelected());
 	furyFX.SetValue(m_pFuryEffects->IsSelected());
 	muzzlelights.SetValue(m_pMuzzleLights->IsSelected());
+	r_efficient_particles.SetValue(m_pEfficientParticles->IsSelected());
 
 
 	m_pMulticore->IsSelected() ? engine->ClientCmd_Unrestricted("mat_queue_mode 2") : engine->ClientCmd_Unrestricted("mat_queue_mode 0");
 
 	if(m_pVideoQuality->GetActiveItem() != r_videoquality.GetInt())
 		ApplyVideoQuality();
+
+
+	OnResetData();
 }
 
 void CHLRSubBonusOptionsGraphics::OnCheckButtonChecked()
@@ -560,3 +659,16 @@ CON_COMMAND(OpenBonusOptions, "")
 
 	pPanel->Activate();
 }
+
+
+
+void ReadGameDirectory(const CCommand& args)
+{
+	char gamedir[MAX_PATH];
+	char video_service_path[MAX_PATH];
+	Q_snprintf(video_service_path, sizeof(video_service_path), "%s\\bin\\video_services.dll", engine->GetGameDirectory());
+	Q_snprintf(gamedir, sizeof(gamedir), engine->GetGameDirectory());
+	Msg("GameDir: %s", gamedir);
+	Msg("TestDir: %s\n", video_service_path);
+}
+static ConCommand readgamedir("readgamedir", ReadGameDirectory);

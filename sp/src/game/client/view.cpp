@@ -107,7 +107,7 @@ extern ConVar cl_forwardspeed;
 static ConVar v_centermove( "v_centermove", "0.15");
 static ConVar v_centerspeed( "v_centerspeed","500" );
 
-ConVar r_nearZ("r_nearz", "1", FCVAR_CHEAT | FCVAR_CLIENTDLL);
+ConVar r_nearZ("r_nearz", "5", FCVAR_CLIENTDLL);
 
 #ifdef TF_CLIENT_DLL
 // 54 degrees approximates a 35mm camera - we determined that this makes the viewmodels
@@ -315,6 +315,7 @@ void CViewRender::Init(void)
 	materials->CreateNamedRenderTargetTextureEx("_rt_PrevFrameFB", iW, iH, RT_SIZE_NO_CHANGE, materials->GetBackBufferFormat(), MATERIAL_RT_DEPTH_NONE, flags, 0);
 	materials->CreateNamedRenderTargetTextureEx("_rt_StaticFB", iW, iH, RT_SIZE_FULL_FRAME_BUFFER, IMAGE_FORMAT_RGBA16161616, MATERIAL_RT_DEPTH_SEPARATE, flags, 0);
 	materials->CreateNamedRenderTargetTextureEx("_rt_TrueDepth", iW, iH, RT_SIZE_FULL_FRAME_BUFFER, IMAGE_FORMAT_RGBA16161616, MATERIAL_RT_DEPTH_SEPARATE, flags, 0);
+	materials->CreateNamedRenderTargetTextureEx("_rt_PrevFrameDB", iW, iH, RT_SIZE_FULL_FRAME_BUFFER, IMAGE_FORMAT_RGBA16161616, MATERIAL_RT_DEPTH_SEPARATE, flags, 0);
 
 	//materials->EndRenderTargetAllocation();
 
@@ -621,7 +622,14 @@ static QAngle s_DbgSetupAngles;
 //-----------------------------------------------------------------------------
 float CViewRender::GetZNear()
 {
-	return r_nearZ.GetFloat();
+	CBasePlayer* player = CBasePlayer::GetLocalPlayer();
+	if (!player)
+		return 5.f;
+
+	if (player->m_Local.m_iHideHUD & HIDEHUD_CINEMATIC_CAMERA)
+		return 0.1f;
+	else
+		return 5.f;
 }
 
 float CViewRender::GetZFar()

@@ -82,7 +82,7 @@ unsigned int CNPCPlasmaBall::PhysicsSolidMaskForEntity() const
 void CNPCPlasmaBall::Spawn(void)
 {
 	Precache();
-	SetMoveType(MOVETYPE_FLY, MOVECOLLIDE_FLY_CUSTOM);
+	SetMoveType(MOVETYPE_FLY);
 	UTIL_SetSize(this, -Vector(1.0f, 1.0f, 1.0f), Vector(1.0f, 1.0f, 1.0f));
 	SetSolid(SOLID_BBOX);
 	SetSolidFlags(FSOLID_NOT_SOLID | FSOLID_TRIGGER);

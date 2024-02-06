@@ -1,12 +1,15 @@
 #include "BaseVSShader.h"
 #include "include/smb_vs30.inc"
 #include "include/smb_ps30.inc"
+#include "VIEW_SHARED.H"
 
 const Sampler_t SAMPLER_FBCURFRAME = SHADER_SAMPLER0;
 const Sampler_t SAMPLER_FBPREVFRAME = SHADER_SAMPLER1;
+const Sampler_t SAMPLER_DEPTH = SHADER_SAMPLER2;
 
 static ConVar mat_simplemotionblur_scale("mat_simplemotionblur_scale", "1");
 static ConVar mat_simplemotionblur("mat_simplemotionblur", "0");
+static ConVar mat_smb_showdiff("mat_smb_showdiff", "0");
 
 
 
@@ -72,7 +75,7 @@ SHADER_DRAW
 	{
 		BindTexture(SAMPLER_FBCURFRAME, info.curframe);
 		BindTexture(SAMPLER_FBPREVFRAME, info.prevframe);
-
+		ClientRender_Globals_t* defGlobals = (ClientRender_Globals_t*)pShaderAPI->GetIntRenderingParameter(INT_RENDERPARM_GLOBALS_PTR);
 
 		DECLARE_DYNAMIC_VERTEX_SHADER(smb_vs30);
 		SET_DYNAMIC_VERTEX_SHADER(smb_vs30);
@@ -84,11 +87,13 @@ SHADER_DRAW
 
 		float scaleconst[2];
 		scaleconst[0] = scale;
-		scaleconst[1] = 0.0f;
+		scaleconst[1] = mat_smb_showdiff.GetBool() ? 1 : 0;
 
 		
 	
 		pShaderAPI->SetPixelShaderConstant(1, scaleconst, 1);
+		pShaderAPI->SetPixelShaderConstant(2, defGlobals->inverseViewProjection.Base(), 4);
+		pShaderAPI->SetPixelShaderConstant(6, defGlobals->lastViewProjection.Base(), 4);
 	}
 
 	Draw();

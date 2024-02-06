@@ -48,6 +48,7 @@ BEGIN_DATADESC( CGrenadeFrag )
 	DEFINE_FIELD( m_inSolid, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_combineSpawned, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_punted, FIELD_BOOLEAN ),
+	DEFINE_FIELD(m_bAccelerated,FIELD_BOOLEAN),
 	
 	// Function Pointers
 	DEFINE_THINKFUNC( DelayThink ),
@@ -105,6 +106,7 @@ void CGrenadeFrag::Spawn( void )
 
 	m_combineSpawned	= false;
 	m_punted			= false;
+	m_bAccelerated		= false;
 
 	BaseClass::Spawn();
 }
@@ -400,6 +402,11 @@ void CGrenadeFrag::Explode(trace_t *pTrace, int bitsDamageType)
 	// Use the thrower's position as the reported position
 	Vector vecReported = m_hThrower ? m_hThrower->GetAbsOrigin() : vec3_origin;
 
+	if (m_bAccelerated)
+	{
+		m_flDamage *= 2.0f;
+	}
+
 	CTakeDamageInfo info(this, m_hThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported);
 
 	RadiusDamage(info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL);
@@ -489,7 +496,7 @@ void CGrenadeFrag::DelayThink()
 	if( !m_bHasWarnedAI && gpGlobals->curtime >= m_flWarnAITime )
 	{
 #if !defined( CLIENT_DLL )
-		CSoundEnt::InsertSound ( SOUND_DANGER, GetAbsOrigin(), 400, 1.5, this );
+		//CSoundEnt::InsertSound ( SOUND_DANGER, GetAbsOrigin(), 400, 1.5, this );
 #endif
 		m_bHasWarnedAI = true;
 	}
@@ -1157,7 +1164,7 @@ bool CStickyGrenade::Stick(CBaseEntity *pOther)
 
 //////SPAWN FUNCTIONS
 
-CBaseGrenade *Fraggrenade_Create( const Vector &position, const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, CBaseEntity *pOwner, float timer, bool combineSpawned )
+CBaseGrenade *Fraggrenade_Create( const Vector &position, const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, CBaseEntity *pOwner, float timer, bool combineSpawned, bool bAccelerated )
 {
 	// Don't set the owner here, or the player can't interact with grenades he's thrown-------------------------------------
 	CGrenadeFrag *pGrenade = (CGrenadeFrag *)CBaseEntity::Create( "npc_grenade_frag", position, angles, pOwner );
@@ -1169,6 +1176,7 @@ CBaseGrenade *Fraggrenade_Create( const Vector &position, const QAngle &angles, 
 	pGrenade->SetGravity(1.0f);
 	pGrenade->m_takedamage = DAMAGE_EVENTS_ONLY;
 	pGrenade->SetCombineSpawned( combineSpawned );
+	pGrenade->SetAccelerated(bAccelerated);
 
 	return pGrenade;
 }

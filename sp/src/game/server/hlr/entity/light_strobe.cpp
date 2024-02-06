@@ -49,12 +49,12 @@ void CStrobeLight::Spawn()
 {
 	m_bEnabled = false;
 	SetTransmitState(FL_EDICT_ALWAYS);
-	Msg("ServerSpawn\n");
+	DevMsg("Strobelight ServerSpawn\n");
 }
 
 void CStrobeLight::InputEnable(inputdata_t& data)
 {
-	Msg("enabling\n");
+	DevMsg("Strobelight enabling\n");
 	m_bEnabled = true;
 }
 

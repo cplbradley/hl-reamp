@@ -11,6 +11,7 @@ $collisionmodel "hgib_small2_hull.smd" {
 
 }
 $contents "solid"
+$surfaceprop "flesh"
 $cdmaterials "models/gibs/human"
 $sequence idle "hgib_small2.smd" activity ACT_IDLE -1 fps 1
 

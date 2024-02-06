@@ -13,6 +13,7 @@
 #pragma once
 #endif
 
+
 static ConVar g_ultragibs("g_ultragibs", "0", FCVAR_REPLICATED | FCVAR_GAMEDLL | FCVAR_CLIENTDLL, "ultragibs");
 static ConVar g_guts_and_glory("g_guts_and_glory", "0", FCVAR_REPLICATED | FCVAR_GAMEDLL | FCVAR_CLIENTDLL, "Guts and Glory!");
 static ConVar g_masochist_mode("g_masochist_mode", "0", FCVAR_NONE, "WARNING: Death will delete your entire save folder.");
@@ -25,6 +26,8 @@ static ConVar mat_blurdarken("mat_blurdarken", "0");
 
 static ConVar mat_taa("mat_taa", "0", FCVAR_REPLICATED | FCVAR_CLIENTDLL, "");
 static ConVar g_custom_nightvision("g_custom_nightvision", "0", FCVAR_ARCHIVE | FCVAR_CLIENTDLL | FCVAR_GAMEDLL);
+
+static ConVar r_efficient_particles("r_efficient_particles", "0", FCVAR_ARCHIVE | FCVAR_REPLICATED | FCVAR_CLIENTDLL | FCVAR_GAMEDLL);
 
 static void CC_TestKillSave(void)
 {

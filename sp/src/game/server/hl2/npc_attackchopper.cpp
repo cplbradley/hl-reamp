@@ -37,6 +37,7 @@
 #include "physics_saverestore.h"
 #include "ai_memory.h"
 #include "npc_attackchopper.h"
+#include "hlr/weapons/actual_bullet.h"
 
 #ifdef HL2_EPISODIC
 #include "physics_bone_follower.h"
@@ -49,7 +50,7 @@
 // Bone controllers
 // -------------------------------------
 #define CHOPPER_DRONE_NAME	"models/combine_helicopter/helicopter_bomb01.mdl"
-#define CHOPPER_MODEL_NAME	"models/combine_helicopter.mdl"
+#define CHOPPER_MODEL_NAME	"models/orcachopper_npc.mdl"
 #define CHOPPER_MODEL_CORPSE_NAME	"models/combine_helicopter_broken.mdl"
 #define CHOPPER_RED_LIGHT_SPRITE	"sprites/redglow1.vmt"
 
@@ -71,11 +72,11 @@ static const char *s_pChunkModelName[CHOPPER_MAX_CHUNKS] =
 #define	HELICOPTER_CHUNK_BODY		"models/gibs/helicopter_brokenpiece_06_body.mdl"
 
 
-#define CHOPPER_MAX_SPEED			(60 * 17.6f)
+#define CHOPPER_MAX_SPEED			(120 * 17.6f)
 #define CHOPPER_MAX_FIRING_SPEED	250.0f
 #define CHOPPER_MAX_GUN_DIST		2000.0f
 
-#define CHOPPER_ACCEL_RATE			500
+#define CHOPPER_ACCEL_RATE			1000
 #define CHOPPER_ACCEL_RATE_BOOST	1500
 
 #define DEFAULT_FREE_KNOWLEDGE_DURATION 5.0f
@@ -940,6 +941,7 @@ void CNPC_AttackHelicopter::Precache( void )
 
 	PrecacheScriptSound( "ReallyLoudSpark" );
 	PrecacheScriptSound( "NPC_AttackHelicopterGrenade.Ping" );
+	PrecacheParticleSystem("bullettrail");
 }
 
 int CNPC_AttackHelicopter::ObjectCaps() 
@@ -1296,7 +1298,7 @@ void CNPC_AttackHelicopter::Activate( void )
 //-----------------------------------------------------------------------------
 const char *CNPC_AttackHelicopter::GetTracerType( void ) 
 {
-	return "HelicopterTracer"; 
+	return "AR2Tracer";
 }
 
 
@@ -1784,76 +1786,17 @@ void CNPC_AttackHelicopter::ShootAtPlayer( const Vector &vBasePos, const Vector 
 	info.m_flDistance = MAX_COORD_RANGE;
 	info.m_iAmmoType = m_iAmmoType;
 	info.m_iTracerFreq = 1;
-	info.m_vecDirShooting = GetActualShootTrajectory( vBasePos );
+	info.m_vecDirShooting = GetSkillAdjustedShootTrajectory(vBasePos, GetEnemy()->WorldSpaceCenter(), 4000.0f);
 	info.m_nFlags = FIRE_BULLETS_TEMPORARY_DANGER_SOUND;
+	info.m_pAttacker = this;
 
 	DoMuzzleFlash();
 
 	QAngle	vGunAng;
 	VectorAngles( vGunDir, vGunAng );
+	int index = PrecacheModel("models/utils/helitracer.mdl");
 	
-	FireBullets( info );
-
-	// Fire the rest of the bullets at objects around the player
-	CBaseEntity *ppNearbyTargets[16];
-	int nActualTargets = BuildMissTargetList( 16, ppNearbyTargets ); 
-
-	// Randomly sort it...
-	int i;
-	for ( i = 0; i < nActualTargets; ++i )
-	{
-		int nSwap = random->RandomInt( 0, nActualTargets - 1 ); 
-		V_swap( ppNearbyTargets[i], ppNearbyTargets[nSwap] );
-	}
-
-	// Just shoot where we're facing
-	float flSinConeDegrees = sin( sk_helicopter_firingcone.GetFloat() * 0.5f * (3.14f / 180.0f) );
-	Vector vecSpread( flSinConeDegrees, flSinConeDegrees, flSinConeDegrees );
-
-	// How many times should we hit the player this time?
-	int nDesiredHitCount = (int)(((float)( m_nMaxBurstHits - m_nBurstHits ) / (float)m_nRemainingBursts) + 0.5f);
-	int nNearbyTargetCount = 0;
-	int nPlayerShotCount = 0;
-	for ( i = sk_helicopter_roundsperburst.GetInt() - 1; --i >= 0; )
-	{
-		// Find something interesting around the enemy to shoot instead of just missing.
-		if ( nActualTargets > nNearbyTargetCount )
-		{
-			// FIXME: Constrain to the firing cone?
-			ppNearbyTargets[nNearbyTargetCount]->CollisionProp()->RandomPointInBounds( Vector(.25, .25, .25), Vector(.75, .75, .75), &info.m_vecDirShooting );
-			info.m_vecDirShooting -= vBasePos;
-			VectorNormalize( info.m_vecDirShooting );
-			info.m_vecSpread = VECTOR_CONE_PRECALCULATED;
-			info.m_flDistance = MAX_COORD_RANGE;
-			info.m_nFlags = FIRE_BULLETS_TEMPORARY_DANGER_SOUND;
-			
-			FireBullets( info );
-
-			++nNearbyTargetCount;
-			continue;
-		}
-
-		if ( GetEnemy() && ( nPlayerShotCount < nDesiredHitCount ))
-		{
-			GetEnemy()->CollisionProp()->RandomPointInBounds( Vector(0, 0, 0), Vector(1, 1, 1), &info.m_vecDirShooting );
-			info.m_vecDirShooting -= vBasePos;
-			VectorNormalize( info.m_vecDirShooting );
-			info.m_vecSpread = VECTOR_CONE_PRECALCULATED;
-			info.m_flDistance = MAX_COORD_RANGE;
-			info.m_nFlags = FIRE_BULLETS_TEMPORARY_DANGER_SOUND;
-			FireBullets( info );
-			++nPlayerShotCount;
-			continue;
-		}
-
-		// Nothing nearby; just fire randomly...
-		info.m_vecDirShooting = vGunDir;
-		info.m_vecSpread = vecSpread;
-		info.m_flDistance = 8192;
-		info.m_nFlags = FIRE_BULLETS_TEMPORARY_DANGER_SOUND;
-
-		FireBullets( info );
-	}
+	FireActualBullet(info,4000,true,0,index);
 }
 
 
@@ -2666,9 +2609,7 @@ bool CNPC_AttackHelicopter::DoGunFiring( const Vector &vBasePos, const Vector &v
 		return true;
 
 	controller.SoundChangeVolume( m_pGunFiringSound, 0.0, 0.01f );
-	float flIdleTime = CHOPPER_GUN_IDLE_TIME;
-	float flVariance = flIdleTime * 0.1f;
-	m_flNextAttack = gpGlobals->curtime + m_flIdleTimeDelay + random->RandomFloat(flIdleTime - flVariance, flIdleTime + flVariance);
+	m_flNextAttack = gpGlobals->curtime + 0.01f;
 	m_nGunState = GUN_STATE_IDLE;
 	SetPauseState( PAUSE_NO_PAUSE );
 	return true;
@@ -3200,9 +3141,9 @@ bool CNPC_AttackHelicopter::FireGun( void )
 	}
 
 	Vector vTipPos;
-	GetAttachment( m_nGunTipAttachment, vTipPos );
+	GetAttachment( LookupAttachment("muzzle"), vTipPos);
 
-	Vector vGunDir = vTipPos - vBasePos;
+	Vector vGunDir = (GetEnemy()->WorldSpaceCenter() - vTipPos);
 	VectorNormalize( vGunDir );
 
 	// Are we firing?
@@ -3434,15 +3375,7 @@ void CNPC_AttackHelicopter::DropCorpse( int nDamage )
 //-----------------------------------------------------------------------------
 void CNPC_AttackHelicopter::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
-	// Take no damage from trace attacks unless it's blast damage. RadiusDamage() sometimes calls
-	// TraceAttack() as a means for delivering blast damage. Usually when the explosive penetrates
-	// the target. (RPG missiles do this sometimes).
-	if ( ( info.GetDamageType() & DMG_AIRBOAT ) || 
-		 ( info.GetInflictor()->Classify() == CLASS_MISSILE ) || 
-		 ( info.GetAttacker()->Classify() == CLASS_MISSILE ) )
-	{
-		BaseClass::BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
-	}
+	BaseClass::BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
 }
 
 
@@ -3451,7 +3384,7 @@ void CNPC_AttackHelicopter::TraceAttack( const CTakeDamageInfo &info, const Vect
 //-----------------------------------------------------------------------------
 int CNPC_AttackHelicopter::OnTakeDamage( const CTakeDamageInfo &info )
 {
-	// We don't take blast damage from anything but the airboat or missiles (or myself!)
+/*	// We don't take blast damage from anything but the airboat or missiles (or myself!)
 	if( info.GetInflictor() != this )
 	{
 		if ( ( ( info.GetDamageType() & DMG_AIRBOAT ) == 0 ) && 
@@ -3490,7 +3423,7 @@ int CNPC_AttackHelicopter::OnTakeDamage( const CTakeDamageInfo &info )
 		fudgedInfo.SetMaxDamage( damage );
 
 		return BaseClass::OnTakeDamage( fudgedInfo );
-	}
+	}*/
 
 	return BaseClass::OnTakeDamage( info );
 }
@@ -3502,12 +3435,6 @@ int CNPC_AttackHelicopter::OnTakeDamage( const CTakeDamageInfo &info )
 int CNPC_AttackHelicopter::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 {
 	int nPrevHealth = GetHealth();
-
-	if ( ( info.GetInflictor() != NULL ) && ( info.GetInflictor()->GetOwnerEntity() != NULL ) && ( info.GetInflictor()->GetOwnerEntity() == this ) )
-	{
-		// Don't take damage from my own bombs. (Unless the player grabbed them and threw them back)
-		return 0;
-	}
 
 	// Chain
 	int nRetVal = BaseClass::OnTakeDamage_Alive( info );

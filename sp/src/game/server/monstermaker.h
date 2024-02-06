@@ -26,7 +26,8 @@
 #define SF_NPCMAKER_NOPRELOADMODELS 512	// Suppress preloading into the cache of all referenced .mdl files
 #define SF_NPCMAKER_INSTANT			1024 //Spawn instantly with the instant spawn particle
 #define SF_NPCMAKER_NOPARTICLE		2048 //Don't use any particles at all, will always spawn the NPC instantly
-#define SF_NPCMAKER_FAST			4096
+#define SF_NPCMAKER_FAST			4096 //Fast-spawn NPCs. Takes 1 second instead of 2.
+#define SF_NPCMAKER_SKILLADJUST_MAXCHILDREN 8192 //Adjust the Max Alive Children value based on skill. Only works if value is greater than 2.
 
 //=========================================================
 //=========================================================
@@ -110,6 +111,8 @@ public:
 
 	int		m_nLiveChildren;	// how many NPCs made by this NPC maker that are currently alive
 	int		m_nMaxLiveChildren;	// max number of NPCs that this maker may have out at one time.
+	int		m_nMaxHardChildren; // max number of live NPCs when difficulty is set to hard
+	int		m_nMaxEasyChildren;// max number of live NPCs when difficulty is set to easy
 
 	bool	m_bDisabled;
 

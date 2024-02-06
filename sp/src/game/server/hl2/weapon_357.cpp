@@ -27,6 +27,13 @@
 #define PHYSCANNON_BEAM_SPRITE "sprites/physbeam.vmt"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+
+enum ChargeState_t {
+	CHARGESTATE_IDLE,
+	CHARGESTATE_CHARGING,
+	CHARGESTATE_CHARGED,
+};
 extern ConVar sk_plr_357_pushamount;
 extern ConVar mat_classic_render;
 //-----------------------------------------------------------------------------
@@ -44,13 +51,28 @@ public:
 	virtual void	SecondaryAttack(void);
 	virtual void	ItemPostFrame(void);
 	virtual void	ItemBusyFrame(void);
+	void StartCharging();
+	void ReleaseChargedShot();
+	void ResetFOV();
 	virtual bool	Holster(CBaseCombatWeapon *pSwitchingTo = NULL);
 			void	Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator);
 			void    GetControlPanelInfo(int nPanelIndex, const char *&pPanelName);
+			ChargeState_t GetChargeState() { return state; }
 
 private:
 	void   	DrawBeam(void);
 	void DrawLargeBeam(void);
+
+	bool m_bCharging;
+	bool m_bCharged;
+	float m_fDamageScale;
+	float m_fFullyChargedTime;
+	float m_fSoonestChargeShot;
+	float m_fNextRemove;
+	float m_fStartTime;
+
+	ChargeState_t state;
+
 public:
 	float	WeaponAutoAimScale()	{ return 0.6f; }
 			void	Precache(void);
@@ -99,12 +121,15 @@ CWeapon357::CWeapon357(void)
 	m_bReloadsSingly = false;
 	m_bFiresUnderwater = false;
 	m_bInZoom = false;
+	m_fDamageScale = 1.f;
 }
 void CWeapon357::Precache(void)
 {
 	PrecacheParticleSystem("railgun_beam");
 	PrecacheParticleSystem("railgun_overdrive");
+	PrecacheParticleSystem("railgun_chargeup");
 	PrecacheScriptSound("railgun.overdrive");
+	PrecacheScriptSound("Railgun.Chargeup");
 	BaseClass::Precache();
 }
 //-----------------------------------------------------------------------------
@@ -148,10 +173,10 @@ void CWeapon357::PrimaryAttack(void)
 		return;
 	}
 
-	if (pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 14) //if we don't have enough charge to fire, don't let player fire
+	if (pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 14 && GetChargeState() == CHARGESTATE_IDLE) //if we don't have enough charge to fire, don't let player fire
 	{
 			WeaponSound(EMPTY);
-			m_flNextPrimaryAttack = 0.15;
+			m_flNextPrimaryAttack = gpGlobals->curtime + 1.f;
 			return;
 	}
 
@@ -166,12 +191,9 @@ void CWeapon357::PrimaryAttack(void)
 
 	m_flNextPrimaryAttack = gpGlobals->curtime + 1.5; //1.5 second delay between shots
 	m_flNextSecondaryAttack = gpGlobals->curtime + 0.75; //0.75 second delay between zooms
-
 	
-	if (!pPlayer)
-		return; //Always validate a pointer
-	
-	pPlayer->RemoveAmmo(15, m_iPrimaryAmmoType); //remove 15 charge from stock
+	if(GetChargeState() == CHARGESTATE_IDLE)
+		pPlayer->RemoveAmmo(15, m_iPrimaryAmmoType); //remove 15 charge from stock
 
 	Vector vecAbsStart, vecAbsEnd, vecDir;
 	Vector vecSrc = pPlayer->Weapon_ShootPosition(); //start at headlevel
@@ -187,6 +209,9 @@ void CWeapon357::PrimaryAttack(void)
 	if ((dot > 0.8f) && (downvel < 0)) //if we're falling and looking down
 		push += abs(downvel); //add the abs of downard velocity
 
+
+	if (GetChargeState() == CHARGESTATE_CHARGED)
+		push *= 2;
 	if (pPlayer->HasOverdrive())
 	{
 		pPlayer->VelocityPunch(vecRev * (push * 2));
@@ -197,8 +222,24 @@ void CWeapon357::PrimaryAttack(void)
 	else
 	{
 		pPlayer->VelocityPunch(vecRev * push);
-		DrawBeam(); //trigger beam draw
-		pPlayer->FireBullets(10, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0); //shoot 15 bullets as 1 bullet
+
+		if (GetChargeState() != CHARGESTATE_CHARGED)
+			DrawBeam(); //trigger beam draw
+		else
+			DrawLargeBeam();
+
+		FireBulletsInfo_t info;
+		info.m_flDamage = 100.f * m_fDamageScale;
+		info.m_iDamageType = DMG_DISSOLVE | DMG_BULLET;
+		info.m_iShots = 1;
+		info.m_iTracerFreq = 0;
+		info.m_vecSrc = vecSrc;
+		info.m_vecDirShooting = vecAiming;
+		info.m_vecSpread = vec3_origin;
+		info.m_flDistance = MAX_TRACE_LENGTH;
+		info.m_iAmmoType = m_iPrimaryAmmoType;
+
+		pPlayer->FireBullets(info); //shoot 15 bullets as 1 bullet
 		if (mat_classic_render.GetInt() == 0)
 			WeaponSound(SINGLE);
 		else
@@ -296,12 +337,6 @@ void CWeapon357::SecondaryAttack(void)
 }
 void CWeapon357::CheckZoomToggle(void)
 {
-	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
-
-	if (pPlayer->m_afButtonPressed & IN_ATTACK2)
-	{
-		ToggleZoom();
-	}
 }
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -317,9 +352,89 @@ void CWeapon357::ItemBusyFrame(void)
 //-----------------------------------------------------------------------------
 void CWeapon357::ItemPostFrame(void)
 {
-	// Allow zoom toggling
-	CheckZoomToggle();
+	CBasePlayer* player = ToBasePlayer(GetOwner());
+
+	if (!player)
+		return;
+
+	engine->Con_NPrintf(0, "DamageScale %f Actual Damage %f Charge State %i sequence length %f", m_fDamageScale, 100.f * m_fDamageScale,GetChargeState(),m_fFullyChargedTime - m_fStartTime);
+
+	if (player->m_nButtons & IN_ATTACK2 && gpGlobals->curtime > m_flNextPrimaryAttack)
+	{
+		if (GetChargeState() == CHARGESTATE_IDLE)
+		{
+			StartCharging();
+		}
+
+		if (GetChargeState() == CHARGESTATE_CHARGING)
+		{
+			if (player->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
+				ReleaseChargedShot();
+
+			m_fDamageScale += 0.03f;
+
+			if (gpGlobals->curtime >= m_fFullyChargedTime)
+			{
+				state = CHARGESTATE_CHARGED;
+				SetIdealActivity(ACT_VM_FIDGET);
+			}
+
+			if (gpGlobals->curtime > m_fNextRemove)
+			{
+				player->RemoveAmmo(1, m_iPrimaryAmmoType);
+				m_fNextRemove = gpGlobals->curtime + 0.03f;
+			}
+		}
+	}
+
+	if (!(player->m_nButtons & IN_ATTACK2))
+	{
+		if (GetChargeState() == CHARGESTATE_CHARGED)
+			ReleaseChargedShot();
+
+		else if (GetChargeState() == CHARGESTATE_CHARGING)
+		{
+			m_fDamageScale += 0.03f;
+			if (gpGlobals->curtime > m_fNextRemove)
+			{
+				player->RemoveAmmo(1, m_iPrimaryAmmoType);
+				m_fNextRemove = gpGlobals->curtime + 0.03f;
+			}
+
+			if (gpGlobals->curtime >= m_fSoonestChargeShot)
+				ReleaseChargedShot();
+		}
+	}
+
 	BaseClass::ItemPostFrame();
+}
+
+void CWeapon357::ReleaseChargedShot()
+{
+	CBasePlayer* player = ToBasePlayer(GetOwner());
+	if (!player)
+		return;
+	player->SetFOV(this, 0, 0.1f);
+	StopParticleEffects(player->GetViewModel());
+	PrimaryAttack();
+	StopSound("Railgun.Chargeup");
+	state = CHARGESTATE_IDLE;
+	m_fDamageScale = 1.f;
+}
+void CWeapon357::StartCharging()
+{
+	CBasePlayer* player = ToBasePlayer(GetOwner());
+	if (!player)
+		return;
+	player->SetFOV(this, player->GetFOV() + 10, 2.f);
+	state = CHARGESTATE_CHARGING;
+	SetIdealActivity(ACT_VM_PULLBACK);
+	m_fFullyChargedTime = gpGlobals->curtime + SequenceDuration();
+	m_fSoonestChargeShot = gpGlobals->curtime + 1.f;
+	m_fStartTime = gpGlobals->curtime;
+	m_fNextRemove = gpGlobals->curtime + 0.03f;
+	EmitSound("Railgun.Chargeup");
+	DispatchParticleEffect("railgun_chargeup", PATTACH_POINT_FOLLOW, player->GetViewModel(), "chargepoint");
 }
 void CWeapon357::ToggleZoom(void)
 {
@@ -375,8 +490,17 @@ bool CWeapon357::Holster(CBaseCombatWeapon *pSwitchingTo)
 	StopEffects();
 	return BaseClass::Holster(pSwitchingTo);
 }
+
+void CWeapon357::ResetFOV()
+{
+	CBasePlayer* player = ToBasePlayer(GetOwner());
+	if (!player)
+		return;
+	player->SetFOV(this, 0, 0.1f);
+}
 void CWeapon357::StopEffects(void)
 {
+	ResetFOV();
 	// Stop zooming
 	if (m_bInZoom)
 	{

@@ -33,13 +33,9 @@
 
 	BEGIN_RECV_TABLE_NOBASE( CEffectData, DT_EffectData )
 
-		RecvPropFloat( RECVINFO( m_vOrigin[0] ) ),
-		RecvPropFloat( RECVINFO( m_vOrigin[1] ) ),
-		RecvPropFloat( RECVINFO( m_vOrigin[2] ) ),
+		RecvPropVector( RECVINFO( m_vOrigin ) ),
 
-		RecvPropFloat( RECVINFO( m_vStart[0] ) ),
-		RecvPropFloat( RECVINFO( m_vStart[1] ) ),
-		RecvPropFloat( RECVINFO( m_vStart[2] ) ),
+		RecvPropVector( RECVINFO( m_vStart ) ),
 
 		RecvPropQAngles( RECVINFO( m_vAngles ) ),
 
@@ -85,12 +81,8 @@
 
 		// Get half-inch precision here.
 #ifdef HL2_DLL
-		SendPropFloat( SENDINFO_NOCHECK( m_vOrigin[0] ), COORD_INTEGER_BITS+SUBINCH_PRECISION, 0, MIN_COORD_INTEGER, MAX_COORD_INTEGER ),
-		SendPropFloat( SENDINFO_NOCHECK( m_vOrigin[1] ), COORD_INTEGER_BITS+SUBINCH_PRECISION, 0, MIN_COORD_INTEGER, MAX_COORD_INTEGER ),
-		SendPropFloat( SENDINFO_NOCHECK( m_vOrigin[2] ), COORD_INTEGER_BITS+SUBINCH_PRECISION, 0, MIN_COORD_INTEGER, MAX_COORD_INTEGER ),
-		SendPropFloat( SENDINFO_NOCHECK( m_vStart[0] ), COORD_INTEGER_BITS+SUBINCH_PRECISION, 0, MIN_COORD_INTEGER, MAX_COORD_INTEGER ),
-		SendPropFloat( SENDINFO_NOCHECK( m_vStart[1] ), COORD_INTEGER_BITS+SUBINCH_PRECISION, 0, MIN_COORD_INTEGER, MAX_COORD_INTEGER ),
-		SendPropFloat( SENDINFO_NOCHECK( m_vStart[2] ), COORD_INTEGER_BITS+SUBINCH_PRECISION, 0, MIN_COORD_INTEGER, MAX_COORD_INTEGER ),
+		SendPropVector(SENDINFO_NOCHECK(m_vOrigin)),
+		SendPropVector(SENDINFO_NOCHECK(m_vStart)),
 #else
 		SendPropFloat( SENDINFO_NOCHECK( m_vOrigin[0] ), -1, SPROP_COORD_MP_INTEGRAL ),
 		SendPropFloat( SENDINFO_NOCHECK( m_vOrigin[1] ), -1, SPROP_COORD_MP_INTEGRAL ),
@@ -104,7 +96,7 @@
 #if defined( TF_DLL )
 		SendPropVector( SENDINFO_NOCHECK( m_vNormal ), 6, 0, -1.0f, 1.0f ),
 #else
-		SendPropVector( SENDINFO_NOCHECK( m_vNormal ), 0, SPROP_NORMAL ),
+		SendPropVector( SENDINFO_NOCHECK( m_vNormal )),
 #endif
 
 		SendPropInt( SENDINFO_NOCHECK( m_fFlags ), MAX_EFFECT_FLAG_BITS, SPROP_UNSIGNED ),

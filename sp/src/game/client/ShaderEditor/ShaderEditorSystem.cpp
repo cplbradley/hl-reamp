@@ -224,6 +224,7 @@ struct CallbackData_t
 	Vector player_pos;
 	Vector view_distance;
 	Vector2D resolution;
+	VMatrix prevViewProj;
 };
 
 static CallbackData_t clCallback_data;
@@ -289,6 +290,8 @@ void ShaderEditorHandler::PrepareCallbackData()
 
 	}
 
+
+	MatrixCopy(CViewRender::GetMainView()->GetPrevViewProjMatrix(), clCallback_data.prevViewProj);
 	clCallback_data.resolution[0] = ScreenWidth();
 	clCallback_data.resolution[1] = ScreenHeight();
 
@@ -353,6 +356,12 @@ pFnClCallback_Declare(ClCallback_HudColor)
 	m_Lock.Lock();
 	Q_memcpy(pfl4, clCallback_data.hud_color.Base(), sizeof(float) * 3);
 }
+
+pFnClCallback_Declare(ClCallback_PrevViewProj)
+{
+	m_Lock.Lock();
+	Q_memcpy(pfl4, clCallback_data.prevViewProj.Base(), sizeof(float) * 16);
+}
 void ShaderEditorHandler::RegisterCallbacks()
 {
 	if ( !IsReady() )
@@ -366,6 +375,7 @@ void ShaderEditorHandler::RegisterCallbacks()
 	shaderEdit->RegisterClientCallback( "local player position", ClCallback_PlayerPos, 3 );
 	shaderEdit->RegisterClientCallback("player view distance", ClCallback_PlayerViewDist, 3);
 	shaderEdit->RegisterClientCallback("hud color", ClCallback_HudColor, 3);
+	shaderEdit->RegisterClientCallback("prev view projection", ClCallback_PrevViewProj, 16);
 
 	shaderEdit->LockClientCallbacks();
 }

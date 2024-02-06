@@ -1,13 +1,8 @@
 // ALL SKIP STATEMENTS THAT AFFECT THIS SHADER!!!
 // defined $LIGHTING_PREVIEW && defined $FASTPATH && $LIGHTING_PREVIEW && $FASTPATH
 
-#ifndef SMB_VS30_H
-#define SMB_VS30_H
-
-#include "shaderapi/ishaderapi.h"
-#include "shaderapi/ishadershadow.h"
-#include "materialsystem/imaterialvar.h"
-
+#pragma once
+#include "shaderlib/cshader.h"
 class smb_vs30_Static_Index
 {
 public:
@@ -39,5 +34,3 @@ public:
 
 #define shaderDynamicTest_smb_vs30 1
 
-
-#endif	// SMB_VS30_H

@@ -285,7 +285,7 @@ void CNPCLegs::Spawn(void)
 #ifdef HL2_EPISODIC
 	SetBloodColor(BLOOD_COLOR_ZOMBIE);
 #else
-	SetBloodColor(BLOOD_COLOR_GREEN);
+	SetBloodColor(BLOOD_COLOR_YELLOW);
 #endif // HL2_EPISODIC
 
 

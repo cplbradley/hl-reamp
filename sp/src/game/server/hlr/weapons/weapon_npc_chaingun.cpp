@@ -268,7 +268,7 @@ void CWeaponNPCChaingun::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseComb
 }
 int CWeaponNPCChaingun::GetMinBurst()
 {
-	return sk_chaingun_maxburst.GetInt();
+	return 1;
 }
 //-----------------------------------------------------------------------------
 // Purpose: 

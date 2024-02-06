@@ -61,7 +61,7 @@ public:
 		const Vector* org, const Vector *dir, int r, int g, int b, int a, int size ) = 0;
 	virtual void BreakModel( IRecipientFilter& filer, float delay,
 		const Vector& pos, const QAngle &angle, const Vector& size, const Vector& vel, 
-		int modelindex, int randomization, int count, float time, int flags ) = 0;
+		int modelindex, int randomization, int count, float time, int flags, bool decal = false, int bloodcolor = -1 ) = 0;
 	virtual void BSPDecal( IRecipientFilter& filer, float delay,
 		const Vector* pos, int entity, int index ) = 0;
 	virtual void ProjectDecal( IRecipientFilter& filter, float delay,

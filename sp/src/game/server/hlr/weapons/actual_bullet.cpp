@@ -44,7 +44,7 @@ void CActualBullet::Think(void)
 	}
 
 
-	if (tr.fraction != 1.0)
+	if (tr.fraction != 1.0 && GetOwnerEntity())
 	{
 		FireBulletsInfo_t info2;
 		info2.m_iShots = 1;
@@ -56,7 +56,16 @@ void CActualBullet::Think(void)
 		info2.m_iAmmoType = info.m_iAmmoType;
 		info2.m_iTracerFreq = 0;
 		GetOwnerEntity()->FireBullets(info2);
-		Stop();
+
+		if (m_bPenetrate)
+		{
+			if (tr.m_pEnt->IsWorld())
+				Stop();
+			else
+				SetAbsOrigin(vecEnd);
+		}
+		else
+			Stop();
 	}
 	else
 	{

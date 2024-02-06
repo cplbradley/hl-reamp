@@ -209,11 +209,22 @@ ITexture *GetSmallBuffer1( void )
 	if ( !s_pQuarterSizedFB1 )
 	{
 		s_pQuarterSizedFB1.Init( materials->FindTexture( "_rt_SmallFB1", TEXTURE_GROUP_RENDER_TARGET ) );
-		Assert( !IsErrorTexture( s_pQuarterSizedFB1 ) );
+		Assert( !IsErrorTexture( s_pQuarterSizedFB1 ) );	
 		AddReleaseFunc();
 	}
 	
 	return s_pQuarterSizedFB1;
+}
+
+static CTextureReference g_rt_truedepth;
+ITexture* GetFullFrameTrueDepthTexture(void)
+{
+	if (!g_rt_truedepth)
+	{
+		g_rt_truedepth.Init(materials->FindTexture("_rt_TrueDepth", TEXTURE_GROUP_RENDER_TARGET));
+		AddReleaseFunc();
+	}
+	return g_rt_truedepth;
 }
 
 static CTextureReference g_rt_prevframe;
@@ -225,6 +236,18 @@ ITexture* GetPrevFrameBufferTexture(void)
 		AddReleaseFunc();
 	}
 	return g_rt_prevframe;
+}
+
+static CTextureReference g_rt_prevdepth;
+ITexture* GetPrevDepthBufferTexture(void)
+{
+	if (!g_rt_prevdepth)
+	{
+		g_rt_prevdepth.Init(materials->FindTexture("_rt_PrevFrameDB", TEXTURE_GROUP_RENDER_TARGET));
+		AddReleaseFunc();
+	}
+
+	return g_rt_prevdepth;
 }
 //=============================================================================
 // Teeny Textures

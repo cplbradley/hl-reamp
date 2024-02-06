@@ -14,6 +14,7 @@
 //  DYNAMIC: "NUM_LIGHTS"               "0..4"
 
 #include "common_vs_fxc.h"
+#include "common_vertexlitgeneric_dx9.h"
 
 static const bool g_bSkinning           = SKINNING ? true : false;
 static const int g_FogType              = DOWATERFOG;
@@ -33,6 +34,8 @@ struct VS_INPUT
     float2 vTexCoord0               : TEXCOORD0;
     float4 vLightmapTexCoord        : TEXCOORD1;
     float4 vLightmapTexCoordOffset  : TEXCOORD2;
+	float3 vTangentS				: TANGENT;
+	float3 vTangentT				: BINORMAL;
 	
 };
 
@@ -42,15 +45,13 @@ struct VS_OUTPUT
     float4 projPosSetup             : POSITION;
     float  fog                      : FOG;
     // Stuff that is seen by the pixel shader
-    float2 baseTexCoord             : TEXCOORD0;
+    float4 baseTexCoord             : TEXCOORD0;
     float4 lightAtten               : TEXCOORD1;
-    float3 worldNormal              : TEXCOORD2;
-    float3 worldPos                 : TEXCOORD3;
-    float3 projPos                  : TEXCOORD4;
-    float4 lightmapTexCoord1And2    : TEXCOORD5;
-    float4 lightmapTexCoord3        : TEXCOORD6;
-	float4 detailTexCoord			: TEXCOORD7;
-	
+    float3 worldPos                 : TEXCOORD2;
+    float3 projPos                  : TEXCOORD3;
+    float4 lightmapTexCoord1And2    : TEXCOORD4;
+    float4 lightmapTexCoord3        : TEXCOORD5;
+	float3x3 mTangentSpaceTranspose : TEXCOORD6;
 };
 
 //-----------------------------------------------------------------------------
@@ -90,9 +91,17 @@ VS_OUTPUT main( const VS_INPUT v )
 	worldPos += worldNormal * 1.00f * v.vLightmapTexCoordOffset.z;
 #endif
 
+
+
+	float3 WorldTangentS    = mul( v.vTangentS, cModel[0] );
+    float3 WorldTangentT    = mul( v.vTangentT, cModel[0] );
+	
+	o.mTangentSpaceTranspose[0] = WorldTangentS;
+    o.mTangentSpaceTranspose[1] = WorldTangentT;
+    o.mTangentSpaceTranspose[2] = worldNormal;
+	
     // Needed for water fog alpha and diffuse lighting 
     o.worldPos = worldPos;
-    o.worldNormal = normalize(worldNormal);
 
     // Scalar attenuations for four lights
     o.lightAtten = float4(0, 0, 0, 0);
@@ -115,9 +124,8 @@ VS_OUTPUT main( const VS_INPUT v )
     // Base texture coordinate transform
     o.baseTexCoord.x = dot(v.vTexCoord0, cBaseTexCoordTransform[0]);
     o.baseTexCoord.y = dot(v.vTexCoord0, cBaseTexCoordTransform[1]);
-    o.baseTexCoord = v.vTexCoord0;
 
-	o.detailTexCoord.x = dot( v.vTexCoord0, cDetailTexCoordTransform[0] );
-	o.detailTexCoord.y = dot( v.vTexCoord0, cDetailTexCoordTransform[1] );
+	o.baseTexCoord.z = dot( v.vTexCoord0, cDetailTexCoordTransform[0] );
+	o.baseTexCoord.w = dot( v.vTexCoord0, cDetailTexCoordTransform[1] );
     return o;
 }

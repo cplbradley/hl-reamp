@@ -37,7 +37,7 @@ void C_StrobeLight::OnDataChanged(DataUpdateType_t type)
 	if (type == DATA_UPDATE_CREATED)
 	{
 		SetNextClientThink(CLIENT_THINK_ALWAYS);
-		Msg("ClientSpawn\n");
+		DevMsg("Strobelight ClientSpawn\n");
 		fNextUpdate = gpGlobals->curtime;
 	}
 }
@@ -55,7 +55,7 @@ void C_StrobeLight::UpdateLight()
 	if (gpGlobals->curtime > fNextUpdate)
 	{
 		fNextUpdate = gpGlobals->curtime + m_fFrequency;
-		Msg("Creating light\n");
+		Msg("Strobelight Creating light\n");
 		dlight_t* dl = effects->CL_AllocDlight(index);
 		dl->origin = GetAbsOrigin();
 		dl->color.r = 255;

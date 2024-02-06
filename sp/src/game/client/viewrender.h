@@ -420,6 +420,9 @@ public:
 	CBase3dView *	GetActiveRenderer() { return m_pActiveRenderer; }
 	CBase3dView *	SetActiveRenderer( CBase3dView *pActiveRenderer ) { CBase3dView *pPrevious = m_pActiveRenderer; m_pActiveRenderer =  pActiveRenderer; return pPrevious; }
 
+
+	VMatrix GetPrevViewProjMatrix() { return m_LastViewProjectionMatrix; }
+
 	void			FreezeFrame( float flFreezeTime );
 
 	void			SetScreenOverlayMaterial(IMaterial *pMaterial);

@@ -9,6 +9,7 @@
 #include "basecombatweapon_shared.h"
 #include "baseviewmodel_shared.h"
 #include "particles_new.h"
+#include "c_te_legacytempents.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -167,3 +168,28 @@ void TracerSoundCallback( const CEffectData &data )
 
 DECLARE_CLIENT_EFFECT( "TracerSound", TracerSoundCallback );
 
+void ModelTracerCallback(const CEffectData& data)
+{
+	C_BasePlayer* player = C_BasePlayer::GetLocalPlayer();
+	if (!player)
+		return;
+
+	Vector start = data.m_vOrigin;
+	float speed = data.m_flScale;
+	int index = data.m_nMaterial;
+	Vector dir = data.m_vNormal * speed;
+
+	C_BaseEntity* pEnt = C_BaseEntity::Instance(data.m_hEntity);
+	if (!pEnt)
+	{
+		Warning("**ERROR IN TRANSMITTING OWNER HANDLE**\n");
+		return;
+
+	}
+
+	CSingleUserRecipientFilter filter(player);
+	filter.MakeReliable();
+
+	tempents->ClientProjectile(start,dir, vec3_origin, index, 10.f,pEnt,0,"bullettrail");
+}
+DECLARE_CLIENT_EFFECT("ModelTracer", ModelTracerCallback);

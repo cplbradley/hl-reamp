@@ -40,6 +40,8 @@ public:
 	CNetworkVar( int, m_nCount );
 	CNetworkVar( float, m_fTime );
 	CNetworkVar( int, m_nFlags );
+	CNetworkVar(bool, m_bDecal);
+	CNetworkVar(int, m_iBloodColor);
 };
 
 //-----------------------------------------------------------------------------
@@ -58,6 +60,8 @@ CTEBreakModel::CTEBreakModel( const char *name ) :
 	m_nCount			= 0;
 	m_fTime				= 0.0;
 	m_nFlags			= 0;
+	m_bDecal = false;
+	m_iBloodColor = -1;
 }
 
 //-----------------------------------------------------------------------------
@@ -122,6 +126,8 @@ IMPLEMENT_SERVERCLASS_ST(CTEBreakModel, DT_TEBreakModel)
 	SendPropInt( SENDINFO(m_nCount), 8, SPROP_UNSIGNED ),
 	SendPropFloat( SENDINFO(m_fTime), 10, 0, 0, 102.4 ),
 	SendPropInt( SENDINFO(m_nFlags), 8, SPROP_UNSIGNED ),
+	SendPropBool(SENDINFO(m_bDecal)),
+	SendPropInt(SENDINFO(m_iBloodColor)),
 END_SEND_TABLE()
 
 // Singleton to fire TEBreakModel objects
@@ -129,7 +135,7 @@ static CTEBreakModel g_TEBreakModel( "breakmodel" );
 
 void TE_BreakModel( IRecipientFilter& filter, float delay,
 	const Vector& pos, const QAngle& angles, const Vector& size, const Vector& vel, int modelindex, int randomization,
-	int count, float time, int flags )
+	int count, float time, int flags, bool decal, int bloodcolor )
 {
 	g_TEBreakModel.m_vecOrigin		= pos;
 	g_TEBreakModel.m_angRotation	= angles;
@@ -140,6 +146,8 @@ void TE_BreakModel( IRecipientFilter& filter, float delay,
 	g_TEBreakModel.m_nCount			= count;
 	g_TEBreakModel.m_fTime			= time;
 	g_TEBreakModel.m_nFlags			= flags;
+	g_TEBreakModel.m_bDecal = decal;
+	g_TEBreakModel.m_iBloodColor = bloodcolor;
 
 	// Send it over the wire
 	g_TEBreakModel.Create( filter, delay );

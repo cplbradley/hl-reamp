@@ -772,7 +772,19 @@ void UTIL_Tracer( const Vector &vecStart, const Vector &vecEnd, int iEntIndex,
 	}
 }
 
+void UTIL_ModelTracer(const Vector& origin, const Vector& direction, float speed, int modelindex, CBaseEntity* pOwner)
+{
+	CEffectData data;
+	data.m_vOrigin = origin;
+	data.m_vNormal = direction;
+	data.m_flScale = speed;
+	data.m_nMaterial = modelindex;
+#ifdef GAME_DLL
+	data.m_nEntIndex = pOwner->entindex();
+#endif
 
+	DispatchEffect("ModelTracer", data);
+}
 void UTIL_BloodDrips( const Vector &origin, const Vector &direction, int color, int amount )
 {
 	if ( !UTIL_ShouldShowBlood( color ) )
@@ -792,20 +804,9 @@ void UTIL_BloodDrips( const Vector &origin, const Vector &direction, int color, 
 
 	if ( amount > 255 )
 		amount = 255;
+	// Normal blood impact
+	UTIL_BloodImpact( origin, direction, color, amount );
 
-	if (color == BLOOD_COLOR_MECH)
-	{
-		g_pEffects->Sparks(origin);
-		if (random->RandomFloat(0, 2) >= 1)
-		{
-			UTIL_Smoke(origin, random->RandomInt(10, 15), 10);
-		}
-	}
-	else
-	{
-		// Normal blood impact
-		UTIL_BloodImpact( origin, direction, color, amount );
-	}
 }	
 
 //-----------------------------------------------------------------------------
@@ -869,16 +870,22 @@ void UTIL_DecalTrace( trace_t *pTrace, char const *decalName )
 
 void UTIL_BloodDecalTrace( trace_t *pTrace, int bloodColor )
 {
-	if ( UTIL_ShouldShowBlood( bloodColor ) )
+	switch(bloodColor)
 	{
-		if ( bloodColor == BLOOD_COLOR_RED )
-		{
-			UTIL_DecalTrace( pTrace, "Blood" );
-		}
-		else
-		{
-			UTIL_DecalTrace( pTrace, "YellowBlood" );
-		}
+	case BLOOD_COLOR_RED:
+		UTIL_DecalTrace(pTrace, "Blood");
+		break;
+	case BLOOD_COLOR_YELLOW:
+		UTIL_DecalTrace(pTrace, "YellowBlood");
+		break;
+	case BLOOD_COLOR_GREEN:
+		UTIL_DecalTrace(pTrace, "GreenBlood");
+		break;
+	case BLOOD_COLOR_MECH:
+		UTIL_DecalTrace(pTrace, "OilBlood");
+		break;
+	default:
+		break;
 	}
 }
 

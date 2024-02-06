@@ -117,7 +117,7 @@ void GetColorForSurface( trace_t *trace, Vector *color )
 		C_BaseEntity *pEnt = trace->m_pEnt;
 		if ( !pEnt )
 		{
-			Msg("Couldn't find surface in GetColorForSurface()\n");
+			DevMsg("Couldn't find surface in GetColorForSurface()\n");
 			color->x = 255;
 			color->y = 255;
 			color->z = 255;

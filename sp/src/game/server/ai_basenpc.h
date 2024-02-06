@@ -144,7 +144,7 @@ enum Interruptability_t
 #define SF_NPC_FALL_TO_GROUND			( 1 << 2  )	// used my NPC_Maker
 #define SF_NPC_DROP_HEALTHKIT			( 1 << 3  )	// Drop a healthkit upon death
 #define SF_NPC_START_EFFICIENT			( 1 << 4  ) // Set into efficiency mode from spawn
-//										( 1 << 5  )
+#define SF_NPC_NO_JUMP					( 1 << 5  ) // No jumping allowed
 #define SF_NPC_SHORT_RANGE				( 1 << 6  ) // makes npc only attack at short ranges
 #define SF_NPC_WAIT_FOR_SCRIPT			( 1 << 7  )	// spawnflag that makes npcs wait to check for attacking until the script is done or they've been attacked
 #define SF_NPC_LONG_RANGE				( 1 << 8  )	// makes npcs look far and relaxes weapon range limit 
@@ -1810,9 +1810,10 @@ public:
 
 	virtual Activity	GetFlinchActivity( bool bHeavyDamage, bool bGesture );
 	
-	virtual bool		ShouldGib( const CTakeDamageInfo &info ) { return false; }	// Always ragdoll, unless specified by the leaf class
+	virtual bool		ShouldGib(const CTakeDamageInfo& info);	// Always ragdoll, unless specified by the leaf class
 	virtual bool		Event_Gibbed( const CTakeDamageInfo &info );
 	virtual void		Event_Killed( const CTakeDamageInfo &info );
+	virtual bool		CorpseGib(const CTakeDamageInfo& info);
 
 	virtual Vector		GetShootEnemyDir( const Vector &shootOrigin, bool bNoisy = true );
 #ifdef HL2_DLL
@@ -1821,7 +1822,7 @@ public:
 	virtual	Vector		GetAttackSpread( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget = NULL );
 	virtual	float		GetSpreadBias( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget );
 
-	virtual Vector		GetSkillAdjustedShootTrajectory(const Vector shootOrigin, Vector shootTarget, float adjustedSpeed);
+	virtual Vector		GetSkillAdjustedShootTrajectory(const Vector& shootOrigin, const Vector& shootTarget, float adjustedSpeed);
 #endif //HL2_DLL
 	virtual void		CollectShotStats( const Vector &vecShootOrigin, const Vector &vecShootDir );
 	virtual Vector		BodyTarget( const Vector &posSrc, bool bNoisy = true );

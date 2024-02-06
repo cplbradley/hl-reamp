@@ -389,6 +389,7 @@ void CFastZombie::Precache(void)
 {
 	PrecacheModel("models/zombie/fast.mdl");
 	PrecacheModel("models/evilsuit.mdl");
+	PrecacheModel("models/panthereye_rigtest.mdl");
 #ifdef HL2_EPISODIC
 	PrecacheModel("models/zombie/Fast_torso.mdl");
 	PrecacheScriptSound("NPC_FastZombie.CarEnter1");
@@ -759,7 +760,7 @@ void CFastZombie::SetZombieModel(void)
 	}
 	else
 	{
-		SetModel("models/evilsuit.mdl");
+		SetModel("models/panthereye_rigtest.mdl");
 		SetHullType(HULL_HUMAN);
 	}
 

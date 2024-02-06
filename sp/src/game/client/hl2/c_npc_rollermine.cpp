@@ -13,6 +13,8 @@
 #include "clienteffectprecachesystem.h"
 #include "beamdraw.h"
 
+#include "iefx.h"
+
 class C_RollerMine : public C_AI_BaseNPC
 {
 	DECLARE_CLASS( C_RollerMine, C_AI_BaseNPC );
@@ -38,6 +40,9 @@ private:
 	float	m_flActiveTime;
 	bool	m_bHackedByAlyx;
 	bool	m_bPowerDown;
+
+
+	dlight_t* dl;
 };
 
 IMPLEMENT_CLIENTCLASS_DT( C_RollerMine, DT_RollerMine, CNPC_RollerMine )
@@ -169,6 +174,34 @@ int C_RollerMine::DrawModel( int flags )
 			DrawHalo( pMaterial, attachOrigin, random->RandomFloat( 1.0f*scale, 1.5f*scale ), color );
 		}
 	}
+
+
+
+	if (m_bIsOpen)
+	{
+		if (!dl)
+		{
+			dl = effects->CL_AllocDlight(index);
+		}
+
+		dl->origin = GetAbsOrigin();
+		dl->die = gpGlobals->curtime + 1.f;
+		dl->radius = 512;
+		dl->color.r = 0;
+		dl->color.g = 180;
+		dl->color.b = 255;
+		dl->color.exponent = 2;
+	}
+	else
+	{
+		if (dl)
+		{
+			dl->die = gpGlobals->curtime;
+		}
+	}
+
+
+
 
 	return BaseClass::DrawModel( flags );
 }

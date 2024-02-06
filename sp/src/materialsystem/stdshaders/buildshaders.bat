@@ -21,7 +21,7 @@ REM ****************
 
 setlocal
 set arg_filename=%1
-set shadercompilecommand=ShaderCompile.exe -dynamic -ver 20
+set shadercompilecommand=ShaderCompile.exe
 set targetdir=shaders
 set SrcDirBase=..\..
 set shaderDir=shaders
@@ -141,6 +141,6 @@ REM END
 REM ****************
 :end
 
-pause
+
 %TTEXE% -diff %tt_start%
 echo.

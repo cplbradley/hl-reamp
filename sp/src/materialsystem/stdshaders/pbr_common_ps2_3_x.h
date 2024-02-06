@@ -123,7 +123,7 @@ float3 calculateLight(float3 lightIn, float3 lightIntensity, float3 lightOut, fl
     float3 specularBRDF = (F * D * G) / max(EPSILON, 4.0 * cosLightIn * lightDirectionAngle);
 #if LIGHTMAPPED && !FLASHLIGHT
     // Ambient light from static lights is already precomputed in the lightmap. Don't add it again
-    return specularBRDF * lightIntensity * cosLightIn;
+    return (diffuseBRDF + specularBRDF) * lightIntensity * cosLightIn;
 #else
     return (diffuseBRDF + specularBRDF) * lightIntensity * cosLightIn;
 #endif
@@ -248,3 +248,58 @@ float3 worldToRelative(float3 worldVector, float3 surfTangent, float3 surfBasis,
        dot(worldVector, surfNormal)
    );
 }
+
+
+float3 f3DomColorAndDir(sampler LightmapSampler, float3 modul, float3 f3TextureNormal, float4 f4LightmapTexCoord1And2, float4 f2Lightmap3Coord, out float3 f3DomColor)
+{
+	float2 bumpCoord1;
+    float2 bumpCoord2;
+    float2 bumpCoord3;
+	float3 f3DomDir;
+	
+    ComputeBumpedLightmapCoordinates(
+            f4LightmapTexCoord1And2, f2Lightmap3Coord.xy,
+            bumpCoord1, bumpCoord2, bumpCoord3);
+			
+	
+	float3 lightmapColor1 = LightMapSample(LightmapSampler, bumpCoord1);
+    float3 lightmapColor2 = LightMapSample(LightmapSampler, bumpCoord2);
+    float3 lightmapColor3 = LightMapSample(LightmapSampler, bumpCoord3);
+	
+	
+	float3 f3Lightmap1Luminance = (float3)dot(lightmapColor1.rgb, (float3)1.0f / 3.0f);
+    float3 f3Lightmap2Luminance = (float3)dot(lightmapColor2.rgb, (float3)1.0f / 3.0f);
+    float3 f3Lightmap3Luminance = (float3)dot(lightmapColor3.rgb, (float3)1.0f / 3.0f);
+
+    // The contribution to the BumpBasis
+    f3Lightmap1Luminance *= bumpBasis[0]; // +x, __, z |    
+    f3Lightmap2Luminance *= bumpBasis[1]; // -x, +y, z |
+    f3Lightmap3Luminance *= bumpBasis[2]; // -x, -y, z |
+
+    f3DomDir = normalize(f3Lightmap1Luminance + f3Lightmap2Luminance + f3Lightmap3Luminance);
+
+    // We save this for DomColor, as we can't use flipped z or x on it
+    float3 f3UnmodifiedDomDir = f3DomDir;
+
+    //==================================//
+    // Compute Dominant Color
+    //==================================//
+    // We can extract the dominant color by running the Dominant Direction through the bumpbasis in reverse
+    // What we get is a factor for each of the lightmaps, for how much data there should have been stored in the particular bumpmed lightmap
+    // If this ends wrong, then the dominant direction is messed up
+    float3    f3Color = float3(dot(bumpBasis[0], f3UnmodifiedDomDir), dot(bumpBasis[1], f3UnmodifiedDomDir), dot(bumpBasis[2], f3UnmodifiedDomDir));
+//    f3Color *= f3Color;
+    f3Color = f3Color.xxx * lightmapColor1 + f3Color.yyy * lightmapColor2 + f3Color.zzz * lightmapColor3;
+
+    // Don't modul or modul/sum. It will blow the colors entirely
+    float f1Sum = dot(f3Color, float3(1, 1, 1));
+    f3Color *= modul; // / f1Sum;
+	
+    f3DomColor = f3Color;
+
+	
+	return f3DomDir;
+
+}
+
+

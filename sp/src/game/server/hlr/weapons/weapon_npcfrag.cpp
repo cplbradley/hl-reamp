@@ -34,9 +34,12 @@ public:
 	int CapabilitiesGet(void) { return bits_CAP_WEAPON_RANGE_ATTACK1; }
 
 	virtual int				GetMinBurst() { return 1; }
-	virtual int				GetMaxBurst() { return 1; }
+	virtual int				GetMaxBurst() { return 3; }
 
-	virtual float			GetFireRate() { return 2; }
+	virtual float			GetMinRestTime() { return 1.4f; }
+	virtual float			GetMaxRestTime() { return 1.8f; }
+
+	virtual float			GetFireRate() { return 0.8; }
 
 
 	void FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bool bUseWeaponAngles);
@@ -123,52 +126,53 @@ void CWeaponNPCFrag::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bool 
 	Vector vecShootOrigin, vecShootDir;
 	CAI_BaseNPC *npc = pOperator->MyNPCPointer();
 	ASSERT(npc != NULL);
-	
-
 	float basespd = sk_npc_grenadelauncher_speed.GetFloat();
 	float adjustedspd = g_pGameRules->SkillAdjustValue(basespd);
 
-	Vector vecTarget;
-	
-	vecShootOrigin = pOperator->Weapon_ShootPosition();
-	vecShootDir = npc->GetEnemy()->WorldSpaceCenter();
+	vecShootOrigin = npc->Weapon_ShootPosition();
+	Vector vecTarget, vecPredCenter, vecPredPos, vecAbsPos, vecCenter;
+	vecAbsPos = npc->GetEnemy()->GetAbsOrigin();
+	vecCenter = npc->GetEnemy()->WorldSpaceCenter();
 
 	float dist = (vecShootDir - vecShootOrigin).Length2D();
 	float timedelta = (dist / adjustedspd);
-	UTIL_PredictedWorldSpaceCenter(npc->GetEnemy(), timedelta, &vecTarget);
+
+	UTIL_PredictedWorldSpaceCenter(npc->GetEnemy(), timedelta, &vecPredCenter);
+	UTIL_PredictedPosition(npc->GetEnemy(), timedelta, &vecPredPos);
+
 	Vector vecMins = -Vector(4, 4, 4);
 	Vector vecMaxs = Vector(4, 4, 4);
-	//Vector vecLaunch = VecCheckToss(this, vecShootOrigin, vecTarget, -1, 1.0f, true, &vecMins, &vecMaxs);
-	Vector vecToss = VecCheckThrow(this, vecShootOrigin, vecTarget, adjustedspd, 1.0, &vecMins, &vecMaxs);
+
+	bool bPredict = dist < 800.f && dist > 256.f;
+
+	Vector vecShoot;
+
+	if (bPredict)
+	{
+		vecShoot = VecCheckThrow(this, vecShootOrigin, vecPredCenter, adjustedspd, 1.0, &vecMins, &vecMaxs);
+		if (vecShoot == vec3_origin)
+			vecShoot = VecCheckThrow(this, vecShootOrigin, vecPredPos, adjustedspd, 1.0, &vecMins, &vecMaxs);
+	}
+	else
+		vecShoot = vec3_origin;
+
+
+	if (vecShoot == vec3_origin)
+		vecShoot = VecCheckThrow(this, vecShootOrigin, vecCenter, adjustedspd, 1.0, &vecMins, &vecMaxs);
+	if(vecShoot == vec3_origin)
+		vecShoot = VecCheckThrow(this, vecShootOrigin, vecCenter, adjustedspd, 1.0, &vecMins, &vecMaxs);
+	if (vecShoot == vec3_origin)
+	{
+		vecShoot = npc->GetActualShootTrajectory(vecShootOrigin);
+		vecShoot *= adjustedspd;
+		vecShoot.z += 250.f;
+	}
 	Vector vecSpin;
 	vecSpin.x = random->RandomFloat(-1000.0, 1000.0);
 	vecSpin.y = random->RandomFloat(-1000.0, 1000.0);
 	vecSpin.z = random->RandomFloat(-1000.0, 1000.0);
-	if (vecToss != vec3_origin)
-	{
-		Fraggrenade_Create(vecShootOrigin, vec3_angle, vecToss, vecSpin, npc, 3.0f, true);
-		/*CGrenadeFrag *pGrenade = (CGrenadeFrag *)CBaseEntity::Create("npc_frag_grenade",vecShootOrigin,vec3_angle,npc);
-		pGrenade->SetTimer(3.0f, 1.5f);
-		pGrenade->SetVelocity(vecToss, vecSpin);
-		pGrenade->SetThrower(npc);
-		pGrenade->m_takedamage = DAMAGE_EVENTS_ONLY;
-		pGrenade->SetCombineSpawned(true);*/
-		WeaponSound(SINGLE_NPC);
-		pOperator->DoMuzzleFlash();
-	}
-	else
-	{
-		Vector vecShoot = (npc->GetActualShootTrajectory(vecShootOrigin) * adjustedspd);
-		Fraggrenade_Create(vecShootOrigin, vec3_angle, vecShoot, vecSpin, npc, 3.0f, true);
-		/*CGrenadeFrag *pGrenade = (CGrenadeFrag *)CBaseEntity::Create("npc_frag_grenade",vecShootOrigin,vec3_angle,npc);
-		pGrenade->SetTimer(3.0f, 1.5f);
-		pGrenade->SetVelocity(vecToss, vecSpin);
-		pGrenade->SetThrower(npc);
-		pGrenade->m_takedamage = DAMAGE_EVENTS_ONLY;
-		pGrenade->SetCombineSpawned(true);*/
-		WeaponSound(SINGLE_NPC);
-		pOperator->DoMuzzleFlash();
-	}
+
+	Fraggrenade_Create(vecShootOrigin, vec3_angle, vecShoot, vecSpin, GetOwnerEntity(), 3.f, true);
 }
 
 //-----------------------------------------------------------------------------

@@ -230,7 +230,8 @@ void CMissile::Spawn(void)
 	SetTouch(&CMissile::MissileTouch);
 
 	SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE);
-	SetThink(&CMissile::IgniteThink);
+	if(!m_bSpawnFlailing)
+		SetThink(&CMissile::IgniteThink);
 	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 
 	SetNextThink(gpGlobals->curtime);
@@ -398,7 +399,14 @@ void CMissile::ShotDown(void)
 	// Let the RPG start reloading immediately
 }
 
+void CMissile::StartFlailing(Vector& vecDir)
+{
+	SetMoveType(MOVETYPE_FLYGRAVITY);
+	SetGravity(GetGravity());
+	SetAbsVelocity(vecDir);
+	ApplyLocalAngularVelocityImpulse(AngularImpulse(RandomFloat(-1000.f, 1000.f), RandomFloat(-1000.f, 1000.f), RandomFloat(-1000.f, 1000.f)));
 
+}
 //-----------------------------------------------------------------------------
 // The actual explosion 
 //-----------------------------------------------------------------------------
@@ -469,7 +477,31 @@ void CMissile::Explode(void)
 	}
 	UTIL_Remove(this);
 }
+void CMissile::RemoveSelf(void)
+{
+	SetSolid(SOLID_NONE);
 
+	if (m_hRocketTrail)
+	{
+		m_hRocketTrail->SetLifetime(0.1f);
+		m_hRocketTrail = NULL;
+	}
+
+	if (m_hMissileTrail)
+	{
+		m_hMissileTrail->TimeOut();
+		m_hMissileTrail->FollowEntity(NULL);
+		m_hMissileTrail->SetParent(NULL);
+	}
+	SetTouch(NULL);
+	StopSound("Missile.Ignite");
+
+	if (m_vMissileList.HasElement(this))
+	{
+		m_vMissileList.FindAndRemove(this);
+	}
+	UTIL_Remove(this);
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pOther - 
@@ -498,9 +530,6 @@ void CMissile::MissileTouch(CBaseEntity *pOther)
 
 	if (IsHitEntityWarrior(pOther))
 	{
-		CNPC_AntlionWarrior* pWarrior = dynamic_cast<CNPC_AntlionWarrior*>(pOther);
-		
-		ReturnToSender(pWarrior->WorldSpaceCenter(), GetOwnerEntity()->WorldSpaceCenter(),pWarrior->GetLocalAngles());
 		return;
 	}
 
@@ -513,8 +542,9 @@ void CMissile::ReturnToSender(Vector vecStart, Vector vecEnd, QAngle angle)
 	VectorNormalize(vecDir);
 	Msg("X %f Y %f Z %f\n", vecDir[0], vecDir[1], vecDir[2]);
 	SetAbsOrigin(vecStart + (vecDir * 100.0f));
-	ActiveSteerMode();
-	SetAbsVelocity(vecDir * 1500.0f);
+	QAngle ang;
+	VectorAngles(vecDir, ang);
+	SetAbsAngles(ang);
 }
 bool CMissile::IsHitEntityWarrior(CBaseEntity* pOther)
 {
@@ -877,10 +907,10 @@ CMissile *CMissile::Create(const Vector &vecOrigin, const QAngle &vecAngles, edi
 	pMissile->Spawn();
 	pMissile->AddEffects(EF_NOSHADOW);
 
-	Vector vecForward;
-	AngleVectors(vecAngles, &vecForward);
+	//Vector vecForward;
+	//AngleVectors(vecAngles, &vecForward);
 
-	pMissile->SetAbsVelocity(vecForward * 300 + Vector(0, 0, 128));
+	//pMissile->SetAbsVelocity(vecForward * 300 + Vector(0, 0, 128));
 
 	return pMissile;
 }

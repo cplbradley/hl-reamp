@@ -39,6 +39,8 @@ $lod 150
 $attachment "eyeball" "ValveBiped.head" 18 0 0 rotate 180 180 0
 $attachment "cannonmuzzle" "ValveBiped.hlp_wrist_R" 36 3.50 -6 rotate 6 7 -0
 
+$eyeposition 0 0 128
+
 $hboxset "default"
 
 $hbox 0 "ValveBiped.spine1"	   -10.31  -12.71  -17.42    23.38   18.88   19.24

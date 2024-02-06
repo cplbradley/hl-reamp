@@ -45,6 +45,9 @@ public:
 	int		GetMaxBurst() { return GetMinBurst(); }
 	float	GetFireRate(void) { return 0.1f; }
 
+	float			GetMinRestTime() { return 0.0f; }
+	float			GetMaxRestTime() { return 0.0f; }
+
 	bool	CanHolster(void);
 	bool	Reload(void);
 

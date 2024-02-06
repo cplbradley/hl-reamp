@@ -486,8 +486,6 @@ void CBaseAnimating::StudioFrameAdvanceManual( float flInterval )
 	CStudioHdr *pStudioHdr = GetModelPtr();
 	if ( !pStudioHdr )
 		return;
-
-	UpdateModelScale();
 	m_flAnimTime = gpGlobals->curtime;
 	m_flPrevAnimTime = m_flAnimTime - flInterval;
 	float flCycleRate = GetSequenceCycleRate( pStudioHdr, GetSequence() ) * m_flPlaybackRate;
@@ -506,8 +504,6 @@ void CBaseAnimating::StudioFrameAdvance()
 	{
 		return;
 	}
-
-	UpdateModelScale();
 
 	if ( !m_flPrevAnimTime )
 	{
@@ -637,7 +633,7 @@ void CBaseAnimating::InputSetModelScale( inputdata_t &inputdata )
 {
 	Vector vecScale;
 	inputdata.value.Vector3D( vecScale );
-
+	Msg("modelscale input %f %f\n", vecScale.x, vecScale.y);
 	SetModelScale( vecScale.x, vecScale.y );
 }
 
@@ -3327,22 +3323,23 @@ void CBaseAnimating::DoMuzzleFlash()
 //-----------------------------------------------------------------------------
 void CBaseAnimating::SetModelScale( float scale, float change_duration /*= 0.0f*/  )
 {
-	if ( change_duration > 0.0f )
+	if (change_duration > 0.0f)
 	{
-		ModelScale *mvs = ( ModelScale * )CreateDataObject( MODELSCALE );
+		ModelScale* mvs = (ModelScale*)CreateDataObject(MODELSCALE);
 		mvs->m_flModelScaleStart = m_flModelScale;
 		mvs->m_flModelScaleGoal = scale;
 		mvs->m_flModelScaleStartTime = gpGlobals->curtime;
 		mvs->m_flModelScaleFinishTime = mvs->m_flModelScaleStartTime + change_duration;
+		SetContextThink(&CBaseAnimating::UpdateModelScale, gpGlobals->curtime, "UpdateModelScaleThink");
 	}
 	else
 	{
 		m_flModelScale = scale;
 		RefreshCollisionBounds();
 
-		if ( HasDataObjectType( MODELSCALE ) )
+		if (HasDataObjectType(MODELSCALE))
 		{
-			DestroyDataObject( MODELSCALE );
+			DestroyDataObject(MODELSCALE);
 		}
 	}
 }
@@ -3354,7 +3351,6 @@ void CBaseAnimating::UpdateModelScale()
 	{
 		return;
 	}
-
 	float dt = mvs->m_flModelScaleFinishTime - mvs->m_flModelScaleStartTime;
 	Assert( dt > 0.0f );
 
@@ -3368,7 +3364,13 @@ void CBaseAnimating::UpdateModelScale()
 	}
 	else
 	{
-		m_flModelScale = Lerp( frac, mvs->m_flModelScaleStart, mvs->m_flModelScaleGoal );
+		float delta = MIN(gpGlobals->curtime, mvs->m_flModelScaleFinishTime);
+		m_flModelScale = FLerp(mvs->m_flModelScaleStart, mvs->m_flModelScaleGoal, mvs->m_flModelScaleStartTime, mvs->m_flModelScaleFinishTime, delta);
+	}
+
+	if (frac < 1.f)
+	{
+		SetContextThink(&CBaseAnimating::UpdateModelScale, gpGlobals->curtime, "UpdateModelScaleThink");
 	}
 
 	RefreshCollisionBounds();

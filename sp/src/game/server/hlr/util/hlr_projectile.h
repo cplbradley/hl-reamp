@@ -5,7 +5,6 @@
 
 #pragma once
 
-
 class CHLRVortProjectile : public CBaseCombatCharacter
 {
 	DECLARE_CLASS(CHLRVortProjectile, CBaseCombatCharacter);

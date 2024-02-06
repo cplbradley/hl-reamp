@@ -1931,6 +1931,10 @@ void CViewRender::CleanupMain3DView(const CViewSetup& view)
 
 	pRenderContext->SetRenderTarget(GetFullFrameFrameBufferTexture(0));
 	pRenderContext->CopyRenderTargetToTexture(GetPrevFrameBufferTexture());
+
+	pRenderContext->SetRenderTarget(materials->FindTexture("_rt_TrueDepth",TEXTURE_GROUP_RENDER_TARGET));
+	pRenderContext->CopyRenderTargetToTexture(GetPrevDepthBufferTexture());
+
 	pRenderContext->SetRenderTarget(0);
 	pRenderContext.SafeRelease();
 
@@ -2156,7 +2160,7 @@ void CViewRender::RenderView(const CViewSetup& view, int nClearFlags, int whatTo
 
 		if (Q_strcmp(szPrevCubemap, szCurCubemap) != 0)
 		{
-			Msg("Cubemap isn't the same as before\n");
+			DevMsg("Cubemap isn't the same as before\n");
 			g_pRenderGlobals.m_flCubemapLerp = 1.0f;
 
 			g_pRenderGlobals.pPrevEnvMap = materials->FindTexture(szPrevCubemap, TEXTURE_GROUP_CUBE_MAP);

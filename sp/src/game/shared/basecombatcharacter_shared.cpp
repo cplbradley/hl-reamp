@@ -568,6 +568,15 @@ bool CBaseCombatCharacter::ComputeTargetIsInDarkness( const Vector &vecEyePositi
 #endif
 
 
+
+Vector CBaseCombatCharacter::AutoAimTarget()
+{
+	Vector center = WorldSpaceCenter();
+	Vector eyes = EyePosition();
+	Vector result = (center + eyes) * 0.5f;
+	return result;
+}
+
 //-----------------------------------------------------------------------------
 /**
 	Return true if our view direction is pointing at the given target, 

@@ -8,12 +8,6 @@ $modelname	"gibs/human/hgib_small3.mdl"
 $staticprop
 $body hgib_small3 "hgib_small3.smd"
 $collisionmodel "hgib_small3_hull.smd" {
-	$inertia 0.0
-	$damping 0.0
-	$rotdamping 0.0
-	$drag 0.0
-	$mass 25.0
-
 }
 $surfaceprop "flesh" 
 $contents "solid"

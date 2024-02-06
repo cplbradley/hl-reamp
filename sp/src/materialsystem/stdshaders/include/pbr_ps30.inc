@@ -1,9 +1,10 @@
 // ALL SKIP STATEMENTS THAT AFFECT THIS SHADER!!!
-// ($PIXELFOGTYPE == 0) && ($WRITEWATERFOGTODESTALPHA != 0)
 // ( $FLASHLIGHT == 0 ) && ( $FLASHLIGHTSHADOWS == 1 )
 // ( $FLASHLIGHT == 0 ) && ( $FLASHLIGHTDEPTHFILTERMODE != 0 )
-// ( $LIGHTMAPPED_MODEL == 1 ) && ( $LIGHTMAPPED == 1 )
+// ( $FLASHLIGHT == 1 ) && ( $EMISSIVE != 0 )
 // ( $LIGHTMAPPED == 1 ) && ( $NUM_LIGHTS > 0 )
+// ( $LIGHTMAPPED == 1 ) && ( $LIGHTMAPPED_MODEL == 1 )
+// ($PIXELFOGTYPE == 0) && ($WRITEWATERFOGTODESTALPHA != 0)
 // defined $HDRTYPE && defined $HDRENABLED && !$HDRTYPE && $HDRENABLED
 // defined $PIXELFOGTYPE && defined $WRITEWATERFOGTODESTALPHA && ( $PIXELFOGTYPE != 1 ) && $WRITEWATERFOGTODESTALPHA
 // defined $LIGHTING_PREVIEW && defined $HDRTYPE && $LIGHTING_PREVIEW && $HDRTYPE != 0
@@ -18,28 +19,30 @@
 // defined $LIGHTING_PREVIEW && defined $FASTPATHENVMAPCONTRAST && $LIGHTING_PREVIEW && $FASTPATHENVMAPCONTRAST
 // defined $LIGHTING_PREVIEW && defined $FASTPATH && $LIGHTING_PREVIEW && $FASTPATH
 // ($FLASHLIGHT || $FLASHLIGHTSHADOWS) && $LIGHTING_PREVIEW
+// defined $HDRTYPE && defined $HDRENABLED && !$HDRTYPE && $HDRENABLED
+// defined $PIXELFOGTYPE && defined $WRITEWATERFOGTODESTALPHA && ( $PIXELFOGTYPE != 1 ) && $WRITEWATERFOGTODESTALPHA
+// defined $LIGHTING_PREVIEW && defined $HDRTYPE && $LIGHTING_PREVIEW && $HDRTYPE != 0
+// defined $LIGHTING_PREVIEW && defined $FASTPATHENVMAPTINT && $LIGHTING_PREVIEW && $FASTPATHENVMAPTINT
+// defined $LIGHTING_PREVIEW && defined $FASTPATHENVMAPCONTRAST && $LIGHTING_PREVIEW && $FASTPATHENVMAPCONTRAST
+// defined $LIGHTING_PREVIEW && defined $FASTPATH && $LIGHTING_PREVIEW && $FASTPATH
+// ($FLASHLIGHT || $FLASHLIGHTSHADOWS) && $LIGHTING_PREVIEW
 
-#ifndef PBR_PS30_H
-#define PBR_PS30_H
-
-#include "shaderapi/ishaderapi.h"
-#include "shaderapi/ishadershadow.h"
-#include "materialsystem/imaterialvar.h"
-
+#pragma once
+#include "shaderlib/cshader.h"
 class pbr_ps30_Static_Index
 {
 	unsigned int m_nFLASHLIGHT : 2;
 	unsigned int m_nFLASHLIGHTDEPTHFILTERMODE : 2;
-	unsigned int m_nLIGHTMAPPED : 2;
 	unsigned int m_nEMISSIVE : 2;
+	unsigned int m_nLIGHTMAPPED : 2;
 	unsigned int m_nPARALLAXOCCLUSION : 2;
 	unsigned int m_nDETAILTEXTURE : 2;
 	unsigned int m_nLERPENVMAP : 2;
 #ifdef _DEBUG
 	bool m_bFLASHLIGHT : 1;
 	bool m_bFLASHLIGHTDEPTHFILTERMODE : 1;
-	bool m_bLIGHTMAPPED : 1;
 	bool m_bEMISSIVE : 1;
+	bool m_bLIGHTMAPPED : 1;
 	bool m_bPARALLAXOCCLUSION : 1;
 	bool m_bDETAILTEXTURE : 1;
 	bool m_bLERPENVMAP : 1;
@@ -63,21 +66,21 @@ public:
 #endif	// _DEBUG
 	}
 
-	void SetLIGHTMAPPED( int i )
-	{
-		Assert( i >= 0 && i <= 1 );
-		m_nLIGHTMAPPED = i;
-#ifdef _DEBUG
-		m_bLIGHTMAPPED = true;
-#endif	// _DEBUG
-	}
-
 	void SetEMISSIVE( int i )
 	{
 		Assert( i >= 0 && i <= 1 );
 		m_nEMISSIVE = i;
 #ifdef _DEBUG
 		m_bEMISSIVE = true;
+#endif	// _DEBUG
+	}
+
+	void SetLIGHTMAPPED( int i )
+	{
+		Assert( i >= 0 && i <= 1 );
+		m_nLIGHTMAPPED = i;
+#ifdef _DEBUG
+		m_bLIGHTMAPPED = true;
 #endif	// _DEBUG
 	}
 
@@ -112,16 +115,16 @@ public:
 	{
 		m_nFLASHLIGHT = 0;
 		m_nFLASHLIGHTDEPTHFILTERMODE = 0;
-		m_nLIGHTMAPPED = 0;
 		m_nEMISSIVE = 0;
+		m_nLIGHTMAPPED = 0;
 		m_nPARALLAXOCCLUSION = 0;
 		m_nDETAILTEXTURE = 0;
 		m_nLERPENVMAP = 0;
 #ifdef _DEBUG
 		m_bFLASHLIGHT = false;
 		m_bFLASHLIGHTDEPTHFILTERMODE = false;
-		m_bLIGHTMAPPED = false;
 		m_bEMISSIVE = false;
+		m_bLIGHTMAPPED = false;
 		m_bPARALLAXOCCLUSION = false;
 		m_bDETAILTEXTURE = false;
 		m_bLERPENVMAP = false;
@@ -130,12 +133,14 @@ public:
 
 	int GetIndex() const
 	{
-		Assert( m_bFLASHLIGHT && m_bFLASHLIGHTDEPTHFILTERMODE && m_bLIGHTMAPPED && m_bEMISSIVE && m_bPARALLAXOCCLUSION && m_bDETAILTEXTURE && m_bLERPENVMAP );
-		return ( 160 * m_nFLASHLIGHT ) + ( 320 * m_nFLASHLIGHTDEPTHFILTERMODE ) + ( 960 * m_nLIGHTMAPPED ) + ( 1920 * m_nEMISSIVE ) + ( 3840 * m_nPARALLAXOCCLUSION ) + ( 7680 * m_nDETAILTEXTURE ) + ( 15360 * m_nLERPENVMAP ) + 0;
+		Assert( m_bFLASHLIGHT && m_bFLASHLIGHTDEPTHFILTERMODE && m_bEMISSIVE && m_bLIGHTMAPPED && m_bPARALLAXOCCLUSION && m_bDETAILTEXTURE && m_bLERPENVMAP );
+		AssertMsg( !( ( m_nFLASHLIGHT == 0 ) && ( m_nFLASHLIGHTDEPTHFILTERMODE != 0 ) ), "Invalid combo combination ( ( FLASHLIGHT == 0 ) && ( FLASHLIGHTDEPTHFILTERMODE != 0 ) )" );
+		AssertMsg( !( ( m_nFLASHLIGHT == 1 ) && ( m_nEMISSIVE != 0 ) ), "Invalid combo combination ( ( FLASHLIGHT == 1 ) && ( EMISSIVE != 0 ) )" );
+		return ( 160 * m_nFLASHLIGHT ) + ( 320 * m_nFLASHLIGHTDEPTHFILTERMODE ) + ( 960 * m_nEMISSIVE ) + ( 1920 * m_nLIGHTMAPPED ) + ( 3840 * m_nPARALLAXOCCLUSION ) + ( 7680 * m_nDETAILTEXTURE ) + ( 15360 * m_nLERPENVMAP ) + 0;
 	}
 };
 
-#define shaderStaticTest_pbr_ps30 psh_forgot_to_set_static_FLASHLIGHT + psh_forgot_to_set_static_FLASHLIGHTDEPTHFILTERMODE + psh_forgot_to_set_static_LIGHTMAPPED + psh_forgot_to_set_static_EMISSIVE + psh_forgot_to_set_static_PARALLAXOCCLUSION + psh_forgot_to_set_static_DETAILTEXTURE + psh_forgot_to_set_static_LERPENVMAP
+#define shaderStaticTest_pbr_ps30 psh_forgot_to_set_static_FLASHLIGHT + psh_forgot_to_set_static_FLASHLIGHTDEPTHFILTERMODE + psh_forgot_to_set_static_EMISSIVE + psh_forgot_to_set_static_LIGHTMAPPED + psh_forgot_to_set_static_PARALLAXOCCLUSION + psh_forgot_to_set_static_DETAILTEXTURE + psh_forgot_to_set_static_LERPENVMAP
 
 
 class pbr_ps30_Dynamic_Index
@@ -230,11 +235,13 @@ public:
 	int GetIndex() const
 	{
 		Assert( m_bFLASHLIGHTSHADOWS && m_bLIGHTMAPPED_MODEL && m_bPIXELFOGTYPE && m_bWRITEWATERFOGTODESTALPHA && m_bNUM_LIGHTS && m_bWRITE_DEPTH_TO_DESTALPHA );
+		AssertMsg( !( ( m_nPIXELFOGTYPE == 0 ) && ( m_nWRITEWATERFOGTODESTALPHA != 0 ) ), "Invalid combo combination ( ( PIXELFOGTYPE == 0 ) && ( WRITEWATERFOGTODESTALPHA != 0 ) )" );
+		AssertMsg( !( 1 && ( 1 && ( ( m_nPIXELFOGTYPE != 1 ) && m_nWRITEWATERFOGTODESTALPHA ) ) ), "Invalid combo combination ( 1 && ( 1 && ( ( PIXELFOGTYPE != 1 ) && WRITEWATERFOGTODESTALPHA ) ) )" );
+		AssertMsg( !( 1 && ( 1 && ( ( m_nPIXELFOGTYPE != 1 ) && m_nWRITEWATERFOGTODESTALPHA ) ) ), "Invalid combo combination ( 1 && ( 1 && ( ( PIXELFOGTYPE != 1 ) && WRITEWATERFOGTODESTALPHA ) ) )" );
+		AssertMsg( !( 1 && ( 1 && ( ( m_nPIXELFOGTYPE != 1 ) && m_nWRITEWATERFOGTODESTALPHA ) ) ), "Invalid combo combination ( 1 && ( 1 && ( ( PIXELFOGTYPE != 1 ) && WRITEWATERFOGTODESTALPHA ) ) )" );
 		return ( 1 * m_nFLASHLIGHTSHADOWS ) + ( 2 * m_nLIGHTMAPPED_MODEL ) + ( 4 * m_nPIXELFOGTYPE ) + ( 8 * m_nWRITEWATERFOGTODESTALPHA ) + ( 16 * m_nNUM_LIGHTS ) + ( 80 * m_nWRITE_DEPTH_TO_DESTALPHA ) + 0;
 	}
 };
 
 #define shaderDynamicTest_pbr_ps30 psh_forgot_to_set_dynamic_FLASHLIGHTSHADOWS + psh_forgot_to_set_dynamic_LIGHTMAPPED_MODEL + psh_forgot_to_set_dynamic_PIXELFOGTYPE + psh_forgot_to_set_dynamic_WRITEWATERFOGTODESTALPHA + psh_forgot_to_set_dynamic_NUM_LIGHTS + psh_forgot_to_set_dynamic_WRITE_DEPTH_TO_DESTALPHA
 
-
-#endif	// PBR_PS30_H

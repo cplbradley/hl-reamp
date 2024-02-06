@@ -16,7 +16,7 @@ class CBaseGrenade;
 class CGrenadeFrag;
 struct edict_t;
 
-CBaseGrenade *Fraggrenade_Create( const Vector &position, const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, CBaseEntity *pOwner, float timer, bool combineSpawned );
+CBaseGrenade *Fraggrenade_Create( const Vector &position, const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, CBaseEntity *pOwner, float timer, bool combineSpawned, bool bAccelerated = false );
 CBaseGrenade *Gasgrenade_Create(const Vector &position, const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, CBaseEntity *pOwner, float timer);
 CBaseGrenade *Stickynade_Create(const Vector &position, const QAngle &angles, const Vector &vecocity, const AngularImpulse &angVelocity, CBaseEntity *pOwner);
 bool	Fraggrenade_WasPunted( const CBaseEntity *pEntity );
@@ -55,6 +55,7 @@ public:
 	void	SetPunted(bool punt) { m_punted = punt; }
 	bool	WasPunted(void) const { return m_punted; }
 	float		iBounces;
+	void	SetAccelerated(bool accelerated) { m_bAccelerated = accelerated; }
 
 	// this function only used in episodic.
 #if defined(HL2_EPISODIC) && 0 // FIXME: HandleInteraction() is no longer called now that base grenade derives from CBaseAnimating
@@ -73,6 +74,7 @@ protected:
 	bool	m_punted;
 	float	m_flAlpha;
 	float	m_flScale;
+	bool	m_bAccelerated;
 
 	CNetworkHandle(CBaseEntity, m_hThrower);
 };

@@ -39,10 +39,6 @@
 
 static float GetTimeScale()
 {
-	static ConVarRef sv_cheats("sv_cheats", false);
-	if (!sv_cheats.GetBool())
-		return 1.0f;
-
 	static ConVarRef host_timescale("host_timescale", false);
 	return host_timescale.GetFloat();
 }

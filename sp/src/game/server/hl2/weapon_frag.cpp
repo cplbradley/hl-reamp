@@ -46,13 +46,14 @@ public:
 
 	void	Precache( void );
 	void	Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator );
-	void	PrimaryAttack( void );
+	void	PrimaryAttack(void);
 	void	SecondaryAttack( void );
 	void	DecrementAmmo( CBaseCombatCharacter *pOwner );
 	void	ItemPostFrame( void );
 	void	ItemHolsterFrame(void);
 
-
+	void	LaunchGrenade(bool accelerated);
+	void	OverdriveThink();
 	bool	IsCharging() { return m_bIsCharging; }
 
 
@@ -70,7 +71,7 @@ public:
 
 	bool	ShouldDisplayHUDHint() { return true; }
 
-	int m_iLastFireAct;
+
 
 private:
 	void	ThrowGrenade( CBasePlayer *pPlayer );
@@ -84,6 +85,9 @@ private:
 	int		m_AttackPaused;
 	bool	m_fDrawbackFinished;
 	bool	m_bFocused;
+
+	int		m_iLastFireAct;
+	int		iLaunches;
 
 	CNetworkVar(bool,m_bIsCharging);
 
@@ -336,7 +340,12 @@ ConVar g_overdrive_frag_mode("g_overdrive_frag_mode", "0");
 //-----------------------------------------------------------------------------
 void CWeaponFrag::PrimaryAttack(void)
 {
-	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+	LaunchGrenade(false);
+}
+
+void CWeaponFrag::LaunchGrenade(bool accelerated)
+{
+	CBasePlayer* pPlayer = ToBasePlayer(GetOwner());
 	Vector	vecEye = pPlayer->EyePosition();
 	Vector	vForward, vRight, vUp;
 	Vector vecAng;
@@ -351,12 +360,12 @@ void CWeaponFrag::PrimaryAttack(void)
 
 	float vertfactor = sk_plr_grenade_vert_factor.GetFloat();
 	Vector vecThrow = vecAng * (sk_plr_grenade_launch_speed.GetFloat() * (1.0f + m_fChargedMultiplier)) + Vector(0, 0, vertfactor);
-	Fraggrenade_Create(muzzlePoint, vec3_angle, vecThrow, AngularImpulse(random->RandomInt(-600, 600), random->RandomInt(-600, 600),0), pPlayer, 3.0f, false);
-	
+	Fraggrenade_Create(muzzlePoint, vec3_angle, vecThrow, AngularImpulse(random->RandomInt(-600, 600), random->RandomInt(-600, 600), 0), pPlayer, 3.0f, false);
+
 	DevMsg("Launching Grenade at Speed %f\n", sk_plr_grenade_launch_speed.GetFloat() * (1.0f + m_fChargedMultiplier));
 
-	
-	if (pPlayer->HasOverdrive())
+
+	if (pPlayer->HasOverdrive() && !accelerated)
 	{
 		for (int i = 0; i < 2; i++)
 		{
@@ -370,7 +379,7 @@ void CWeaponFrag::PrimaryAttack(void)
 				Vector vecAimAng;
 				AngleVectors(qAng, &vecAimAng);
 				Vector vecThrow = vecAimAng * sk_plr_grenade_launch_speed.GetFloat() + Vector(0, 0, vertfactor);
-				Fraggrenade_Create(muzzlePoint, vec3_angle, vecThrow, AngularImpulse(200, random->RandomInt(-600, 600), 0), pPlayer, 3.0f, false);
+				Fraggrenade_Create(muzzlePoint, vec3_angle, vecThrow, AngularImpulse(200, random->RandomInt(-600, 600), 0), pPlayer, 3.0f, false, accelerated);
 			}
 			if (i == 1)
 			{
@@ -382,11 +391,11 @@ void CWeaponFrag::PrimaryAttack(void)
 				Vector vecAimAng;
 				AngleVectors(qAng2, &vecAimAng);
 				Vector vecThrow = vecAimAng * sk_plr_grenade_launch_speed.GetFloat() + Vector(0, 0, vertfactor);
-				Fraggrenade_Create(muzzlePoint, vec3_angle, vecThrow, AngularImpulse(200, random->RandomInt(-600, 600), 0), pPlayer, 3.0f, false);
+				Fraggrenade_Create(muzzlePoint, vec3_angle, vecThrow, AngularImpulse(200, random->RandomInt(-600, 600), 0), pPlayer, 3.0f, false, accelerated);
 			}
 		}
 	}
-	
+
 	m_flNextPrimaryAttack = gpGlobals->curtime + 0.4f;
 	m_flNextSecondaryAttack = gpGlobals->curtime + 0.4f;
 
@@ -403,6 +412,26 @@ void CWeaponFrag::PrimaryAttack(void)
 	DecrementAmmo(GetOwner());
 }
 
+
+void CWeaponFrag::OverdriveThink()
+{
+	if (iLaunches >= 2)
+	{
+		LaunchGrenade(true);
+		SetThink(NULL);
+		SetNextThink(gpGlobals->curtime);
+		m_bIsCharging = false;
+		iLaunches = 0;
+		m_fChargedMultiplier = 0.0f;
+	}
+	else
+	{
+		LaunchGrenade(true);
+		SetNextThink(gpGlobals->curtime + 0.2f);
+		iLaunches++;
+	}
+
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pOwner - 
@@ -452,8 +481,7 @@ void CWeaponFrag::ItemPostFrame( void )
 {
 	CBasePlayer* pPlayer = ToBasePlayer(GetOwner());
 
-	m_fChargedMultiplier = MIN(2.0f, m_fChargedMultiplier);
-	m_fChargedMultiplier = MAX(0.0f, m_fChargedMultiplier);
+	m_fChargedMultiplier = Clamp((float)m_fChargedMultiplier, 0.f, 2.f);
 
 	if (gpGlobals->curtime > m_flNextSecondaryAttack)
 	{
@@ -467,9 +495,17 @@ void CWeaponFrag::ItemPostFrame( void )
 		{
 			if (IsCharging())
 			{
-				m_bIsCharging = false;
-				PrimaryAttack();
-				m_fChargedMultiplier = 0.0f;
+				if (pPlayer->HasOverdrive())
+				{
+					SetThink(&CWeaponFrag::OverdriveThink);
+					SetNextThink(gpGlobals->curtime);
+				}
+				else
+				{
+					m_bIsCharging = false;
+					LaunchGrenade(true);
+					m_fChargedMultiplier = 0.0f;
+				}
 			}
 		}
 	}

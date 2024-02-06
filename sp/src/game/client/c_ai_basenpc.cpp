@@ -88,7 +88,7 @@ int C_AI_BaseNPC::InternalDrawModel(int flags)
 		{
 			if (CurrentViewID() != VIEW_DEPTHBUFFER)
 			{
-				if (m_bShouldDrawShieldOverlay)
+				if (m_bShouldDrawShieldOverlay || bNightVision)
 				{
 					// Cyanide; So we basically need to redraw the model but scaled up slightly
 					UpdateBoneAttachments();
@@ -121,7 +121,10 @@ int C_AI_BaseNPC::InternalDrawModel(int flags)
 					// Set override material for glow color
 					IMaterial* pMatGlowColor = NULL;
 
-					pMatGlowColor = GetShieldType(m_iVortEffectType);
+					if (bNightVision)
+						pMatGlowColor = materials->FindMaterial("engine/nightvision_enemyoverlay", TEXTURE_GROUP_OTHER);
+					else
+						pMatGlowColor = GetShieldType(m_iVortEffectType);
 
 					if (pMatGlowColor)
 					{

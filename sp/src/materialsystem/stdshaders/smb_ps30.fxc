@@ -2,8 +2,13 @@
 
 sampler FBSampler : register(s0);
 sampler PrevFBSampler : register(s1);
+sampler DepthSampler : register(s2);
 
 float2 inSamples : register(c1);
+float4x4 g_ViewProjectionInverseMatrix : register(c2);
+float4x4 g_PreviousViewProjectionMatrix : register(c6);
+
+
 
 struct PS_INPUT
 {
@@ -13,10 +18,27 @@ struct PS_INPUT
 
 float4 main(PS_INPUT i) : COLOR
 {
-	float4 curframe = tex2D(FBSampler,i.texCoord);
-	float4 prevframe = tex2D(PrevFBSampler,i.texCoord);
-	float scale = inSamples.x;
-	float4 color = lerp(curframe,prevframe,scale);
-    return color;
+	float2 texCoords = i.texCoord;
+	float zOverW = tex2D(DepthSampler,texCoords);
+	float4 H = float4(texCoords.x * 2 - 1, (1 - texCoords.y) * 2 - 1, zOverW, 1);
+	float4 D = H * g_ViewProjectionInverseMatrix;
+	float4 worldPos = D / D.w;
 	
+	float4 currentPos = H;
+	float4 previousPos = worldPos * g_PreviousViewProjectionMatrix;
+	previousPos /= previousPos.w;
+	float2 velocity = (currentPos - previousPos) * 0.5;
+	
+	float4 color = tex2D(FBSampler,texCoords);
+	texCoords += velocity;
+	
+	for(int i = 1; i < 16; ++i, texCoords += velocity)
+	{
+		float4 currentColor = tex2D(FBSampler,texCoords);
+		color += currentColor;
+	}
+	
+	float4 finalColor = color/16;
+	
+	return finalColor;
 };

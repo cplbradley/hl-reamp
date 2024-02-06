@@ -486,6 +486,9 @@ public:
 	bool					GetShootPosition( Vector &vOrigin, QAngle &vAngles );
 	virtual void			DrawCrosshair( void );
 	virtual bool			ShouldDrawCrosshair( void ) { return true; }
+
+
+	virtual void			SetWheelSlot(int slot) { m_iWheelSlot = slot; }
 	
 	// Weapon state checking
 	virtual bool			IsCarriedByLocalPlayer( void );
@@ -626,6 +629,8 @@ private:
 	bool					m_bReloadHudHintDisplayed;	// Have we displayed a reload HUD hint since this weapon was deployed?
 	float					m_flHudHintPollTime;	// When to poll the weapon again for whether it should display a hud hint.
 	float					m_flHudHintMinDisplayTime; // if the hint is squelched before this, reset my counter so we'll display it again.
+
+	int						m_iWheelSlot;
 	
 	// Server only
 #if !defined( CLIENT_DLL )
@@ -642,6 +647,8 @@ protected:
 
 	// Allow weapons resource to access m_hWeaponFileInfo directly
 	friend class			WeaponsResource;
+
+	
 
 protected:	
 	int						m_iOldState;

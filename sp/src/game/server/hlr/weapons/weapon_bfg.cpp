@@ -104,7 +104,7 @@ void CProjectileOverdrivenBFG::DoDamage(void)
 {
 	CBasePlayer *pPlayer = ToBasePlayer(GetOwnerEntity());
 	AddFlag(EF_NODRAW);
-	g_pGameRules->RadiusDamage(CTakeDamageInfo(this, pPlayer, 50000, DMG_SONIC), GetAbsOrigin(), 8192, CLASS_PLAYER, true);
+	g_pGameRules->RadiusDamage(CTakeDamageInfo(this, pPlayer, 50000, DMG_SONIC | DMG_BLAST), GetAbsOrigin(), 8192, CLASS_PLAYER, true);
 	SetThink(&CProjectileOverdrivenBFG::Kill);
 	SetNextThink(gpGlobals->curtime + 0.5f);
 	UTIL_ScreenShake(pPlayer->WorldSpaceCenter(), 20, 10, 5, 2048, SHAKE_START);
@@ -200,7 +200,7 @@ void CProjectileBFG::DoDamage(void)
 {
 	CBasePlayer *pPlayer = ToBasePlayer(GetOwnerEntity());
 	AddFlag(EF_NODRAW);
-	g_pGameRules->RadiusDamage(CTakeDamageInfo(this, pPlayer, 800, DMG_SONIC), GetAbsOrigin(), 800, CLASS_PLAYER, true);
+	g_pGameRules->RadiusDamage(CTakeDamageInfo(this, pPlayer, 800, DMG_SONIC | DMG_BLAST), GetAbsOrigin(), 800, CLASS_PLAYER, true);
 	SetThink(&CProjectileBFG::Kill);
 	SetNextThink(gpGlobals->curtime + 0.5f);
 }
@@ -266,7 +266,7 @@ void CWeaponBFG::PrimaryAttack(void)
 	int iAttachment = LookupAttachment("muzzle");
 
 	EmitSound("Weapon_BFG.Single");
-	pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);
+	
 	CBaseEntity* pObj = NULL;
 	ConVarRef g_thirdperson("g_thirdperson");
 	if (g_thirdperson.GetBool())
@@ -285,6 +285,8 @@ void CWeaponBFG::LaunchBall(void)
 	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
 	if (!pPlayer)
 		return;
+
+	pPlayer->RemoveAmmo(100, m_iPrimaryAmmoType);
 	ResetFOV();
 	SendWeaponAnim(ACT_VM_SECONDARYATTACK);
 	Vector vecAiming, vecSrc, vecAttachment;

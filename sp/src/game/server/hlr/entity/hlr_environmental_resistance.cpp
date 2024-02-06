@@ -31,6 +31,8 @@ public:
 	void Think(void);
 	void Kill(void);
 	void SetEnvColor(void);
+
+	COutputEvent m_OnPickup;
 	
 
 private:
@@ -61,6 +63,7 @@ DEFINE_FIELD(m_iMaxToxicPoints,FIELD_INTEGER),
 DEFINE_FIELD(m_iMaxFirePoints,FIELD_INTEGER),
 DEFINE_THINKFUNC(Think),
 DEFINE_FUNCTION(Touch),
+DEFINE_OUTPUT(m_OnPickup, "OnPickup"),
 END_DATADESC()
 
 IMPLEMENT_SERVERCLASS_ST(CHLREnvironmentResistance,DT_EnvironmentalResistance)
@@ -113,6 +116,7 @@ void CHLREnvironmentResistance::Touch(CBaseEntity *pOther)
 		return;
 	if (pOther->IsPlayer())
 	{
+		m_OnPickup.FireOutput(pOther, this);
 		EnableBlocker();
 		SetThink(&CHLREnvironmentResistance::Think);
 		SetNextThink(gpGlobals->curtime + 0.5f);

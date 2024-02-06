@@ -47,7 +47,7 @@ void TE_BloodSprite( IRecipientFilter& filter, float delay,
 	const Vector* org, const Vector *dir, int r, int g, int b, int a, int size );
 void TE_BreakModel( IRecipientFilter& filter, float delay,
 	const Vector& pos, const QAngle &angles, const Vector& size, const Vector& vel, 
-	int modelindex, int randomization, int count, float time, int flags );
+	int modelindex, int randomization, int count, float time, int flags, bool decal, int bloodcolor );
 void TE_BSPDecal( IRecipientFilter& filter, float delay,
 	const Vector* pos, int entity, int index );
 void TE_ProjectDecal( IRecipientFilter& filer, float delay,
@@ -260,11 +260,11 @@ public:
 	}
 	virtual void BreakModel( IRecipientFilter& filter, float delay,
 		const Vector& pos, const QAngle &angle, const Vector& size, const Vector& vel, 
-		int modelindex, int randomization, int count, float time, int flags )
+		int modelindex, int randomization, int count, float time, int flags, bool decal, int bloodcolor )
 	{
 		if ( !SuppressTE( filter ) )
 		{
-			TE_BreakModel( filter, delay, pos, angle, size, vel, modelindex, randomization, count, time, flags );
+			TE_BreakModel( filter, delay, pos, angle, size, vel, modelindex, randomization, count, time, flags, decal, bloodcolor );
 		}
 	}
 	virtual void BSPDecal( IRecipientFilter& filter, float delay,

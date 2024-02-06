@@ -87,7 +87,7 @@ void CHLRHudHealthbar::Enable(void)
 		WRITE_BOOL(bActive);
 		WRITE_STRING(STRING(szName));
 		MessageEnd();
-		Msg("enabled, sending name %s\n",STRING(szName));
+		DevMsg("enabled, sending name %s\n",STRING(szName));
 		break;
 	}
 	case HEALTHBAR_SLOT2:
@@ -106,7 +106,7 @@ void CHLRHudHealthbar::Enable(void)
 		WRITE_BOOL(bActive);
 		WRITE_STRING(STRING(szName));
 		MessageEnd();
-		Msg("enabled, sending name %s\n", STRING(szName));
+		DevMsg("enabled, sending name %s\n", STRING(szName));
 		break;
 	}
 	case HEALTHBAR_SLOT3:
@@ -125,7 +125,7 @@ void CHLRHudHealthbar::Enable(void)
 		WRITE_BOOL(bActive);
 		WRITE_STRING(STRING(szName));
 		MessageEnd();
-		Msg("enabled, sending name %s\n", STRING(szName));
+		DevMsg("enabled, sending name %s\n", STRING(szName));
 		break;
 	}
 	}

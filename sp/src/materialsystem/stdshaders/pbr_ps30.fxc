@@ -6,11 +6,11 @@
 
 // STATIC: "FLASHLIGHT"                 "0..1"
 // STATIC: "FLASHLIGHTDEPTHFILTERMODE"  "0..2"
-// STATIC: "LIGHTMAPPED"                "0..1"
 // STATIC: "EMISSIVE"                   "0..1"
+// STATIC: "LIGHTMAPPED"                "0..1"
 // STATIC: "PARALLAXOCCLUSION"          "0..1"
-// STATIC: "DETAILTEXTURE"				"0..1"
-// STATIC: "LERPENVMAP"					"0..1"
+// STATIC: "DETAILTEXTURE"              "0..1"
+// STATIC: "LERPENVMAP"                 "0..1"
 
 // DYNAMIC: "FLASHLIGHTSHADOWS"         "0..1"
 // DYNAMIC: "LIGHTMAPPED_MODEL"         "0..1"
@@ -19,14 +19,12 @@
 // DYNAMIC: "NUM_LIGHTS"                "0..4"
 // DYNAMIC: "WRITE_DEPTH_TO_DESTALPHA"  "0..1"
 
-// Can't write fog to alpha if there is no fog
-// SKIP: ($PIXELFOGTYPE == 0) && ($WRITEWATERFOGTODESTALPHA != 0)
-// We don't care about flashlight depth unless the flashlight is on
 // SKIP: ( $FLASHLIGHT == 0 ) && ( $FLASHLIGHTSHADOWS == 1 )
-// Flashlight shadow filter mode is irrelevant if there is no flashlight
 // SKIP: ( $FLASHLIGHT == 0 ) && ( $FLASHLIGHTDEPTHFILTERMODE != 0 )
-// SKIP: ( $LIGHTMAPPED_MODEL == 1 ) && ( $LIGHTMAPPED == 1 )
+// SKIP: ( $FLASHLIGHT == 1 ) && ( $EMISSIVE != 0 )
 // SKIP: ( $LIGHTMAPPED == 1 ) && ( $NUM_LIGHTS > 0 )
+// SKIP: ( $LIGHTMAPPED == 1 ) && ( $LIGHTMAPPED_MODEL == 1 )
+// SKIP: ($PIXELFOGTYPE == 0) && ($WRITEWATERFOGTODESTALPHA != 0)
 
 #include "common_ps_fxc.h"
 #include "common_flashlight_fxc.h"
@@ -71,20 +69,56 @@ sampler EnvmapSampler2			: register( s14 );
 
 struct PS_INPUT
 {
-    float2 baseTexCoord             : TEXCOORD0;
+    float4 baseTexCoord             : TEXCOORD0;
     float4 lightAtten               : TEXCOORD1;
-    float3 worldNormal              : TEXCOORD2;
-    float3 worldPos                 : TEXCOORD3;
-    float3 projPos                  : TEXCOORD4;
-    float4 lightmapTexCoord1And2    : TEXCOORD5; 
-    float4 lightmapTexCoord3        : TEXCOORD6;
-	float4 detailTexCoord			: TEXCOORD7;
-	
+    float3 worldPos                 : TEXCOORD2;
+    float3 projPos                  : TEXCOORD3;
+    float4 lightmapTexCoord1And2    : TEXCOORD4; 
+    float4 lightmapTexCoord3        : TEXCOORD5;
+	float3x3 mTangentSpaceTranspose : TEXCOORD6;
 };
+
+float4 multidetailV1(float4 basetexture, float4 detailColor, float4 detailMask, float detailBlendFactor)
+{
+	float4 combined1 = TextureCombine(basetexture, detailColor.r, 0, detailMask.r * detailBlendFactor) * detailMask.r;
+	float4 combined2 = TextureCombine(basetexture, detailColor.g, 0, detailMask.g * detailBlendFactor) * detailMask.g;
+	float4 combined3 = TextureCombine(basetexture, detailColor.b, 0, detailMask.b * detailBlendFactor) * detailMask.b;
+	float totalmask = detailMask.r + detailMask.g + detailMask.b;
+	float4 detailed = (combined1 + combined2 + combined3) * totalmask;
+	float4 undetailed = basetexture * (1 - totalmask);
+	float4 albedo = detailed + undetailed;
+	return albedo;
+}
+float4 multidetailV2(float4 basetexture, float4 detailColor, float4 detailMask, float totalblend)
+{
+	float detail1 = detailMask.r * detailColor.r;
+	float detail2 = detailMask.g * detailColor.g;
+	float detail3 = detailMask.b * detailColor.b;
+	float cd1 = lerp(1,detail1,detailMask.r * totalblend);
+	float cd2 = lerp(1,detail2,detailMask.g * totalblend);
+	float cd3 = lerp(1,detail3,detailMask.b * totalblend);
+	float combined = (cd1 * detailMask.r) + (cd2*detailMask.g) + (cd3*detailMask.b);
+	float totalmask = detailMask.r + detailMask.g + detailMask.b;
+	float4 detail = TextureCombine(basetexture,float4(combined,combined,combined,1),0,totalmask);
+	return detail;
+}
+float4 GetTotalDetail(float4 detailColor, float4 detailMask, float totalblend)
+{
+	float detail1 = detailMask.r * detailColor.r;
+	float detail2 = detailMask.g * detailColor.g;
+	float detail3 = detailMask.b * detailColor.b;
+	float cd1 = lerp(1,detail1,detailMask.r * totalblend);
+	float cd2 = lerp(1,detail2,detailMask.g * totalblend);
+	float cd3 = lerp(1,detail3,detailMask.b * totalblend);
+	float combined = (cd1 * detailMask.r) + (cd2*detailMask.g) + (cd3*detailMask.b);
+	float4 detail = float4(combined,combined,combined,1);
+	return detail;
+}
 float roughnessDetail(float rough,float detail,float factor)
 {
 	return rough + ((1 - detail) * factor / 4);
 }
+
 // Entry point
 float4 main(PS_INPUT i) : COLOR
 {
@@ -92,19 +126,22 @@ float4 main(PS_INPUT i) : COLOR
 	
 	bool bHasDetailMask = g_DetailParams.y;
 	bool bMultiDetail = g_DetailParams.z;
-	bool bDetailInMrao = g_DetailParams.w;
+	bool bAltDetailMethod = g_ParallaxParms.w;
+	float brushphong = g_DetailParams.w;
 	
 	float detailBlendFactor = g_DetailParams.x;
 	
     #define EnvAmbientCube cAmbientCube
 	
-    float3 surfNormal = normalize(i.worldNormal);
+	float3 worldNormal = i.mTangentSpaceTranspose[2];
+	
+    float3 surfNormal = normalize(worldNormal);
     float3 surfTangent;
     float3 surfBase; 
     float flipSign;
 	
-	float2 baseTexCoord = i.baseTexCoord;
-	float2 detailTexCoord = i.detailTexCoord;
+	float2 baseTexCoord = i.baseTexCoord.xy;
+	float2 detailTexCoord = i.baseTexCoord.zw;
 
     float3x3 normalBasis = compute_tangent_frame(surfNormal, i.worldPos, baseTexCoord.xy, surfTangent, surfBase, flipSign);
 
@@ -138,11 +175,14 @@ float4 main(PS_INPUT i) : COLOR
 		float4 detailMask = tex2D(DetailMaskSampler,correctedTexCoord.xy);
 		if(bMultiDetail)
 		{
-			float4 combined1 = TextureCombine(basetexture, detailColor.r, 0, detailMask.r * detailBlendFactor) * detailMask.r;
-			float4 combined2 = TextureCombine(basetexture, detailColor.g, 0, detailMask.g * detailBlendFactor) * detailMask.g;
-			float4 combined3 = TextureCombine(basetexture, detailColor.b, 0, detailMask.b * detailBlendFactor) * detailMask.b;
-			
-			albedo = combined1 + combined2 + combined3;
+			if(bAltDetailMethod)
+			{
+				albedo = multidetailV2(basetexture,detailColor,detailMask,detailBlendFactor);
+			}
+			else
+			{
+				albedo = multidetailV1(basetexture,detailColor,detailMask,detailBlendFactor);
+			}
 		}
 		else
 		{
@@ -159,6 +199,8 @@ float4 main(PS_INPUT i) : COLOR
 
     float3 outgoingLightDirection = normalize(g_EyePos.xyz - i.worldPos); // Lo
     float lightDirectionAngle = max(0, dot(normal, outgoingLightDirection)); // cosLo
+	float3 incomingViewDir = normalize(i.worldPos - g_EyePos.xyz);
+	float lightViewDirectionAngle = max(0,dot(normal,incomingViewDir));
 
     float3 specularReflectionVector = 2.0 * lightDirectionAngle * normal - outgoingLightDirection; // Lr
 
@@ -207,14 +249,23 @@ float4 main(PS_INPUT i) : COLOR
     // Start direct
 	if (!FLASHLIGHT) 
 	{
-    for (uint n = 0; n < NUM_LIGHTS; ++n)
-    {
-        float3 LightIn = normalize(PixelShaderGetLightVector(i.worldPos, cLightInfo, n));
-        float3 LightColor = PixelShaderGetLightColor(cLightInfo, n) * GetAttenForLight(i.lightAtten, n); // Li
+		for (uint n = 0; n < NUM_LIGHTS; ++n)
+		{
+			float3 LightIn = normalize(PixelShaderGetLightVector(i.worldPos, cLightInfo, n));
+			float3 LightColor = PixelShaderGetLightColor(cLightInfo, n) * GetAttenForLight(i.lightAtten, n); // Li
 
-        directLighting += calculateLight(LightIn, LightColor, outgoingLightDirection,
-            normal, fresnelReflectance, roughness, metalness, lightDirectionAngle, albedo.rgb);
-    }
+			directLighting += calculateLight(LightIn, LightColor, outgoingLightDirection,
+				normal, fresnelReflectance, roughness, metalness, lightDirectionAngle, albedo.rgb);
+		}
+#if LIGHTMAPPED
+		float3 f3DomColor;
+		float3 f3DomDir = f3DomColorAndDir(LightmapSampler, g_DiffuseModulation.xyz, textureNormal,i.lightmapTexCoord1And2,i.lightmapTexCoord3,f3DomColor);
+		f3DomDir = mul(i.mTangentSpaceTranspose,f3DomDir);
+		f3DomDir.z *= 0.75;
+		
+		directLighting += calculateLight(f3DomDir,f3DomColor,outgoingLightDirection,normal,fresnelReflectance,roughness,metalness,lightDirectionAngle,albedo.rgb);
+#endif
+		
 	}
     // End direct
     if (FLASHLIGHT)
@@ -277,8 +328,6 @@ float4 main(PS_INPUT i) : COLOR
     alpha *= g_DiffuseModulation.a;
 	
 	float4 finalColor = float4(combinedLighting, alpha);
-	
-
 	
     return FinalOutput(finalColor, fogFactor, PIXELFOGTYPE, TONEMAP_SCALE_LINEAR, bWriteDepthToAlpha, i.projPos.z);
 }

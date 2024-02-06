@@ -208,7 +208,7 @@ int CNPCMechubus::SelectSchedule()
 int CNPCMechubus::SelectCombatSchedule()
 {
 	if (HasCondition(COND_ENEMY_OCCLUDED))
-		return SCHED_ESTABLISH_LINE_OF_FIRE;
+		return SCHEDULE_MECHUBUS_GETCLOSER;
 
 	if (EnemyTooFar())
 		return SCHED_ESTABLISH_LINE_OF_FIRE;

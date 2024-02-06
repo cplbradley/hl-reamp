@@ -455,18 +455,18 @@ void CHudHintKeyDisplay::OnThink()
 	}
 	if (bUseWorldPos)
 	{
-		Vector screen = Vector(0, 0, 0);
-		float screenX = ScreenWidth() * 0.5f;
-		float screenY = ScreenHeight() * 0.5f;
-		ScreenTransform(vecWorldPos, screen);
-		screenX += 0.5 * screen[0] * ScreenWidth() + 0.5;
+		Vector screen = Vector(0, 0, 0); //empty vector
+		float screenX = ScreenWidth() * 0.5f; //center screen X
+		float screenY = ScreenHeight() * 0.5f; //center screen Y
+		ScreenTransform(vecWorldPos, screen); //screen transform, store result in screen vector
+		screenX += 0.5 * screen[0] * ScreenWidth() + 0.5; //transform the panel origin
 		screenY -= 0.5 * screen[1] * ScreenHeight() + 0.5;
-		screenX -= GetWide() * 0.5;
-		screenY -= GetTall() * 0.5;
-		float x = clamp(screenX, 0, ScreenWidth()-GetWide());
-		float y = clamp(screenY, 0, ScreenHeight()-GetTall());
-		SetPos(x, y);
-		engine->Con_NPrintf(0, "HudX: %f HudY:%f", screenX, screenY);
+		screenX -= GetWide() * 0.5; //offset the panel so the center is on target, not the upper left corner
+		screenY -= GetTall() * 0.5; 
+		float x = clamp(screenX, 0, ScreenWidth()-GetWide()); //clamp so it stays on-screen
+		float y = clamp(screenY, 0, ScreenHeight()-GetTall()); 
+		SetPos(x, y); //set the final position
+		engine->Con_NPrintf(0, "HudX: %f HudY:%f", screenX, screenY); //debug stuff
 	}
 	else
 	{
@@ -477,9 +477,9 @@ void CHudHintKeyDisplay::OnThink()
 //-----------------------------------------------------------------------------
 // Purpose: Sets the hint text, replacing variables as necessary
 //-----------------------------------------------------------------------------
-bool CHudHintKeyDisplay::SetHintText( const char *text )
+bool CHudHintKeyDisplay::SetHintText(const char* text)
 {
-	if ( text == NULL || text[0] == L'\0' )
+	if (text == NULL || text[0] == L'\0')
 		return false;
 
 	// clear the existing text
@@ -490,10 +490,10 @@ bool CHudHintKeyDisplay::SetHintText( const char *text )
 	m_Labels.RemoveAll();
 
 	// look up the text string
-	wchar_t *ws = g_pVGuiLocalize->Find( text );
+	wchar_t* ws = g_pVGuiLocalize->Find(text);
 
 	wchar_t wszBuf[256];
-	if ( !ws || wcslen(ws) <= 0)
+	if (!ws || wcslen(ws) <= 0)
 	{
 		if (text[0] == '#')
 		{
@@ -506,24 +506,37 @@ bool CHudHintKeyDisplay::SetHintText( const char *text )
 	}
 
 	// parse out the text into a label set
-	while ( *ws )
+	while (*ws)
 	{
 		wchar_t token[256];
 		bool isVar = false;
+		bool makebold = false;
 
 		// check for variables
-		if ( *ws == '%' )
+		if (*ws == '%')
 		{
 			isVar = true;
 			++ws;
 		}
 
+		if (*ws == '[')
+		{
+			makebold = true;
+			++ws;
+		}
+
 		// parse out the string
 		wchar_t *end = wcschr( ws, '%' );
+		wchar_t* boldend = wcschr(ws, ']');
 		if ( end )
 		{
 			wcsncpy( token, ws, MIN( end - ws, ARRAYSIZE(token)) );
 			token[end - ws] = L'\0';	// force null termination
+		}
+		else if (boldend)
+		{
+			wcsncpy(token, ws, MIN(boldend - ws, ARRAYSIZE(token)));
+			token[boldend - ws] = L'\0';	// force null termination
 		}
 		else
 		{
@@ -532,7 +545,7 @@ bool CHudHintKeyDisplay::SetHintText( const char *text )
 		}
 
 		ws += wcslen( token );
-		if ( isVar )
+		if ( isVar || makebold )
 		{
 			// move over the end of the variable
 			++ws; 
@@ -646,6 +659,11 @@ bool CHudHintKeyDisplay::SetHintText( const char *text )
 					label->SetText( locName );
 				}
 			}
+		}
+		else if (makebold)
+		{
+			label->SetFont(m_hLargeFont);
+			label->SetText(token);
 		}
 		else
 		{

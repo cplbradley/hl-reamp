@@ -74,6 +74,8 @@ CBaseCombatWeapon::CBaseCombatWeapon()
 	m_fMaxRange1 = 1024;
 	m_fMaxRange2 = 1024;
 
+	m_iWheelSlot = -1;
+
 	m_bReloadsSingly = false;
 
 	// Defaults to zero
@@ -457,7 +459,10 @@ int CBaseCombatWeapon::GetSlot(void) const
 
 int CBaseCombatWeapon::GetWheelPosition(void) const
 {
-	return GetWpnData().iWeaponWheelPos;
+	if (m_iWheelSlot != -1)
+		return m_iWheelSlot;
+
+	else return GetWpnData().iWeaponWheelPos;
 }
 //-----------------------------------------------------------------------------
 // Purpose: 

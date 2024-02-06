@@ -41,11 +41,14 @@ void CHudItemPickup::Init()
 
 void CHudItemPickup::Reset()
 {
+	for (int i = 0; i < itemList.Count(); i++)
+	{
+			itemList[i].iAmount = 0;
+	}
 }
 
 void CHudItemPickup::Paint()
 {
-
 	int wide, tall;
 	wide = GetWide();
 	tall = GetTall();
@@ -80,7 +83,7 @@ void CHudItemPickup::Paint()
 			scale = 0.0f;
 		clr[3] = 200 * scale;
 
-		if (elapsed <= 0.0f)
+		if (elapsed <= 0.1f)
 			itemList[i].iAmount = 0;
 
 		int ypos = 0 + (talldiv * i) + vgui::surface()->GetFontTall(m_hNumberFont);
@@ -108,7 +111,6 @@ void CHudItemPickup::GetIcons()
 
 	for (int i = 0; i < 6; i++)
 	{
-		 
 		switch (i)
 		{
 		case 0:
@@ -135,7 +137,6 @@ void CHudItemPickup::GetIcons()
 		case 5:
 			pStruct[i].iID = "RPG_Round";
 			pStruct[i].icon = L"x";
-			//pStruct[i]->icon = gHUD.GetIcon("item_ammo_heavy");
 			break;
 		default:
 			break;
@@ -153,8 +154,7 @@ void CHudItemPickup::MsgFunc_ItemPickup(bf_read& msg)
 	msg.ReadString(szItemName, sizeof(szItemName));
 	int iValue = msg.ReadShort();
 
-	Msg("Picked up %s\n", szItemName);
-	Msg("Picked up amount %i\n", iValue);
+	DevMsg("Picked up %i of %s\n", iValue, szItemName);
 
 	for (int i = 0; i < itemList.Count(); i++)
 	{

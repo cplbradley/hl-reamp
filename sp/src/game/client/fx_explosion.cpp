@@ -18,6 +18,7 @@
 #include "fx_quad.h"
 #include "fx_line.h"
 #include "fx_water.h"
+#include "hlr/hlr_shareddefs.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -188,15 +189,23 @@ void C_BaseExplosionEffect::Create( const Vector &position, float force, float s
 
 	if (m_fFlags & TE_EXPLFLAG_SMALL)
 	{
-		Msg("creating small explosion\n");
-		DispatchParticleEffect("hlr_base_explosion2", position, vec3_angle);
+		DevMsg("creating small explosion\n");
+		if (r_efficient_particles.GetBool())
+			DispatchParticleEffect("hlr_base_explosion2_efficient", position, vec3_angle);
+		else
+			DispatchParticleEffect("hlr_base_explosion2", position, vec3_angle);
 		return;
 	}
 	// UNDONE: Make core size parametric to scale or remove scale?
-	Msg("creating large explosion\n");
-	DispatchParticleEffect("hlr_base_explosion1", position, QAngle(0, 0, 0));	
-	CreateDebris();
-	CreateDynamicLight();
+	DevMsg("creating large explosion\n");
+	if (r_efficient_particles.GetBool())
+		DispatchParticleEffect("hlr_base_explosion1_efficient", position, vec3_angle);
+	else
+	{
+		DispatchParticleEffect("hlr_base_explosion1", position, vec3_angle);
+		CreateDebris();
+		CreateDynamicLight();
+	}
 	//CreateMisc();
 }
 

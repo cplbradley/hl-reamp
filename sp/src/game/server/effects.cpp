@@ -704,7 +704,7 @@ bool CEnvShooter::KeyValue( const char *szKeyName, const char *szValue )
 			m_iGibMaterial = matMetal;
 			break;
 		case 3:
-			m_iGibMaterial = matFlesh;
+			m_iGibMaterial = matRedFlesh;
 			break;
 		case 4:
 			m_iGibMaterial = matRocks;

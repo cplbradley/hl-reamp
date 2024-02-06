@@ -15,6 +15,11 @@
 #include "coordsize.h"
 #include "rumble_shared.h"
 
+
+#ifdef GAME_DLL
+#include "ai_basenpc.h"
+#endif
+
 #if defined(HL2_DLL) || defined(HL2_CLIENT_DLL)
 	#include "hl_movedata.h"
 #endif
@@ -3870,6 +3875,20 @@ void CGameMovement::SetGroundEntity( trace_t *pm )
 
 		m_bBlockingAirControl = false;
 		m_bBlockDistanceFromOrigin = false;
+
+		if (newGround->IsNPC())
+		{
+#ifdef GAME_DLL
+			CAI_BaseNPC* pNPC = newGround->MyNPCPointer();
+			if (pNPC)
+			{
+				ClearMultiDamage();
+				pNPC->TakeDamage(CTakeDamageInfo(player, player, player->m_Local.m_flFallVelocity * 0.1f, DMG_CRUSH));
+				Msg("Falldamage %f\n", player->m_Local.m_flFallVelocity);
+				ApplyMultiDamage();
+			}
+#endif
+		}
 /*#ifndef CLIENT_DLL
 		
 		CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());

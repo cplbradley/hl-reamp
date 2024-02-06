@@ -249,7 +249,9 @@ void CSinglePlayerAnimState::ComputePoseParam_BodyYaw(void)
 		mult = (-(((flYaw - 90) * (flYaw - 90)) * 0.0037037f) + 30); //do the formula not inverted
 	else //if moving forward, backward, or not at all
 		mult = 0; //
-	float speed = GetBasePlayer()->GetAbsVelocity().Length();
+	Vector vecVel = GetBasePlayer()->GetAbsVelocity();
+	vecVel.z = 0;
+	float speed = vecVel.Length();
 	float ratio = speed / GetBasePlayer()->GetPlayerMaxSpeed();
 
 	

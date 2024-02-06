@@ -8,15 +8,9 @@ $modelname	"gibs/human/hgib_small1.mdl"
 $staticprop
 $body hgib_small1 "hgib_small1.smd"
 $collisionmodel "hgib_small1_hull.smd" {
-	$concave
-	$inertia 0.0
-	$damping 0.0
-	$rotdamping 0.0
-	$drag 0.0
-	$mass 25.0
 
 }
-$surfaceprop "flesh" 
+$surfaceprop "flesh"
 $contents "solid"
 $cdmaterials "models/gibs/human"
 $sequence idle "hgib_small1.smd" activity ACT_IDLE -1 fps 1

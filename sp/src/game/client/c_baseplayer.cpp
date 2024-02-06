@@ -1123,7 +1123,7 @@ void C_BasePlayer::CreateMuzzleLight(int r, int g, int b, Vector vecSrc)
 
 	dlight_t* dl = effects->CL_AllocDlight(GetActiveWeapon()->index);
 
-	Msg("Creating Muzzle Light color %i %i %i at %f %f %f\n", red,green,blue,vecSrc.x, vecSrc.y, vecSrc.z);
+	DevMsg("Creating Muzzle Light color %i %i %i at %f %f %f\n", red,green,blue,vecSrc.x, vecSrc.y, vecSrc.z);
 
 	dl->origin = vecSrc;
 	dl->color.r = red;
@@ -1969,7 +1969,7 @@ void C_BasePlayer::CalcThirdPersonDeathView(Vector& eyeOrigin, QAngle& eyeAngles
 			fov = GetFOV();
 			eyeOrigin = GetAbsOrigin();
 			SetModelName(NULL);
-			Msg("player gibbed\n");
+			DevMsg("player gibbed\n");
 			return;
 		}
 
@@ -2999,14 +2999,6 @@ void C_BasePlayer::FogControllerChanged( bool bSnap )
 	{
 		fogparams_t	*pFogParams = &(m_Local.m_PlayerFog.m_hCtrl->m_fog);
 
-		/*
-		Msg("Updating Fog Target: (%d,%d,%d) %.0f,%.0f -> (%d,%d,%d) %.0f,%.0f (%.2f seconds)\n", 
-					m_CurrentFog.colorPrimary.GetR(), m_CurrentFog.colorPrimary.GetB(), m_CurrentFog.colorPrimary.GetG(), 
-					m_CurrentFog.start.Get(), m_CurrentFog.end.Get(), 
-					pFogParams->colorPrimary.GetR(), pFogParams->colorPrimary.GetB(), pFogParams->colorPrimary.GetG(), 
-					pFogParams->start.Get(), pFogParams->end.Get(), pFogParams->duration.Get() );*/
-		
-
 		// Setup the fog color transition.
 		m_Local.m_PlayerFog.m_OldColor = m_CurrentFog.colorPrimary;
 		m_Local.m_PlayerFog.m_flOldStart = m_CurrentFog.start;
@@ -3038,12 +3030,6 @@ void C_BasePlayer::UpdateFogController( void )
 			fogparams_t	*pFogParams = &(m_Local.m_PlayerFog.m_hCtrl->m_fog);
 			if ( m_CurrentFog != *pFogParams )
 			{
-				/*
-					Msg("FORCING UPDATE: (%d,%d,%d) %.0f,%.0f -> (%d,%d,%d) %.0f,%.0f (%.2f seconds)\n", 
-										m_CurrentFog.colorPrimary.GetR(), m_CurrentFog.colorPrimary.GetB(), m_CurrentFog.colorPrimary.GetG(), 
-										m_CurrentFog.start.Get(), m_CurrentFog.end.Get(), 
-										pFogParams->colorPrimary.GetR(), pFogParams->colorPrimary.GetB(), pFogParams->colorPrimary.GetG(), 
-										pFogParams->start.Get(), pFogParams->end.Get(), pFogParams->duration.Get() );*/
 					
 
 				m_CurrentFog = *pFogParams;
@@ -3091,11 +3077,6 @@ void C_BasePlayer::UpdateFogBlend( void )
 			m_CurrentFog.start.Set( m_Local.m_PlayerFog.m_flNewStart );
 			m_CurrentFog.end.Set( m_Local.m_PlayerFog.m_flNewEnd );
 			m_Local.m_PlayerFog.m_flTransitionTime = -1;
-
-			/*
-				Msg("Finished transition to (%d,%d,%d) %.0f,%.0f\n", 
-								m_CurrentFog.colorPrimary.GetR(), m_CurrentFog.colorPrimary.GetB(), m_CurrentFog.colorPrimary.GetG(), 
-								m_CurrentFog.start.Get(), m_CurrentFog.end.Get() );*/
 				
 		}
 	}

@@ -177,6 +177,7 @@ const Vector& CBaseEntity::WorldChestPosition() const
 	return vecChest;
 }
 
+
 #if !defined( CLIENT_DLL )
 #define CHANGE_FLAGS(flags,newFlags) { unsigned int old = flags; flags = (newFlags); gEntList.ReportEntityFlagsChanged( this, old, flags ); }
 #else
@@ -2281,7 +2282,7 @@ int CBaseEntity::BloodColor()
 
 void CBaseEntity::TraceBleed( float flDamage, const Vector &vecDir, trace_t *ptr, int bitsDamageType )
 {
-	if ((BloodColor() == DONT_BLEED) || (BloodColor() == BLOOD_COLOR_MECH))
+	if ((BloodColor() == DONT_BLEED))
 	{
 		return;
 	}

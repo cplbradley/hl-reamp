@@ -23,8 +23,10 @@
 #include "decals.h"
 #include "hlr_projectile.h"
 #include "particle_parse.h"
+#include "hlr/hlr_shareddefs.h"
 
 #include "tier0/memdbgon.h"
+
 
 LINK_ENTITY_TO_CLASS(hlr_vortprojectile, CHLRVortProjectile); //ooh i'm being assigned a class
 BEGIN_DATADESC(CHLRVortProjectile) //let's store some data
@@ -515,7 +517,9 @@ void CHLRMechubusMissile::Precache(void)
 }
 bool CHLRMechubusMissile::DispatchEffects(void)
 {
-	DispatchParticleEffect("mechubus_missile_core", PATTACH_ABSORIGIN_FOLLOW, this, "root", false);
+	if(!r_efficient_particles.GetBool())
+		DispatchParticleEffect("mechubus_missile_core", PATTACH_ABSORIGIN_FOLLOW, this, "root", false);
+
 	SetRenderColor(255, 128, 0);
 	return true;
 }

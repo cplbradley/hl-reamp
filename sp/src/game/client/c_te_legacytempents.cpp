@@ -35,6 +35,7 @@
 #include "c_te_effect_dispatch.h"
 #include "c_props.h"
 #include "c_basedoor.h"
+#include "hlr/hlr_shareddefs.h"
 
 // NOTE: Always include this last!
 #include "tier0/memdbgon.h"
@@ -42,7 +43,7 @@
 extern ConVar muzzleflash_light;
 
 #define TENT_WIND_ACCEL 50
-
+#define PARTICLE_INTERVAL 0.5f
 //Precache the effects
 #ifndef TF_CLIENT_DLL
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectMuzzleFlash )
@@ -80,6 +81,52 @@ ITempEnts *tempents = ( ITempEnts * )&g_TempEnts;
 #endif
 
 
+
+const char* GibImpactEffect(int bloodcolor)
+{
+	switch (bloodcolor)
+	{
+	case BLOOD_COLOR_GREEN:
+	case BLOOD_COLOR_GREEN_ZAP:
+		return "blood_gib_green_impact";
+	case BLOOD_COLOR_RED:
+	case BLOOD_COLOR_RED_ZAP:
+		return "blood_gib_red_impact";
+	case BLOOD_COLOR_YELLOW:
+	case BLOOD_COLOR_YELLOW_ZAP:
+		return "blood_gib_yellow_impact";
+	case BLOOD_COLOR_MECH_ZAP:
+	case BLOOD_COLOR_MECH:
+		return "blood_gib_mech_impact";
+	default:
+		return "";
+	}
+}
+
+const char* GibTrailEffect(int bloodcolor)
+{
+	switch (bloodcolor)
+	{
+	case BLOOD_COLOR_GREEN:
+		return "blood_trail_green";
+	case BLOOD_COLOR_RED:
+		return "blood_trail_red";
+	case BLOOD_COLOR_YELLOW:
+		return "blood_trail_yellow";
+	case BLOOD_COLOR_MECH:
+		return "blood_trail_mech";
+	case BLOOD_COLOR_GREEN_ZAP:
+		return "blood_trail_green_zap";
+	case BLOOD_COLOR_RED_ZAP:
+		return "blood_trail_red_zap";
+	case BLOOD_COLOR_YELLOW_ZAP:
+		return "blood_trail_yellow_zap";
+	case BLOOD_COLOR_MECH_ZAP:
+		return "blood_trail_mech_zap";
+	default:
+		return "";
+	}
+}
 
 
 C_LocalTempEntity::C_LocalTempEntity()
@@ -130,6 +177,7 @@ void C_LocalTempEntity::Prepare( const model_t *pmodel, float time )
 	bounceFactor = 1;
 	m_nFlickerFrame = 0;
 	m_bParticleCollision = false;
+	bloodcolor = -1;
 }
 
 //-----------------------------------------------------------------------------
@@ -420,7 +468,10 @@ bool C_LocalTempEntity::Frame( float frametime, int framenumber )
 					collisionGroup = GetCollisionGroup();
 				}
 
-				UTIL_TraceLine( vPrevOrigin, GetLocalOrigin(), MASK_SOLID, GetOwnerEntity(), collisionGroup, &trace );
+				UTIL_TraceLine( vPrevOrigin, GetLocalOrigin(), MASK_SHOT, GetOwnerEntity(), collisionGroup, &trace );
+
+				if (trace.m_pEnt)
+					Msg("ClientProjectile hit %s", trace.m_pEnt->GetClassname());
 
 				if ( (flags & FTENT_COLLIDEPROPS) && trace.m_pEnt )
 				{
@@ -488,7 +539,22 @@ bool C_LocalTempEntity::Frame( float frametime, int framenumber )
 				tempents->PlaySound(this, damp);
 			}
 
-			if ( m_pszImpactEffect )
+			if (flags & FTENT_DECAL)
+			{
+				if (!r_efficient_particles.GetBool())// && gpGlobals->curtime > m_fParticleInterval)
+				{
+					if (m_vecTempEntVelocity.Length() > 1.f)
+					{
+						UTIL_BloodDecalTrace(&trace, bloodcolor);
+						DispatchParticleEffect(m_pszImpactEffect, GetAbsOrigin(), vec3_angle);
+						if (trace.m_pEnt)
+							ConDColorMsg(Color(0, 120, 255), "Gib Impact, hit object %s Impact Velocity %f\n", trace.m_pEnt->GetClassname(), m_vecTempEntVelocity.Length());
+						//m_fParticleInterval = gpGlobals->curtime;// +PARTICLE_INTERVAL;
+					}
+				}
+			}
+
+			/*if (m_pszImpactEffect)
 			{
 				CEffectData data;
 				//data.m_vOrigin = newOrigin;
@@ -516,7 +582,7 @@ bool C_LocalTempEntity::Frame( float frametime, int framenumber )
 				}
 				DispatchEffect( m_pszImpactEffect, data );
 			}
-
+			*/
 			// Check for a collision and stop the particle system.
 			if ( flags & FTENT_CLIENTSIDEPARTICLES )
 			{
@@ -997,7 +1063,7 @@ int BreakModelDrawHelper( C_LocalTempEntity *entity, int flags )
 //			flags - 
 //-----------------------------------------------------------------------------
 void CTempEnts::BreakModel( const Vector &pos, const QAngle &angles, const Vector &size, const Vector &dir, 
-						   float randRange, float life, int count, int modelIndex, char flags)
+						   float randRange, float life, int count, int modelIndex, char flags, bool decal, int bloodcolor)
 {
 	int					i, frameCount;
 	C_LocalTempEntity			*pTemp;
@@ -1056,6 +1122,24 @@ void CTempEnts::BreakModel( const Vector &pos, const QAngle &angles, const Vecto
 		}
 
 		pTemp->flags |= FTENT_COLLIDEWORLD | FTENT_FADEOUT | FTENT_SLOWGRAVITY;
+
+		if (decal)
+		{
+			pTemp->flags |= FTENT_DECAL;
+			pTemp->bloodcolor = bloodcolor;
+			if (!r_efficient_particles.GetBool())
+			{
+				pTemp->SetImpactEffect(GibImpactEffect(bloodcolor));
+				// Add the entity to the ClientEntityList and create the particle system.
+				ClientEntityList().AddNonNetworkableEntity(pTemp);
+				pTemp->ParticleProp()->Create(GibTrailEffect(bloodcolor), PATTACH_ABSORIGIN_FOLLOW);
+
+				// Set the particle flag on the temp entity and save the name of the particle effect.
+				pTemp->flags |= FTENT_CLIENTSIDEPARTICLES;
+				pTemp->SetParticleEffect(GibTrailEffect(bloodcolor));
+			}
+		}
+
 
 		if ( random->RandomInt(0,255) < 200 ) 
 		{
@@ -1153,33 +1237,33 @@ void CTempEnts::PhysicsProp( int modelindex, int skin, const Vector& pos, const 
 //			lifetime - 
 //			*pOwner - 
 //-----------------------------------------------------------------------------
-C_LocalTempEntity *CTempEnts::ClientProjectile( const Vector& vecOrigin, const Vector& vecVelocity, const Vector& vecAcceleration, int modelIndex, int lifetime, CBaseEntity *pOwner, const char *pszImpactEffect, const char *pszParticleEffect )
+C_LocalTempEntity* CTempEnts::ClientProjectile(const Vector& vecOrigin, const Vector& vecVelocity, const Vector& vecAcceleration, int modelIndex, int lifetime, CBaseEntity* pOwner, const char* pszImpactEffect, const char* pszParticleEffect)
 {
-	C_LocalTempEntity	*pTemp;
-	const model_t		*model;
+	C_LocalTempEntity* pTemp;
+	const model_t* model;
 
-	if ( !modelIndex ) 
+	if (!modelIndex)
 		return NULL;
 
-	model = modelinfo->GetModel( modelIndex );
-	if ( !model )
+	model = modelinfo->GetModel(modelIndex);
+	if (!model)
 	{
 		Warning("ClientProjectile: No model %d!\n", modelIndex);
 		return NULL;
 	}
 
-	pTemp = TempEntAlloc( vecOrigin, model );
+	pTemp = TempEntAlloc(vecOrigin, model);
 	if (!pTemp)
 		return NULL;
 
-	pTemp->SetVelocity( vecVelocity );
-	pTemp->SetAcceleration( vecAcceleration );
+	pTemp->SetVelocity(vecVelocity);
+	pTemp->SetAcceleration(vecAcceleration);
 	QAngle angles;
-	VectorAngles( vecVelocity, angles );
-	pTemp->SetAbsAngles( angles );
-	pTemp->SetAbsOrigin( vecOrigin );
+	VectorAngles(vecVelocity, angles);
+	pTemp->SetAbsAngles(angles);
+	pTemp->SetAbsOrigin(vecOrigin);
 	pTemp->die = gpGlobals->curtime + lifetime;
-	pTemp->flags = FTENT_COLLIDEALL | FTENT_ATTACHTOTARGET | FTENT_ALIGNTOMOTION;
+	pTemp->flags = FTENT_COLLIDEALL | FTENT_ATTACHTOTARGET | FTENT_ALIGNTOMOTION | FTENT_COLLIDEKILL;
 	pTemp->clientIndex = ( pOwner != NULL ) ? pOwner->entindex() : 0; 
 	pTemp->SetOwnerEntity( pOwner );
 	pTemp->SetImpactEffect( pszImpactEffect );

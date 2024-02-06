@@ -208,6 +208,7 @@ void CNPC_VortBrute::Spawn()
 	SetSolid(SOLID_BBOX);
 	AddSolidFlags(FSOLID_NOT_STANDABLE);
 
+	SetBloodColor(BLOOD_COLOR_GREEN);
 	NPCInit();
 	flNextLeap = flNextThrow = gpGlobals->curtime;
 

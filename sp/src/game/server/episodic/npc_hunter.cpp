@@ -1753,7 +1753,7 @@ void CNPC_Hunter::Spawn()
 
 	SetEnemyClass(ENEMYCLASS_HEAVY);
 
-	SetBloodColor( DONT_BLEED );
+	SetBloodColor( BLOOD_COLOR_MECH );
 	
 	m_iHealth = m_iMaxHealth = sk_hunter_health.GetInt();
 
@@ -5393,8 +5393,6 @@ void CNPC_Hunter::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &v
 		
 		QAngle vecAngles;
 		VectorAngles( ptr->plane.normal, vecAngles );
-		DispatchParticleEffect( "blood_impact_synth_01", ptr->endpos, vecAngles );
-		DispatchParticleEffect( "blood_impact_synth_01_arc_parent", PATTACH_POINT_FOLLOW, this, gm_nHeadCenterAttachment );
 	}
 
 	BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );

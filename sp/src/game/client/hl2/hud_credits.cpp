@@ -351,6 +351,10 @@ void CHudCredits::DrawOutroCreditsName( void )
 		else
 			surface()->DrawSetTextColor(cColor[0], cColor[1], cColor[2], cColor[3]);
 		
+		if (cmp3 == 0)
+		{
+			surface()->DrawSetTextScale(10.f, 10.f);
+		}
 		wchar_t unicode[256];
 		
 		if ( pCredit->szCreditName[0] == '#' )

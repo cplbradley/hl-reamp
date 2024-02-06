@@ -1251,16 +1251,6 @@ void CNPC_Vortigaunt::Event_Killed( const CTakeDamageInfo &info )
 	StopHealing();
 	if (m_hHealTarget && g_pGameRules->g_utlvec_vorteffectlist.HasElement(m_hHealTarget->entindex()))
 		g_pGameRules->g_utlvec_vorteffectlist.FindAndFastRemove(m_hHealTarget->entindex());
-	if (info.GetDamage() >= (m_iMaxHealth * 1.5f) && (info.GetDamageType() != DMG_DISSOLVE))
-	{
-		SetSolid(SOLID_NONE);
-		SetModelName(NULL_STRING);
-		DispatchParticleEffect("agib_sploosh", WorldSpaceCenter(), GetAbsAngles());
-		CGib::SpawnSpecificGibs(this, 2, 1200, 500, "models/gibs/alien/agib_1.mdl", 5);
-		CGib::SpawnSpecificGibs(this, 2, 1200, 500, "models/gibs/alien/agib_2.mdl", 5);
-		CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_3.mdl", 5);
-		CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/alien/agib_4.mdl", 5);
-	}
 
 	BaseClass::Event_Killed( info );
 }
@@ -1328,6 +1318,14 @@ void CNPC_Vortigaunt::Spawn( void )
 	GetShotRegulator()->SetRestInterval( 2.0f, 2.0f );
 }
 
+const char* cszVortParticles[5] =
+{
+	"vort_heal_beam",
+	"vort_shield_beam",
+	"vort_buff_beam",
+	"vortigaunt_telein",
+	"vortigaunt_teleout"
+};
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -1335,11 +1333,10 @@ void CNPC_Vortigaunt::Precache()
 {
 	UTIL_PrecacheOther( "vort_charge_token" );
 	UTIL_PrecacheOther("hlr_vortprojectile");
-	PrecacheParticleSystem("vort_heal_beam");
-	PrecacheParticleSystem("vort_shield_beam");
-	PrecacheParticleSystem("vort_buff_beam");
-	PrecacheParticleSystem("vortigaunt_teleout");
-	PrecacheParticleSystem("vortigaunt_telein");
+	for (int i = 0; i < 5; i++)
+	{
+		PrecacheParticleSystem(cszVortParticles[i]);
+	}
 	PrecacheModel( STRING( GetModelName() ) );
 
 	m_nLightningSprite = PrecacheModel("sprites/lgtning.vmt");
@@ -1378,13 +1375,6 @@ void CNPC_Vortigaunt::Precache()
 	PrecacheMaterial( "sprites/light_glow02_add" );
 	PrecacheModel("sprites/greenglow1.vmt");
 	PrecacheModel("sprites/smoke.vmt");
-
-	PrecacheModel("models/gibs/alien/agib_1.mdl");
-	PrecacheModel("models/gibs/alien/agib_2.mdl");
-	PrecacheModel("models/gibs/alien/agib_3.mdl");
-	PrecacheModel("models/gibs/alien/agib_4.mdl");
-	PrecacheModel("models/gibs/agibs.mdl");
-	PrecacheParticleSystem("agib_sploosh");
 	
 
 	BaseClass::Precache();

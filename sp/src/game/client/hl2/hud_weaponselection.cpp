@@ -1071,7 +1071,7 @@ void CHudWeaponSelection::OpenSelection( void )
 	if (slowmo.GetBool())
 	{
 		ConVar* host_timescale = cvar->FindVar("host_timescale");
-		engine->ClientCmd_Unrestricted("sv_cheats 1");
+		//engine->ClientCmd_Unrestricted("sv_cheats 1");
 		host_timescale->SetValue(0.3f);
 	}
 	CSingleUserRecipientFilter user(CBasePlayer::GetLocalPlayer());
@@ -1090,7 +1090,7 @@ void CHudWeaponSelection::HideSelection( void )
 	if (slowmo.GetBool())
 	{
 		ConVar* host_timescale = cvar->FindVar("host_timescale");
-		engine->ClientCmd_Unrestricted("sv_cheats 1");
+		//engine->ClientCmd_Unrestricted("sv_cheats 1");
 		host_timescale->SetValue(1);
 	}
 	CSingleUserRecipientFilter user(CBasePlayer::GetLocalPlayer());

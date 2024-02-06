@@ -190,6 +190,20 @@ $collisiontext
 		"jointmerge" "valvebiped.bip01_pelvis,valvebiped.bip01"
 		"jointmerge" "valvebiped.bip01_pelvis,valvebiped.bip01_spine1"
 	}
+	break { model "gibs/robot/robohead" health 0 fadetime 3 burst 200 placementbone "ValveBiped.Bip01_Head1" }
+	break { model "gibs/robot/robochest" health 0 fadetime 3 burst 200 placementbone "ValveBiped.Bip01_Spine4" }
+	break { model "gibs/robot/robopelvis" health 0 fadetime 3 burst 200 placementbone "ValveBiped.Bip01_Pelvis" }
+	break { model "gibs/robot/robothigh_r" health 0 fadetime 3 burst 200 placementbone "ValveBiped.Bip01_R_Thigh" }
+	break { model "gibs/robot/robothigh_l" health 0 fadetime 3 burst 200 placementbone "ValveBiped.Bip01_L_Thigh" }
+	break { model "gibs/robot/roboboot_r" health 0 fadetime 3 burst 200 placementbone "ValveBiped.Bip01_R_Foot" }
+	break { model "gibs/robot/roboboot_l" health 0 fadetime 3 burst 200 placementbone "ValveBiped.Bip01_L_Foot" }
+	break { model "gibs/robot/roboupperarm_r" health 0 fadetime 3 burst 200 placementbone "ValveBiped.Bip01_R_UpperArm" }
+	break { model "gibs/robot/roboupperarm_l" health 0 fadetime 3 burst 200 placementbone "ValveBiped.Bip01_L_UpperArm" }
+	break { model "gibs/robot/roboforearm_r" health 0 fadetime 3 burst 200 placementbone "ValveBiped.Bip01_R_Forearm" }
+	break { model "gibs/robot/roboforearm_l" health 0 fadetime 3 burst 200 placementbone "ValveBiped.Bip01_L_Forearm" }
+	break { model "gibs/robot/robohand_r" health 0 fadetime 3 burst 200 placementbone "ValveBiped.Bip01_R_Hand" }
+	break { model "gibs/robot/robohand_l" health 0 fadetime 3 burst 200 placementbone "ValveBiped.Bip01_L_Hand" }
+
 }
 
 

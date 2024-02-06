@@ -100,6 +100,22 @@ enum SpeechMemory_t
 	bits_MEMORY_PLAYER_HARASSED		= bits_MEMORY_CUSTOM4,
 };
 
+#define NUM_ROBO_GIBS 13
+const char* szRoboGibs[NUM_ROBO_GIBS] = {
+	"models/gibs/robot/robohead.mdl",
+	"models/gibs/robot/robochest.mdl",
+	"models/gibs/robot/robopelvis.mdl",
+	"models/gibs/robot/robothigh_r.mdl",
+	"models/gibs/robot/robothigh_l.mdl",
+	"models/gibs/robot/roboboot_r.mdl",
+	"models/gibs/robot/roboboot_l.mdl",
+	"models/gibs/robot/roboupperarm_r.mdl",
+	"models/gibs/robot/roboupperarm_l.mdl",
+	"models/gibs/robot/roboforearm_r.mdl",
+	"models/gibs/robot/roboforearm_l.mdl",
+	"models/gibs/robot/robohand_r.mdl",
+	"models/gibs/robot/robohand_l.mdl"
+};
 //Metrocop
 int	g_interactionMetrocopStartedStitch = 0;
 int g_interactionMetrocopIdleChatter = 0;
@@ -596,7 +612,10 @@ void CNPC_MetroPolice::Precache( void )
 	enginesound->PrecacheSentenceGroup( "METROPOLICE" );
 
 	
-
+	for (int i = 0; i < NUM_ROBO_GIBS; i++)
+	{
+		PrecacheModel(szRoboGibs[i]);
+	}
 	
 
 	BaseClass::Precache();
@@ -3127,11 +3146,32 @@ void CNPC_MetroPolice::Event_Killed( const CTakeDamageInfo &info )
 	{
 		UTIL_Remove(m_pSprite);
 	}
-
-	DispatchParticleEffect("hlr_base_explosion2", WorldSpaceCenter(), vec3_angle, this);
 	BaseClass::Event_Killed( info );
 }
 
+
+bool CNPC_MetroPolice::CorpseGib(const CTakeDamageInfo& info)
+{
+	BaseClass::CorpseGib(info);
+	DispatchParticleEffect("hlr_base_explosion2", WorldSpaceCenter(), vec3_angle, this);
+	QAngle eyeAng = -GetAbsAngles();
+	CBaseCombatCharacter* killer = ToBaseCombatCharacter(info.GetAttacker());
+	if (killer)
+		eyeAng = killer->EyeAngles();
+	Vector vecAng;
+	AngleVectors(eyeAng, &vecAng);
+	VectorNormalize(vecAng);
+
+	Vector velocity = vecAng * 500;
+	AngularImpulse	angVelocity = RandomAngularImpulse(-150, 150);
+	breakablepropparams_t params(EyePosition(), GetAbsAngles(), velocity, angVelocity);
+	params.impactEnergyScale = 1.0f;
+	params.defBurstScale = 150.0f;
+	params.defCollisionGroup = COLLISION_GROUP_DEBRIS;
+	PropBreakableCreateAll(GetModelIndex(), NULL, params, this, -1, true, false,m_nSkin);
+
+	return true;
+}
 //-----------------------------------------------------------------------------
 // Try to enter a slot where we shoot a pistol 
 //-----------------------------------------------------------------------------

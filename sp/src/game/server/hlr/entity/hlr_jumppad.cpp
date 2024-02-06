@@ -75,6 +75,10 @@ DEFINE_FUNCTION(PlayAnim),
 DEFINE_INPUTFUNC(FIELD_VOID,"Enable",Enable),
 DEFINE_INPUTFUNC(FIELD_VOID, "Disable",Disable),
 DEFINE_INPUTFUNC(FIELD_FLOAT, "SetForce", SetForce),
+
+DEFINE_FIELD(m_iszSound,FIELD_STRING),
+DEFINE_FIELD(signalPoint,FIELD_VECTOR),
+
 END_DATADESC()
 void CLaunchpad::Spawn(void)
 {
@@ -357,9 +361,14 @@ public:
 	void Touch(CBaseEntity* pOther);
 	void Reenable(void);
 
+	void LegacyLaunch(CBaseEntity* pOther);
+	void TargetedLaunch(CBaseEntity* pOther);
+
 
 	float m_flPushForce;
 
+	const char* target;
+	Vector signalPoint;
 
 	COutputEvent m_OnLaunch;
 
@@ -370,6 +379,7 @@ LINK_ENTITY_TO_CLASS(trigger_launch, CTriggerLaunch);
 BEGIN_DATADESC(CTriggerLaunch)
 	DEFINE_KEYFIELD(m_flPushForce,FIELD_FLOAT,"PushForce"),
 	DEFINE_OUTPUT(m_OnLaunch, "OnLaunch"),
+	DEFINE_KEYFIELD(target, FIELD_STRING, "target"),
 END_DATADESC()
 
 void CTriggerLaunch::Spawn(void)
@@ -381,6 +391,26 @@ void CTriggerLaunch::Spawn(void)
 
 void CTriggerLaunch::Touch(CBaseEntity* pOther)
 {
+	CBaseEntity* targetEnt = gEntList.FindEntityByName(NULL, target);
+
+	if (!targetEnt)
+	{
+		LegacyLaunch(pOther);
+	}
+	else
+	{
+		signalPoint = targetEnt->GetAbsOrigin();
+		TargetedLaunch(pOther);
+	}
+}
+
+void CTriggerLaunch::LegacyLaunch(CBaseEntity* pOther)
+{
+	if (!pOther) //if null
+		return; //stop
+	if (pOther->IsWorld()) //if i touched a world object
+		return; //stop
+
 	if (!pOther->IsPlayer())
 		return;
 
@@ -416,6 +446,66 @@ void CTriggerLaunch::Touch(CBaseEntity* pOther)
 		SetNextThink(gpGlobals->curtime + 0.25f);
 	}
 
+}
+
+void CTriggerLaunch::TargetedLaunch(CBaseEntity* pOther)
+{
+	if (!pOther) //if null
+		return; //stop
+	if (pOther->IsWorld()) //if i touched a world object
+		return; //stop
+	if (pOther->GetSolid() == SOLID_BSP)
+		return;
+
+	if (!pOther->IsPlayer())
+		return;
+
+	Vector vecToss = VecCheckThrow(this, pOther->GetAbsOrigin(), signalPoint, m_flPushForce, (10.0f * 12.0f), 1.0f); //calculate the trajectory
+	Vector vecToTarget = (signalPoint - pOther->GetAbsOrigin());
+	VectorNormalize(vecToTarget);
+	float flVelocity = VectorNormalize(vecToss);
+
+	Vector vecStall = Vector(0, 0, 0); //stall the entity 
+	pOther->SetAbsVelocity(vecStall);
+
+	if (pOther->IsPlayer()) //if it's the player 
+	{
+		CBasePlayer* pPlayer = ToBasePlayer(pOther);
+		CHL2_Player* phl2player = dynamic_cast<CHL2_Player*>(pPlayer);
+		extern IGameMovement* g_pGameMovement; //call the game movement code 
+		CGameMovement* gm = dynamic_cast<CGameMovement*>(g_pGameMovement); //create a pointer for the game movement code
+		gm->m_iJumpCount = 1; //set the jump count to 1 
+		Vector vecVel = gm->GetMoveData()->m_vecVelocity;
+		gm->GetMoveData()->m_vecVelocity += -vecVel;
+		gm->m_bLaunchpadTimedBlock = true;
+		//pOther->VelocityPunch(vecToss * flVelocity); //launch the player
+		pOther->SetAbsVelocity(vecToss * flVelocity);
+		phl2player->SetAnimation(PLAYER_JUMP);
+
+	}
+	else
+	{
+		QAngle angDir;
+		VectorAngles(vecToTarget, angDir); //get the angle from start to target
+		if (pOther->GetMoveType() && pOther->GetMoveType() == MOVETYPE_FLY) //if it isn't affected by gravity
+		{
+			pOther->SetMoveType(MOVETYPE_FLYGRAVITY); //make it affected by gravity 
+		}
+		if (pOther->IsNPC()) //if it's an npc
+		{
+			pOther->SetGroundEntity(NULL); //register it as in the air
+		}
+		pOther->SetGravity(1.0f); //set the gravity to 100%
+		pOther->SetAbsOrigin(GetAbsOrigin()); //set the absolute origin to that of the launchpad
+
+		pOther->SetAbsVelocity(vecToss * flVelocity); //launch the object
+
+		if (!pOther->IsNPC())
+			pOther->SetAbsAngles(angDir); //point it towards the target
+	}
+
+	SetThink(&CTriggerLaunch::Reenable);
+	SetNextThink(gpGlobals->curtime + 0.25f);
 }
 
 void CTriggerLaunch::Reenable(void)

@@ -137,7 +137,7 @@ public:
 	bool		ShouldGib( const CTakeDamageInfo &info );
 	bool		CorpseGib( const CTakeDamageInfo &info );
 
-	float		GetMaxJumpSpeed() const { return 1024.0f; }
+	float		GetMaxJumpSpeed() const { return BaseClass::GetMaxJumpSpeed(); }
 
 	void		SetFightTarget( CBaseEntity *pTarget );
 	void		InputFightToPosition( inputdata_t &inputdata );

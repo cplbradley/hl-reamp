@@ -343,7 +343,7 @@ void CNPC_VortBoss::Spawn(void)
 	SetSolid(SOLID_BBOX);
 	AddSolidFlags(FSOLID_NOT_STANDABLE);
 	SetMoveType(MOVETYPE_STEP);
-	SetBloodColor(BLOOD_COLOR_RED);
+	SetBloodColor(BLOOD_COLOR_GREEN);
 	SetNavType(NAV_GROUND);
 	SetEnemyClass(ENEMYCLASS_SUPERHEAVY);
 	bDrawSpinBeam = false;

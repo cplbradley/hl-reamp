@@ -893,7 +893,7 @@ CGameGibManager *GetGibManager( void )
 
 #endif
 
-void PropBreakableCreateAll( int modelindex, IPhysicsObject *pPhysics, const breakablepropparams_t &params, CBaseEntity *pEntity, int iPrecomputedBreakableCount, bool bIgnoreGibLimit, bool defaultLocation )
+void PropBreakableCreateAll( int modelindex, IPhysicsObject *pPhysics, const breakablepropparams_t &params, CBaseEntity *pEntity, int iPrecomputedBreakableCount, bool bIgnoreGibLimit, bool defaultLocation, int skin )
 {
         // Check for prop breakable count reset. 
 	int nPropCount = props_break_max_pieces_perframe.GetInt(); 
@@ -936,7 +936,7 @@ void PropBreakableCreateAll( int modelindex, IPhysicsObject *pPhysics, const bre
 	if ( !pCollide )
 		return;
 
-	int nSkin = 0;
+	int nSkin = skin;
 	CBaseEntity *pOwnerEntity = pEntity;
 	CBaseAnimating *pOwnerAnim = NULL;
 	if ( pPhysics )

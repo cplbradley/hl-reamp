@@ -11,7 +11,7 @@
 #include "basecombatcharacter.h"
 #include "ai_basenpc.h"
 #include "player.h"
-#include "weapon_ar2.h"
+#include "weapon_chaingun.h"
 #include "grenade_ar2.h"
 #include "gamerules.h"
 #include "game.h"
@@ -182,6 +182,8 @@ void CWeaponChaingun::Precache( void )
 	PrecacheScriptSound(CHAINGUN_FULLSPEED_OVERDRIVE);
 	PrecacheScriptSound(CHAINGUN_SINGLE);
 	PrecacheParticleSystem("smg_core");
+	PrecacheParticleSystem("bullettrail");
+	tracermodelindex = PrecacheModel("models/utils/player_heavytracer.mdl");
 }
 
 
@@ -287,7 +289,8 @@ void CWeaponChaingun::ItemPostFrame(void)
 	}
 	else
 	{
-		iNumShots--;
+		if(m_fScaleReductionTime <= gpGlobals->curtime)
+			iNumShots--;
 		m_iWeaponState = WEAPON_STATE_NOTFULLSPEED;
 		m_bPlayingWoundSound = false;
 	}
@@ -483,8 +486,11 @@ void CWeaponChaingun::PrimaryAttack(void)
 	}
 	m_iPrimaryAttacks++;
 
-	if(GetFireRate() == GetMaxFirerate() && !AmFocusFiring())
+	if (GetFireRate() == GetMaxFirerate() && !AmFocusFiring())
+	{
 		iNumShots++;
+		m_fScaleReductionTime = gpGlobals->curtime + 3.f;
+	}
 
 	gamestats->Event_WeaponFired(pPlayer, true, GetClassname());
 	Vector vUp, vRight, vForward;
@@ -493,7 +499,7 @@ void CWeaponChaingun::PrimaryAttack(void)
 	QAngle angThird;
 
 
-	Vector vecSrc, vecDirShooting;
+	Vector vecSrc, vecDirShooting, muzzle;
 
 	if (g_thirdperson.GetBool())
 	{
@@ -515,7 +521,7 @@ void CWeaponChaingun::PrimaryAttack(void)
 		}
 
 		vecDirShooting = (tr.endpos - vecSrc).Normalized();
-
+		muzzle = vecSrc;
 	}
 	else
 	{
@@ -523,7 +529,9 @@ void CWeaponChaingun::PrimaryAttack(void)
 		vecSrc = vecSrcPoint + RandomVector(-4, 4);
 
 		vecDirShooting = pPlayer->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT);
+		muzzle = vecSrc + vForward * -20.0f;
 	}
+	
 	// Fire the bullets
 	FireBulletsInfo_t info;
 	info.m_iShots = iBulletsToFire;
@@ -536,11 +544,11 @@ void CWeaponChaingun::PrimaryAttack(void)
 	info.m_pAttacker = pPlayer;
 
 	if (!AmFocusFiring())
-		FireActualBullet(info, 8000, GetTracerType());
+		FireActualBullet(info, 8000, false, GetTracerType());
 	else
 		pPlayer->FireBullets(info);
 
-	pPlayer->CreateMuzzleLight(0, 150, 255,vecSrc);
+	pPlayer->CreateMuzzleLight(0, 150, 255, muzzle);
 
 	//FireBullets(info);
 

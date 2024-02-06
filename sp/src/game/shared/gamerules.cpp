@@ -626,21 +626,15 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 	Vector		vecEndPos;
 
 
-
+	Msg("doing zero falloff\n");
 	if (debug_radius_damage.GetBool())
 	{
 		NDebugOverlay::Sphere(vecSrcIn, flRadius, 255, 0, 0, false, 1.0f);
 		if(!bZeroFalloff)
 			NDebugOverlay::Sphere(vecSrcIn, flRadius * 0.5f, 255, 255, 0, false, 1.0f);
-
 	}
 
 	Vector vecSrc = vecSrcIn;
-
-	if ( flRadius )
-		falloff = info.GetDamage() / flRadius;
-	else
-		falloff = 1.0;
 
 	int bInWater = (UTIL_PointContents ( vecSrc ) & MASK_WATER) ? true : false;
 
@@ -665,8 +659,6 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 
 			// radius damage can only be blocked by the world
 			vecSpot = pEntity->WorldSpaceCenter();
-
-
 
 			bool bHit = false;
 
@@ -703,11 +695,18 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 				// decrease damage for an ent that's farther from the bomb.
 				if (!bZeroFalloff)
 				{
+					falloff = info.GetDamage() / flRadius;
 					flAdjustedDamage = vecToTarget.Length() * falloff;
 					flAdjustedDamage = info.GetDamage() - flAdjustedDamage;
 				}
 				else
-					flAdjustedDamage = info.GetDamage();
+				{
+					falloff = vecToTarget.Length() / flRadius;
+					falloff = MIN(1.0f, falloff);
+					float dmgratio = falloff * falloff * falloff * falloff * falloff * falloff * falloff * falloff * falloff * falloff;
+					flAdjustedDamage = info.GetDamage() * (1 - dmgratio);
+					Msg("falloff %f ratio %f damage %f\n", falloff, dmgratio, flAdjustedDamage);
+				}
 
 				if ( flAdjustedDamage > 0 )
 				{

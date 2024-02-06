@@ -2227,10 +2227,105 @@ static ConVar r_queued_post_processing( "r_queued_post_processing", "0" );
 static ConVar mat_postprocess_x( "mat_postprocess_x", "4" );
 static ConVar mat_postprocess_y( "mat_postprocess_y", "1" );
 
-void DrawNightVisionOverlay(IMaterial* mat, int destx, int desty, int width, int height, float srcx0, float srcy0, float srcx1, float srcy1, int wide, int tall)
+void DrawNightVisionOverlay(IMatRenderContext* pRenderContext, IMaterial* mat, int destx, int desty, int width, int height, float srcx0, float srcy0, float srcx1, float srcy1, int wide, int tall)
 {
-	CMatRenderContextPtr pRenderContext(materials);
-	pRenderContext->DrawScreenSpaceRectangle(mat, destx, desty, width, height, srcx0, srcy0, srcx1, srcy1, wide, tall);
+	pRenderContext->EnableColorCorrection(true);
+	pRenderContext->DrawScreenSpaceRectangle(mat, destx, desty, width, height, srcx0, srcy0, srcx1, srcy1, wide, tall, GetClientWorldEntity()->GetClientRenderable());
+	UpdateScreenEffectTexture(0, destx, desty, width, height);
+}
+	
+void DoHLRPostProcessing(IMatRenderContext* pRenderContext, int x, int y, int w, int h)
+{
+	static IMaterial* pMat = materials->FindMaterial("engine/retrographics", TEXTURE_GROUP_OTHER);
+	static IMaterial* pFlipMat = materials->FindMaterial("engine/screenflip", TEXTURE_GROUP_OTHER);
+	static IMaterial* pFurious = materials->FindMaterial("engine/fury", TEXTURE_GROUP_OTHER);
+	static IMaterial* pTAA = materials->FindMaterial("engine/taa", TEXTURE_GROUP_OTHER);
+	static IMaterial* pSMB = materials->FindMaterial("engine/smb", TEXTURE_GROUP_OTHER);
+	static IMaterial* pBDK = materials->FindMaterial("engine/blurdarken", TEXTURE_GROUP_OTHER);
+	static IMaterial* pNV = materials->FindMaterial("engine/nightvision", TEXTURE_GROUP_OTHER);
+
+	ConVarRef smb("mat_simplemotionblur");
+
+	if (smb.GetBool())
+	{
+		if (pSMB)
+		{
+			pSMB->AddRef();
+			pRenderContext->DrawScreenSpaceRectangle(pSMB, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h, GetClientWorldEntity()->GetClientRenderable());
+			UpdateScreenEffectTexture(0, x, y, w, h);
+		}
+	}
+	if (mat_taa.GetBool())
+	{
+		if (pTAA)
+		{
+			pTAA->AddRef();
+			
+			pRenderContext->DrawScreenSpaceRectangle(pTAA, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h, GetClientWorldEntity()->GetClientRenderable());
+			UpdateScreenEffectTexture(0, x, y, w, h);
+		}
+	}
+	if (mat_classic_render.GetInt() == 1)
+	{
+		if (pMat)
+		{
+			pMat->AddRef();
+			pRenderContext->DrawScreenSpaceRectangle(pMat, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h, GetClientWorldEntity()->GetClientRenderable());
+			UpdateScreenEffectTexture(0, x, y, w, h);
+
+		}
+	}
+	C_BaseHLPlayer* pPlayer = dynamic_cast<C_BaseHLPlayer*>(CBasePlayer::GetLocalPlayer());
+
+	if (pPlayer->m_HL2Local.m_bInvertedScreen)
+	{
+		if (pFlipMat)
+		{
+			pFlipMat->AddRef();
+			pRenderContext->DrawScreenSpaceRectangle(pFlipMat, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h, GetClientWorldEntity()->GetClientRenderable());
+			UpdateScreenEffectTexture(0, x, y, w, h);
+		}
+	}
+
+	ConVarRef furyfx("g_draw_fury_effects");
+	if (pPlayer->m_HL2Local.m_bIsFurious && furyfx.GetBool())
+	{
+		if (pFurious)
+		{
+			pFurious->AddRef();
+			
+			pRenderContext->DrawScreenSpaceRectangle(pFurious, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h, GetClientWorldEntity()->GetClientRenderable());
+			UpdateScreenEffectTexture(0, x, y, w, h);
+			
+		}
+	}
+	if (pPlayer->IsEffectActive(EF_DIMLIGHT))
+	{
+		if (pNV)
+		{
+		/*	ICallQueue* pCallQueue = pRenderContext->GetCallQueue();
+
+			if (pCallQueue)
+				pCallQueue->QueueCall(DrawNightVisionOverlay, pRenderContext, pNV, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
+			else*/
+				DrawNightVisionOverlay(pRenderContext, pNV, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
+			pNV->AddRef();
+			g_bInNightvision = true;
+		}
+	}
+	else
+		g_bInNightvision = false;
+
+	ConVarRef blurdarken("mat_blurdarken");
+	if (blurdarken.GetBool())	
+	{
+		if (pBDK)
+		{
+			pBDK->AddRef();
+			pRenderContext->DrawScreenSpaceRectangle(pBDK, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h, GetClientWorldEntity()->GetClientRenderable());
+			UpdateScreenEffectTexture(0, x, y, w, h);
+		}
+	}
 }
 
 void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, bool bPostVGui )
@@ -2267,12 +2362,14 @@ void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, b
 		}
 	}
 
+
 	float flBloomScale = GetBloomAmount();
 
 	HDRType_t hdrType = g_pMaterialSystemHardwareConfig->GetHDRType();
 
 	g_bFlashlightIsOn = bFlashlightIsOn;
 
+	
 	// Use the appropriate autoexposure min / max settings.
 	// Mapmaker's overrides the convar settings.
 	float flAutoExposureMin;
@@ -2342,6 +2439,8 @@ void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, b
 			{
 				flAAStrength = mat_software_aa_strength.GetFloat();
 			}
+
+			
 
 			// bloom, software-AA and colour-correction (applied in 1 pass, after generation of the bloom texture)
 			bool  bPerformSoftwareAA	= IsX360() && ( engine->GetDXSupportLevel() >= 90 ) && ( flAAStrength != 0.0f );
@@ -2429,7 +2528,7 @@ void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, b
 						{
 							pRenderContext->SetScissorRect( partialViewportPostDestRect.width / 2, 0, partialViewportPostDestRect.width, partialViewportPostDestRect.height, true );
 						}
-
+						
 						pRenderContext->DrawScreenSpaceRectangle(post_mat,
                                                                  // TomF - offset already done by the viewport.
 																 0,0, //partialViewportPostDestRect.x,				partialViewportPostDestRect.y, 
@@ -2530,6 +2629,9 @@ void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, b
 							bFBUpdated  = true;
 						}
 					}
+					UpdateScreenEffectTexture(0, x, y, w, h);
+
+					DoHLRPostProcessing(pRenderContext, x, y, w, h);
 
 					bool bVisionOverride = ( localplayer_visionflags.GetInt() & ( 0x01 ) ); // Pyro-vision Goggles
 
@@ -2572,6 +2674,7 @@ void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, b
 			{
 				DoPostBloomTonemapping( pRenderContext, x, y, w, h, flAutoExposureMin, flAutoExposureMax );
 			}
+			
 		}
 		break;
 
@@ -2645,94 +2748,6 @@ void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, b
 			}
 			pRenderContext->SetRenderTarget( NULL );
 			break;
-		}
-	}
-
-	static IMaterial *pMat = materials->FindMaterial("engine/retrographics", TEXTURE_GROUP_OTHER);
-	static IMaterial* pFlipMat = materials->FindMaterial("engine/screenflip", TEXTURE_GROUP_OTHER);
-	static IMaterial* pFurious = materials->FindMaterial("engine/fury", TEXTURE_GROUP_OTHER);
-	static IMaterial* pTAA = materials->FindMaterial("engine/taa", TEXTURE_GROUP_OTHER);
-	static IMaterial* pSMB = materials->FindMaterial("engine/smb", TEXTURE_GROUP_OTHER);
-	static IMaterial* pBDK = materials->FindMaterial("engine/blurdarken", TEXTURE_GROUP_OTHER);
-	static IMaterial* pNV = materials->FindMaterial("engine/nightvision", TEXTURE_GROUP_OTHER);
-
-	ConVarRef smb("mat_simplemotionblur");
-
-	if (smb.GetBool())
-	{
-		if (pSMB)
-		{
-			pSMB->AddRef();
-			UpdateScreenEffectTexture();
-			pRenderContext->DrawScreenSpaceRectangle(pSMB, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
-		}
-	}
-	if (mat_taa.GetBool())
-	{
-		if (pTAA)
-		{
-			pTAA->AddRef();
-			UpdateScreenEffectTexture();
-			pRenderContext->DrawScreenSpaceRectangle(pTAA, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
-		}
-	}
-	if (mat_classic_render.GetInt() == 1)
-	{
-		if (pMat)
-		{
-			pMat->AddRef();
-			UpdateScreenEffectTexture();
-			pRenderContext->DrawScreenSpaceRectangle(pMat, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
-			
-		}
-	}
-	C_BaseHLPlayer* pPlayer = dynamic_cast<C_BaseHLPlayer*>(CBasePlayer::GetLocalPlayer());
-
-	if (pPlayer->m_HL2Local.m_bInvertedScreen)
-	{
-		if (pFlipMat)
-		{
-			pFlipMat->AddRef();
-			UpdateScreenEffectTexture();
-			pRenderContext->DrawScreenSpaceRectangle(pFlipMat, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
-		}
-	}
-
-	ConVarRef furyfx("g_draw_fury_effects");
-	if (pPlayer->m_HL2Local.m_bIsFurious && furyfx.GetBool())
-	{
-		if (pFurious)
-		{
-			pFurious->AddRef();
-			UpdateScreenEffectTexture();
-			pRenderContext->DrawScreenSpaceRectangle(pFurious, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
-		}
-	}
-	if (pPlayer->IsEffectActive(EF_DIMLIGHT))
-	{
-		if (pNV)
-		{
-			ICallQueue* pCallQueue = pRenderContext->GetCallQueue();
-
-			if (pCallQueue)
-				pCallQueue->QueueCall(DrawNightVisionOverlay, pNV, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
-			else
-				DrawNightVisionOverlay(pNV, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
-			pNV->AddRef();
-			g_bInNightvision = true;
-		}
-	}
-	else
-		g_bInNightvision = false;
-
-	ConVarRef blurdarken("mat_blurdarken");
-	if (blurdarken.GetBool())
-	{
-		if (pBDK)
-		{
-			pBDK->AddRef();
-			pRenderContext->DrawScreenSpaceRectangle(pBDK, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
-			UpdateScreenEffectTexture();
 		}
 	}
 #if defined( _X360 )

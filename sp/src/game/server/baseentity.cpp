@@ -1375,14 +1375,8 @@ int CBaseEntity::TakeHealth( float flHealth, int bitsDamageType )
 
 	m_iHealth += flHealth;
 
-	
-
 	if (m_iHealth > iMax)
 		m_iHealth = iMax;
-
-
-	
-
 	return m_iHealth - oldHealth;
 }
 

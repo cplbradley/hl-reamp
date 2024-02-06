@@ -79,6 +79,7 @@ void W_Precache(void)
 	PrecacheParticleSystem( "blood_impact_red_01" );
 	PrecacheParticleSystem( "blood_impact_green_01" );
 	PrecacheParticleSystem( "blood_impact_yellow_01" );
+	PrecacheParticleSystem("blood_impact_mech_01");
 
 	CBaseEntity::PrecacheModel ("effects/bubble.vmt");//bubble trails
 

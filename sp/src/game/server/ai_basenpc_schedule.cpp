@@ -4495,6 +4495,13 @@ int CAI_BaseNPC::SelectAlertSchedule()
 //-----------------------------------------------------------------------------
 int CAI_BaseNPC::SelectCombatSchedule()
 {
+
+	if (HasCondition(COND_ENEMY_OCCLUDED))
+		DevMsg("%s EnemyOccluded\n", GetClassname());
+
+	if (HasCondition(COND_WEAPON_SIGHT_OCCLUDED))
+		DevMsg("%s WeaponSightOccluded\n", GetClassname());
+
 	if ( m_hForcedInteractionPartner )
 		return SelectInteractionSchedule();
 
@@ -4584,6 +4591,9 @@ int CAI_BaseNPC::SelectCombatSchedule()
 		if ( HasCondition(COND_CAN_RANGE_ATTACK1) )
 			return SCHED_COMBAT_FACE;
 	}
+
+	if (GetEnemy() && HasCondition(COND_ENEMY_OCCLUDED))
+		return SCHED_ESTABLISH_LINE_OF_FIRE;
 
 	// we can see the enemy
 	if ( HasCondition(COND_CAN_RANGE_ATTACK1) )

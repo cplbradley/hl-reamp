@@ -87,6 +87,8 @@ DEFINE_KEYFIELD(m_nMaxNumNPCs, FIELD_INTEGER, "MaxNPCCount"),
 DEFINE_KEYFIELD(m_nMaxLiveChildren, FIELD_INTEGER, "MaxLiveChildren"),
 DEFINE_KEYFIELD(m_flSpawnFrequency, FIELD_FLOAT, "SpawnFrequency"),
 DEFINE_KEYFIELD(m_bDisabled, FIELD_BOOLEAN, "StartDisabled"),
+DEFINE_KEYFIELD(m_nMaxEasyChildren,FIELD_INTEGER,"MaxEasyChildren"),
+DEFINE_KEYFIELD(m_nMaxHardChildren,FIELD_INTEGER,"MaxHardChildren"),
 
 DEFINE_FIELD(m_nLiveChildren, FIELD_INTEGER),
 
@@ -194,6 +196,7 @@ void CBaseNPCMaker::SpawnNPC(void)
 	DispatchSpawn(pent);
 	pent->SetOwnerEntity(this);
 	DispatchActivate(pent);
+	pent->SetModelScale(0.1f);
 	ChildPostSpawn(pent);
 }
 //-----------------------------------------------------------------------------
@@ -203,8 +206,27 @@ bool CBaseNPCMaker::CanMakeNPC(bool bIgnoreSolidEntities)
 {
 	if (ai_inhibit_spawners.GetBool())
 		return false;
+	int maxchildren = m_nMaxLiveChildren;
 
-	if (m_nMaxLiveChildren > 0 && m_nLiveChildren >= m_nMaxLiveChildren)
+	if (m_spawnflags & SF_NPCMAKER_SKILLADJUST_MAXCHILDREN)
+	{
+			switch (g_pGameRules->GetSkillLevel())
+			{
+			case SKILL_EASY:
+				if (m_nMaxEasyChildren > 0)
+					maxchildren = m_nMaxEasyChildren;
+				break;
+			case SKILL_HARD:
+				if (m_nMaxHardChildren > 0)
+					maxchildren = m_nMaxHardChildren;
+				break;
+			case SKILL_MEDIUM:
+			default:
+				maxchildren = m_nMaxLiveChildren;
+			}
+	}
+
+	if (maxchildren > 0 && m_nLiveChildren >= maxchildren)
 	{// not allowed to make a new one yet. Too many live ones out right now.
 		return false;
 	}
@@ -477,12 +499,12 @@ void CNPCMaker::SpawnNPC(void)
 	DevMsg("Spawning NPC ID %i\n", queuedid[npcid]);
 	npcid--;
 	ChildPreSpawn(pent);
-
 	DispatchSpawn(pent);
 	pent->SetOwnerEntity(this);
 	DispatchActivate(pent);
+	pent->SetModelScale(0.1f);
 	SetContextThink(NULL, gpGlobals->curtime, "SpawnContext");
-	//ChildPostSpawn(pent);
+	ChildPostSpawn(pent);
 	m_bSuccessfulSpawn = true;
 }
 //-----------------------------------------------------------------------------
@@ -615,6 +637,8 @@ void CBaseNPCMaker::ChildPostSpawn(CAI_BaseNPC *pChild)
 	{
 		pChild->SetOwnerEntity(m_hIgnoreEntity);
 	}
+	
+	pChild->SetModelScale(1.0f, 0.2f);
 }
 
 //-----------------------------------------------------------------------------
@@ -909,8 +933,9 @@ void CTemplateNPCMaker::SpawnNPC(void)
 	DispatchSpawn(pent);
 	pent->SetOwnerEntity(this);
 	DispatchActivate(pent);
+	pent->SetModelScale(0.1f);
 	SetContextThink(NULL, gpGlobals->curtime, "SpawnContext");
-	//ChildPostSpawn(pent);
+	ChildPostSpawn(pent);
 	m_bSuccessfulSpawn = true;
 }
 //-----------------------------------------------------------------------------
@@ -1180,6 +1205,7 @@ void CTemplateNPCMaker::MakeNPCInRadius(void)
 	ChildPreSpawn(pent);
 
 	DispatchSpawn(pent);
+
 
 	pent->SetOwnerEntity(this);
 	DispatchActivate(pent);

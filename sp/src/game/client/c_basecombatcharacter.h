@@ -94,6 +94,8 @@ public:
 
 	virtual void		DoMuzzleFlash();
 
+	virtual Vector		AutoAimTarget();
+
 #ifdef GLOWS_ENABLE
 	CGlowObject			*GetGlowObject( void ){ return m_pGlowEffect; }
 	virtual void		GetGlowEffectColor( float *r, float *g, float *b );

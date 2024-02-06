@@ -675,19 +675,6 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 	// catch the change of state if we set this to whatever the ideal state is.
 	if ( CanBecomeRagdoll() || IsRagdoll() )
 		 SetState( NPC_STATE_DEAD );
-
-	ConVarRef g_guts_and_glory("g_guts_and_glory");
-
-	if (info.GetDamage() >= (m_iMaxHealth * ai_gib_threshold.GetFloat()))
-	{
-		DevMsg("threshold passed, should gib now\n");
-		GoreGib(info.GetAttacker());
-	}
-	if (g_guts_and_glory.GetBool())
-	{
-		DevMsg("guts and glory enabled, should gib now\n");
-		GoreGib(info.GetAttacker());
-	}
 	
 	// Just Wax - Dynamic Health Spawn Call
 	/*int ArmorCount = pPlayer->ArmorValue(); //get the player's armor value and store it as an int
@@ -726,6 +713,13 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 		DropItem("item_batterydrop", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360)); //Drop more armor
 	}
 
+	if ((info.GetDamageType() & DMG_DIRECT) && LastHitGroup() == HITGROUP_HEAD)
+	{
+		DropItem("item_batterydrop", EyePosition() + RandomVector(-4, 4), RandomAngle(0, 360));
+		DropItem("item_batterydrop", EyePosition() + RandomVector(-4, 4), RandomAngle(0, 360));
+		DropItem("item_batterydrop", EyePosition() + RandomVector(-4, 4), RandomAngle(0, 360));
+		DropItem("item_ammo_ar2", EyePosition() + RandomVector(-4, 4), RandomAngle(0, 360));
+	}
 	if (info.GetDamageType() & DMG_CLUB) //if we're killed by crowbar drop some ammo
 	{
 		DropItem("item_ammo_smg1", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360));
@@ -755,8 +749,30 @@ ConVar gib_rand_max("gib_rand_max", "1");
 ConVar gib_rand("gib_rand", "100");
 ConVar gib_time("gib_time", "3");
 
+bool CAI_BaseNPC::ShouldGib(const CTakeDamageInfo& info)
+{
+	ConVarRef g_guts_and_glory("g_guts_and_glory");
 
-void CAI_BaseNPC::GoreGib(CBaseEntity* pKiller)
+	if (info.GetDamageType() & DMG_DIRECT)
+		return false;
+
+	if (info.GetDamageType() & DMG_ENERGYBEAM)
+		return true;
+
+	if (info.GetDamage() >= (m_iMaxHealth * ai_gib_threshold.GetFloat()))
+	{
+		DevMsg("threshold passed, should gib now\n");
+		return true;
+	}
+	if (g_guts_and_glory.GetBool())
+	{
+		DevMsg("guts and glory enabled, should gib now\n");
+		return true;
+	}
+
+	return false;
+}
+bool CAI_BaseNPC::CorpseGib(const CTakeDamageInfo& info)
 {
 	ConVarRef ultragibs("g_ultragibs");
 	DevMsg("gibbing\n");
@@ -771,15 +787,34 @@ void CAI_BaseNPC::GoreGib(CBaseEntity* pKiller)
 	}
 	else
 		gibcount = m_iGibCount;
-	CPVSFilter filter(WorldSpaceCenter());
 
-	QAngle eyeAng = -GetAbsAngles();
-	CBaseCombatCharacter* killer = ToBaseCombatCharacter(pKiller);
-	if(killer)
-		eyeAng = killer->EyeAngles();
-	Vector vecAng;
-	AngleVectors(eyeAng, &vecAng);
-	VectorNormalize(vecAng);
+	gibcount *= 2;
+	CPVSFilter filter(WorldSpaceCenter());
+	Vector vecAng, vecSrc, vecDest;
+	if (info.GetDamageType() & DMG_BLAST)
+	{
+		vecSrc = info.GetDamagePosition();
+		vecDest = WorldSpaceCenter();
+	}
+	else
+	{
+		vecSrc = info.GetInflictor()->GetAbsOrigin();
+		vecDest = info.GetDamagePosition();
+	}
+
+	vecAng = (vecDest - vecSrc).Normalized();
+
+	//DebugDrawLine(vecSrc, vecDest, 0, 255, 0, false, 1.0f);
+
+	trace_t tr;
+	UTIL_TraceLine(WorldSpaceCenter(), WorldSpaceCenter() + (Vector(0, 0, -1) * FLT_MAX), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr);
+
+
+	int zap;
+	if (info.GetDamageType() & DMG_ENERGYBEAM)
+		zap = 4;
+	else
+		zap = 0;
 
 	switch (blood)
 	{
@@ -790,25 +825,22 @@ void CAI_BaseNPC::GoreGib(CBaseEntity* pKiller)
 		SetSolid(SOLID_NONE);
 		SetSolidFlags(FSOLID_NOT_SOLID);
 		SetModelName(NULL_STRING);
-		if (ultragibs.GetBool() == true)
-		{
-			DispatchParticleEffect("hgib_megasploosh", WorldSpaceCenter(), GetAbsAngles());
-			DevMsg("ultragibs enabled, doing megasploosh\n");
-		}
-		else
-			DispatchParticleEffect("hgib_sploosh", WorldSpaceCenter(), GetAbsAngles());
+		DispatchParticleEffect("hgib_sploosh", WorldSpaceCenter(), GetAbsAngles());
 		EmitSound("Gore.Splatter");
-
-		
 
 		for (int i = 0; i <= gibcount; i++)
 		{
-			int modelindex = modelinfo->GetModelIndex(g_PropDataSystem.GetRandomChunkModel("FleshChunks"));
-			te->BreakModel(filter, 0.0f, WorldSpaceCenter(), vec3_angle, GetHullMaxs(), vecAng * 200, modelindex, 200, 1, 5.0f, BREAK_FLESH);
+			int modelindex = modelinfo->GetModelIndex(g_PropDataSystem.GetRandomChunkModel("RedFleshChunks"));
+			te->BreakModel(filter, 0.0f, WorldSpaceCenter(), vec3_angle, GetHullMaxs(), vecAng * 200, modelindex, 200, 1, 5.0f, BREAK_FLESH, true, BLOOD_COLOR_RED + zap);
 		}
-		
+		DecalTrace(&tr, "BigBlood");
 		RemoveDeferred();
-		
+
+		int gibrand = RandomInt(1, 20);
+		if (gibrand <= 2)
+		{
+			CGib::SpawnSpecificGibs(this, 1, 1500, 750, "models/gibs/ham.mdl", 5);
+		}
 		break;
 	}
 	case BLOOD_COLOR_GREEN:
@@ -822,29 +854,31 @@ void CAI_BaseNPC::GoreGib(CBaseEntity* pKiller)
 		EmitSound("Gore.Splatter");
 		for (int i = 0; i <= gibcount; i++)
 		{
-			int modelindex = modelinfo->GetModelIndex(g_PropDataSystem.GetRandomChunkModel("AlienFleshChunks"));
-			te->BreakModel(filter, 0.0f, WorldSpaceCenter(), vec3_angle, GetHullMaxs(), vecAng * 200, modelindex, 200, 1, 5.0f, BREAK_FLESH);
+			int modelindex = modelinfo->GetModelIndex(g_PropDataSystem.GetRandomChunkModel("GreenFleshChunks"));
+			te->BreakModel(filter, 0.0f, WorldSpaceCenter(), vec3_angle, GetHullMaxs(), vecAng * (info.GetDamage() * 2), modelindex, 200, 1, 5.0f, BREAK_FLESH, true, BLOOD_COLOR_GREEN + zap);
 		}
+		DecalTrace(&tr, "BigGreenBlood");
 		RemoveDeferred();
 		break;
 	}
 	case BLOOD_COLOR_YELLOW:
 	{
-			m_bIsGibbed = true;
-			SetSolid(SOLID_NONE);
-			SetSolidFlags(FSOLID_NOT_SOLID);
-			AddEffects(EF_NODRAW);
-			SetModelName(NULL_STRING);
-			
-			DispatchParticleEffect("agib_sploosh", WorldSpaceCenter(), GetAbsAngles());
-			EmitSound("Gore.Splatter");
-			for (int i = 0; i <= gibcount; i++)
-			{
-				int modelindex = modelinfo->GetModelIndex(g_PropDataSystem.GetRandomChunkModel("AlienFleshChunks"));
-				te->BreakModel(filter, 0.0f, WorldSpaceCenter(), vec3_angle, GetHullMaxs(), vecAng * 200, modelindex, 200, 1, 5.0f, BREAK_FLESH);
-			}
-			RemoveDeferred();
-			break;
+		m_bIsGibbed = true;
+		SetSolid(SOLID_NONE);
+		SetSolidFlags(FSOLID_NOT_SOLID);
+		AddEffects(EF_NODRAW);
+		SetModelName(NULL_STRING);
+
+		DispatchParticleEffect("agib_sploosh", WorldSpaceCenter(), GetAbsAngles());
+		EmitSound("Gore.Splatter");
+		for (int i = 0; i <= gibcount; i++)
+		{
+			int modelindex = modelinfo->GetModelIndex(g_PropDataSystem.GetRandomChunkModel("YellowFleshChunks"));
+			te->BreakModel(filter, 0.0f, WorldSpaceCenter(), vec3_angle, GetHullMaxs(), vecAng * 200, modelindex, 200, 1, 5.0f, BREAK_FLESH, true, BLOOD_COLOR_YELLOW + zap);
+		}
+		DecalTrace(&tr, "BigYellowBlood");
+		RemoveDeferred();
+		break;
 	}
 	case BLOOD_COLOR_MECH:
 	{
@@ -853,11 +887,16 @@ void CAI_BaseNPC::GoreGib(CBaseEntity* pKiller)
 		SetSolidFlags(FSOLID_NOT_SOLID);
 		AddEffects(EF_NODRAW);
 		SetModelName(NULL_STRING);
+
+		DispatchParticleEffect("hlr_mech_gib", WorldSpaceCenter(), GetAbsAngles());
+
 		for (int i = 0; i <= gibcount; i++)
 		{
 			int modelindex = modelinfo->GetModelIndex(g_PropDataSystem.GetRandomChunkModel("MetalChunks"));
-			te->BreakModel(filter, 0.0f, WorldSpaceCenter(), vec3_angle, GetHullMaxs(), vecAng * 200, modelindex, 200, 1, 5.0f, BREAK_METAL);
+			te->BreakModel(filter, 0.0f, WorldSpaceCenter(), vec3_angle, GetHullMaxs(), vecAng * 200, modelindex, 200, 1, 5.0f, BREAK_METAL, true, BLOOD_COLOR_MECH + zap);
 		}
+		DecalTrace(&tr, "BigOilBlood");
+
 		RemoveDeferred();
 		break;
 	}
@@ -866,6 +905,11 @@ void CAI_BaseNPC::GoreGib(CBaseEntity* pKiller)
 		break;
 	}
 	}
+
+	return true;
+}
+void CAI_BaseNPC::GoreGib(CBaseEntity* pKiller)
+{
 }
 
 //-----------------------------------------------------------------------------
@@ -4453,7 +4497,6 @@ int CAI_BaseNPC::RangeAttack1Conditions ( float flDot, float flDist )
 	{
 		return COND_NOT_FACING_ATTACK;
 	}
-
 	return COND_CAN_RANGE_ATTACK1;
 }
 
@@ -10011,7 +10054,7 @@ Vector GetInterpedShootTrajectory(Vector vecA, Vector vecB, float frac)
 	return vecRet.Normalized();
 }
 
-Vector CAI_BaseNPC::GetSkillAdjustedShootTrajectory(const Vector shootOrigin, Vector shootTarget, float adjustedSpeed)
+Vector CAI_BaseNPC::GetSkillAdjustedShootTrajectory(const Vector& shootOrigin, const Vector& shootTarget, float adjustedSpeed)
 {
 	int iSkill = g_pGameRules->GetSkillLevel();
 	int skillVar = iSkill * iSkill;
@@ -11259,6 +11302,50 @@ void CAI_BaseNPC::Activate( void )
 
 }
 
+
+#define NUM_TOTAL_GIBS 17
+#define NUM_VORTFX_PARTICLES 6
+#define NUM_GIB_PARTICLES 4
+
+const char* cszAllGibs[NUM_TOTAL_GIBS] =
+{
+	"models/gibs/red/hgibs_01.mdl",
+	"models/gibs/red/hgibs_02.mdl",
+	"models/gibs/red/hgibs_03.mdl",
+	"models/gibs/red/hgibs_04.mdl",
+	"models/gibs/yellow/hgibs_01.mdl",
+	"models/gibs/yellow/hgibs_02.mdl",
+	"models/gibs/yellow/hgibs_03.mdl",
+	"models/gibs/yellow/hgibs_04.mdl",
+	"models/gibs/green/hgibs_01.mdl",
+	"models/gibs/green/hgibs_02.mdl",
+	"models/gibs/green/hgibs_03.mdl",
+	"models/gibs/green/hgibs_04.mdl",
+	"models/gibs/robot/metalcog1.mdl",
+	"models/gibs/robot/metalcog2.mdl",
+	"models/gibs/robot/metalcog3.mdl",
+	"models/gibs/robot/metalcog4.mdl",
+	"models/gibs/ham.mdl"
+};
+
+const char* cszVortFXParticles[NUM_VORTFX_PARTICLES] =
+{
+	"shield_burst",
+	"shield_form",
+	"necro_burst",
+	"necro_form",
+	"buff_form",
+	"buff_burst",
+};
+
+const char* cszGoreParticles[NUM_GIB_PARTICLES] =
+{
+	"hgib_sploosh",
+	"hgib_megasploosh",
+	"agib_sploosh",
+	"hlr_mech_gib"
+};
+
 void CAI_BaseNPC::Precache( void )
 {
 	gm_iszPlayerSquad = AllocPooledString( PLAYER_SQUADNAME ); // cache for fast IsPlayerSquad calls
@@ -11290,25 +11377,21 @@ void CAI_BaseNPC::Precache( void )
 	UTIL_PrecacheOther("item_ammo_smg1");
 	//UTIL_PrecacheOther("item_ammo_crossbow");
 	PrecacheScriptSound("Gore.Splatter");
-	PrecacheModel("models/gibs/human/hgib_1.mdl");
-	PrecacheModel("models/gibs/human/hgib_2.mdl");
-	PrecacheModel("models/gibs/human/hgib_3.mdl");
-	PrecacheModel("models/gibs/human/hgib_small1.mdl");
-	PrecacheModel("models/gibs/human/hgib_small2.mdl");
-	PrecacheModel("models/gibs/human/hgib_small3.mdl");
-	PrecacheParticleSystem("hgib_sploosh");
-	PrecacheParticleSystem("hgib_megasploosh");
-	PrecacheModel("models/gibs/alien/agib_1.mdl");
-	PrecacheModel("models/gibs/alien/agib_2.mdl");
-	PrecacheModel("models/gibs/alien/agib_3.mdl");
-	PrecacheModel("models/gibs/alien/agib_4.mdl");
-	PrecacheParticleSystem("agib_sploosh");
-	PrecacheParticleSystem("shield_burst");
-	PrecacheParticleSystem("shield_form");
-	PrecacheParticleSystem("buff_burst");
-	PrecacheParticleSystem("buff_form");
-	PrecacheParticleSystem("necro_burst");
-	PrecacheParticleSystem("necro_form");
+	
+	for (int i = 0; i < NUM_GIB_PARTICLES; i++)
+	{
+		PrecacheParticleSystem(cszGoreParticles[i]);
+	}
+
+	for (int i = 0; i < NUM_VORTFX_PARTICLES; i++)
+	{
+		PrecacheParticleSystem(cszVortFXParticles[i]);
+	}
+
+	for (int i = 0; i < NUM_TOTAL_GIBS; i++)
+	{
+		PrecacheModel(cszAllGibs[i]);
+	}
 
 	BaseClass::Precache();
 }

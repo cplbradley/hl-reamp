@@ -1890,7 +1890,6 @@ void CBasePlayer::Event_Killed( const CTakeDamageInfo &info )
 	if (info.GetDamage() > 50)
 	{
 		m_bGibbed = true;
-		AddEffects(EF_NODRAW);
 		SetSolid(SOLID_NONE);
 		SetSolidFlags(FSOLID_NOT_SOLID);
 		SetModel("models/skeleton/skeleton_whole.mdl");
@@ -1898,33 +1897,13 @@ void CBasePlayer::Event_Killed( const CTakeDamageInfo &info )
 		DispatchParticleEffect("hgib_sploosh", WorldSpaceCenter(), GetAbsAngles());
 		EmitSound("Gore.Splatter");
 
-
-		for (int i = 0; i <= 5; i++)
+		CPVSFilter filter(WorldSpaceCenter());
+		Vector eyevec;
+		EyeVectors(&eyevec);
+		for (int i = 0; i <= 9; i++)
 		{
-			int rand = RandomInt(1, 3);
-			switch (rand)
-			{
-			case 1:
-			{
-				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/human/hgib_1.mdl", 5);
-				break;
-			}
-			case 2:
-			{
-				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/human/hgib_2.mdl", 5);
-				break;
-			}
-			case 3:
-			{
-				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/human/hgib_3.mdl", 5);
-				break;
-			}
-			default:
-			{
-				CGib::SpawnSpecificGibs(this, 1, 1200, 500, "models/gibs/human/hgib_1.mdl", 5);
-				break;
-			}
-			}
+			int modelindex = modelinfo->GetModelIndex(g_PropDataSystem.GetRandomChunkModel("RedFleshChunks"));
+			te->BreakModel(filter, 0.0f, WorldSpaceCenter(), vec3_angle, GetPlayerMaxs(), eyevec * -200, modelindex, 200, 1, 5.0f, BREAK_FLESH, true, BLOOD_COLOR_RED);
 		}
 	}
 

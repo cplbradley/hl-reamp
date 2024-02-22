@@ -36,7 +36,7 @@ static ConVar mat_pbr_parallaxmap("mat_pbr_parallaxmap", "1");
 static ConVar mat_pbr_force_enabled("mat_pbr_force_enabled", "0");
 static ConVar mat_pbr_debug("mat_pbr_debug", "0");
 static ConVar mat_pbr_multidetail_version("mat_pbr_multidetail_version", "0");
-static ConVar mat_pbr_brushphong("mat_pbr_brushphong", "1");
+static ConVar mat_pbr_diffusecontribution("mat_pbr_diffusecontribution", "0");
 
 // Variables for this shader
 struct PBR_Vars_t
@@ -316,7 +316,7 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
 
         bool bLerpEnvMap = (info.lerpEnvMaps != -1) && params[info.lerpEnvMaps]->GetIntValue() == 1;
 
-        bool bAlternateMultidetailVersion = mat_pbr_multidetail_version.GetBool();
+        int iDebugState = mat_pbr_debug.GetInt();
 
         // Determining whether we're dealing with a fully opaque material
         BlendType_t nBlendType = EvaluateBlendRequirements(info.baseTexture, true);
@@ -747,12 +747,13 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
                 flParams[2] = defGlobals->m_flCubemapLerp;
             else
                 flParams[2] = 0.0f;
-            flParams[3] = bAlternateMultidetailVersion ? 1 : 0;
+            flParams[3] = (float)iDebugState;
+
             pShaderAPI->SetPixelShaderConstant(27, flParams, 1);
 
 
 
-            bool brushphong = mat_pbr_brushphong.GetFloat();
+            float fdfc = mat_pbr_diffusecontribution.GetFloat();
             float flDetailParams[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
             //blend factor
             flDetailParams[0] = GetFloatParam(info.m_nDetailTextureBlendFactor, params, 0.5f);
@@ -761,9 +762,8 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
             //multidetail
             flDetailParams[2] = bMultiDetail ? 1 : 0;
             //debug state
-            flDetailParams[3] = brushphong;
+            flDetailParams[3] = fdfc;
             pShaderAPI->SetPixelShaderConstant(26, flDetailParams, 1);
-
         }
 
         // Actually draw the shader

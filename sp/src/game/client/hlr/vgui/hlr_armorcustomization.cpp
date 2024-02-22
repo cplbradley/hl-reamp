@@ -41,9 +41,29 @@ public:
 	virtual void Paint();
 	void SetArmorGroup(const char* szGroupName, int nValue);
 	void Update();
+	virtual void OnThink();
 	void InitModel();
+	Vector GetInterpedCamPos();
+	void SetCamDest(const Vector& vecDest);
 
 	MDLHandle_t handle;
+
+	Vector m_vecRootPos;
+	Vector m_vecHelmetPos;
+	Vector m_vecChestPos;
+	Vector m_vecUpperArmPos;
+	Vector m_vecForearmPos;
+	Vector m_vecCodPiecePos;
+	Vector m_vecThighPos;
+	Vector m_vecBootsPos;
+
+	bool bUpdate;
+private:
+	Vector m_vecStart;
+	Vector m_vecDest;
+	float fFrac;
+	Vector m_vecCurPos;
+
 };
 
 CHLRArmorPanel::CHLRArmorPanel(vgui::Panel* parent) : BaseClass(parent, NULL)
@@ -60,12 +80,13 @@ CHLRArmorPanel::CHLRArmorPanel(vgui::Panel* parent) : BaseClass(parent, NULL)
 }
 
 
-ConVar armorpanel_camx("armorpanel_camx", "-240");
-ConVar armorpanel_camy("armorpanel_camy", "0");
-ConVar armorpanel_camz("armorpanel_camy", "25");
+ConVar armorpanel_modelx("armorpanel_modelx", "-240");
+ConVar armorpanel_modely("armorpanel_modely", "0");
+ConVar armorpanel_modelz("armorpanel_modelz", "35");
 
 void CHLRArmorPanel::InitModel()
 {
+	bUpdate = false;
 	handle = mdlcache->FindMDL("models/player/mark6.mdl");
 	mdlcache->PreloadModel(handle);
 	SetMDL(handle);
@@ -73,16 +94,52 @@ void CHLRArmorPanel::InitModel()
 	CStudioHdr studiohdr(hdr, mdlcache);
 	int anim = LookupSequence(&studiohdr, "armor_custom_idle");
 	SetSequence(anim);
-	Vector campos = Vector(armorpanel_camx.GetFloat(), armorpanel_camy.GetFloat(), armorpanel_camz.GetFloat());
-	SetModelAnglesAndPosition(QAngle(0, -180, 0), vec3_origin);
-	SetCameraPositionAndAngles(campos, vec3_angle);
+	m_vecRootPos = Vector(-240, 0, 35);
+	m_vecHelmetPos = Vector(-100, 10, 63);
+	m_vecChestPos = Vector(-120, 10, 54);
+	m_vecUpperArmPos = Vector(-110, 10, 52);
+	m_vecForearmPos = Vector(-110, 10, 40);
+	m_vecCodPiecePos = Vector(-100, 10, 38);
+	m_vecThighPos = Vector(-120, 10, 28);
+	m_vecBootsPos = Vector(-120, 10, 10);
+	Vector modelpos = Vector(60, 12, 0);
+	SetModelAnglesAndPosition(QAngle(0, -180, 0), modelpos);
+	m_vecCurPos = m_vecDest = m_vecRootPos;
+	SetCameraPositionAndAngles(m_vecRootPos, vec3_angle);
+	fFrac = 0.f;
+}
+float easeInOut(float t) {
+	return t < 0.5f ? 0.5f * pow(2 * t, 2.0f) : 0.5f * (2 - pow(2 * (1 - t), 2.0f));
+}
+Vector CHLRArmorPanel::GetInterpedCamPos()
+{
+	Vector vecRet;
+	float frac = easeInOut(fFrac);
+	InterpolateVector(frac, m_vecCurPos, m_vecDest, vecRet);
+	//engine->Con_NPrintf(0, "dest x: %f dest y: %f dest z: %f cur x: %f cur y: %f cur z: %f fInterp %f", m_vecDest.x, m_vecDest.y, m_vecDest.z, m_vecCurPos.x, m_vecCurPos.y, m_vecCurPos.z,fFrac);
+	return vecRet;
 }
 
+void CHLRArmorPanel::SetCamDest(const Vector& vecDest)
+{
+	if (m_vecDest != vecDest)
+	{
+		m_vecCurPos = m_vecDest;
+		m_vecDest = vecDest;
+		fFrac = 0.f;
+	}
+}
+
+void CHLRArmorPanel::OnThink()
+{
+	BaseClass::OnThink();
+	fFrac += 0.01f;
+	fFrac = Clamp(fFrac, 0.f, 1.f);
+	SetCameraPositionAndAngles(GetInterpedCamPos(), vec3_angle);
+}
 void CHLRArmorPanel::Paint()
 {
 	BaseClass::Paint();
-	Vector campos = Vector(armorpanel_camx.GetFloat(), armorpanel_camy.GetFloat(), armorpanel_camz.GetFloat());
-	SetCameraPositionAndAngles(campos, vec3_angle);
 }
 
 void CHLRArmorPanel::SetArmorGroup(const char* szGroupName, int nValue)
@@ -105,6 +162,7 @@ public:
 	virtual void OnApplyChanges();
 	virtual void OnDataChanged();
 	virtual void OnResetData();
+	void UpdateCamPos();
 	void SetupArmorPanel();
 	void UpdateCombos();
 	void SetupHelmets();
@@ -253,7 +311,7 @@ void CHLRArmorCustomization::SetupArmorPanel()
 	armorPanel = new CHLRArmorPanel(this);
 	armorPanel->SetVisible(true);
 	armorPanel->SetEnabled(true);
-	armorPanel->SetSize(GetParent()->GetTall() / 1.5, GetParent()->GetTall());
+	armorPanel->SetSize(GetParent()->GetTall(), GetParent()->GetTall() * 0.85);
 	armorPanel->SetPos((GetParent()->GetWide() / 2) - (armorPanel->GetWide() / 2), 0);
 	armorPanel->InitModel();
 }
@@ -371,6 +429,24 @@ void CHLRArmorCustomization::UpdateTextBoxesFromSliders()
 		textTextEntryTB->SetText(text);
 	}
 }
+
+void CHLRArmorCustomization::UpdateCamPos()
+{
+	if (helmetCombo->IsDropdownVisible())
+		armorPanel->SetCamDest(armorPanel->m_vecHelmetPos);
+	if (chestcombo->IsDropdownVisible())
+		armorPanel->SetCamDest(armorPanel->m_vecChestPos);
+	if (bootscombo->IsDropdownVisible())
+		armorPanel->SetCamDest(armorPanel->m_vecBootsPos);
+	if (upperarmscombo->IsDropdownVisible())
+		armorPanel->SetCamDest(armorPanel->m_vecUpperArmPos);
+	if (codpiececombo->IsDropdownVisible())
+		armorPanel->SetCamDest(armorPanel->m_vecCodPiecePos);
+	if (forearmscombo->IsDropdownVisible())
+		armorPanel->SetCamDest(armorPanel->m_vecForearmPos);
+	if (thighcombo->IsDropdownVisible())
+		armorPanel->SetCamDest(armorPanel->m_vecThighPos);
+}
 void CHLRArmorCustomization::Paint()
 {
 	BaseClass::Paint();
@@ -403,6 +479,8 @@ void CHLRArmorCustomization::Paint()
 	{
 		OnDataChanged();
 	}
+
+	UpdateCamPos();
 }
 
 void CHLRArmorCustomization::RetrieveColors()
@@ -543,6 +621,7 @@ void CHLRArmorCustomization::OnApplyChanges()
 	usecustomcolors.SetValue(UseCustomColors->IsSelected());
 	UpdatePlayerBodygroups();
 	UpdateColors();
+	armorPanel->SetCamDest(armorPanel->m_vecRootPos);
 }
 
 void CHLRArmorCustomization::UpdateEditorBodygroups()

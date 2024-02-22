@@ -544,7 +544,7 @@ void CWeaponChaingun::PrimaryAttack(void)
 	info.m_pAttacker = pPlayer;
 
 	if (!AmFocusFiring())
-		FireActualBullet(info, 8000, false, GetTracerType());
+		FireActualBullet(info, 15000, false, GetTracerType());
 	else
 		pPlayer->FireBullets(info);
 

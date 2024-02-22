@@ -56,7 +56,6 @@ void CFMODDynamicPlayer::InputTransitionToMediumMusic(inputdata_t& inputdata)
 }
 void CFMODDynamicPlayer::InputTransitionToHeavyMusic(inputdata_t& inputdata)
 {
-
 	m_iMusicType = MUSICTYPE_TRANSITION_HEAVY;
 }
 void CFMODDynamicPlayer::InputImmediateHeavyMusic(inputdata_t &inputdata)
@@ -188,12 +187,14 @@ void CFMODDynamicPlayer::ParseMusicScript(const char* pKeyName)
 
 void CFMODDynamicPlayer::PrintRandomPath()
 {
-	int rnd = RandomInt(1, m_musiclist.Count());
+	int rnd = RandomInt(0, m_musiclist.Count());
 	if (rnd == lastrand)
 	{
-		rnd = RandomInt(1, m_musiclist.Count());
+		rnd = RandomInt(0, m_musiclist.Count());
 	}
 	lastrand = rnd;
+	if (m_musiclist.Element(lastrand).szMusicPath == NULL)
+		Warning("NULL PATH\n");
 	Msg("%s\n", m_musiclist.Element(rnd).szMusicPath);
 }
 

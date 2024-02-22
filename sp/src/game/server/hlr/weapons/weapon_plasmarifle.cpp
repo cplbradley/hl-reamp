@@ -30,6 +30,7 @@
 extern ConVar    sk_plr_dmg_smg1_grenade;
 extern ConVar	sk_plr_dmg_smg1;
 extern ConVar	 sk_npc_dmg_smg1;
+ConVar sk_plasmarifle_firerate("sk_plasmarifle_firerate", "0.15");
 
 class CPlasmaBall : public CBaseCombatCharacter
 {
@@ -823,9 +824,9 @@ void CWeaponPlasmaRifle::PrimaryAttack(void)
 			WeaponSound(SPECIAL1);
 
 		if (pPlayer->HasOverdrive())
-			m_flNextPrimaryAttack = m_flNextPrimaryAttack + 0.05f;
+			m_flNextPrimaryAttack = m_flNextPrimaryAttack + (sk_plasmarifle_firerate.GetFloat() * 0.5f);
 		else
-			m_flNextPrimaryAttack = m_flNextPrimaryAttack + 0.1f;
+			m_flNextPrimaryAttack = m_flNextPrimaryAttack + sk_plasmarifle_firerate.GetFloat();
 		//m_flNextSecondaryAttack = gpGlobals->curtime + 1.0f;//can't shoot again til after 0.1 seconds
 		CPlasmaBall *pBall = CPlasmaBall::Create(vecSrc, angAiming, pOwner); //emit plasma ball object
 		pBall->SetModel(PLASMA_MODEL); //set model to player model

@@ -31,6 +31,8 @@
 #include "tier0/memdbgon.h"
 
 extern ConVar mat_classic_render;
+
+ConVar newshotgun("newshotgun", "1");
 class CShotgunPellet : public CBaseCombatCharacter
 {
 	DECLARE_CLASS(CShotgunPellet, CBaseCombatCharacter);
@@ -753,8 +755,15 @@ void CWeaponShotgun::PrimaryAttack( void )
 	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
 	int right = classicpos.GetBool() ? 0 : 3;
 	Vector vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * right + vUp * -2.0f;
-	
 	Vector vecAiming = pPlayer->GetAutoaimVector( AUTOAIM_SCALE_DEFAULT );
+
+	trace_t trh;
+	bool bHull = false;
+	AI_TraceHull(vecSrc, vecSrc + (vecAiming * 128.f), Vector(-32, -32, -32), Vector(32, 32, 32), MASK_SHOT, GetOwnerEntity(), COLLISION_GROUP_NPC, &trh);
+	if (trh.m_pEnt && trh.m_pEnt->IsNPC() && newshotgun.GetBool())
+	{
+		bHull = true;
+	}
 	FireBulletsInfo_t info;
 	info.m_iAmmoType = m_iPrimaryAmmoType;
 	info.m_vecSrc = vecSrc;
@@ -763,6 +772,9 @@ void CWeaponShotgun::PrimaryAttack( void )
 	info.m_pAttacker = GetOwnerEntity();
 	info.m_iShots = 30;
 	info.m_iTracerFreq = 1;
+	
+	if (bHull)
+		info.m_flDamage = 0.1f;
 
 	// Fire the bullets
 	if (pPlayer->HasOverdrive())
@@ -779,6 +791,14 @@ void CWeaponShotgun::PrimaryAttack( void )
 		m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
 		FireBullets(info);
 	}
+
+	if (trh.m_pEnt && bHull)
+	{
+		CTakeDamageInfo dmgInfo(GetOwnerEntity(), GetOwnerEntity(), 180.f, DMG_BUCKSHOT);
+		CalculateBulletDamageForce(&dmgInfo, m_iPrimaryAmmoType, (trh.endpos - trh.startpos).Normalized(), pPlayer->Weapon_ShootPosition());
+		trh.m_pEnt->TakeDamage(dmgInfo);
+	}
+
 	//pPlayer->ViewPunch( QAngle(random->RandomFloat( -15, 15 ),0,0) );
 	QAngle angAiming;
 	VectorAngles(vecAiming, angAiming);

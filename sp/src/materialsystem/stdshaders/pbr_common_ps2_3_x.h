@@ -8,6 +8,7 @@
 static const float PI = 3.141592;
 static const float ONE_OVER_PI = 0.318309;
 static const float EPSILON = 0.00001;
+static const float TWENTYONE = 0.047619f;
 
 // Shlick's approximation of the Fresnel factor
 float3 fresnelSchlick(float3 F0, float cosTheta)
@@ -90,6 +91,83 @@ float GetAttenForLight(float4 lightAtten, int lightNum)
     return lightAtten.x;
 }
 
+
+float3 UE4Fresnel(float3 F0, float F90, float U)
+{
+	return F0 + (F90 - F0) * pow(2, (-5.55473f * U - 6.98316) * U); // 
+}
+
+float Fd_DisneyDiffuse(float NdotV, float NdotL, float LdotH, float linearRoughness)
+{
+	float energyBias = lerp(0.0f, 0.5f, linearRoughness);
+	float energyFactor = lerp(1.0f, 1.0f / 1.51f, linearRoughness);
+	float fd90 = energyBias + 2.0f * LdotH * LdotH * linearRoughness;
+
+	float3 f0 = float3(1.0f, 1.0f, 1.0f);
+
+	float lightScatter = UE4Fresnel(f0, fd90, NdotL).r;
+	float viewScatter  = UE4Fresnel(f0, fd90, NdotV).r;
+	return lightScatter * viewScatter * energyFactor;
+}
+
+float Distribution(float NdH, float roughness)
+{
+	float a = NdH * roughness;
+	float k = roughness / (1.0 - NdH * NdH + a * a);
+	return k * k * ONE_OVER_PI;    // k²/pi -> k² * const(1.0 / PI)
+}
+
+float Visibility(float NdV, float NdL, float linearRoughness)
+{
+	return 0.5f / lerp((2.0f * NdL * NdV),(NdL + NdV), linearRoughness);
+}
+
+float3 BRDF_Regular(const float3 f3Albedo, const float3 f3Specular, const float f1Roughness, const float3 f3ViewDir, const float3 f3NormalDir, const float3 f3LightDir, const float3 f3LightColor)
+{
+	// We expect NormalDir and ViewDir to already be normalized!!!
+	float f1NdV = saturate(dot(f3NormalDir, f3ViewDir));
+
+	float3 f3H	= normalize(f3LightDir + f3ViewDir);
+	float f1NdH	= saturate(dot(f3NormalDir, f3H));
+	float f1NdL	= saturate(dot(f3NormalDir, f3LightDir));
+	float f1HdV	= saturate(dot(f3H, f3ViewDir));
+	float f1LdH	= saturate(dot(f3LightDir, f3H));
+
+	float f1D = Distribution(f1NdH, f1Roughness * f1Roughness);
+	float f1V = Visibility(f1NdV, f1NdL, f1Roughness * f1Roughness);
+	float f1F = UE4Fresnel(f3Specular, 1.0f.xxx, f1HdV);
+
+	float3 f3SpecularBRDF = f1F * f1D * f1V;
+
+	// ONE_OVER_PI happens on param init
+	float3 f3DiffuseBRDF = f3Albedo;
+
+	return f3LightColor * f1NdL * (f3DiffuseBRDF + f3SpecularBRDF);
+}
+
+
+float3 StaticBRDF_Diffuse(float3 f3Albedo, float3 f3Specular, float f1Roughness, float3 f3ViewDir, float3 f3NormalDir, float3 f3DomLightDir, float3 f3LightMapColor, float3 f3DomLightColor)
+{
+	// We expect NormalDir and ViewDir to already be normalized!!!
+	float f1NdV = saturate(dot(f3NormalDir, f3ViewDir));
+
+	float3 f3H	= normalize(f3DomLightDir + f3ViewDir);
+	float f1NdH	= saturate(dot(f3NormalDir, f3H));
+	float f1NdL	= saturate(dot(f3NormalDir, f3DomLightDir));
+	float f1HdV	= saturate(dot(f3H, f3ViewDir));
+	float f1LdH	= saturate(dot(f3DomLightDir, f3H));
+
+	float f1D = Distribution(f1NdH, f1Roughness * f1Roughness);
+	float f1V = saturate(Visibility(f1NdV, f1NdL, f1Roughness * f1Roughness));	// unsaturated values make edges behave like sheen but way worse
+	float f1F = UE4Fresnel(f3Specular, 1.0f.xxx, f1HdV);
+
+	float3 f3SpecularBRDF = f1F * f1D * f1V * f3DomLightColor;
+
+	float3 f3DiffuseBRDF = f3Albedo * f3LightMapColor;	
+
+	return (f3DiffuseBRDF + f3SpecularBRDF);    // no NDL it makes shit very black
+}
+
 // Calculate direct light for one source
 float3 calculateLight(float3 lightIn, float3 lightIntensity, float3 lightOut, float3 normal, float3 fresnelReflectance, float roughness, float metalness, float lightDirectionAngle, float3 albedo)
 {
@@ -97,10 +175,12 @@ float3 calculateLight(float3 lightIn, float3 lightIntensity, float3 lightOut, fl
     float3 HalfAngle = normalize(lightIn + lightOut); 
     float cosLightIn = max(0.0, dot(normal, lightIn));
     float cosHalfAngle = max(0.0, dot(normal, HalfAngle));
-
+#if LIGHTMAPPED
     // F - Calculate Fresnel term for direct lighting
     float3 F = lerp(fresnelSchlick(fresnelReflectance, max(0.0, dot(HalfAngle, lightOut))), fresnelSchlickRoughness(fresnelReflectance, max(0.0,dot(HalfAngle, lightOut)), roughness), 0.5f);
-
+#else
+	float3 F = fresnelSchlick(fresnelReflectance,max(0.0,dot(HalfAngle,lightOut)));
+#endif
     // D - Calculate normal distribution for specular BRDF
     float D = ndfGGX(cosHalfAngle, roughness);
 
@@ -249,7 +329,6 @@ float3 worldToRelative(float3 worldVector, float3 surfTangent, float3 surfBasis,
    );
 }
 
-
 float3 f3DomColorAndDir(sampler LightmapSampler, float3 modul, float3 f3TextureNormal, float4 f4LightmapTexCoord1And2, float4 f2Lightmap3Coord, out float3 f3DomColor)
 {
 	float2 bumpCoord1;
@@ -293,7 +372,7 @@ float3 f3DomColorAndDir(sampler LightmapSampler, float3 modul, float3 f3TextureN
 
     // Don't modul or modul/sum. It will blow the colors entirely
     float f1Sum = dot(f3Color, float3(1, 1, 1));
-    f3Color *= modul; // / f1Sum;
+    //f3Color *= modul; // / f1Sum;
 	
     f3DomColor = f3Color;
 
@@ -302,4 +381,60 @@ float3 f3DomColorAndDir(sampler LightmapSampler, float3 modul, float3 f3TextureN
 
 }
 
+float2 EnvBRDF_AB(float3 SpecularColor, float Roughness, float NoV, out float2 AB)
+{
+    const float4 c0 = { -1, -0.0275, -0.572, 0.022 };
+    const float4 c1 = { 1, 0.0425, 1.04, -0.04 };
+    float4 r 		= Roughness * c0 + c1;
+    float a004 		= min(r.x * r.x, exp2(-9.28 * NoV)) * r.x + r.y;
+    AB 				= float2(-1.04, 1.04) * a004 + r.zw;
+	return AB;
+}
+float3 EnvBRDFScatterSpecular(float3 SpecularColor, float Roughness, float NoV)
+{
+    float2 AB;
+	EnvBRDF_AB(SpecularColor, Roughness, NoV, AB);
+	
+	// The rest
+	float3 k_S = SpecularColor;	
+	float3 FssEss = k_S * AB.x + AB.y;	// EnvBRDFApprox but with k_S
+	
+    return FssEss;
+}
 
+
+
+float3 DiffuseScatter(float3 SpecularColor, float Roughness, float NoV, float3 Irradiance, float3 diffuseColor)
+{
+    float2 AB;
+	EnvBRDF_AB(SpecularColor, Roughness, NoV, AB);
+	
+	// The rest		
+	float3 k_S 		= SpecularColor + (max(1.0f.xxx - Roughness, SpecularColor) - SpecularColor) * pow(2, (-5.55473f * NoV - 6.98316) * NoV); 	// a modified (NdV) duplicate of roughnessed fresnel for envbrdf per [Fdez-Aguera19]		
+	float3 FssEss 	= k_S * AB.x + AB.y;
+	
+	// Multiscatter per [Fdez-Aguera19]
+	float	Ess 		= AB.x + AB.y;
+	float	Ems 		= (1.0 - Ess);
+	float3	Favg 		= SpecularColor + (1.0 - SpecularColor) * TWENTYONE;	// division by 21 as precompute
+	float3	Fms 		= FssEss * Favg / ( 1.0 - (1.0 - Ess) * Favg);
+	
+	// Dielectrics
+	float3 Edss 	= 1.0 - (FssEss + Fms * Ems);
+	float3 kD 		= diffuseColor * Edss;	
+	
+    return (Fms*Ems+kD) * Irradiance;										// actually all of this is slightly wrong but im not touching this it's good enough
+}
+
+void setupEnvMapAmbientCube(out float3 EnvAmbientCube[6], sampler EnvmapSampler)
+{
+	float4 directionPosX = { 1, 0, 0, 12 }; float4 directionNegX = { -1, 0, 0, 12 };
+	float4 directionPosY = { 0, 1, 0, 12 }; float4 directionNegY = { 0, -1, 0, 12 };
+	float4 directionPosZ = { 0, 0, 1, 12 }; float4 directionNegZ = { 0, 0, -1, 12 };
+	EnvAmbientCube[0] = texCUBElod(EnvmapSampler, directionPosX).rgb;
+	EnvAmbientCube[1] = texCUBElod(EnvmapSampler, directionNegX).rgb;
+	EnvAmbientCube[2] = texCUBElod(EnvmapSampler, directionPosY).rgb;
+	EnvAmbientCube[3] = texCUBElod(EnvmapSampler, directionNegY).rgb;
+	EnvAmbientCube[4] = texCUBElod(EnvmapSampler, directionPosZ).rgb;
+	EnvAmbientCube[5] = texCUBElod(EnvmapSampler, directionNegZ).rgb;
+}

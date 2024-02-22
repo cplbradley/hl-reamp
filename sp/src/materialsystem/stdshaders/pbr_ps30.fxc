@@ -126,8 +126,8 @@ float4 main(PS_INPUT i) : COLOR
 	
 	bool bHasDetailMask = g_DetailParams.y;
 	bool bMultiDetail = g_DetailParams.z;
-	bool bAltDetailMethod = g_ParallaxParms.w;
-	float brushphong = g_DetailParams.w;
+	float fDebugState = g_ParallaxParms.w;
+	float fDfC = g_DetailParams.w;
 	
 	float detailBlendFactor = g_DetailParams.x;
 	
@@ -144,6 +144,8 @@ float4 main(PS_INPUT i) : COLOR
 	float2 detailTexCoord = i.baseTexCoord.zw;
 
     float3x3 normalBasis = compute_tangent_frame(surfNormal, i.worldPos, baseTexCoord.xy, surfTangent, surfBase, flipSign);
+	
+	float3 f3ViewDir = normalize(g_EyePos.xyz - i.worldPos);
 
 #if PARALLAXOCCLUSION
     float3 outgoingLightRay = g_EyePos.xyz - i.worldPos;
@@ -157,6 +159,7 @@ float4 main(PS_INPUT i) : COLOR
 
     float3 textureNormal = normalize((tex2D( NormalTextureSampler,  correctedTexCoord.xy).xyz - float3(0.5, 0.5, 0.5)) * 2);
     float3 normal = normalize(mul(textureNormal, normalBasis)); // World Normal
+	float3 faceNormal = normalize(mul(textureNormal,i.mTangentSpaceTranspose));
 	
 	float4 basetexture = tex2D(BaseTextureSampler, correctedTexCoord.xy);
 	float4 albedo = basetexture;
@@ -165,6 +168,11 @@ float4 main(PS_INPUT i) : COLOR
     float metalness = mrao.x;
 	float roughness = mrao.y;
 	float ambientOcclusion = mrao.z;
+	
+	
+//	float3 EnvAmbientCube[6];
+//   setupEnvMapAmbientCube(EnvAmbientCube, EnvmapSampler);
+	
 	
 #if DETAILTEXTURE
 	float4 detailColor = tex2D( DetailSampler, correctedDetailTexCoord.xy );
@@ -175,14 +183,17 @@ float4 main(PS_INPUT i) : COLOR
 		float4 detailMask = tex2D(DetailMaskSampler,correctedTexCoord.xy);
 		if(bMultiDetail)
 		{
-			if(bAltDetailMethod)
+		
+			/*if(bAltDetailMethod)
 			{
 				albedo = multidetailV2(basetexture,detailColor,detailMask,detailBlendFactor);
 			}
 			else
 			{
 				albedo = multidetailV1(basetexture,detailColor,detailMask,detailBlendFactor);
-			}
+			}*/
+			
+			albedo = multidetailV1(basetexture,detailColor,detailMask,detailBlendFactor);
 		}
 		else
 		{
@@ -202,10 +213,12 @@ float4 main(PS_INPUT i) : COLOR
 	float3 incomingViewDir = normalize(i.worldPos - g_EyePos.xyz);
 	float lightViewDirectionAngle = max(0,dot(normal,incomingViewDir));
 
-    float3 specularReflectionVector = 2.0 * lightDirectionAngle * normal - outgoingLightDirection; // Lr
+	float3 specularReflectionVector = 2.0 * lightDirectionAngle * normal - outgoingLightDirection; // Lr
 
     float3 dielectricCoefficient = 0.04; // F0 dielectric
-    float3 fresnelReflectance = lerp(dielectricCoefficient, albedo.rgb, metalness); // F0
+    float3 fresnelReflectance = albedo.rgb * metalness + (dielectricCoefficient * (1 - metalness));
+	
+	float3 f3Albedo = albedo.rgb * max(fDfC,1.0f - metalness);
 
     // Prepare ambient and direct
     float3 ambientLighting = 0.0;
@@ -218,20 +231,11 @@ float4 main(PS_INPUT i) : COLOR
 #else
         float3 diffuseIrradiance = ambientLookup(normal, EnvAmbientCube, textureNormal, i.lightmapTexCoord1And2, i.lightmapTexCoord3, LightmapSampler, g_DiffuseModulation);
 #endif
-        // return float4(diffuseIrradiance, 1); // testing diffuse irraciance
-		//float3 ambientLightingFresnelTerm = fresnelSchlick(fresnelReflectance, lightDirectionAngle);
+        float3 ambientLightingFresnelTerm = fresnelSchlick(fresnelReflectance, lightDirectionAngle); // F
 
-        float3 ambientLightingFresnelTerm = lerp(fresnelSchlickRoughness(fresnelReflectance, lightDirectionAngle, roughness),fresnelSchlick(fresnelReflectance, lightDirectionAngle), 0.5f); // F
+        float3 diffuseContributionFactor = lerp(1 - ambientLightingFresnelTerm, 0, metalness); // kd
 
-#if SPECULAR
-        float3 diffuseContributionFactor = 1 - ambientLightingFresnelTerm; // kd
-#else
-        float3 diffuseContributionFactor = lerp(1 - ambientLightingFresnelTerm, 0, metalness); ; // kd
-#endif
-        float3 diffuseIBL = diffuseContributionFactor * albedo.rgb * diffuseIrradiance;
 		
-
-
         float4 specularUV = float4(specularReflectionVector, roughness * ENVMAPLOD);
 		
 #if LERPENVMAP
@@ -239,16 +243,40 @@ float4 main(PS_INPUT i) : COLOR
 #else
 		float3 lookupHigh = ENV_MAP_SCALE * texCUBElod(EnvmapSampler, specularUV).xyz;
 #endif
-        float3 lookupLow = PixelShaderAmbientLight(specularReflectionVector, EnvAmbientCube);
+
+#if LIGHTMAPPED
+		float3 lookupLow = lookupHigh;
+#else
+        float3 lookupLow = PixelShaderAmbientLight(normal, EnvAmbientCube);
+#endif
+		
         float3 specularIrradiance = lerp(lookupHigh, lookupLow, roughness * roughness);
-        float3 specularIBL = specularIrradiance * EnvBRDFApprox(fresnelReflectance, roughness, lightDirectionAngle);
+		
+        float3 diffuseIBL = diffuseContributionFactor * f3Albedo * diffuseIrradiance;
+		
+		if(fDebugState == 1.0f)
+			return float4(diffuseIBL,1.0f);
+			
+		//float3 diffuseIBL = f3Albedo * diffuseIrradiance;
 
-        ambientLighting = (diffuseIBL + specularIBL) * ambientOcclusion;
-    }
-
-    // Start direct
-	if (!FLASHLIGHT) 
-	{
+#if LIGHTMAPPED
+		float3 envBRDF = EnvBRDFScatterSpecular(fresnelReflectance,roughness,dot(normal,f3ViewDir));
+		if(fDebugState == 2.0f)
+			return float4(envBRDF,1.0f);
+			
+        float3 specularIBL = envBRDF * specularIrradiance;
+		ambientLighting = diffuseIBL + specularIBL;
+		
+		float3 f3DomColor;
+		float3 f3DomDir = f3DomColorAndDir(LightmapSampler, g_DiffuseModulation.xyz, textureNormal,i.lightmapTexCoord1And2,i.lightmapTexCoord3,f3DomColor);
+		float3 f3Lightmap = ambientLookupLightmap(normal,textureNormal,i.lightmapTexCoord1And2,i.lightmapTexCoord3,LightmapSampler,g_DiffuseModulation);
+		f3DomDir = mul(i.mTangentSpaceTranspose,f3DomDir);
+		//f3DomDir.z *= 0.75;	
+		directLighting += StaticBRDF_Diffuse(f3Albedo, fresnelReflectance, roughness, f3ViewDir, faceNormal, f3DomDir, f3Lightmap, f3DomColor);
+#else
+		float3 specularIBL = specularIrradiance * EnvBRDFApprox(fresnelReflectance, roughness, lightDirectionAngle);
+		ambientLighting = diffuseIBL + specularIBL;
+		
 		for (uint n = 0; n < NUM_LIGHTS; ++n)
 		{
 			float3 LightIn = normalize(PixelShaderGetLightVector(i.worldPos, cLightInfo, n));
@@ -257,17 +285,17 @@ float4 main(PS_INPUT i) : COLOR
 			directLighting += calculateLight(LightIn, LightColor, outgoingLightDirection,
 				normal, fresnelReflectance, roughness, metalness, lightDirectionAngle, albedo.rgb);
 		}
-#if LIGHTMAPPED
-		float3 f3DomColor;
-		float3 f3DomDir = f3DomColorAndDir(LightmapSampler, g_DiffuseModulation.xyz, textureNormal,i.lightmapTexCoord1And2,i.lightmapTexCoord3,f3DomColor);
-		f3DomDir = mul(i.mTangentSpaceTranspose,f3DomDir);
-		f3DomDir.z *= 0.75;
-		
-		directLighting += calculateLight(f3DomDir,f3DomColor,outgoingLightDirection,normal,fresnelReflectance,roughness,metalness,lightDirectionAngle,albedo.rgb);
 #endif
+
+		if(fDebugState == 3.0f)
+			return float4(specularIBL,1.0f);
+		if(fDebugState == 4.0f)
+			return float4(ambientLighting,1.0f);
+		if(fDebugState == 5.0f)
+			return float4(directLighting,1.0f);
 		
 	}
-    // End direct
+
     if (FLASHLIGHT)
     {
     // Start flashlight
@@ -299,9 +327,10 @@ float4 main(PS_INPUT i) : COLOR
 
     directLighting += max(0, calculateLight(flashLightIn, flashLightIntensity, outgoingLightDirection,
         normal, fresnelReflectance, roughness, metalness, lightDirectionAngle, albedo.rgb));
-    // End flashlight
+    // End flashlight	
   }
-
+	
+	
     float fogFactor = CalcPixelFogFactor(PIXELFOGTYPE, g_FogParams, g_EyePos.xyz, i.worldPos.xyz, i.projPos.z);
 
 #if !FLASHLIGHT
@@ -320,7 +349,7 @@ float4 main(PS_INPUT i) : COLOR
 
     bool bWriteDepthToAlpha = (WRITE_DEPTH_TO_DESTALPHA != 0) && (WRITEWATERFOGTODESTALPHA == 0);
 
-    float3 combinedLighting = directLighting + ambientLighting;
+    float3 combinedLighting = (directLighting + ambientLighting) * ambientOcclusion;
 #if EMISSIVE && !FLASHLIGHT
     combinedLighting += emission;
 #endif

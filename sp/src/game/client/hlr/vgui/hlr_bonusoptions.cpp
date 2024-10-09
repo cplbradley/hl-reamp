@@ -441,6 +441,7 @@ private:
 	vgui::Slider* m_sHudB;
 	vgui::Panel* m_pCrosshair;
 	vgui::CheckButton* m_poverride;
+	vgui::ComboBox* m_movement;
 	int iautoaimscale;
 
 };
@@ -472,6 +473,10 @@ CHLRSubBonusOptionsGameplay::CHLRSubBonusOptionsGameplay(vgui::Panel* parent) : 
 	m_pthirdperson = new CheckButton(this, "ThirddPerson", "Third-Person");
 	m_pcustomnv = new CheckButton(this, "customNV", "custom nightvision");
 
+	m_movement = new ComboBox(this, "AirMovementType", 2, false);
+	m_movement->AddItem("#HLR_MovementType_Source", NULL);
+	m_movement->AddItem("#HLR_MovementType_Accel", NULL);
+
 
 	LoadControlSettings("resource/ui/bonusoptionsgameplay.res");
 }
@@ -488,6 +493,7 @@ void CHLRSubBonusOptionsGameplay::OnResetData()
 	ConVarRef hudb("hud_color_b");
 	ConVarRef haoverride("hud_override_healtharmor_color");
 	ConVarRef customnv("g_custom_nightvision");
+	ConVarRef movementtype("g_airmovement_type");
 
 	iautoaimscale = autoaimscale.GetFloat() * 10;
 
@@ -504,6 +510,7 @@ void CHLRSubBonusOptionsGameplay::OnResetData()
 	m_poverride->SetSelected(haoverride.GetBool());
 
 	m_pcustomnv->SetSelected(customnv.GetBool());
+	m_movement->ActivateItem(movementtype.GetInt());
 }
 void CHLRSubBonusOptionsGameplay::OnApplyChanges()
 {
@@ -517,6 +524,7 @@ void CHLRSubBonusOptionsGameplay::OnApplyChanges()
 	ConVarRef hudb("hud_color_b");
 	ConVarRef haoverride("hud_override_healtharmor_color");
 	ConVarRef customnv("g_custom_nightvision");
+	ConVarRef movementtype("g_airmovement_type");
 
 	iautoaimscale = m_pautoaimscale->GetValue();
 
@@ -548,6 +556,7 @@ void CHLRSubBonusOptionsGameplay::OnApplyChanges()
 	hudb.SetValue(m_sHudB->GetValue());
 
 	customnv.SetValue(m_pcustomnv->IsSelected());
+	movementtype.SetValue(m_movement->GetActiveItem());
 
 	DevMsg("changing bonus option data\n");
 

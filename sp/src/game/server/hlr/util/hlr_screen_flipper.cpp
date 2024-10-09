@@ -3,7 +3,7 @@
 #include "player.h"
 #include "triggers.h"
 
-#include "memdbgon.h"
+#include "tier0/memdbgon.h"
 
 
 
@@ -46,11 +46,9 @@ void CScreenFlipper::FlipScreen()
 	if (m_bFlipped)
 	{
 		pPlayer->m_HL2Local.m_bInvertedScreen = false;
-		m_bFlipped = false;
 	}
 	else
 	{
 		pPlayer->m_HL2Local.m_bInvertedScreen = true;
-		m_bFlipped = true;
 	}
 }

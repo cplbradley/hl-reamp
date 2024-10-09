@@ -1,14 +1,15 @@
 #include "cbase.h"
 #include "filesystem.h"
 
-#ifdef GAME_DLL
-#include "hl2_player.h"
+#ifdef CLIENT_DLL
+#include "c_basehlplayer.h"
 #endif
 
 
 #ifndef HLR_SHAREDDEFS_H
 #define HLR_SHAREDDEFS_H
-#endif
+
+
 #ifdef _WIN32
 #pragma once
 #endif
@@ -23,11 +24,18 @@ static ConVar hud_weapon_selection_slowmo("hud_weapon_selection_slowmo", "1", FC
 static ConVar g_draw_fury_effects("g_draw_fury_effects", "1", FCVAR_REPLICATED | FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Draws fury screen effects");
 static ConVar g_rocket_jump_mania("g_rocket_jump_mania", "0", FCVAR_REPLICATED | FCVAR_GAMEDLL | FCVAR_ARCHIVE, "No explosive self-damage. Rocket-jump away!");
 static ConVar mat_blurdarken("mat_blurdarken", "0");
+static ConVar g_thirdperson_aimmode("g_thirdperson_aimmode", "0", FCVAR_REPLICATED | FCVAR_GAMEDLL | FCVAR_ARCHIVE, "Sets third-person aiming mode. 0 = Crosshair follows aim, 1 = aim follows crosshair");
 
 static ConVar mat_taa("mat_taa", "0", FCVAR_REPLICATED | FCVAR_CLIENTDLL, "");
 static ConVar g_custom_nightvision("g_custom_nightvision", "0", FCVAR_ARCHIVE | FCVAR_CLIENTDLL | FCVAR_GAMEDLL);
+static ConVar mat_glitch("mat_glitch", "0", FCVAR_REPLICATED | FCVAR_GAMEDLL | FCVAR_CLIENTDLL, "");
 
 static ConVar r_efficient_particles("r_efficient_particles", "0", FCVAR_ARCHIVE | FCVAR_REPLICATED | FCVAR_CLIENTDLL | FCVAR_GAMEDLL);
+
+
+static float easeInOut(float t) {
+	return t < 0.5f ? 0.5f * pow(2 * t, 2.0f) : 0.5f * (2 - pow(2 * (1 - t), 2.0f));
+}
 
 static void CC_TestKillSave(void)
 {
@@ -127,16 +135,7 @@ static void CC_TestKillSave(void)
 
 
 
-static void CC_StartMasochistMode(void)
-{
-#ifdef GAME_DLL
-	CHL2_Player* pPlayer = dynamic_cast<CHL2_Player*>(UTIL_GetLocalPlayer());
-	Warning("Starting Masochist Mode\n");
-	if (!pPlayer)
-		return;
-	pPlayer->m_HL2Local.m_bMasochistMode = true;
-	engine->ClientCommand(pPlayer->edict(), "map introtest_newnew\n");
-#endif
-}
 
 static ConCommand testkillsave("testkillsave", CC_TestKillSave, "testkillsave", FCVAR_REPLICATED | FCVAR_HIDDEN | FCVAR_CLIENTCMD_CAN_EXECUTE);
+
+#endif

@@ -564,7 +564,7 @@ public:
 	virtual float			GetHeldObjectMass( IPhysicsObject *pHeldObject );
 
 	void					CheckSuitUpdate();
-	void					SetSuitUpdate(const char *name, int fgroup, int iNoRepeat);
+	void					SetSuitUpdate(const char *name, int fgroup, int iNoRepeat, bool male = false);
 	virtual void			UpdateGeigerCounter( void );
 	void					CheckTimeBasedDamage( void );
 
@@ -763,10 +763,23 @@ public:
 	CNetworkVector(m_vecRopeSegmentPosition);
 
 	bool m_bInCinematicCamera;
+	
 
+	CNetworkVar(int, m_iButtonLookState);
+
+	int		GetButtonLookState();
 
 	CNetworkVar(bool, m_bClimbingRope);
 	CHandle<CClimbableRope> curRope;
+
+
+	CNetworkVector(m_vecGrapplePoint);
+
+	void TryGrappleMove();
+
+	bool m_bGrappleHooked;
+	CNetworkVar(bool,m_bShouldGrapple);
+
 
 public:
 	// Suicide...

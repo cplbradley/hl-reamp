@@ -362,6 +362,8 @@ void CNPC_VortBoss::Spawn(void)
 	m_flFieldOfView = -0.9;
 	m_NPCState = NPC_STATE_NONE;
 	m_iBodyState = BODYSTATE_NORMAL;
+
+	szEnemyName = "#HLR_EnemyName_Vortboss";
 	UpdateBodyState();
 	SetupGlobalModelData();
 	//CapabilitiesClear();
@@ -779,9 +781,22 @@ void CNPC_VortBoss::CreateAttackBeam(void)
 }
 void CNPC_VortBoss::AttackBeamThink(void)
 {
+
+	if (!GetEnemy())
+	{
+		ClearBeam();
+		return;
+	}
+
+	if (GetEnemy() && !GetEnemy()->IsAlive())
+	{
+		ClearBeam();
+		return;
+	}
+
 	iAttackBeamWidth -= 4;
 	Vector vecAdjustedTargetPos = m_vTargetPos + Vector(0, 0, 32);
-	Vector m_vLaserDir = vecAdjustedTargetPos - m_vStartPos;
+	Vector m_vLaserDir = (vecAdjustedTargetPos - m_vStartPos).Normalized();
 
 	trace_t tr;
 	UTIL_TraceLine(m_vStartPos, m_vStartPos + m_vLaserDir * VORTBOSS_MAX_LASER_RANGE, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr);
@@ -790,16 +805,34 @@ void CNPC_VortBoss::AttackBeamThink(void)
 	//DebugDrawLine(tr.startpos, tr.endpos, 0, 255, 0, false, 0.5f);
 	pEyeAttackBeam->SetWidth(iAttackBeamWidth);
 	pEyeAttackBeam->RelinkBeam();
-	CBaseCombatCharacter *pBCC = ToBaseCombatCharacter(tr.m_pEnt);
-	if (pBCC)
+	
+	if (tr.m_pEnt && tr.m_pEnt->IsCombatCharacter())
 	{
-		ClearMultiDamage();
-		CTakeDamageInfo info(this, this, 10, DMG_SHOCK);
-		info.AdjustPlayerDamageTakenForSkillLevel();
-		CalculateMeleeDamageForce(&info, m_vLaserDir, tr.endpos);
-		pBCC->DispatchTraceAttack(info, m_vLaserDir, &tr);
-		ApplyMultiDamage();
-		DevMsg("applying damage\n");
+		CBaseCombatCharacter* pBCC = ToBaseCombatCharacter(tr.m_pEnt);
+		if (pBCC)
+		{
+			ClearMultiDamage();
+			CTakeDamageInfo info(this, this, 10, DMG_SHOCK);
+			info.AdjustPlayerDamageTakenForSkillLevel();
+			CalculateMeleeDamageForce(&info, m_vLaserDir, tr.endpos);
+			pBCC->DispatchTraceAttack(info, m_vLaserDir, &tr);
+			ApplyMultiDamage();
+			DevMsg("applying damage\n");
+		}
+	}
+	else if (tr.m_pEnt)
+	{
+		FireBulletsInfo_t fbinfo;
+		fbinfo.m_flDamage = 10;
+		fbinfo.m_vecSrc = m_vStartPos;
+		fbinfo.m_vecDirShooting = m_vLaserDir;
+		fbinfo.m_iShots = 1;
+		fbinfo.m_iTracerFreq = -1;
+		fbinfo.m_pAttacker = this;
+		fbinfo.m_vecSpread = vec3_origin;
+
+		FireBullets(fbinfo);
+
 	}
 	SetNextThink(gpGlobals->curtime + 0.01f, "AttackBeamContext");
 
@@ -902,6 +935,22 @@ bool CNPC_VortBoss::ShouldCharge(const Vector &startPos, const Vector &endPos, b
 	GetMoveProbe()->MoveLimit(NAV_GROUND, startPos, vecTargetPos, MASK_NPCSOLID_BRUSHONLY, GetEnemy(), &moveTrace);
 
 	// Draw the probe
+	trace_t trx;
+
+	AI_TraceHull(WorldSpaceCenter(), WorldSpaceCenter(), GetHullMins(), GetHullMaxs(), MASK_NPCSOLID, NULL, &trx);
+	int clr[3];
+	clr[0] = 0;
+	clr[1] = 255;
+	clr[2] = 255;
+
+	if (trx.m_pEnt && !trx.m_pEnt->IsWorld() && trx.m_pEnt != this)
+	{
+		clr[0] = 255;
+		clr[1] = 0;
+		clr[2] = 0;
+	}
+
+	//NDebugOverlay::Box(WorldSpaceCenter(), GetHullMins() * 1.25f, GetHullMaxs() * 1.25f, clr[0], clr[1], clr[2], 255, 0.1f);
 
 	// If we're not blocked, charge
 	if (IsMoveBlocked(moveTrace))

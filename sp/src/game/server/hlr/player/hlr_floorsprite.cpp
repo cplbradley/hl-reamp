@@ -56,27 +56,17 @@ void CHLRFloorSprite::DrawSprite(void)
 	if (!pPlayer)
 		return;
 
-	if (pPlayer->IsSuitEquipped())
-		InitSprite();
+	InitSprite();
 }
-/*void CHLRFloorSprite::UpdatePos(void)
-{
-	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-	Vector vecPlayerPos = pPlayer->GetAbsOrigin();
-	trace_t tr;
-	UTIL_TraceLine(vecPlayerPos, vecPlayerPos + (Vector(0, 0, -1) * MAX_TRACE_LENGTH), MASK_PLAYERSOLID_BRUSHONLY, pPlayer, COLLISION_GROUP_PLAYER_MOVEMENT, &tr);
-	Vector vecTgtPos = Vector(vecPlayerPos.x, vecPlayerPos.y, tr.endpos.z);
-	SetAbsOrigin(vecTgtPos + Vector(0, 0, 4));
-	Vector vecDown = Vector(0, 0, 1);
-	QAngle angDown;
-	VectorAngles(vecDown, angDown);
-	SetAbsAngles(angDown);
-}*/
 void CHLRFloorSprite::UpdateThink(void)
 {
-	//UpdatePos();
-
 	CBasePlayer* pPlayer = UTIL_GetLocalPlayer();
+
+	if (!pPlayer)
+		return;
+
+	if (!m_pSprite)
+		return;
 	if (pPlayer->GetGroundEntity() == NULL)
 		spriteAlpha+= 4;
 	else

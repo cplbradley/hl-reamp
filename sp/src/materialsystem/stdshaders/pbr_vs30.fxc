@@ -19,6 +19,7 @@
 static const bool g_bSkinning           = SKINNING ? true : false;
 static const int g_FogType              = DOWATERFOG;
 const float4 cBaseTexCoordTransform[3]	: register(SHADER_SPECIFIC_CONST_0);
+const float4 cNormalTexCoordTransform[3] : register(SHADER_SPECIFIC_CONST_3);
 const float4 cDetailTexCoordTransform[2]	: register( SHADER_SPECIFIC_CONST_6 );
 
 //-----------------------------------------------------------------------------
@@ -127,5 +128,6 @@ VS_OUTPUT main( const VS_INPUT v )
 
 	o.baseTexCoord.z = dot( v.vTexCoord0, cDetailTexCoordTransform[0] );
 	o.baseTexCoord.w = dot( v.vTexCoord0, cDetailTexCoordTransform[1] );
+    
     return o;
 }

@@ -38,6 +38,7 @@ DEFINE_INPUTFUNC(FIELD_FLOAT,"SetUpdateFrequency", InputSetUpdateFrequency),
 DEFINE_KEYFIELD(m_fQueryRange,FIELD_FLOAT,"QueryRange"),
 DEFINE_KEYFIELD(m_fUpdateFrequency,FIELD_FLOAT,"UpdateFrequency"),
 DEFINE_FUNCTION(UpdateMemory),
+DEFINE_THINKFUNC(UpdateThink),
 DEFINE_FIELD(m_bAmUpdating,FIELD_BOOLEAN),
 END_DATADESC()
 

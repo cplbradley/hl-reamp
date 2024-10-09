@@ -133,7 +133,8 @@ Navigation_t CAI_Pathfinder::ComputeWaypointType( CAI_Node **ppNodes, int parent
 			break;
 		}
 	}
-
+	if (pNode->GetHint() && pNode->GetHint()->HintType() == HINT_ANTLION_WALL_POINT)
+		navType = NAV_JUMP;
 	// @TODO (toml 10-15-02): one would not expect to come out of the above logic
 	// with NAV_NONE. However, if a graph is newly built, it can contain malformed
 	// links that are referred to by the destination node, not the source node.
@@ -635,6 +636,7 @@ bool CAI_Pathfinder::IsLinkUsable(CAI_Link *pLink, int startID)
 	pStartNode = GetNetwork()->GetNode(startID);
 	pEndNode = GetNetwork()->GetNode(endID);
 
+
 	if ( (linkMoveTypes & bits_CAP_MOVE_JUMP) && !moveType )
 	{
 		CAI_Hint *pStartHint = pStartNode->GetHint();
@@ -824,7 +826,7 @@ AI_Waypoint_t *CAI_Pathfinder::BuildSimpleRoute( Navigation_t navType, const Vec
 {
 	Assert( navType == NAV_JUMP || navType == NAV_CLIMB ); // this is what this here function is for
 	// Only allowed to jump to ground nodes
-	if ((nodeID == NO_NODE)	|| (GetNetwork()->GetNode(nodeID)->GetType() == nodeTargetType) )
+	if ((nodeID != NO_NODE)	&& (GetNetwork()->GetNode(nodeID)->GetType() == nodeTargetType) )
 	{
 		AIMoveTrace_t moveTrace;
 		GetOuter()->GetMoveProbe()->MoveLimit( navType, vStart, vEnd, MASK_NPCSOLID, pTarget, &moveTrace );

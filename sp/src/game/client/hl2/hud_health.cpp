@@ -57,6 +57,11 @@ public:
 			void MsgFunc_SuitPickup(bf_read &msg);
 	virtual void PaintValue(vgui::HFont font, int xpos, int ypos, int value, Color &color);
 
+	virtual void LevelInit() {
+		CHudElement::LevelInit();
+		SetAlpha(255);
+	}
+
 
 	void GetIcons();
 	virtual void Paint(void);
@@ -130,6 +135,8 @@ void CHudHealth::Reset()
 
 	SetPaintBackgroundEnabled(false);
 	GetIcons();
+	SetAlpha(255);
+
 	/*wchar_t *tempString = g_pVGuiLocalize->Find("#Valve_Hud_HEALTH");
 
 	if (tempString)
@@ -152,8 +159,6 @@ void CHudHealth::VidInit()
 	SetPaintEnabled(true);
 
 	SetVisible(true);
-	
-
 }
 
 

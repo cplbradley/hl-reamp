@@ -712,7 +712,6 @@ void CNPC_MetroPolice::Spawn( void )
 
 		if (FClassnameIs(pWeapon, "weapon_pistol"))
 			SetSkin(2);
-
 		if (FClassnameIs(pWeapon, "weapon_smg1"))
 			SetSkin(0);
 		if (FClassnameIs(pWeapon, "weapon_shotgun"))
@@ -750,6 +749,8 @@ void CNPC_MetroPolice::Spawn( void )
 	m_flPreChaseYaw = 0;
 
 	DrawEyes();
+
+	szEnemyName = "#HLR_EnemyName_Droid";
 
 	SetUse( &CNPC_MetroPolice::PrecriminalUse );
 

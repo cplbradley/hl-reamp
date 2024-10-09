@@ -58,7 +58,8 @@ enum NodeType_e
 	NODE_GROUND,     
 	NODE_AIR,       
 	NODE_CLIMB,  
-	NODE_WATER     
+	NODE_WATER,
+	NODE_WALL
 };
 
 enum NodeInfoBits_e

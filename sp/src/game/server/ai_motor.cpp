@@ -92,6 +92,7 @@ CAI_Motor::CAI_Motor(CAI_BaseNPC *pOuter)
 	m_vecVelocity = Vector( 0, 0, 0 );
 	m_pMoveProbe = NULL;
 	m_bYawLocked = false;
+	m_fMoveSpeedScale = 1.f;
 }
 
 //-----------------------------------------------------------------------------
@@ -371,7 +372,12 @@ int CAI_Motor::MoveJumpExecute( )
 
 	if (GetOuter()->GetActivity() == ACT_JUMP && GetOuter()->IsActivityFinished())
 	{
-		SetActivity( ACT_GLIDE );
+		if (GetOuter()->GetAbsVelocity().z < 0 && SelectWeightedSequence(ACT_HOVER) != ACT_INVALID)
+		{
+			GetOuter()->SetIdealActivity(ACT_HOVER);
+		}
+		else
+			GetOuter()->SetIdealActivity(ACT_GLIDE);
 	}
 
 	// use all the time
@@ -384,7 +390,7 @@ AIMoveResult_t CAI_Motor::MoveJumpStop()
 {
 	SetSmoothedVelocity( Vector(0,0,0) );
 
-	if (GetOuter()->GetActivity() == ACT_GLIDE)
+	if (GetOuter()->GetActivity() == ACT_GLIDE || GetOuter()->GetActivity() == ACT_HOVER)
 	{
 		float flTime = GetOuter()->GetGroundChangeTime();
 		GetOuter()->AddStepDiscontinuity( flTime, GetAbsOrigin(), GetAbsAngles() );
@@ -539,7 +545,7 @@ AIMotorMoveResult_t CAI_Motor::MoveGroundExecuteWalk( const AILocalMoveGoal_t &m
 		SetMoveInterval( 0 );
 	}
 
-	SetMoveVel( move.dir * speed );
+	SetMoveVel( move.dir * speed * m_fMoveSpeedScale);
 
 	// --------------------------------------------
 	// walk the distance
@@ -1028,6 +1034,12 @@ bool CAI_Motor::HasPoseParameter( int iSequence, int iParameter )
 void CAI_Motor::SetMoveType( MoveType_t val, MoveCollide_t moveCollide )
 {
 	GetOuter()->SetMoveType( val, moveCollide );
+}
+
+
+void CAI_Motor::ScaleVelocity(float scale)
+{
+	m_fMoveSpeedScale = scale;
 }
 
 //=============================================================================

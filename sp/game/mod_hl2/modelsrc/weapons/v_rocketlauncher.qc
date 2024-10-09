@@ -5,14 +5,15 @@
 
 $scale 1.0
 $modelname    "weapons/v_rocketlauncher.mdl"
-$body v_rocketlauncher "v_rocketlauncher.smd"
+$model v_rocketlauncher "v_rocketlauncher_new.smd"
+$model hands "v_hands_mark6_left.smd"
 $origin 2 0 70
 $contents "solid"
 $cdmaterials "models/weapons/rocketlauncher"
-$cdmaterials "models/weapons/v_hand"
-$sequence draw "v_rocketlauncher_sequence_draw" fps 30.0 activity ACT_VM_DRAW -1.0 fadein 0.2 fadeout 0.2 
-$sequence fire "v_rocketlauncher_sequence_fire" fps 25.0 activity ACT_VM_PRIMARYATTACK -1.0 fadein 0.0 fadeout 0.3 
-$sequence idle "v_rocketlauncher_sequence_idle" fps 30.0 loop  activity ACT_VM_IDLE -1.0 fadein 0.2 fadeout 0.0 
+$cdmaterials "models/weapons/v_hands"
+$sequence draw "v_rocketlauncher_sequence_draw2" fps 30.0 activity ACT_VM_DRAW -1.0 fadein 0.2 fadeout 0.2 
+$sequence fire "v_rocketlauncher_sequence_fire2" fps 25.0 activity ACT_VM_PRIMARYATTACK -1.0 fadein 0.0 fadeout 0.3 snap
+$sequence idle "v_rocketlauncher_sequence_idle2" fps 10.0 loop  activity ACT_VM_IDLE -1.0 fadein 0.2 fadeout 0.0 
 $attachment "0" "heavyweapon" 0 0 0 rotate 0 0 0
 $attachment "laser" "heavyweapon" 5 -16.5 2 rotate 0 0 0
 $attachment "laser_end" "heavyweapon" 5 -116.5 2 rotate 0 0 0

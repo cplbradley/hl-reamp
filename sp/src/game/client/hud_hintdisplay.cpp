@@ -58,6 +58,8 @@ protected:
 
 	bool		m_bLastLabelUpdateHack;
 	CPanelAnimationVar( float, m_flLabelSizePercentage, "HintSize", "0" );
+
+	
 };
 
 DECLARE_HUDELEMENT( CHudHintDisplay );
@@ -372,6 +374,7 @@ private:
 	int baseYpos;
 	bool bUseWorldPos;
 	Vector vecWorldPos;
+	float m_fLerpTime;
 
 	CPanelAnimationVarAliasType( float, m_iTextX, "text_xpos", "8", "proportional_float" );
 	CPanelAnimationVarAliasType( float, m_iTextY, "text_ypos", "8", "proportional_float" );
@@ -436,6 +439,7 @@ bool CHudHintKeyDisplay::ShouldDraw( void )
 	return ( ( GetAlpha() > 0 ) && CHudElement::ShouldDraw() );
 }
 
+ConVar g_hudhint_lerp("g_hudhint_lerp", "0.1");
 //-----------------------------------------------------------------------------
 // Purpose: Updates the label color each frame
 //-----------------------------------------------------------------------------
@@ -464,13 +468,21 @@ void CHudHintKeyDisplay::OnThink()
 		screenX -= GetWide() * 0.5; //offset the panel so the center is on target, not the upper left corner
 		screenY -= GetTall() * 0.5; 
 		float x = clamp(screenX, 0, ScreenWidth()-GetWide()); //clamp so it stays on-screen
-		float y = clamp(screenY, 0, ScreenHeight()-GetTall()); 
-		SetPos(x, y); //set the final position
-		engine->Con_NPrintf(0, "HudX: %f HudY:%f", screenX, screenY); //debug stuff
+		float y = clamp(screenY, 0, ScreenHeight()-GetTall());
+		Vector vecDest = Vector(x, y, 0);
+		int curx, cury;
+		GetPos(curx, cury);
+		Vector vecCurPos = Vector(curx, cury, 0);
+		Vector vecOut = Lerp(g_hudhint_lerp.GetFloat(), vecCurPos, vecDest);
+		if (m_fLerpTime > gpGlobals->curtime)
+			SetPos(vecOut.x, vecOut.y); //set the final position
+		else
+			SetPos(x, y);
+		//engine->Con_NPrintf(0, "HudX: %f HudY:%f", screenX, screenY); //debug stuff
 	}
 	else
 	{
-		SetPos(baseXpos - GetWide(), baseYpos - (GetTall() / 2));
+		SetPos(baseXpos - GetWide() / 2, baseYpos - (GetTall() / 2));
 	}
 }
 
@@ -808,6 +820,9 @@ void CHudHintKeyDisplay::MsgFunc_KeyHintText( bf_read &msg )
 	// how many strings do we receive ?
 	int count = msg.ReadByte();
 	bUseWorldPos = msg.ReadByte();
+
+	if (bUseWorldPos)
+		m_fLerpTime = gpGlobals->curtime + 0.2f;
 
 	// here we expect only one string
 	if ( count != 1 )

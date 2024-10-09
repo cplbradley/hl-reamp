@@ -16,6 +16,7 @@ void CActualBullet::Start(void)
 	SetThink(&CActualBullet::Think);
 	SetNextThink(gpGlobals->curtime);
 	SetOwnerEntity(info.m_pAttacker);
+	fKillTime = gpGlobals->curtime + 3.f;
 }
 void CActualBullet::Think(void)
 {
@@ -39,10 +40,11 @@ void CActualBullet::Think(void)
 
 	if (debug_actual_bullet.GetBool() == true)
 	{
-
 		DebugDrawLine(vecStart, vecEnd, 0, 128, 255, false, 0.05f);
 	}
 
+	if (gpGlobals->curtime > fKillTime)
+		Stop();
 
 	if (tr.fraction != 1.0 && GetOwnerEntity())
 	{

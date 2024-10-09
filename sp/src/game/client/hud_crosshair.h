@@ -41,10 +41,16 @@ public:
 protected:
 	virtual void	ApplySchemeSettings( vgui::IScheme *scheme );
 	virtual void	Paint();
+
+	virtual void LevelInit() {
+		CHudElement::LevelInit();
+		SetAlpha(255);
+	}
 	
 	// Crosshair sprite and colors
 	CHudTexture		*m_pCrosshair;
 	CHudTexture		*m_pDefaultCrosshair;
+	CHudTexture* GetPointer();
 	Color			m_clrCrosshair;
 	QAngle			m_vecCrossHairOffsetAngle;
 

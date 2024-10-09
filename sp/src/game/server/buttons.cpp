@@ -30,6 +30,7 @@ string_t MakeButtonSound( int sound );				// get string of button sound number
 #define SF_BUTTON_LOCKED				2048	// Whether the button is initially locked.
 #define	SF_BUTTON_SPARK_IF_OFF			4096	// button sparks in OFF state
 #define	SF_BUTTON_JIGGLE_ON_USE_LOCKED	8192	// whether to jiggle if someone uses us when we're locked
+#define SF_BUTTON_USE_SECONDARY_ICON	16384	// use the palm icon instead of pointer icon
 
 BEGIN_DATADESC( CBaseButton )
 
@@ -77,8 +78,6 @@ END_DATADESC()
 
 
 LINK_ENTITY_TO_CLASS( func_button, CBaseButton );
-
-
 
 void CBaseButton::Precache( void )
 {

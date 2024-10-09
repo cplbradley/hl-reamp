@@ -29,8 +29,9 @@ int ITEM_GiveAmmo( CBasePlayer *pPlayer, float flCount, const char *pszAmmoName,
 		return 0;
 	}
 
+#ifndef HLR //this shits retarded, higher difficulty definitely shouldn't make you have less ammo, undo that
 	flCount *= g_pGameRules->GetAmmoQuantityScale(iAmmoType);
-
+#endif
 	// Don't give out less than 1 of anything.
 	flCount = MAX( 1.0f, flCount );
 
@@ -198,12 +199,14 @@ class CItem_LargeBoxMRounds : public CItem
 public:
 	DECLARE_CLASS( CItem_LargeBoxMRounds, CItem );
 	CHandle <CSprite> m_pAmmoSprite;
+	int AmmoToAdd;
 	void Spawn( void )
 	{ 
 		Precache( );
 		SetModel( "models/items/energy_ammo.mdl");
 		BaseClass::Spawn( );
 		DrawSprite();
+		AmmoToAdd = SIZE_AMMO_SMG1_LARGE;
 	}
 	void Precache( void )
 	{
@@ -227,12 +230,22 @@ public:
 	}
 	bool MyTouch( CBasePlayer *pPlayer )
 	{
-		if (ITEM_GiveAmmo( pPlayer, SIZE_AMMO_SMG1_LARGE, "SMG1"))
+		int amtGiven = ITEM_GiveAmmo(pPlayer, AmmoToAdd, "SMG1");
+
+		Msg("AmmoToAdd %i amtGiven %i\n", AmmoToAdd,amtGiven);
+
+		if (amtGiven)
 		{
-			if ( g_pGameRules->ItemShouldRespawn( this ) == GR_ITEM_RESPAWN_NO )
+			if (amtGiven > AmmoToAdd * 0.25)
 			{
-				UTIL_Remove(this);	
+				//UTIL_Remove(this);
+				return true;
 			}
+			else
+			{
+				AmmoToAdd -= amtGiven;
+			}
+
 			return true;
 		}
 		return false;

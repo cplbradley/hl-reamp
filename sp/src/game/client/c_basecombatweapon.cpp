@@ -231,6 +231,8 @@ void C_BaseCombatWeapon::DrawCrosshair()
 
 	ConVarRef rainbow("hud_rainbow");
 	Color clr = rainbow.GetBool() ? gHUD.GetRainbowColor() : gHUD.GetDefaultColor();
+
+
 /*
 
 	// TEST: if the thing under your crosshair is on a different team, light the crosshair with a different color.

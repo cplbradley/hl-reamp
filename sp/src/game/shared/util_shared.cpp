@@ -772,13 +772,14 @@ void UTIL_Tracer( const Vector &vecStart, const Vector &vecEnd, int iEntIndex,
 	}
 }
 
-void UTIL_ModelTracer(const Vector& origin, const Vector& direction, float speed, int modelindex, CBaseEntity* pOwner)
+void UTIL_ModelTracer(const Vector& origin, const Vector& direction, float speed, int modelindex, CBaseEntity* pOwner, bool drawtrail)
 {
 	CEffectData data;
 	data.m_vOrigin = origin;
 	data.m_vNormal = direction;
 	data.m_flScale = speed;
 	data.m_nMaterial = modelindex;
+	data.m_bCustomColors = drawtrail;
 #ifdef GAME_DLL
 	data.m_nEntIndex = pOwner->entindex();
 #endif

@@ -81,9 +81,13 @@ enum view_id_t
 	VIEW_SHADOW_DEPTH_TEXTURE = 7,
 	VIEW_SSAO = 8,
 	VIEW_DEPTHBUFFER = 9,
+	VIEW_REFLECTIVE_GLASS = 10,
 	VIEW_ID_COUNT
 };
 view_id_t CurrentViewID();
+
+
+static bool bDrawingReflectiveGlass;
 
 //-----------------------------------------------------------------------------
 // Purpose: Stored pitch drifting variables

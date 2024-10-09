@@ -346,6 +346,9 @@ void CWeaponFrag::PrimaryAttack(void)
 void CWeaponFrag::LaunchGrenade(bool accelerated)
 {
 	CBasePlayer* pPlayer = ToBasePlayer(GetOwner());
+
+
+
 	Vector	vecEye = pPlayer->EyePosition();
 	Vector	vForward, vRight, vUp;
 	Vector vecAng;
@@ -360,7 +363,7 @@ void CWeaponFrag::LaunchGrenade(bool accelerated)
 
 	float vertfactor = sk_plr_grenade_vert_factor.GetFloat();
 	Vector vecThrow = vecAng * (sk_plr_grenade_launch_speed.GetFloat() * (1.0f + m_fChargedMultiplier)) + Vector(0, 0, vertfactor);
-	Fraggrenade_Create(muzzlePoint, vec3_angle, vecThrow, AngularImpulse(random->RandomInt(-600, 600), random->RandomInt(-600, 600), 0), pPlayer, 3.0f, false);
+	Fraggrenade_Create(muzzlePoint, vec3_angle, vecThrow, AngularImpulse(random->RandomInt(-600, 600), random->RandomInt(-600, 600), 0), pPlayer, 3.0f, false, accelerated);
 
 	DevMsg("Launching Grenade at Speed %f\n", sk_plr_grenade_launch_speed.GetFloat() * (1.0f + m_fChargedMultiplier));
 
@@ -410,6 +413,12 @@ void CWeaponFrag::LaunchGrenade(bool accelerated)
 	gamestats->Event_WeaponFired(pPlayer, true, GetClassname());
 
 	DecrementAmmo(GetOwner());
+
+	if (pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
+	{
+		ConVarRef mvox("cl_hev_gender");
+		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0, mvox.GetBool());
+	}
 }
 
 

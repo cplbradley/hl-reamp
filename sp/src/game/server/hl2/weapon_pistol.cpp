@@ -20,6 +20,7 @@
 #include "hlr/util/hlr_projectile.h"
 #include "hl2_gamerules.h"
 #include "gamestats.h"
+#include "hlr/hlr_shareddefs.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -69,6 +70,9 @@ public:
 	Activity	GetPrimaryAttackActivity(void);
 
 	virtual bool Reload(void);
+
+	int defaultVM;
+	int specialVM;
 
 	virtual const Vector& GetBulletSpread(void)
 	{
@@ -185,6 +189,9 @@ void CWeaponPistol::Precache(void)
 	PrecacheParticleSystem("pistol_npc_core");
 	PrecacheParticleSystem("pistol_core");
 	UTIL_PrecacheOther("hlr_pistolprojectile");
+	defaultVM = m_iViewModelIndex;
+	specialVM = PrecacheModel("models/weapons/vbb.mdl");
+
 	BaseClass::Precache();
 }
 
@@ -225,6 +232,7 @@ void CWeaponPistol::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCha
 		
 		pPew->Spawn();
 		pPew->SetAbsVelocity(vecVelocity);
+		pPew->SetOwnerEntity(GetOwnerEntity());
 		DispatchParticleEffect("pistol_npc_core", vecShootOrigin, angAiming, pOperator);
 		//pOperator->FireBullets(0, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2);
 		pOperator->DoMuzzleFlash();
@@ -325,9 +333,7 @@ void CWeaponPistol::FireProjectile(void)
 	Vector vecSrc;
 	QAngle throwaway;
 	
-	vecSrc = pPlayer->Weapon_ShootPosition();
-
-	
+	vecSrc = pPlayer->Weapon_ShootPosition() + vRight * 4 + vUp * -4;
 	QAngle angAiming = pPlayer->EyeAngles();
 	AngleVectors(angAiming, &vecAiming);
 	Vector vecAbsStart = pPlayer->EyePosition();
@@ -336,7 +342,11 @@ void CWeaponPistol::FireProjectile(void)
 	Vector vecShotDir = (tr.endpos - vecSrc).Normalized();
 	//pPlayer->FireBullets(1, vecSrc, vecShotDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false);
 	//DispatchParticleEffect("pistol_core", tr.endpos, GetAbsAngles(), this);
-	DispatchParticleEffect("pistol_core", PATTACH_POINT_FOLLOW, pPlayer->GetViewModel(), LookupAttachment("muzzle"), true);
+	if (!g_thirdperson.GetBool())
+		DispatchParticleEffect("pistol_core", PATTACH_POINT_FOLLOW, pPlayer->GetViewModel(), LookupAttachment("muzzle"), true);
+	else
+		DispatchParticleEffect("pistol_core", PATTACH_POINT_FOLLOW, this, LookupAttachment("muzzle"), true);
+
 	CHLRPistolProjectile *pPew = (CHLRPistolProjectile*)CreateEntityByName("hlr_pistolprojectile");
 	UTIL_SetOrigin(pPew, vecSrc);
 	pPew->Spawn();
@@ -351,6 +361,8 @@ void CWeaponPistol::FireProjectile(void)
 		random->RandomFloat(-250, -500),
 		random->RandomFloat(-250, -500)));
 	pPlayer->CreateMuzzleLight(255, 50, 0,vecSrc);
+
+	pPlayer->SetAnimation(PLAYER_ATTACK1);
 	
 }
 //-----------------------------------------------------------------------------

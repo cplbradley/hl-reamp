@@ -63,6 +63,7 @@ int g_fCombineQuestion;				// true if an idle grunt asked a question. Cleared wh
 // This is the index to the name of the shotgun's classname in the string pool
 // so that we can get away with an integer compare rather than a string compare.
 string_t	s_iszShotgunClassname;
+string_t	s_iszGrenadeClassname;
 
 //-----------------------------------------------------------------------------
 // Interactions
@@ -305,6 +306,8 @@ void CNPC_Combine::Precache()
 void CNPC_Combine::Activate()
 {
 	s_iszShotgunClassname = FindPooledString( "weapon_shotgun" );
+	s_iszGrenadeClassname = FindPooledString("weapon_fraglauncher");
+
 	BaseClass::Activate();
 }
 
@@ -400,6 +403,13 @@ void CNPC_Combine::PostNPCInit()
 		}
 	}
 	DrawStuff();
+
+	if (HasShotgun())
+		szEnemyName = "#HLR_EnemyName_Shotgunner";
+	else if (GetActiveWeapon() && GetActiveWeapon()->m_iClassname == s_iszGrenadeClassname)
+		szEnemyName = "#HLR_EnemyName_Grenader";
+	else
+		szEnemyName = "#HLR_EnemyName_Soldier";
 
 	BaseClass::PostNPCInit();
 }

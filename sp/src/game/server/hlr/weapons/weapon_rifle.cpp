@@ -235,6 +235,7 @@ void CWeaponRifle::PrimaryAttack(void)
 
 		QAngle punch = QAngle(random->RandomFloat(-2, -1), random->RandomFloat(-2, 2), 0);
 		pOwner->AbsViewPunch(punch / 2);
+		
 	}
 	else
 	{
@@ -256,9 +257,11 @@ void CWeaponRifle::PrimaryAttack(void)
 	info.m_vecSpread = GetBulletSpread();
 	info.m_pAttacker = GetOwnerEntity();
 	info.m_iDamageType = DMG_BULLET | DMG_DIRECT;
-	FireActualBullet(info, 12000, true, NULL, tracermodelindex,true,vecSrc,vecDir);
+	FireActualBullet(info, 12000, true, NULL, tracermodelindex,true,true,vecSrc,vecDir);
 
 	pOwner->CreateMuzzleLight(255, 200, 0,vecSrc);
+
+	pOwner->SetAnimation(PLAYER_ATTACK1);
 
 	//pOwner->FireBullets(2, vecSrc, vecDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1, -1, -1, 0, NULL, false, false);
 	

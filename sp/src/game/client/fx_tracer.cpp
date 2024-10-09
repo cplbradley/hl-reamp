@@ -178,6 +178,7 @@ void ModelTracerCallback(const CEffectData& data)
 	float speed = data.m_flScale;
 	int index = data.m_nMaterial;
 	Vector dir = data.m_vNormal * speed;
+	bool trail = data.m_bCustomColors;
 
 	C_BaseEntity* pEnt = C_BaseEntity::Instance(data.m_hEntity);
 	if (!pEnt)
@@ -190,6 +191,6 @@ void ModelTracerCallback(const CEffectData& data)
 	CSingleUserRecipientFilter filter(player);
 	filter.MakeReliable();
 
-	tempents->ClientProjectile(start,dir, vec3_origin, index, 10.f,pEnt,0,"bullettrail");
+	tempents->ClientProjectile(start,dir, vec3_origin, index, 10.f,pEnt,0,"bullettrail",trail);
 }
 DECLARE_CLIENT_EFFECT("ModelTracer", ModelTracerCallback);

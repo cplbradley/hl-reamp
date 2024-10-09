@@ -54,18 +54,19 @@ void CMasochistModeQBox::OnOkButtonPressed()
 	engine->ClientCmd_Unrestricted("startmasochistmode\n");
 }*/
 
-static ConCommand startmasochistmode("startmasochistmode", CC_StartMasochistMode, "startmasochistmode");
+
 
 void CMasochistModeQBox::OnCommand(const char* command)
 {
 	if (!stricmp(command, "Cancel"))
 	{
 		Close();
+		Msg("Cancel\n");
 	}
 	else if (!stricmp(command, "OK"))
 	{
-		Close();
-		engine->ClientCmd_Unrestricted("startmashochistmode\n");
+		engine->ServerCmd("startmasochistmode\n",false);
+		engine->ClientCmd_Unrestricted("startmasochistmode\n");
 	}
 	else
 		return;

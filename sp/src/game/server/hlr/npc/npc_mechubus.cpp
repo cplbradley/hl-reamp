@@ -144,6 +144,8 @@ void CNPCMechubus::Spawn()
 	m_NPCState = NPC_STATE_NONE;
 
 	m_flFieldOfView = 0.2;
+
+	szEnemyName = "#HLR_EnemyName_Mechubus";
 }
 
 void CNPCMechubus::Precache()

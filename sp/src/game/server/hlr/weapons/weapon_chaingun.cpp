@@ -33,14 +33,16 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 #define MINFIRERATE 0.2f //5hz
-#define MAXFIRERATE 0.0625f //16hz
-#define MAXOVERDRIVEFIRERATE 0.03571f //28hz
+#define MAXFIRERATE 0.04f //25hz
+#define MAXOVERDRIVEFIRERATE 0.03571f //40hz
 #define MAXFOCUSFIRERATE 0.09091f //11hz
 
 #define CHAINGUN_FULLSPEED_STANDARD "Chaingun.Fullspeed"
 #define CHAINGUN_FULLSPEED_OVERDRIVE "Chaingun.Overdrive"
 #define CHAINGUN_FULLSPEED_FOCUS "Chaingun.Focus"
 #define CHAINGUN_SINGLE "Chaingun.Single"
+
+
 
 enum {
 	WEAPON_STATE_FULLSPEED,
@@ -148,7 +150,6 @@ CWeaponChaingun::CWeaponChaingun( )
 	//InitWoundSound();
 }
 
-
 float CWeaponChaingun::GetMaxFirerate()
 {
 	CBasePlayer* pOwner = ToBasePlayer(GetOwner());
@@ -221,7 +222,7 @@ void CWeaponChaingun::ItemPostFrame(void)
 	// Update our pose parameter for the vents
 	CBasePlayer* pOwner = ToBasePlayer(GetOwner());
 
-	if ((UsesClipsForAmmo1() && m_iClip1 == 0) || (!UsesClipsForAmmo1() && !pOwner->GetAmmoCount(m_iPrimaryAmmoType)))
+	if (!pOwner->GetAmmoCount(m_iPrimaryAmmoType))
 		ShutdownAllSounds();
 
 	if (pOwner->m_nButtons & IN_ATTACK)
@@ -325,6 +326,16 @@ void CWeaponChaingun::Equip(CBaseCombatCharacter *pOwner)
 }
 void CWeaponChaingun::UpdateWeaponSoundState(void)
 {
+	CBasePlayer* pPlayer = ToBasePlayer(GetOwner());
+	if (!pPlayer)
+		return;
+
+	if (!pPlayer->IsAlive())
+	{
+		ShutdownAllSounds();
+		return;
+	}
+
 	switch (m_iWeaponState)
 	{
 	case WEAPON_STATE_NOTFULLSPEED:
@@ -334,12 +345,6 @@ void CWeaponChaingun::UpdateWeaponSoundState(void)
 		}
 	case WEAPON_STATE_FULLSPEED:
 	{
-		CBasePlayer* pPlayer = ToBasePlayer(GetOwner());
-		if (!pPlayer)
-			return;
-
-		//InitWoundSound();
-
 		if (pPlayer->HasOverdrive())
 		{
 			CSoundEnvelopeController::GetController().Play(m_pOverdrive, 1.0f, 100.0f);
@@ -439,6 +444,7 @@ void CWeaponChaingun::PrimaryAttack(void)
 	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
 	if (!pPlayer)
 		return;
+
 	int iAttachment = LookupAttachment("muzzle");
 	ConVarRef g_thirdperson("g_thirdperson");
 	if (g_thirdperson.GetBool())
@@ -473,17 +479,8 @@ void CWeaponChaingun::PrimaryAttack(void)
 		bShooting = true;
 	}
 
-	// Make sure we don't fire more than the amount in the clip, if this weapon uses clips
-	if (UsesClipsForAmmo1())
-	{
-		if (iBulletsToFire > m_iClip1)
-			iBulletsToFire = m_iClip1;
-		m_iClip1 -= iBulletsToFire;
-	}
-	if (!UsesClipsForAmmo1())
-	{
-		pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);
-	}
+	pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);
+
 	m_iPrimaryAttacks++;
 
 	if (GetFireRate() == GetMaxFirerate() && !AmFocusFiring())
@@ -540,7 +537,7 @@ void CWeaponChaingun::PrimaryAttack(void)
 	info.m_vecSpread = GetSpread();
 	info.m_flDistance = MAX_TRACE_LENGTH;
 	info.m_iAmmoType = m_iPrimaryAmmoType;
-	info.m_iTracerFreq = 1;
+	//info.m_iTracerFreq = 1;
 	info.m_pAttacker = pPlayer;
 
 	if (!AmFocusFiring())
@@ -556,11 +553,11 @@ void CWeaponChaingun::PrimaryAttack(void)
 	AddViewKick();
 
 	CSoundEnt::InsertSound(SOUND_COMBAT, GetAbsOrigin(), SOUNDENT_VOLUME_MACHINEGUN, 0.2, pPlayer);
-
-	if (!m_iClip1 && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
+	ConVarRef mvox("cl_hev_gender");
+	if (pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
 	{
 		// HEV suit - indicate out of ammo condition
-		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
+		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0, mvox.GetBool());
 	}
 
 	SendWeaponAnim(GetPrimaryAttackActivity());

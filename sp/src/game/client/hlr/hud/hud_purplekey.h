@@ -8,6 +8,7 @@ class CHudPurpleKey : public CHudElement, public Panel
 	DECLARE_CLASS_SIMPLE(CHudPurpleKey, Panel);
 
 public:
+
 	CHudPurpleKey(const char *pElementName);
 	void togglePrint();
 	virtual void OnThink();
@@ -33,5 +34,7 @@ public:
 protected: 
 	virtual void Paint();
 	CHudTexture *m_background;
+
+
 };
 

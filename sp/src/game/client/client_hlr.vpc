@@ -69,6 +69,7 @@ $Project
 				$File "hlr/hud/hud_weaponwheel.cpp"
 				$File "hlr/hud/hud_chaingun.cpp"
 				$File "hlr/hud/hud_fraglaunch.cpp"
+				$File "hlr/hud/hud_wavecounter.cpp"
 			}
 			$Folder "NPC"
 			{
@@ -108,6 +109,8 @@ $Project
 				$File "hlr/entities/c_hlr_skullkey.cpp"
 				$File "hlr/entities/c_hlr_powerups.cpp"
 				$File "hlr/entities/c_light_strobe.cpp"
+				$File "hlr/entities/c_fireball.cpp"
+				$File "hlr/entities/c_enemy_counter.cpp"
 			}
 		}
 		$Folder "FMOD"

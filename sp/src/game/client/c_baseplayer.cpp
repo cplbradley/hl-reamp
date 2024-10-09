@@ -47,6 +47,10 @@
 #include "cam_thirdperson.h"
 #include "dlight.h"
 #include "cdll_client_int.h"
+
+#ifdef HLR_CLIENT
+#include "cl_animevent.h"
+#endif
 #if defined( REPLAY_ENABLED )
 #include "replay/replaycamera.h"
 #include "replay/ireplaysystem.h"
@@ -304,9 +308,14 @@ END_RECV_TABLE()
 		RecvPropBool(RECVINFO(m_bUseAltCrosshair)),
 		RecvPropBool(RECVINFO(m_bGibbed)),
 
+		RecvPropInt(RECVINFO(m_iButtonLookState)),
+
 		RecvPropVector(RECVINFO(m_vecRopeSegmentNormal)),
 		RecvPropVector(RECVINFO(m_vecRopeSegmentVelocity)),
 		RecvPropBool(RECVINFO(m_bClimbingRope)),
+
+		RecvPropVector(RECVINFO(m_vecGrapplePoint)),
+		RecvPropBool(RECVINFO(m_bShouldGrapple)),
 
 		RecvPropEHandle( RECVINFO(m_hVehicle) ),
 		RecvPropEHandle( RECVINFO(m_hUseEntity) ),
@@ -526,7 +535,7 @@ void C_BasePlayer::Spawn( void )
 	SetArmorPieces();
 
 	Precache();
-
+	PrecacheModel("sprites/chainrope.vmt");
 	SetThink(NULL);
 
 	SharedSpawn();
@@ -786,7 +795,27 @@ void C_BasePlayer::FireGameEvent( IGameEvent *event )
 	}
 
 }
+#ifdef HLR_CLIENT
+//HACKHACK: because we're drawing the player model in reflections even when we're in first person, we have to make sure the player model isn't playing it's own footstep sounds in first person.
+//player models now have unique footstep events. check for those events. if yes, check FPV, bail out if yes, replace with standard if no. if not those events, cast to baseclass like normal.
 
+void C_BasePlayer::FireEvent(const Vector& origin, const QAngle& angles, int event, const char* options)
+{
+	int evnt = 0;
+
+	if (event == CL_EVENT_PLAYER_FOOTSTEP_LEFT || event == CL_EVENT_PLAYER_FOOTSTEP_RIGHT)
+	{
+		if (InFirstPersonView())
+			return;
+
+		evnt = event == CL_EVENT_PLAYER_FOOTSTEP_LEFT ? CL_EVENT_MFOOTSTEP_LEFT : CL_EVENT_MFOOTSTEP_RIGHT;
+	}
+	else
+		evnt = event;
+
+	BaseClass::FireEvent(origin, angles, evnt, options);
+}
+#endif
 //-----------------------------------------------------------------------------
 // returns the player name
 //-----------------------------------------------------------------------------
@@ -1426,10 +1455,10 @@ void C_BasePlayer::AddEntity( void )
 
 	// If set to invisible, skip. Do this before resetting the entity pointer so it has 
 	// valid data to decide whether it's visible.
-	if ( !IsVisible() || !g_pClientMode->ShouldDrawLocalPlayer( this ) )
+	/*if (!IsVisible() || !g_pClientMode->ShouldDrawLocalPlayer(this))
 	{
 		return;
-	}
+	}*/
 
 	// Server says don't interpolate this frame, so set previous info to new info.
 	if ( IsNoInterpolationFrame() || Teleported() )
@@ -1546,7 +1575,7 @@ bool C_BasePlayer::ShouldInterpolate()
 
 bool C_BasePlayer::ShouldDraw()
 {
-	return ShouldDrawThisPlayer() && BaseClass::ShouldDraw();
+	return BaseClass::ShouldDraw();
 }
 
 ConVar r_draw_playermodel_reflections("r_draw_playermodel_reflections", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
@@ -1555,20 +1584,10 @@ int C_BasePlayer::DrawModel( int flags )
 {
 #ifdef HLR_CLIENT
 
-	SetArmorPieces();
-	if (r_draw_playermodel_reflections.GetBool())
-	{
-		view_id_t id = CurrentViewID();
-		if (id == VIEW_MAIN || id == VIEW_INTRO_CAMERA)
-		{
-			if (!ShouldDrawThisPlayer())
-				return 0;
-		}
-		return BaseClass::DrawModel(flags);
-	}
-
 	if (!ShouldDrawThisPlayer())
 		return 0;
+
+	SetArmorPieces();
 
 	return BaseClass::DrawModel(flags);
 #else
@@ -1579,9 +1598,6 @@ int C_BasePlayer::DrawModel( int flags )
 	{
 		return 0;
 	}
-
-	
-
 	return BaseClass::DrawModel( flags );
 #endif
 }
@@ -2111,7 +2127,7 @@ C_BaseCombatWeapon *C_BasePlayer::GetActiveWeaponForSelection( void )
 C_BaseAnimating* C_BasePlayer::GetRenderedWeaponModel()
 {
 	// Attach to either their weapon model or their view model.
-	if ( ShouldDrawLocalPlayer() || !IsLocalPlayer() )
+	if ( ShouldDrawThisPlayer() || !IsLocalPlayer() )
 	{
 		return GetActiveWeapon();
 	}
@@ -2190,7 +2206,10 @@ void C_BasePlayer::ThirdPersonSwitch( bool bThirdperson )
 {
 	if ( !UseVR() )
 	{
-		return !LocalPlayerInFirstPersonView() || cl_first_person_uses_world_model.GetBool();
+		if (LocalPlayerInFirstPersonView() && bDrawingReflectiveGlass == false)
+			return false;
+
+		return true;
 	}
 
 	static ConVarRef vr_first_person_uses_world_model( "vr_first_person_uses_world_model" );
@@ -2228,24 +2247,15 @@ bool C_BasePlayer::InFirstPersonView()
 //-----------------------------------------------------------------------------
 bool C_BasePlayer::ShouldDrawThisPlayer()
 {
-	if ( !InFirstPersonView() )
-	{
+	if (!LocalPlayerInFirstPersonView())
 		return true;
-	}
-	if ( !UseVR() && cl_first_person_uses_world_model.GetBool() )
-	{
+
+	if (LocalPlayerInFirstPersonView() && CurrentViewID() == VIEW_REFLECTIVE_GLASS)
 		return true;
-	}
-	if ( UseVR() )
-	{
-		static ConVarRef vr_first_person_uses_world_model( "vr_first_person_uses_world_model" );
-		if ( vr_first_person_uses_world_model.GetBool() )
-		{
-			return true;
-		}
-	}
+
 	return false;
 }
+
 
 
 
@@ -2352,6 +2362,20 @@ void C_BasePlayer::PostThink( void )
 	// Even if dead simulate entities
 	SimulatePlayerSimulatedEntities();
 #endif
+
+	if (m_bShouldGrapple)
+	{
+		if (!beamrope)
+		{
+			beamrope = CBeam::BeamCreate("sprites/chainrope.vmt", 4);
+		}
+		Vector src, forward, right, up;
+		EyeVectors(&forward, &right, &up);
+
+		beamrope->SetStartPos(EyePosition() + right * -8);
+		beamrope->SetEndPos(m_vecGrapplePoint);
+		beamrope->RelinkBeam();
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -2539,7 +2563,7 @@ void C_BasePlayer::PlayPlayerJingle()
 }
 
 // Stuff for prediction
-void C_BasePlayer::SetSuitUpdate(const char *name, int fgroup, int iNoRepeat)
+void C_BasePlayer::SetSuitUpdate(const char *name, int fgroup, int iNoRepeat, bool male)
 {
 	// FIXME:  Do something here?
 }

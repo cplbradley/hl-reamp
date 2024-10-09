@@ -345,7 +345,7 @@ void CWeaponShotgun::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool
 	vecShootOrigin = pOperator->Weapon_ShootPosition();
 	vecShootDir = npc->GetShootEnemyDir(vecShootOrigin);
 
-	pOperator->FireBullets( 0, vecShootOrigin, vecShootDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0 );
+	//pOperator->FireBullets( 0, vecShootOrigin, vecShootDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0 );
 	for ( int i = 0; i < 5; i++ )
 	{
 		Vector vecSpread(random->RandomFloat(-0.08716, 0.08716), random->RandomFloat(-0.08716, 0.08716), random->RandomFloat(-0.08716, 0.08716));
@@ -707,10 +707,13 @@ void CWeaponShotgun::SecondaryAttack( void )
 	pPlayer->SetMuzzleFlashTime(gpGlobals->curtime + 0.5);
 	pPlayer->CreateMuzzleLight(255, 200, 0, vecSrc);
 	CSoundEnt::InsertSound(SOUND_COMBAT, GetAbsOrigin(), 600, 0.2, GetOwner());
-	if (!m_iClip1 && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
+
+	ConVarRef mvox("cl_hev_gender");
+
+	if (pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
 	{
 		// HEV suit - indicate out of ammo condition
-		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
+		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0, mvox.GetBool());
 	}
 	
 }
@@ -774,7 +777,7 @@ void CWeaponShotgun::PrimaryAttack( void )
 	info.m_iTracerFreq = 1;
 	
 	if (bHull)
-		info.m_flDamage = 0.1f;
+		info.m_flDamage = 0.01f;
 
 	// Fire the bullets
 	if (pPlayer->HasOverdrive())
@@ -799,20 +802,30 @@ void CWeaponShotgun::PrimaryAttack( void )
 		trh.m_pEnt->TakeDamage(dmgInfo);
 	}
 
-	//pPlayer->ViewPunch( QAngle(random->RandomFloat( -15, 15 ),0,0) );
+	QAngle angles = pPlayer->GetLocalAngles();
+
+	angles.x += random->RandomInt(0, 0);
+	angles.y += random->RandomInt(0, 0);
+	angles.z = 0;
+
+	pPlayer->SnapEyeAngles(angles);
+
+	pPlayer->ViewPunch(QAngle(-12, random->RandomFloat(0, 2), 0));
+
 	QAngle angAiming;
 	VectorAngles(vecAiming, angAiming);
 	pPlayer->SetMuzzleFlashTime( gpGlobals->curtime + 1.0 );
 	pPlayer->CreateMuzzleLight(255, 200, 0,vecSrc);
 	DispatchParticleEffect("muzzleflash_orange_large_core", vecSrc, angAiming, this);
 	CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), SOUNDENT_VOLUME_SHOTGUN, 0.2 );
+	ConVarRef mvox("cl_hev_gender");
 
-	/*if (!m_iClip1 && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
+	if (pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
 	{
 		// HEV suit - indicate out of ammo condition
-		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0); 
+		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0, mvox.GetBool()); 
 	}
-	*/
+
 	if( m_iClip1 )
 	{
 		// pump so long as some rounds are left.

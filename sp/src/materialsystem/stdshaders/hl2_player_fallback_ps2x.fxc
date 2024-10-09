@@ -1,0 +1,126 @@
+//==================================================================================================
+//
+// Physically Based Rendering pixel shader for brushes and models
+//
+//==================================================================================================
+
+// STATIC: "FLASHLIGHT"                 "0..1"
+// STATIC: "FLASHLIGHTDEPTHFILTERMODE"  "0..2"
+
+// DYNAMIC: "USECUSTOMCOLORS"			"0..1"
+// DYNAMIC: "FLASHLIGHTSHADOWS"         "0..1"
+// DYNAMIC: "PIXELFOGTYPE"              "0..1"
+// DYNAMIC: "WRITEWATERFOGTODESTALPHA"  "0..1"
+// DYNAMIC: "NUM_LIGHTS"                "0..4"
+// DYNAMIC: "WRITE_DEPTH_TO_DESTALPHA"  "0..1"
+
+// Can't write fog to alpha if there is no fog
+// SKIP: ($PIXELFOGTYPE == 0) && ($WRITEWATERFOGTODESTALPHA != 0)
+// We don't care about flashlight depth unless the flashlight is on
+// SKIP: ( $FLASHLIGHT == 0 ) && ( $FLASHLIGHTSHADOWS == 1 )
+// Flashlight shadow filter mode is irrelevant if there is no flashlight
+// SKIP: ( $FLASHLIGHT == 0 ) && ( $FLASHLIGHTDEPTHFILTERMODE != 0 )
+
+#include "common_ps_fxc.h"
+#include "common_flashlight_fxc.h"
+#include "common_lightmappedgeneric_fxc.h"
+#include "shader_constant_register_map.h"
+
+#include "pbr_common_ps2_3_x.h"
+
+const float4 g_DiffuseModulation                : register(PSREG_DIFFUSE_MODULATION);
+const float4 g_ShadowTweaks                     : register(PSREG_ENVMAP_TINT__SHADOW_TWEAKS);
+const float3 cAmbientCube[6]                    : register(PSREG_AMBIENT_CUBE);
+const float4 g_EyePos                           : register(PSREG_EYEPOS_SPEC_EXPONENT);
+const float4 g_FogParams                        : register(PSREG_FOG_PARAMS);
+const float4 g_FlashlightAttenuationFactors     : register(PSREG_FLASHLIGHT_ATTENUATION);
+const float4 g_FlashlightPos                    : register(PSREG_FLASHLIGHT_POSITION_RIM_BOOST);
+const float4x4 g_FlashlightWorldToTexture       : register(PSREG_FLASHLIGHT_TO_WORLD_TEXTURE);
+
+const float3 g_cColor1							: register(c32);
+const float3 g_cColor2							: register(c33);
+const float3 g_cColor3							: register(c34);
+const float4 g_ExtraVars						: register(c35);
+
+
+
+PixelShaderLightInfo cLightInfo[3]              : register(PSREG_LIGHT_INFO_ARRAY);         // 2 registers each - 6 registers total (4th light spread across w's)
+
+
+
+sampler BaseTextureSampler          : register(s0);     // Base map, selfillum in alpha
+sampler NormalTextureSampler        : register(s1);     // Normal map
+sampler EnvmapSampler               : register(s2);     // Cubemap
+sampler MRAOTextureSampler          : register(s3);    // MRAO texture
+sampler ShadowDepthSampler          : register(s4);     // Flashlight shadow depth map sampler
+sampler RandRotSampler              : register(s5);     // RandomRotation sampler
+sampler FlashlightSampler           : register(s6);  	// Flashlight cookie 
+sampler ColorMaskSampler			: register(s7);   	// Color mask
+
+
+#define ENVMAPLOD (g_EyePos.a)
+
+struct PS_INPUT
+{
+    float2 baseTexCoord             : TEXCOORD0;
+    float4 lightAtten               : TEXCOORD1;
+    float3 worldNormal              : TEXCOORD2;
+    float3 worldPos                 : TEXCOORD3;
+    float3 projPos                  : TEXCOORD4;
+    float4 lightmapTexCoord1And2    : TEXCOORD5; 
+    float4 lightmapTexCoord3        : TEXCOORD6;
+};
+// Entry point
+float4 main(PS_INPUT i) : COLOR
+{
+    #define EnvAmbientCube cAmbientCube
+	
+    float3 surfNormal = normalize(i.worldNormal);
+    float3 surfTangent;
+    float3 surfBase; 
+    float flipSign;
+	
+	float2 baseTexCoord = i.baseTexCoord;
+
+    float3x3 normalBasis = compute_tangent_frame(surfNormal, i.worldPos, baseTexCoord.xy, surfTangent, surfBase, flipSign);
+
+	float2 correctedTexCoord = baseTexCoord.xy;
+
+    float3 textureNormal = normalize((tex2D( NormalTextureSampler,  correctedTexCoord.xy).xyz - float3(0.5, 0.5, 0.5)) * 2);
+    float3 normal = normalize(mul(textureNormal, normalBasis)); // World Normal
+	
+	float4 basetexture = tex2D(BaseTextureSampler, correctedTexCoord.xy);
+	float4 albedo = basetexture;
+	
+#if USECUSTOMCOLORS
+	float4 colorMask = tex2D(ColorMaskSampler,correctedTexCoord.xy);
+	float3 white = {1, 1, 1};
+	albedo.xyz *= ((white * (1 - colorMask.r)) + (g_cColor1.rgb * colorMask.r));
+	albedo.xyz *=((white * (1 - colorMask.g)) + (g_cColor2.rgb * colorMask.g));
+	albedo.xyz *= ((white * (1 - colorMask.b)) + (g_cColor3.rgb * colorMask.b));
+#endif
+
+	float4 mrao = tex2D(MRAOTextureSampler, correctedTexCoord);
+	
+    float metalness = mrao.x;
+	float roughness = mrao.y;
+	float ambientOcclusion = mrao.z;
+	
+	float4 specfactor = albedo * metalness;
+	
+	
+	float3 outgoingLightDirection = normalize(g_EyePos.xyz - i.worldPos); // Lo
+    float lightDirectionAngle = max(0, dot(normal, outgoingLightDirection)); // cosLo
+
+    float3 specularReflectionVector = 2.0 * lightDirectionAngle * normal - outgoingLightDirection; // Lr
+	
+	float4 specularUV = float4(specularReflectionVector, roughness * ENVMAPLOD);
+	
+	float3 specular = ENV_MAP_SCALE * texCUBElod(EnvmapSampler, specularUV).xyz;
+	
+	specular *= specfactor.rgb;
+
+	float3 diffuseLighting = PixelShaderDoLighting(i.worldPos,i.worldNormal,float3(0,0,0),false,true,i.lightAtten,cAmbientCube,
+	
+    return FinalOutput(finalColor, fogFactor, PIXELFOGTYPE, TONEMAP_SCALE_LINEAR, bWriteDepthToAlpha, i.projPos.z);
+}

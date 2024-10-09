@@ -235,8 +235,8 @@ void CSinglePlayerAnimState::ComputePoseParam_BodyYaw(void)
 	/// x = yaw 
 	/// y = roll
 	///
-	/// if moving right, your 3 coordinates are (0,0); (0,180); and (90,30);  the formula is as follows: y = (x-90)^2/270 + 30.
-	/// if moving left, you have to invert the formula and your 3 coordinates are (0,0); (0,-180); (-90,-30); the formula is as follows: y = (x+90)^2/270 - 30.
+	/// if moving right, your 3 coordinates are (0,0); (0,180); and (90,30);  the formula is as follows: y = -((x-90)^2)/270 + 30.
+	/// if moving left, you have to invert the formula and your 3 coordinates are (0,0); (0,-180); (-90,-30); the formula is as follows: y = -(x+90)^2/270 - 30.
 	/// 
 	/// once the formula is calculated, the output is multiplied by a ratio of currentspeed / maxspeed to smooth out the transitions.
 	/// 
@@ -258,7 +258,7 @@ void CSinglePlayerAnimState::ComputePoseParam_BodyYaw(void)
 //	DevMsg("Testing Parabolic Formula. Yaw = %f , Parabolic ratio is %f\n", flYaw, mult);
 	GetBasePlayer()->SetPoseParameter(iYaw, flYaw);
 
-	if (GetBasePlayer()->GetActiveWeapon() && !FClassnameIs(GetBasePlayer()->GetActiveWeapon(), "weapon_chaingun"))
+	if (GetBasePlayer()->GetActiveWeapon() && !FClassnameIs(GetBasePlayer()->GetActiveWeapon(), "weapon_chaingun") && GetBasePlayer()->GetGroundEntity() != NULL)
 		GetBasePlayer()->SetPoseParameter(iRoll, ratio * mult); // HACKHACK - Don't apply body rolling when using the chaingun because it fucks with the animations
 	else
 		GetBasePlayer()->SetPoseParameter(iRoll, 0);

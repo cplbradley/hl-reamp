@@ -72,6 +72,8 @@ public:
 	bool m_bBlockDistanceFromOrigin;
 	float m_fDistanceFromOrigin;
 
+	void GrappleMove(const Vector& vecGrapplePoint);
+
 #define BRUSH_ONLY true
 	virtual unsigned int PlayerSolidMask( bool brushOnly = false );	///< returns the solid mask for the given player, so bots can have a more-restrictive set
 	CBasePlayer		*player;
@@ -119,10 +121,12 @@ protected:
 	virtual void	AirAccelerate( Vector& wishdir, float wishspeed, float accel );
 
 	virtual void	AirMove( void );
-	virtual float	GetAirSpeedCap( void ) { return 64.0f; }
+	virtual float	GetAirSpeedCap( void ) { return 64.f; }
 	
 	virtual bool	CanAccelerate();
 	virtual void	Accelerate( Vector& wishdir, float wishspeed, float accel);
+
+	void TangentialLocomotion(Vector& wishdir, float wishspeed, float accel, Vector& wishvel);
 	
 	// Only used by players.  Moves along the ground when player is a MOVETYPE_WALK.
 	virtual void	WalkMove( void );
@@ -142,6 +146,8 @@ protected:
 
 	virtual Vector	GetPlayerMins( void ) const; // uses local player
 	virtual Vector	GetPlayerMaxs( void ) const; // uses local player
+
+	
 
 	typedef enum
 	{
@@ -303,6 +309,8 @@ protected:
 
 //private:
 	int				m_iSpeedCropped;
+
+	int				m_iAirSpeedScale[2];
 
 	float			m_flStuckCheckTime[MAX_PLAYERS+1][2]; // Last time we did a full test
 

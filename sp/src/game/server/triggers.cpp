@@ -3259,8 +3259,10 @@ void CTriggerCamera::Disable( void )
 	if (SF_CAMERA_CINEMATIC)
 	{
 		if (pPlayer)
+		{
 			pPlayer->m_bInCinematicCamera = false;
-		engine->ClientCommand(pPlayer->edict(), "r_nearz 5\n");
+			engine->ClientCommand(pPlayer->edict(), "r_nearz 5\n");
+		}
 	}
 	m_state = USE_OFF;
 	m_flReturnTime = gpGlobals->curtime;

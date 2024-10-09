@@ -343,7 +343,7 @@ void		UTIL_ParticleTracer( const char *pszTracerEffectName, const Vector &vecSta
 
 // Old style, non-particle system, tracers
 void		UTIL_Tracer( const Vector &vecStart, const Vector &vecEnd, int iEntIndex = 0, int iAttachment = TRACER_DONT_USE_ATTACHMENT, float flVelocity = 0, bool bWhiz = false, const char *pCustomTracerName = NULL, int iParticleID = 0 );
-void		UTIL_ModelTracer(const Vector& origin, const Vector& direction, float speed, int modelindex, CBaseEntity* pOwner);
+void		UTIL_ModelTracer(const Vector& origin, const Vector& direction, float speed, int modelindex, CBaseEntity* pOwner, bool drawtrail);
 
 bool		UTIL_IsLowViolence( void );
 bool		UTIL_ShouldShowBlood( int bloodColor );

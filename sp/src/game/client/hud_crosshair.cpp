@@ -18,6 +18,7 @@
 #include "VGuiMatSurface/IMatSystemSurface.h"
 #include "client_virtualreality.h"
 #include "sourcevr/isourcevirtualreality.h"
+#include "hlr/hlr_shareddefs.h"
 
 
 #ifdef SIXENSE
@@ -232,6 +233,30 @@ void CHudCrosshair::GetDrawPosition ( float *pX, float *pY, bool *pbBehindCamera
 	*pbBehindCamera = bBehindCamera;
 }
 
+CHudTexture* CHudCrosshair::GetPointer()
+{
+	C_BasePlayer* pPlayer = C_BasePlayer::GetLocalPlayer();
+
+	if (!pPlayer)
+		return m_pCrosshair;
+
+	switch (pPlayer->ButtonLookState())
+	{
+	case 1:
+		return gHUD.GetIcon("finger_pointer");
+		break;
+	case 2:
+		return gHUD.GetIcon("palm_pointer");
+		break;
+	case 3:
+		return gHUD.GetIcon("locked_pointer");
+		break;
+	case 0:
+	default:
+		return m_pCrosshair;
+		break;
+	}
+}
 
 void CHudCrosshair::Paint( void )
 {
@@ -253,8 +278,8 @@ void CHudCrosshair::Paint( void )
 		return;
 
 	float flWeaponScale = 1.0f;
-	int iTextureW = m_pCrosshair->Width();
-	int iTextureH = m_pCrosshair->Height();
+	int iTextureW = GetPointer()->Width();
+	int iTextureH = GetPointer()->Height();
 	C_BaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
 	if ( pWeapon )
 	{
@@ -278,7 +303,7 @@ void CHudCrosshair::Paint( void )
 		int iX = (int)(x + 0.5f);
 		int iY = (int)(y + 0.5f);
 
-		m_pCrosshair->DrawSelfCropped(
+		GetPointer()->DrawSelfCropped(
 			iX - (iWidth / 2), iY - (iHeight / 2),
 			0, 0,
 			iTextureW, iTextureH,
@@ -303,14 +328,14 @@ void CHudCrosshair::Paint( void )
 		crossx += 0.5 * screen[0] * ScreenWidth() + 0.5;
 		crossy -= 0.5 * screen[1] * ScreenHeight() + 0.5;
 
-		crossx -= m_pCrosshair->Width() / 2;
-		crossy -= m_pCrosshair->Height() / 2;
+		crossx -= GetPointer()->Width() / 2;
+		crossy -= GetPointer()->Height() / 2;
 		Color crosscolor;
 		if (trace.m_pEnt && trace.m_pEnt->IsNPC())
 			crosscolor = Color(190, 0, 0, 255);
 		else
 			crosscolor = clr;
-		m_pCrosshair->DrawSelf(crossx,crossy, crosscolor);
+		GetPointer()->DrawSelf(crossx,crossy, crosscolor);
 	}
 }
 

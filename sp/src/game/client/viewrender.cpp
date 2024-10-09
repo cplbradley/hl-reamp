@@ -434,6 +434,28 @@ protected:
 	void			DrawInternal(view_id_t iViewID);
 };
 
+//----------------------------------------------------------------------------
+// S P O N S O R
+// B R O A D C A S T
+// I N C O M I N G
+//----------------------------------------------------------------------------
+
+class CLinusView : public CRendering3dView
+{
+	DECLARE_CLASS(CLinusView, CRendering3dView);
+public:
+	CLinusView(CViewRender* pMainView) :
+		CRendering3dView(pMainView)
+	{
+	}
+
+	bool		Setup(const CViewSetup& view, ITexture* pDepthTexture = NULL, ITexture* pRenderTarget = NULL);
+	void		Draw();
+protected:
+	ITexture* m_pColorTexture;
+	ITexture* m_pDepthTexture;
+	void			DrawInternal(view_id_t iViewID);
+};
 
 class CStaticMatView : public CRendering3dView
 {
@@ -714,6 +736,7 @@ public:
 	virtual void PopView();
 	void Setup(const CViewSetup& view, int nClearFlags, bool bDrawSkybox, const VisibleFogVolumeInfo_t& fogInfo, const WaterRenderInfo_t& waterInfo, const cplane_t& reflectionPlane);
 	void Draw();
+	void DrawInternal(view_id_t viewid);
 
 	cplane_t m_ReflectionPlane;
 };
@@ -1997,6 +2020,7 @@ const char* COM_GetModDirectory();
 
 
 ConVar r_envmap_lerp_rate("r_envmap_lerp_rate", "0.02");
+ConVar r_linux("r_linux", "0");
 
 inline int interpFPS(int prevframe, int curframe, float frac)
 {
@@ -2015,7 +2039,7 @@ void CViewRender::RenderView(const CViewSetup& view, int nClearFlags, int whatTo
 	m_CurrentView = view;
 
 	if (building_cubemaps.GetBool())
-		m_CurrentView.fov = RAD2DEG(2.0f * atanf(64.0f / (64 - 0.5f)));
+		m_CurrentView.fov = RAD2DEG(2.0f * atanf(128.f / (128.f - 0.5f)));
 
 	if (r_adaptive_resolution.GetBool() && !engine->IsPaused())
 	{
@@ -2196,9 +2220,19 @@ void CViewRender::RenderView(const CViewSetup& view, int nClearFlags, int whatTo
 		}
 		SafeRelease(pDepthView);
 
+
+		if (r_linux.GetBool())
+		{
+			CLinusView* pLinus = new CLinusView(this);
+			pLinus->Setup(view,0,GetFullFrameFrameBufferTexture(0));
+			{
+				AddViewToScene(pLinus);
+			}
+			SafeRelease(pLinus);
+		}
+
 		// We can still use the 'current view' stuff set up in ViewDrawScene
 		s_bCanAccessCurrentView = true;
-
 
 		engine->DrawPortals();
 
@@ -2799,9 +2833,10 @@ void CViewRender::DrawWorldAndEntities(bool bDrawSkybox, const CViewSetup& viewI
 		cplane_t glassReflectionPlane;
 		if (IsReflectiveGlassInView(viewIn, glassReflectionPlane))
 		{
-			CRefPtr<CReflectiveGlassView> pGlassReflectionView = new CReflectiveGlassView(this);
+			CReflectiveGlassView* pGlassReflectionView = new CReflectiveGlassView(this);
 			pGlassReflectionView->Setup(viewIn, VIEW_CLEAR_DEPTH | VIEW_CLEAR_COLOR, bDrawSkybox, fogVolumeInfo, info, glassReflectionPlane);
 			AddViewToScene(pGlassReflectionView);
+			SafeRelease(pGlassReflectionView);
 
 			CRefPtr<CRefractiveGlassView> pGlassRefractionView = new CRefractiveGlassView(this);
 			pGlassRefractionView->Setup(viewIn, VIEW_CLEAR_DEPTH | VIEW_CLEAR_COLOR, bDrawSkybox, fogVolumeInfo, info, glassReflectionPlane);
@@ -4278,7 +4313,7 @@ void CRendering3dView::DrawOpaqueRenderables(ERenderDepthMode DepthMode)
 		}
 	}
 
-	if (0 && r_threaded_renderables.GetBool())
+	if (r_threaded_renderables.GetBool())
 	{
 		ParallelProcess("BoneSetupNpcsLast", arrBoneSetupNpcsLast.Base() + numOpaqueEnts - numNpcs, numNpcs, &SetupBonesOnBaseAnimating);
 		ParallelProcess("BoneSetupNpcsLast NonNPCs", arrBoneSetupNpcsLast.Base(), numNonNpcsAnimating, &SetupBonesOnBaseAnimating);
@@ -5937,6 +5972,64 @@ void CStaticMatView::DrawInternal(view_id_t iViewID)
 ConVar r_depthbuffer_nearz("r_depthbuffer_nearz", "1");
 ConVar r_depthbuffer_farz("r_depthbuffer_farz", "8192");
 
+
+bool CLinusView::Setup(const CViewSetup& view, ITexture* pDepthTexture, ITexture* pRenderTarget)
+{
+	BaseClass::Setup(view);
+	m_ClearFlags = VIEW_CLEAR_COLOR | VIEW_CLEAR_DEPTH | VIEW_CLEAR_STENCIL | VIEW_CLEAR_FULL_TARGET;
+
+	m_DrawFlags = DF_RENDER_UNDERWATER | DF_RENDER_ABOVEWATER | DF_RENDER_WATER | DF_DRAWSKYBOX;
+	m_pColorTexture = pRenderTarget;
+	m_pDepthTexture = pDepthTexture;
+	return true;
+}
+
+void CLinusView::Draw()
+{
+	DrawInternal(CurrentViewID());
+}
+void CLinusView::DrawInternal(view_id_t iViewId)
+{
+
+	ITexture* DepthBufferTexture = materials->FindTexture("_rt_FullFrameFB", TEXTURE_GROUP_RENDER_TARGET);
+
+	if (m_pDepthTexture == NULL && m_pColorTexture == NULL)
+	{
+		render->Push3DView((*this), m_ClearFlags, DepthBufferTexture, GetFrustum(), NULL);
+	}
+	else
+	{
+		render->Push3DView((*this), m_ClearFlags, m_pDepthTexture, GetFrustum(), m_pColorTexture);
+	}
+
+	render->BeginUpdateLightmaps();
+	BuildWorldRenderLists(true, true, -1);
+	BuildRenderableRenderLists(iViewId);
+	render->EndUpdateLightmaps();
+
+	m_DrawFlags |= DF_SSAO_DEPTH_PASS;
+
+	DrawWorld(0.0f);
+
+	IMaterial* mat = materials->FindMaterial("engine/linux", TEXTURE_GROUP_OTHER);
+	mat->AddRef();
+
+	// Draw opaque and translucent renderables with appropriate override materials
+	// OVERRIDE_SSAO_DEPTH_WRITE is OK with a NULL material pointer
+	modelrender->ForcedMaterialOverride(mat, OVERRIDE_NORMAL);
+
+	// Iterate over all leaves and render objects in those leaves
+	DrawOpaqueRenderables(DEPTH_MODE_OVERRIDE);
+	DrawTranslucentRenderablesNoWorld(true);
+
+	m_pMainView->DrawViewModels((*this), true);
+
+	modelrender->ForcedMaterialOverride(0);
+
+	render->PopView(GetFrustum());
+}
+
+
 bool CDepthView::Setup(const CViewSetup& view, ITexture* pDepthTexture, ITexture* pRenderTarget)
 {
 	BaseClass::Setup(view);
@@ -5961,7 +6054,7 @@ bool CDepthView::Setup(const CViewSetup& view, ITexture* pDepthTexture, ITexture
 //-----------------------------------------------------------------------------
 void CDepthView::Draw()
 {
-	VPROF_BUDGET("CViewRender::Draw3dSkyboxworld", "3D Skybox");
+	VPROF_BUDGET("CViewRender::DrawDepthView", "Depth Buffer");
 
 	DrawInternal(CurrentViewID());
 }
@@ -5988,6 +6081,8 @@ void CDepthView::DrawInternal(view_id_t iViewId)
 	BuildRenderableRenderLists(iViewId);
 	render->EndUpdateLightmaps();
 
+	
+
 	m_DrawFlags |= DF_SSAO_DEPTH_PASS;
 
 	DrawWorld(0.0f);
@@ -6007,11 +6102,6 @@ void CDepthView::DrawInternal(view_id_t iViewId)
 	render->PopView(GetFrustum());
 
 	g_CurrentViewID = iViewId;
-
-#if defined( _X360 )
-	pRenderContext.GetFrom(materials);
-	pRenderContext->PopVertexShaderGPRAllocation();
-#endif
 }
 
 
@@ -6541,7 +6631,16 @@ void CReflectiveGlassView::PopView()
 //-----------------------------------------------------------------------------
 void CReflectiveGlassView::Draw()
 {
+	DrawInternal(CurrentViewID());
+}
+
+void CReflectiveGlassView::DrawInternal(view_id_t viewid)
+{
 	VPROF("CReflectiveGlassView::Draw");
+
+	bDrawingReflectiveGlass = true;
+
+	g_CurrentViewID = VIEW_REFLECTIVE_GLASS;
 
 	CMatRenderContextPtr pRenderContext(materials);
 	PIXEVENT(pRenderContext, "CReflectiveGlassView::Draw");
@@ -6556,6 +6655,10 @@ void CReflectiveGlassView::Draw()
 
 	pRenderContext->ClearColor4ub(0, 0, 0, 255);
 	pRenderContext->Flush();
+
+
+	g_CurrentViewID = viewid;
+	bDrawingReflectiveGlass = false;
 }
 
 

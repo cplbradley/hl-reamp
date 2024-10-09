@@ -214,11 +214,14 @@ struct CallbackData_t
 		view_distance.Init();
 		resolution.Init();
 		hud_color.Init();
+		buildingcubemaps.Init();
 	};
 	Vector4D sun_data;
 	Vector sun_dir;
 
 	Vector hud_color;
+
+	Vector2D buildingcubemaps;
 
 	Vector4D player_speed;
 	Vector player_pos;
@@ -309,6 +312,8 @@ void ShaderEditorHandler::PrepareCallbackData()
 		clCallback_data.hud_color[2] = 0;
 	}
 
+	ConVarRef cubemaps("building_cubemaps");
+	clCallback_data.buildingcubemaps[0] = cubemaps.GetBool();
 }
 
 pFnClCallback_Declare(ClCallback_Resolution)
@@ -362,6 +367,11 @@ pFnClCallback_Declare(ClCallback_PrevViewProj)
 	m_Lock.Lock();
 	Q_memcpy(pfl4, clCallback_data.prevViewProj.Base(), sizeof(float) * 16);
 }
+pFnClCallback_Declare(ClCallback_Cubemaps)
+{
+	m_Lock.Lock();
+	Q_memcpy(pfl4, clCallback_data.buildingcubemaps.Base(), sizeof(float) * 2);
+}
 void ShaderEditorHandler::RegisterCallbacks()
 {
 	if ( !IsReady() )
@@ -376,7 +386,8 @@ void ShaderEditorHandler::RegisterCallbacks()
 	shaderEdit->RegisterClientCallback("player view distance", ClCallback_PlayerViewDist, 3);
 	shaderEdit->RegisterClientCallback("hud color", ClCallback_HudColor, 3);
 	shaderEdit->RegisterClientCallback("prev view projection", ClCallback_PrevViewProj, 16);
-
+	shaderEdit->RegisterClientCallback("building cubemaps", ClCallback_Cubemaps, 2);
+	
 	shaderEdit->LockClientCallbacks();
 }
 

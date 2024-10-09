@@ -1743,6 +1743,8 @@ void CNPC_Hunter::Spawn()
 
 	//m_debugOverlays |= OVERLAY_NPC_ROUTE_BIT | OVERLAY_BBOX_BIT | OVERLAY_PIVOT_BIT;
 
+	szEnemyName = "#HLR_EnemyName_Hunter";
+
 	SetHullType( HULL_MEDIUM_TALL );
 	SetHullSizeNormal();
 	SetDefaultEyeOffset();

@@ -308,6 +308,8 @@ void CGrenadeFrag::NadeTouch(CBaseEntity *pOther)
 		float hitDot = DotProduct(tr.plane.normal, -vecDir);
 		iBounces += 0.5f;
 		Vector vReflection = 2.0f * tr.plane.normal * hitDot + vecDir;
+
+		DebugDrawLine(tr.endpos, tr.endpos + vReflection, 255, 0, 0, true, 1.f);
 		SetAbsVelocity(vReflection * (speed * 1/iBounces));
 		EmitSound("Grenade.ImpactHard");
 		float actualspeed = GetAbsVelocity().Length();

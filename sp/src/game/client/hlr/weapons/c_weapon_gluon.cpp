@@ -7,10 +7,30 @@
 #include "debugoverlay_shared.h"
 #include "soundenvelope.h"
 #include "hlr/hlr_shareddefs.h"
+#include "iclientmode.h"
 #include "beam_shared.h"
+#include "hud.h"
+#include "hudelement.h"
+#include "vgui_controls/Panel.h"
+#include "vgui_controls/AnimationController.h"
+#include "vgui_controls/Controls.h"
+#include "hud_crosshair.h"
+#include "VGuiMatSurface\IMatSystemSurface.h"
+#include <vgui/IVGui.h>
+#include <vgui/IScheme.h>
+#include <vgui/ISurface.h>
+#include <vgui/ISystem.h>
+#include "view_scene.h"
+#include "hlr/weapons/c_weapon_gluon.h"
 
-#define BEAM_SEGMENTS 16
+
+ConVar g_gluon_segments("g_gluon_segments", "16", FCVAR_CHEAT);
+
+string_t sGluon = "weapon_gluon";
+
+#define BEAM_SEGMENTS 32
 #define SIMPLE_BEAM_MAT ""
+
 float fuckedvalue(float scale)
 {
 	return sin(gpGlobals->curtime * scale);
@@ -24,7 +44,7 @@ Vector BezierCurve(const Vector& p0, const Vector& p1, const Vector& p2, const V
 	float u = 1.0 - t;
 	float tt = t * t;
 	float uu = u * u;
-	float uuu = uu * u;
+	float uuu = u * u * u;
 	float ttt = tt * t;
 
 	Vector p;
@@ -34,6 +54,102 @@ Vector BezierCurve(const Vector& p0, const Vector& p1, const Vector& p2, const V
 
 	return p;
 }
+
+
+DECLARE_HUDELEMENT(C_GluonHudDot);
+
+C_GluonHudDot::C_GluonHudDot(const char* ElementName) : CHudElement(ElementName), BaseClass(NULL, "HudGluonDot")
+{
+	Panel* pParent = g_pClientMode->GetViewport();
+	SetParent(pParent);
+	SetVisible(true);
+	SetEnabled(true);
+	SetActive(true);
+	SetPaintBackgroundEnabled(false);
+	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT);
+}
+
+void C_GluonHudDot::Init()
+{
+	if (!pDot)
+	{
+		pDot = gHUD.GetIcon("gluondot");
+	}
+
+	SetSize(ScreenWidth(), ScreenHeight());
+	bDraw = false;
+}
+
+bool C_GluonHudDot::ShouldDraw()
+{
+	return bDraw;
+}
+
+void C_GluonHudDot::OnThink()
+{
+}
+void C_GluonHudDot::Paint()
+{
+	if (!ShouldDraw())
+		return;
+
+	if (!pDot)
+	{
+		pDot = gHUD.GetIcon("gluondot");
+	}
+
+	Vector vecTarget;
+
+	ConVarRef thirdperson("cl_thirdperson_crosshair");
+
+	CBasePlayer* player = CBasePlayer::GetLocalPlayer();
+
+	float crossx, crossy;
+
+	crossx = ScreenWidth() / 2;
+	crossy = ScreenHeight() / 2;
+
+
+	Vector vecEyeDirection, vecEndPos, vecAimPoint;
+	player->EyeVectors(&vecEyeDirection);
+	VectorMA(player->EyePosition(), MAX_TRACE_LENGTH, vecEyeDirection, vecEndPos);
+	trace_t	trace;
+	UTIL_TraceLine(player->EyePosition(), vecEndPos, MASK_SHOT, player, COLLISION_GROUP_NONE, &trace);
+	vecAimPoint = trace.endpos;
+
+
+	if (bUseHoverPoint)
+	{
+		vecTarget = m_vecHoverPoint;
+	}
+	else
+	{
+		fLerp += 0.01f;
+		fLerp = Clamp(fLerp, 0.f, 1.f);
+
+		float f = easeInOut(fLerp);
+
+		if (f < 1.f)
+			InterpolateVector(f, m_vecHoverPoint, vecAimPoint, vecTarget);
+		else
+			vecTarget = vecAimPoint;
+	}
+
+	Vector vecPos = Vector(0, 0, 0);
+
+	HudTransform(vecTarget, vecPos);
+
+	crossx += 0.5 * vecPos[0] * ScreenWidth() + 0.5;
+	crossy -= 0.5 * vecPos[1] * ScreenHeight() + 0.5;
+
+	crossx -= pDot->Width() / 2;
+	crossy -= pDot->Height() / 2;
+
+	pDot->DrawSelf(crossx, crossy, gHUD.GetDefaultColor());
+
+}
+
+
 class C_GluonTarget : public C_BaseEntity
 {
 	DECLARE_CLASS(C_GluonTarget, C_BaseEntity);
@@ -43,10 +159,12 @@ public:
 	void SetDirection();
 private:
 	Vector m_vecDestination;
+	bool m_bOverdrive;
 };
 
 IMPLEMENT_CLIENTCLASS_DT(C_GluonTarget,DT_GluonTarget,CGluonTarget)
 RecvPropVector(RECVINFO(m_vecDestination)),
+RecvPropBool(RECVINFO(m_bOverdrive)),
 END_RECV_TABLE()
 
 void C_GluonTarget::OnDataChanged(DataUpdateType_t type)
@@ -60,10 +178,12 @@ void C_GluonTarget::SetDirection()
 	Vector vecVec = m_vecDestination - GetAbsOrigin();
 	Vector vecDir = vecVec.Normalized();
 	float fLength = vecVec.Length();
-	SetAbsVelocity(GetAbsOrigin() + (vecDir * fLength * 10.f));
+	float speedmod = 5.f;
+	if (m_bOverdrive)
+		speedmod = 30.f;
+	SetAbsVelocity(GetAbsOrigin() + (vecDir * fLength * speedmod));
 }
 
-ConVar gluon_spline_scale("gluon_spline_scale", "128");
 
 class C_WeaponGluon : public C_BaseHLCombatWeapon
 {
@@ -81,6 +201,9 @@ public:
 	void StartFX();
 	void StopFX();
 
+
+	bool m_bDrawCross;
+
 private:
 
 	CNewParticleEffect* beamFX[BEAM_SEGMENTS];
@@ -95,10 +218,14 @@ private:
 	float fPrevTick;
 	float flInterval;
 
+	bool m_bOverdrive;
+
 
 	CSoundPatch* m_sBaseLayer;
 	CSoundPatch* m_sMidLayer;
 	Vector vecnext;
+
+	C_GluonHudDot* pDot;
 };
 
 STUB_WEAPON_CLASS_IMPLEMENT(weapon_gluon,C_WeaponGluon)
@@ -106,6 +233,8 @@ IMPLEMENT_CLIENTCLASS_DT(C_WeaponGluon,DT_WeaponGluon,CWeaponGluon)
 RecvPropBool(RECVINFO(m_bFiring)),
 RecvPropVector(RECVINFO(m_vecDamagePoint)),
 RecvPropEHandle(RECVINFO(pTarget)),
+RecvPropBool(RECVINFO(m_bOverdrive)),
+RecvPropBool(RECVINFO(m_bDrawCross)),
 END_RECV_TABLE()
 
 
@@ -123,9 +252,15 @@ void C_WeaponGluon::OnDataChanged(DataUpdateType_t type)
 		SetNextClientThink(CLIENT_THINK_ALWAYS);
 		PrecacheParticleSystem("gluon_centerbeam");
 		PrecacheParticleSystem("gluon_muzzle");
+		PrecacheParticleSystem("gluon_muzzle_overdrive");
+		PrecacheParticleSystem("gluon_centerbeam_overdrive");
 		PrecacheScriptSound("Gluon.BaseLayer");
 		PrecacheScriptSound("Gluon.MidLayer");
+		PrecacheScriptSound("Gluon.ODLayer");
+		
 	}
+
+	BaseClass::OnDataChanged(type);
 }
 
 void C_WeaponGluon::ClientThink()
@@ -139,6 +274,15 @@ void C_WeaponGluon::ClientThink()
 		StartFX();
 	else
 		StopFX();
+
+	if(!pDot)
+		pDot = (C_GluonHudDot*)GET_HUDELEMENT(C_GluonHudDot);
+	if (pDot)
+	{
+		pDot->bDraw = m_bDrawCross;
+	}
+
+	BaseClass::ClientThink();
 }
 
 void C_WeaponGluon::StartFX()
@@ -148,8 +292,13 @@ void C_WeaponGluon::StartFX()
 		return;
 
 	Vector vecStart, vecEnd, vecQuarter, vecThreeQuarter;
-
+	
 	player->GetViewModel()->GetAttachment(LookupAttachment("muzzle"), vecStart);
+
+	ConVarRef thirdperson("g_thirdperson");
+
+	if (thirdperson.GetBool())
+		GetAttachment(LookupAttachment("muzzle"), vecStart);
 
 	if (pTarget)
 	{
@@ -196,13 +345,29 @@ void C_WeaponGluon::StartFX()
 
 	if (!muzzleFX)
 	{
-		muzzleFX = player->GetViewModel()->ParticleProp()->Create("gluon_muzzle", PATTACH_POINT_FOLLOW, "muzzle");
+		if (thirdperson.GetBool())
+		{
+			if (m_bOverdrive)
+				muzzleFX = ParticleProp()->Create("gluon_muzzle_overdrive", PATTACH_POINT_FOLLOW, "muzzle");
+			else
+				muzzleFX = ParticleProp()->Create("gluon_muzzle", PATTACH_POINT_FOLLOW, "muzzle");
+		}
+		else
+		{
+			if (m_bOverdrive)
+				muzzleFX = player->GetViewModel()->ParticleProp()->Create("gluon_muzzle_overdrive", PATTACH_POINT_FOLLOW, "muzzle");
+			else
+				muzzleFX = player->GetViewModel()->ParticleProp()->Create("gluon_muzzle", PATTACH_POINT_FOLLOW, "muzzle");
+		}
 	}
 
 	CPASAttenuationFilter filter(this);
 	if (!m_sBaseLayer)
 	{
-		m_sBaseLayer = CSoundEnvelopeController::GetController().SoundCreate(filter, entindex(), "Gluon.BaseLayer");
+		if(!m_bOverdrive)
+			m_sBaseLayer = CSoundEnvelopeController::GetController().SoundCreate(filter, entindex(), "Gluon.BaseLayer");
+		else
+			m_sBaseLayer = CSoundEnvelopeController::GetController().SoundCreate(filter, entindex(), "Gluon.ODLayer");
 		CSoundEnvelopeController::GetController().Play(m_sBaseLayer, 1.0f, 100.f);
 		CSoundEnvelopeController::GetController().SoundChangePitch(m_sBaseLayer, 150, 15.f);
 	}
@@ -215,6 +380,11 @@ void C_WeaponGluon::StartFX()
 	}
 
 
+	if (pDot)
+	{
+		pDot->bUseHoverPoint = true;
+		pDot->m_vecHoverPoint = vecEnd;
+	}
 }
 
 void C_WeaponGluon::StopFX()
@@ -222,6 +392,7 @@ void C_WeaponGluon::StopFX()
 	C_BasePlayer* player = CBasePlayer::GetLocalPlayer();
 	if (!player)
 		return;
+	ConVarRef thirdperson("g_thirdperson");
 
 	if (m_sBaseLayer)
 	{
@@ -235,19 +406,25 @@ void C_WeaponGluon::StopFX()
 		m_sMidLayer = NULL;
 	}
 
-	for (int i = 0; i < BEAM_SEGMENTS; i++)
+	for (int i = 0; i < g_gluon_segments.GetInt(); i++)
 	{
 		if (beamFX[i])
 		{
-			player->GetViewModel()->ParticleProp()->StopEmissionAndDestroyImmediately(beamFX[i]);
+			thirdperson.GetBool() ? ParticleProp()->StopEmissionAndDestroyImmediately(beamFX[i]) : player->GetViewModel()->ParticleProp()->StopEmissionAndDestroyImmediately(beamFX[i]);
 			beamFX[i] = NULL;
 		}
 	}
 
 	if (muzzleFX)
 	{
-		player->GetViewModel()->ParticleProp()->StopEmissionAndDestroyImmediately(muzzleFX);
+		thirdperson.GetBool() ? ParticleProp()->StopEmissionAndDestroyImmediately(muzzleFX) : player->GetViewModel()->ParticleProp()->StopEmissionAndDestroyImmediately(muzzleFX);
 		muzzleFX = NULL;
+	}
+
+	if (pDot && pDot->bUseHoverPoint == true)
+	{
+		pDot->fLerp = 0.f;
+		pDot->bUseHoverPoint = false;
 	}
 }
 
@@ -259,11 +436,15 @@ void C_WeaponGluon::DrawSimpleBeam(const Vector& p0, const Vector& p1, const Vec
 	if (!player)
 		return;
 
+	ConVarRef thirdperson("g_thirdperson");
+
 	for (int i = 0; i < 4; i++)
 	{
 		if (!beamFX[i])
 		{
-			beamFX[i] = player->GetViewModel()->ParticleProp()->Create("gluon_centerbeam", PATTACH_CUSTOMORIGIN);
+			const char* beam = m_bOverdrive ? "gluon_centerbeam_overdrive" : "gluon_centerbeam";
+			DevMsg("creating gluon particle %\n", beam);
+			thirdperson.GetBool() ? beamFX[i] = ParticleProp()->Create(beam, PATTACH_CUSTOMORIGIN) : beamFX[i] = player->GetViewModel()->ParticleProp()->Create(beam, PATTACH_CUSTOMORIGIN);
 		}
 	}
 
@@ -290,17 +471,22 @@ void C_WeaponGluon::DrawComplexBeam(const Vector& p0, const Vector& p1, const Ve
 
 	Vector cp1, cp2;
 
-	for (int i = 0; i < BEAM_SEGMENTS; i++)
+	ConVarRef thirdperson("g_thirdperson");
+
+	for (int i = 0; i < g_gluon_segments.GetInt(); i++)
 	{
-		cp1 = BezierCurve(p0, p1, p2, p3, (float)i / BEAM_SEGMENTS);
+		cp1 = BezierCurve(p0, p1, p2, p3, (float)i / g_gluon_segments.GetInt());
 		//NDebugOverlay::Cross3D(cp1, 4.f, 255, 0, 0, false, 0.02f);
-		cp2 = BezierCurve(p0, p1, p2, p3, (float)(i + 1) / BEAM_SEGMENTS);
+		cp2 = BezierCurve(p0, p1, p2, p3, (float)(i + 1) / g_gluon_segments.GetInt());
 		if (!beamFX[i])
 		{
-			beamFX[i] = player->GetViewModel()->ParticleProp()->Create("gluon_centerbeam", PATTACH_CUSTOMORIGIN);
+			const char* beam = m_bOverdrive ? "gluon_centerbeam_overdrive" : "gluon_centerbeam";
+			DevMsg("creating particle %\n", beam);
+			thirdperson.GetBool() ? beamFX[i] = ParticleProp()->Create(beam, PATTACH_CUSTOMORIGIN) : beamFX[i] = player->GetViewModel()->ParticleProp()->Create(beam, PATTACH_CUSTOMORIGIN);
 		}
 		beamFX[i]->SetControlPoint(1, cp1);
 		beamFX[i]->SetControlPoint(2, cp2);
 	}
 }
+
 

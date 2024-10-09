@@ -245,6 +245,7 @@ BEGIN_DATADESC( CNPC_Antlion )
 	DEFINE_INPUTFUNC( FIELD_VOID,	"IgnoreBugbait", InputIgnoreBugbait ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"HearBugbait", InputHearBugbait ),
 	DEFINE_INPUTFUNC( FIELD_STRING,	"JumpAtTarget", InputJumpAtTarget ),
+	DEFINE_INPUTFUNC(FIELD_VOID, "TestWallJump", InputTestWallJump),
 
 	DEFINE_OUTPUT( m_OnReachFightGoal, "OnReachedFightGoal" ),
 	DEFINE_OUTPUT( m_OnUnBurrowed, "OnUnBurrowed" ),
@@ -285,13 +286,15 @@ void CNPC_Antlion::Spawn( void )
 	SetBloodColor( BLOOD_COLOR_YELLOW );
 #endif // HL2_EPISODIC*/
 
-	SetHullType(HULL_MEDIUM);
+	SetHullType(HULL_HUMAN);
 	SetHullSizeNormal();
 	SetDefaultEyeOffset();
 	
 	SetNavType( NAV_GROUND );
 
 	m_NPCState	= NPC_STATE_NONE;
+
+	szEnemyName = "#HLR_EnemyName_Implion";
 
 //#if HL2_EPISODIC
 	m_iHealth = ( IsWorker() ) ? sk_antlion_worker_health.GetFloat() : sk_antlion_health.GetFloat();
@@ -321,10 +324,6 @@ void CNPC_Antlion::Spawn( void )
 		CapabilitiesAdd( bits_CAP_INNATE_RANGE_ATTACK1 );
 		// CapabilitiesRemove( bits_CAP_INNATE_MELEE_ATTACK2 );
 	}
-
-	// JAY: Optimize these out for now
-	if ( HasSpawnFlags( SF_ANTLION_USE_GROUNDCHECKS ) == false )
-		 CapabilitiesAdd( bits_CAP_SKIP_NAV_GROUND_CHECK );
 
 	NPCInit();
 
@@ -885,6 +884,35 @@ bool CNPC_Antlion::GetPathToSoundFleePoint( int soundType )
 	return false;
 }
 
+#ifdef HLR
+bool CNPC_Antlion::GetPathToWallPoint()
+{
+	CHintCriteria	hintCriteria;
+
+	hintCriteria.SetHintType(HINT_ANTLION_WALL_POINT);
+	hintCriteria.SetFlag(bits_HINT_NODE_NEAREST);
+	hintCriteria.AddIncludePosition(WorldSpaceCenter(), 2500);
+
+	CAI_Hint* pHint = CAI_HintManager::FindHint(WorldSpaceCenter(), hintCriteria);
+
+	Vector vecWallDest;
+
+	if (pHint != NULL)
+	{
+		pHint->GetPosition(this, &vecWallDest);
+
+		AI_NavGoal_t goal(vecWallDest);
+		if (GetNavigator()->SetGoal(goal))
+		{
+			NDebugOverlay::Cross3D(goal.dest, 16, 0, 255, 0, false, 10.f);
+			return true;
+		}
+	}
+
+	return false;
+}
+#endif
+
 //-----------------------------------------------------------------------------
 // Purpose: Returns whether the enemy has been seen within the time period supplied
 // Input  : flTime - Timespan we consider
@@ -1277,7 +1305,7 @@ void CNPC_Antlion::HandleAnimEvent( animevent_t *pEvent )
 
 	if ( pEvent->event == AE_ANTLION_START_JUMP )
 	{
-		StartJump();
+	//	StartJump();
 		return;
 	}
 
@@ -1719,7 +1747,13 @@ void CNPC_Antlion::StartTask( const Task_t *pTask )
 		}
 		
 		break;
-
+	case TASK_ANTLION_GET_PATH_TO_WALL_POINT:
+	{
+		if (GetPathToWallPoint())
+			TaskComplete();
+		else
+			TaskFail(FAIL_NO_REACHABLE_NODE);
+	}
 
 	default:
 		BaseClass::StartTask( pTask );
@@ -1986,7 +2020,7 @@ bool CNPC_Antlion::IsFirmlyOnGround( void )
 //-----------------------------------------------------------------------------
 int CNPC_Antlion::SelectFailSchedule( int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode )
 {
-	if ( m_FollowBehavior.GetNumFailedFollowAttempts() >= 2 )
+	/*if (m_FollowBehavior.GetNumFailedFollowAttempts() >= 2)
 	{
 		if( IsFirmlyOnGround() == false )
 		{
@@ -2011,7 +2045,7 @@ int CNPC_Antlion::SelectFailSchedule( int failedSchedule, int failedTask, AI_Tas
 	
 			return SCHED_ANTLION_JUMP;
 		}
-	}
+	}*/
 
 	// Catch the LOF failure and choose another route to take
 	if ( failedSchedule == SCHED_ESTABLISH_LINE_OF_FIRE )
@@ -2041,7 +2075,7 @@ bool CNPC_Antlion::ShouldJump( void )
 	if ( ( CapabilitiesGet() & bits_CAP_MOVE_JUMP ) == false )
 		return false;
 
-	Vector vEnemyForward, vForward;
+	/*Vector vEnemyForward, vForward;
 
 	GetEnemy()->GetVectors( &vEnemyForward, NULL, NULL );
 	GetVectors( &vForward, NULL, NULL );
@@ -2106,7 +2140,7 @@ bool CNPC_Antlion::ShouldJump( void )
 
 	//Save this jump in case the next time fails
 	m_vecSavedJump = moveTrace.vJumpVelocity;
-	m_vecLastJumpAttempt = targetPos;
+	m_vecLastJumpAttempt = targetPos;*/
 
 	return true;
 }
@@ -2461,8 +2495,8 @@ int CNPC_Antlion::SelectSchedule( void )
 				}
 
 				// Try to jump
-				if ( HasCondition( COND_ANTLION_CAN_JUMP ) )
-					return SCHED_ANTLION_JUMP;
+				/*if (HasCondition(COND_ANTLION_CAN_JUMP))
+					return SCHED_ANTLION_JUMP;*/
 			}
 		}
 		break;
@@ -4349,6 +4383,11 @@ void CNPC_Antlion::InputJumpAtTarget( inputdata_t &inputdata )
 	SetCondition( COND_ANTLION_CAN_JUMP_AT_TARGET );
 }
 
+void CNPC_Antlion::InputTestWallJump(inputdata_t& inputdata)
+{
+	ClearAllSchedules();
+	SetSchedule(SCHED_ANTLION_JUMP_TO_WALL_POINT);
+}
 //#if HL2_EPISODIC
 //-----------------------------------------------------------------------------
 // workers can explode.
@@ -4537,6 +4576,7 @@ AI_BEGIN_CUSTOM_NPC( npc_antlion, CNPC_Antlion )
 	DECLARE_TASK( TASK_ANTLION_DROWN )
 	DECLARE_TASK( TASK_ANTLION_GET_PATH_TO_RANDOM_NODE )
 	DECLARE_TASK( TASK_ANTLION_FIND_COVER_FROM_SAVEPOSITION )
+	DECLARE_TASK( TASK_ANTLION_GET_PATH_TO_WALL_POINT)
 
 	//Activities
 	DECLARE_ACTIVITY( ACT_ANTLION_DISTRACT )
@@ -5026,6 +5066,21 @@ AI_BEGIN_CUSTOM_NPC( npc_antlion, CNPC_Antlion )
 		"		COND_TASK_FAILED"
 		"		COND_NEW_ENEMY"
 	)
+	DEFINE_SCHEDULE
+		(
+			SCHED_ANTLION_JUMP_TO_WALL_POINT,
+
+			"	Tasks"
+			"		TASK_SET_FAIL_SCHEDULE						SCHEDULE:SCHED_CHASE_ENEMY"
+			"		TASK_ANTLION_GET_PATH_TO_WALL_POINT			0"
+			"		TASK_RUN_PATH								0"
+			"		TASK_WAIT_FOR_MOVEMENT						0"
+			"		TASK_STOP_MOVING							0"
+			""
+			"	Interrupts"
+			"		COND_TASK_FAILED"
+			"		COND_NEW_ENEMY"
+		)
 
 AI_END_CUSTOM_NPC()
 

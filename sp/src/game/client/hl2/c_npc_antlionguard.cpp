@@ -116,8 +116,8 @@ void C_NPC_AntlionGuard::UpdateBleedingPerformance()
 
 	case 2: // severe bleeding
 		{
-			m_pBleedingFX = pProp->Create( "blood_antlionguard_injured_heavy", PATTACH_ABSORIGIN_FOLLOW );
-			AssertMsg1( m_pBleedingFX, "Particle system couldn't make %s", "blood_antlionguard_injured_heavy" );
+			m_pBleedingFX = pProp->Create( "blood_mech_bleeding", PATTACH_ABSORIGIN_FOLLOW );
+			AssertMsg1( m_pBleedingFX, "Particle system couldn't make %s", "blood_mech_bleeding" );
 			if ( m_pBleedingFX )
 			{
 				pProp->AddControlPoint( m_pBleedingFX, 1, this, PATTACH_ABSORIGIN_FOLLOW );

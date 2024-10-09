@@ -1991,6 +1991,12 @@
     <ClInclude Include="toolframework_client.h">
       <Filter>Tool Framework</Filter>
     </ClInclude>
+    <ClInclude Include="hlr\weapons\c_weapon_gluon.h">
+      <Filter>Source Files\HLR\Weapons</Filter>
+    </ClInclude>
+    <ClInclude Include="hl2\hud_weaponselection.h">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mp3player.cpp">
@@ -3600,6 +3606,21 @@
     </ClCompile>
     <ClCompile Include="hlr\weapons\c_weapon_gluon.cpp">
       <Filter>Source Files\HLR\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\util\c_mat_hlr_dissolveproxy.cpp">
+      <Filter>Source Files\HLR\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\entities\c_fireball.cpp">
+      <Filter>Source Files\HLR\Entity</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\entities\c_enemy_counter.cpp">
+      <Filter>Source Files\HLR\Entity</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\hud\hud_wavecounter.cpp">
+      <Filter>Source Files\HLR\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\vgui\hlr_demopanel.cpp">
+      <Filter>Source Files\HLR\VGUI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

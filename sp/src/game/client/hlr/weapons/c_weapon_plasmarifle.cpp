@@ -41,13 +41,18 @@ public:
 
 	float m_fProgress;
 	bool bActive;
+	bool bNearOverheat;
+	float m_fTimeMultiplier;
 private:
 	CHudTexture* pIcon;
 	CPanelAnimationVarAliasType(float, fWide, "wide", "128", "proportional_float");
 	CPanelAnimationVarAliasType(float, fTall, "tall", "32", "proportional_float");
-	CPanelAnimationVarAliasType(float, iconWide, "iconWide", "4", "proportional_float");
-	CPanelAnimationVarAliasType(float, iconTall, "iconTall", "4", "proportional_float");
+	CPanelAnimationVarAliasType(float, iconWide, "iconWide", "64", "proportional_float");
+	CPanelAnimationVarAliasType(float, iconTall, "iconTall", "64", "proportional_float");
 	CPanelAnimationVarAliasType(float, fBarTall, "barheight", "2", "proportional_float");
+	CPanelAnimationVarAliasType(float, fBarWide, "barheight", "32", "proportional_float");
+	CPanelAnimationVar(vgui::HFont, m_hTextFont, "TextFont", "HudWeaponWheelText");
+
 
 	int xpos, ypos;
 };
@@ -123,16 +128,23 @@ void C_HudPlasmaRifleAltProgress::Paint()
 	}
 	
 
-	gHUD.DrawProgressBar(0, 0, GetWide(), fBarTall, m_fProgress, outColor, CHud::HUDPB_HORIZONTAL_INV_NOBG);
+	gHUD.DrawProgressBar((GetWide() * 0.5) - (fBarWide * 0.5), 0, fBarWide, fBarTall, m_fProgress, outColor, CHud::HUDPB_HORIZONTAL_INV_NOBG);
 
 	if (m_fProgress >= 1.0f)
-		alpha = ((sin(gpGlobals->curtime * 15) * 100) + 100);
+	{
+		float fTimeMult;
+		if (bNearOverheat)
+			fTimeMult = 30.f;
+		else
+			fTimeMult = 15.f;
+		alpha = ((sin(gpGlobals->curtime * fTimeMult) * 100.f) + 100.f);
+	}
 	else
 		alpha = 0.0f;
-	pIcon = gHUD.GetIcon("overheat_icon");
 
+	pIcon = gHUD.GetIcon("overheat_icon");
 	Color iconColor = Color(255, 0, 0, alpha);
-	pIcon->DrawSelf(GetWide() * 0.5f - pIcon->Width() * 0.5f, 0, iconWide, iconTall, iconColor);
+	pIcon->DrawSelf(GetWide() * 0.5f - iconWide * 0.5f, fBarTall * 4, iconWide,iconTall, iconColor);
 	SetPos(xpos + screen[0] * screenX, ypos - screen[1] * screenY);
 }
 
@@ -147,6 +159,7 @@ public:
 	int DrawModel(int flags);
 	virtual void	OnDataChanged(DataUpdateType_t updateType);
 	bool bActive;
+	bool bNearOverheat;
 	int iShots;
 	//bool bShootingSecondary;
 	//Vector vecBeamEnd;
@@ -189,58 +202,12 @@ void C_WeaponPlasmaRifle::ClientThink()
 	float fProgress = numShots / 30;
 	hudbar->m_fProgress = fProgress;
 
-	/*C_BasePlayer* pPlayer = CBasePlayer::GetLocalPlayer();
-	if (!pPlayer)
-		return;
-	C_BaseAnimating* pAnimating = pPlayer->GetViewModel();
-	if (!pAnimating)
-		return;
-	int attachment = pAnimating->LookupAttachment("barrel_vm");
-
-	Vector vecStart, vecDir;
-	QAngle angAttach;
-
-
-	GetAttachment(attachment, vecStart, angAttach);
-	QAngle angDir = pPlayer->EyeAngles();
-	AngleVectors(angDir, &vecDir);
-	VectorNormalize(vecDir);
-
-	trace_t tr;
-	UTIL_TraceLine(pPlayer->EyePosition(), pPlayer->EyePosition() + (vecDir * MAX_TRACE_LENGTH), MASK_SHOT, GetOwnerEntity(), COLLISION_GROUP_NONE, &tr);
-	Vector vecEnd;
-	InterpolateVector(0.5f, vecBeamEnd, tr.endpos, vecEnd);
-	CParticleProperty* pProp = ParticleProp();
-	Vector	vForward, vRight, vUp;
-
-	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
-
-	if (bShootingSecondary)
-	{
-		DevMsg("Firing Secondary\n");
-		
-
-		if (!beamFX)
-		{
-			beamFX = pProp->Create("plasmarifle_altfire_beam", PATTACH_CUSTOMORIGIN, 0, pPlayer->EyePosition() + vForward * 12.0f + vRight * 2.0f + vUp * -3.0f);
-		}
-		else
-		{
-			beamFX->SetControlPoint(0, pPlayer->EyePosition() + vForward * 12.0f + vRight * 2.0f + vUp * -3.0f);
-			beamFX->SetControlPoint(1, tr.endpos);
-			//beamFX->StartEmission();
-		}
-	}
+	if (iShots > 45)
+		bNearOverheat = true;
 	else
-	{
-		if (beamFX)
-		{
-			beamFX->StopEmission();
-			pProp->StopEmissionAndDestroyImmediately(beamFX);
-			beamFX = NULL;
-		}
-	}*/
+		bNearOverheat = false;
 
+	hudbar->bNearOverheat = bNearOverheat;
 }
 
 int C_WeaponPlasmaRifle::DrawModel(int flags)

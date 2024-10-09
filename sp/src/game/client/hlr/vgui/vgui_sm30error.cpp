@@ -13,6 +13,7 @@
 #include "filesystem.h"
 #include "../common/xbox/xboxstubs.h"
 #include "steam/steam_api.h"
+#include "cdll_client_int.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -65,7 +66,6 @@ void CSM30Error::ApplySchemeSettings(vgui::IScheme* pScheme)
 	BaseClass::ApplySchemeSettings(pScheme);
 
 	m_hFont = pScheme->GetFont("Default");
-	Assert(m_hFont);
 }
 const char* smdxerror1()
 {
@@ -93,18 +93,28 @@ const char* smdxerror2()
 }
 bool CSM30Error::ShouldDraw(void)
 {
-	if (!g_hide_sm30error.GetBool() || !g_hide_dxerror.GetBool())
+	bool bSM30 = g_pMaterialSystemHardwareConfig->SupportsShaderModel_3_0();
+	bool bDX = g_pMaterialSystemHardwareConfig->GetDXSupportLevel() >= 95;
+
+	if(!bDX || !bSM30)
 	{
-		if (!IsVisible())
-			SetVisible(true);
-		return true;
+		if (!bDX)
+		{
+			g_hide_dxerror.SetValue(0);
+			return true;
+		}
+		else if (!bSM30)
+		{
+			g_hide_sm30error.SetValue(0);
+			return true;
+		}
 	}
-	else
-	{
-		if (IsVisible())
-			SetVisible(false);
-		return false;
-	}
+
+	g_hide_sm30error.SetValue(1);
+	g_hide_dxerror.SetValue(1);
+
+	return false;
+
 }
 
 void CSM30Error::ComputeSize(void)
@@ -136,10 +146,8 @@ void CSM30Error::Paint()
 
 	ComputeSize();
 
-	
 	g_pMatSystemSurface->DrawColoredText(m_hFont, GetInsetPos(smdxerror1()), 0, 255, 60, 0, 255, smdxerror1());
 	g_pMatSystemSurface->DrawColoredText(m_hFont, GetInsetPos(smdxerror2()), 2 + vgui::surface()->GetFontTall(m_hFont), 255, 60, 0, 255, smdxerror2());
-
 }
 
 

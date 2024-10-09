@@ -206,9 +206,7 @@ CMissile::~CMissile()
 //-----------------------------------------------------------------------------
 void CMissile::Precache(void)
 {
-	PrecacheModel("models/weapons/w_missile.mdl");
-	PrecacheModel("models/weapons/w_missile_launch.mdl");
-	PrecacheModel("models/weapons/w_missile_closed.mdl");
+	PrecacheModel("models/weapons/w_rocket.mdl");
 	PrecacheMaterial("sprites/rockettrail.vmt");
 	UTIL_PrecacheOther("missile_trail");
 }
@@ -224,7 +222,7 @@ void CMissile::Spawn(void)
 	Precache();
 	RegisterThinkContext("EnableExplosion");
 	SetSolid(SOLID_BBOX);
-	SetModel("models/weapons/w_missile_launch.mdl");
+	SetModel("models/weapons/w_rocket.mdl");
 	UTIL_SetSize(this, -Vector(4, 4, 4), Vector(4, 4, 4));
 
 	SetTouch(&CMissile::MissileTouch);
@@ -906,6 +904,7 @@ CMissile *CMissile::Create(const Vector &vecOrigin, const QAngle &vecAngles, edi
 	pMissile->SetOwnerEntity(Instance(pentOwner));
 	pMissile->Spawn();
 	pMissile->AddEffects(EF_NOSHADOW);
+	pMissile->ApplyLocalAngularVelocityImpulse(AngularImpulse(300, 0, 0));
 
 	//Vector vecForward;
 	//AngleVectors(vecAngles, &vecForward);
@@ -1816,6 +1815,8 @@ void CWeaponRPG::Rocket3(void)
 void CWeaponRPG::LaunchRocket(void)
 {
 	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+
+	
 	Vector	vForward, vRight, vUp;
 	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
 	QAngle vecAngles;
@@ -1840,6 +1841,14 @@ void CWeaponRPG::LaunchRocket(void)
 	m_iPrimaryAttacks++;
 	gamestats->Event_WeaponFired(pPlayer, true, GetClassname());
 	DispatchParticleEffect("muzzleflash_shotgun_altfire", muzzlePoint, vecAngles, this);
+
+	if (pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
+	{
+		ConVarRef mvox("cl_hev_gender");
+		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0, mvox.GetBool());
+	}
+
+	pPlayer->SetAnimation(PLAYER_ATTACK1);
 }
 void CWeaponRPG::SecondaryAttack(void)
 {

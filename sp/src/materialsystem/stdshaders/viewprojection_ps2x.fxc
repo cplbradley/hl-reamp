@@ -1,0 +1,87 @@
+#include "common_ps_fxc.h"
+#include "common_vertexlitgeneric_dx9.h"
+#include "common_lightmappedgeneric_fxc.h"
+#include "shader_constant_register_map.h"
+
+
+sampler BaseTextureSampler						: register(s0);
+
+const float4 cflMovementParms					: register(c16);
+const float4 cflScaleParms						: register(c18);
+
+
+struct PS_INPUT
+{
+	float4 vViewProj		: TEXCOORD0;
+};
+
+void Rotation(in float2 UV, in float2 Pivot, in float Time, in float Scale, out float2 UVOut)
+{	
+	float sine = sin((Time * Scale) / 2);
+	float cosine = cos(Time * Scale);
+
+	UVOut = UV;
+	UVOut -= Pivot;
+
+	UVOut.x = UV.x * cosine - UV.y * sine;
+	UVOut.y = UV.x * sine + UV.y * cosine;
+};
+
+void SinWaveMorph( in float2 CoordsIn, in float Time, in float Scale, out float2 CoordsOut )
+{
+	//CoordsIn.x=( 0.55*CoordsIn.x)+0.5;
+	//CoordsIn.y=(-0.55*CoordsIn.y)+0.5;
+	float x = sin(CoordsIn.x + 2 * Time * Scale) * 0.5;
+	float y = cos(CoordsIn.y + 2 * Time * Scale) * 0.3;
+	CoordsOut = float2(CoordsIn.x + x, CoordsIn.y + y);
+};
+
+float4 main(PS_INPUT i) : COLOR
+{
+	float xmove = cflMovementParms.x;
+	float ymove = cflMovementParms.y;
+	float fTime = cflMovementParms.z;
+	float buildcubes = cflMovementParms.w;
+	
+	float projScale = cflScaleParms.x;
+	float moveScale = cflScaleParms.y;
+	float rotScale = cflScaleParms.z;
+	float morphScale = cflScaleParms.w;
+	
+	
+	float2 projpos_xy = i.vViewProj.xy;
+	float projpos_w = i.vViewProj.w;
+	
+	float2 flatres = float2(0.8,-0.45);
+	
+	float movescale_time = fTime * moveScale;
+	
+	float2 UVCoord = float2(0,0);
+	
+	Rotation(projpos_xy,flatres,fTime,rotScale,UVCoord);
+	
+	UVCoord /= projpos_w;
+	UVCoord *= flatres;
+	UVCoord *= projScale;
+	
+	
+	float projXmove = UVCoord.x + (movescale_time * xmove);
+	float projYmove = UVCoord.y + (movescale_time * ymove);
+	
+	float2 projUV = float2(projXmove,projYmove);
+	
+	float2 finalUV = float2(0,0);
+	
+	SinWaveMorph(projUV,fTime,morphScale,finalUV);
+	
+	float4 tex = tex2D(BaseTextureSampler,finalUV);
+	
+	tex *= buildcubes;
+	
+	return tex;
+};
+	
+	
+	
+	
+	

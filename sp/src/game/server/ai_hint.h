@@ -28,6 +28,7 @@
 #define bits_HINT_NOT_CLOSE_TO_ENEMY			0x00000800		// Hint must not be within 30 feet of my enemy
 #define bits_HINT_HAS_LOS_TO_PLAYER				0x00001000		// Like VISIBLE_TO_PLAYER but doesn't care about player's facing
 #define bits_HAS_EYEPOSITION_LOS_TO_PLAYER		0x00002000		// Like HAS LOS TO PLAYER, but checks NPC's eye position at the node, not node origin.
+#define bits_HINT_MUST_BE_JUMPED_TO				0x00004000
 
 //-----------------------------------------------------------------------------
 //
@@ -80,6 +81,7 @@ enum Hint_e
 
 	HINT_ANTLION_BURROW_POINT = 400,
 	HINT_ANTLION_THUMPER_FLEE_POINT,
+	HINT_ANTLION_WALL_POINT,
 
 	HINT_HEADCRAB_BURROW_POINT = 450,
 	HINT_HEADCRAB_EXIT_POD_POINT,

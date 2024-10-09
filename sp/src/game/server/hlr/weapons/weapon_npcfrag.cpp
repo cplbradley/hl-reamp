@@ -173,6 +173,8 @@ void CWeaponNPCFrag::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bool 
 	vecSpin.z = random->RandomFloat(-1000.0, 1000.0);
 
 	Fraggrenade_Create(vecShootOrigin, vec3_angle, vecShoot, vecSpin, GetOwnerEntity(), 3.f, true);
+
+	pOperator->m_flNextAttack = gpGlobals->curtime + 1.5f;
 }
 
 //-----------------------------------------------------------------------------

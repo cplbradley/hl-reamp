@@ -2243,6 +2243,7 @@ void DoHLRPostProcessing(IMatRenderContext* pRenderContext, int x, int y, int w,
 	static IMaterial* pSMB = materials->FindMaterial("engine/smb", TEXTURE_GROUP_OTHER);
 	static IMaterial* pBDK = materials->FindMaterial("engine/blurdarken", TEXTURE_GROUP_OTHER);
 	static IMaterial* pNV = materials->FindMaterial("engine/nightvision", TEXTURE_GROUP_OTHER);
+	static IMaterial* pGlitch = materials->FindMaterial("engine/glitch", TEXTURE_GROUP_OTHER);
 
 	ConVarRef smb("mat_simplemotionblur");
 
@@ -2260,7 +2261,6 @@ void DoHLRPostProcessing(IMatRenderContext* pRenderContext, int x, int y, int w,
 		if (pTAA)
 		{
 			pTAA->AddRef();
-			
 			pRenderContext->DrawScreenSpaceRectangle(pTAA, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h, GetClientWorldEntity()->GetClientRenderable());
 			UpdateScreenEffectTexture(0, x, y, w, h);
 		}
@@ -2277,7 +2277,7 @@ void DoHLRPostProcessing(IMatRenderContext* pRenderContext, int x, int y, int w,
 	}
 	C_BaseHLPlayer* pPlayer = dynamic_cast<C_BaseHLPlayer*>(CBasePlayer::GetLocalPlayer());
 
-	if (pPlayer->m_HL2Local.m_bInvertedScreen)
+	if (pPlayer && pPlayer->m_HL2Local.m_bInvertedScreen)
 	{
 		if (pFlipMat)
 		{
@@ -2288,18 +2288,17 @@ void DoHLRPostProcessing(IMatRenderContext* pRenderContext, int x, int y, int w,
 	}
 
 	ConVarRef furyfx("g_draw_fury_effects");
-	if (pPlayer->m_HL2Local.m_bIsFurious && furyfx.GetBool())
+	if (pPlayer && pPlayer->m_HL2Local.m_bIsFurious && furyfx.GetBool())
 	{
 		if (pFurious)
 		{
 			pFurious->AddRef();
-			
 			pRenderContext->DrawScreenSpaceRectangle(pFurious, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h, GetClientWorldEntity()->GetClientRenderable());
 			UpdateScreenEffectTexture(0, x, y, w, h);
 			
 		}
 	}
-	if (pPlayer->IsEffectActive(EF_DIMLIGHT))
+	if (pPlayer && pPlayer->IsEffectActive(EF_DIMLIGHT))
 	{
 		if (pNV)
 		{
@@ -2308,8 +2307,8 @@ void DoHLRPostProcessing(IMatRenderContext* pRenderContext, int x, int y, int w,
 			if (pCallQueue)
 				pCallQueue->QueueCall(DrawNightVisionOverlay, pRenderContext, pNV, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
 			else*/
-				DrawNightVisionOverlay(pRenderContext, pNV, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
 			pNV->AddRef();
+			DrawNightVisionOverlay(pRenderContext, pNV, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
 			g_bInNightvision = true;
 		}
 	}
@@ -2323,6 +2322,16 @@ void DoHLRPostProcessing(IMatRenderContext* pRenderContext, int x, int y, int w,
 		{
 			pBDK->AddRef();
 			pRenderContext->DrawScreenSpaceRectangle(pBDK, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h, GetClientWorldEntity()->GetClientRenderable());
+			UpdateScreenEffectTexture(0, x, y, w, h);
+		}
+	}
+
+	if (mat_glitch.GetBool())
+	{
+		if (pGlitch)
+		{
+			pGlitch->AddRef();
+			pRenderContext->DrawScreenSpaceRectangle(pGlitch, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h, GetClientWorldEntity()->GetClientRenderable());
 			UpdateScreenEffectTexture(0, x, y, w, h);
 		}
 	}

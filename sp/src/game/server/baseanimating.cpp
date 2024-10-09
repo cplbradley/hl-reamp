@@ -455,11 +455,16 @@ void CBaseAnimating::StudioFrameAdvanceInternal( CStudioHdr *pStudioHdr, float f
 		Msg("%s %6.3f : %6.3f %6.3f (%.3f) %.3f\n", 
 			GetClassname(), gpGlobals->curtime, 
 			m_flAnimTime.Get(), m_flPrevAnimTime, flInterval, GetCycle() );
-	*/
-	float flmult = 1.0f;
+	*/	float flmult = 1.0f;
 
-	if (IsNPC() && MyNPCPointer() && MyNPCPointer()->AmBeingBuffed())
-		flmult = 2.0f;
+	if (IsNPC() && MyNPCPointer())
+	{
+		flmult = MyNPCPointer()->GetMoveSpeedScale();
+
+		if (MyNPCPointer()->AmBeingBuffed())
+			flmult *= 2.f;
+	}
+
  
 	m_flGroundSpeed = GetSequenceGroundSpeed( pStudioHdr, GetSequence() ) * GetModelScale() * flmult;
 
@@ -905,8 +910,13 @@ void CBaseAnimating::ResetSequenceInfo ( )
 
 	float flmult = 1.0f;
 
-	if (IsNPC() && MyNPCPointer() && MyNPCPointer()->AmBeingBuffed())
-		flmult = 2.0f;
+	if (IsNPC() && MyNPCPointer())
+	{
+		flmult = MyNPCPointer()->GetMoveSpeedScale();
+
+		if (MyNPCPointer()->AmBeingBuffed())
+			flmult *= 2.f;
+	}
 
 	CStudioHdr *pStudioHdr = GetModelPtr();
 	m_flGroundSpeed = GetSequenceGroundSpeed( pStudioHdr, GetSequence() ) * GetModelScale() * flmult;

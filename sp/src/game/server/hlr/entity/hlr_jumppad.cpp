@@ -380,6 +380,8 @@ BEGIN_DATADESC(CTriggerLaunch)
 	DEFINE_KEYFIELD(m_flPushForce,FIELD_FLOAT,"PushForce"),
 	DEFINE_OUTPUT(m_OnLaunch, "OnLaunch"),
 	DEFINE_KEYFIELD(target, FIELD_STRING, "target"),
+	DEFINE_FUNCTION(Touch),
+	DEFINE_THINKFUNC(Reenable),
 END_DATADESC()
 
 void CTriggerLaunch::Spawn(void)

@@ -557,11 +557,11 @@ void CWeaponPumpShotgun::PrimaryAttack(void)
 	}
 	*/
 	CSoundEnt::InsertSound(SOUND_COMBAT, GetAbsOrigin(), SOUNDENT_VOLUME_SHOTGUN, 0.2, GetOwner());
-
-	if (!m_iClip1 && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
+	ConVarRef mvox("cl_hev_gender");
+	if (pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
 	{
 		// HEV suit - indicate out of ammo condition
-		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
+		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0, mvox.GetBool());
 	}
 
 	if (m_iClip1 && !pPlayer->HasOverdrive())
@@ -833,10 +833,15 @@ void CWeaponPumpShotgun::ItemPostFrame(void)
 
 	if (pOwner->m_nButtons & IN_ATTACK && gpGlobals->curtime > m_flNextPrimaryAttack && !m_bNeedPump)
 	{
-		if (m_bAimingGrenade)
-			LaunchGrenade();
+		if (pOwner->GetAmmoCount(GetPrimaryAmmoType()) <= 0)
+			DryFire();
 		else
-			PrimaryAttack();
+		{
+			if (m_bAimingGrenade)
+				LaunchGrenade();
+			else
+				PrimaryAttack();
+		}
 	}
 }
 

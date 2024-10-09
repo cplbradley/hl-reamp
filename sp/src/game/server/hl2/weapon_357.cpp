@@ -209,9 +209,19 @@ void CWeapon357::PrimaryAttack(void)
 	if ((dot > 0.8f) && (downvel < 0)) //if we're falling and looking down
 		push += abs(downvel); //add the abs of downard velocity
 
+	Vector vecForward = vecDir;
+	vecForward[2] = 0;
+
+	float viewdot = DotProduct(vecForward, vecDir);
+
+	if (viewdot > 0.9) //if i'm looking straight
+		pPlayer->VelocityPunch(Vector(0, 0, 200));
+
+	//Msg("view x %f view y %f view z %f forx %f fory %f forz %f viewdot %f\n", vecDir.x, vecDir.y, vecDir.z, vecForward.x, vecForward.y, vecForward.z,viewdot);
 
 	if (GetChargeState() == CHARGESTATE_CHARGED)
 		push *= 2;
+
 	if (pPlayer->HasOverdrive())
 	{
 		pPlayer->VelocityPunch(vecRev * (push * 2));
@@ -256,14 +266,16 @@ void CWeapon357::PrimaryAttack(void)
 
 	pPlayer->SnapEyeAngles(angles);
 
-	//pPlayer->ViewPunch(QAngle(-8, random->RandomFloat(0, 2), 0));
+	pPlayer->ViewPunch(QAngle(-8, random->RandomFloat(0, 2), 0));
 
 	CSoundEnt::InsertSound(SOUND_COMBAT, GetAbsOrigin(), 600, 0.2, GetOwner());
 
-	if (!m_iClip1 && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
+	ConVarRef mvox("cl_hev_gender");
+
+	if (pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
 	{
 		// HEV suit - indicate out of ammo condition
-		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
+		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0, mvox.GetBool());
 	}
 }
 //-----------------------------------------------------------------------------

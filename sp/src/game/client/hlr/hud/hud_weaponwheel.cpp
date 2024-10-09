@@ -52,6 +52,7 @@
 #include "strtools.h"
 #include "cdll_util.h"
 #include "inputsystem/IInputSystem.h"
+#include "hud_weaponselection.h"
 
 #include "vgui/ILocalize.h"
 
@@ -476,6 +477,10 @@ void CHudWeaponWheel::OnThink()
 }
 void CHudWeaponWheel::OpenWheel() //Opening the wheel
 {
+	CHudWeaponSelection* pSelect = GET_HUDELEMENT(CHudWeaponSelection);
+	if(pSelect)
+		pSelect->HideSelection();
+
 	C_BasePlayer* pPlayer = CBasePlayer::GetLocalPlayer();
 	if (!pPlayer)
 		return;
@@ -499,6 +504,8 @@ void CHudWeaponWheel::OpenWheel() //Opening the wheel
 	engine->ClientCmd("mat_blurdarken 1\n");
 	engine->ClientCmd("host_timescale 0.3\n");
 	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("WeaponWheelOpen");
+
+	
 }
 
 void CHudWeaponWheel::CloseWheel()

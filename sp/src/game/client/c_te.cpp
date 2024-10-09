@@ -126,7 +126,7 @@ void TE_PhysicsProp( IRecipientFilter& filter, float delay,
 void TE_PhysicsProp( IRecipientFilter& filter, float delay, KeyValues *pKeyValues );
 void TE_ConcussiveExplosion( IRecipientFilter& filter, float delay, KeyValues *pKeyValues );
 void TE_ClientProjectile( IRecipientFilter& filter, float delay,
-	 const Vector* vecOrigin, const Vector* vecVelocity, int modelindex, int lifetime, CBaseEntity *pOwner );
+	 const Vector* vecOrigin, const Vector* vecVelocity, int modelindex, int lifetime, CBaseEntity *pOwner);
 
 class C_TempEntsSystem : public ITempEntsSystem
 {
@@ -517,7 +517,7 @@ public:
 		}
 	}
 	virtual void ClientProjectile( IRecipientFilter& filter, float delay,
-		const Vector* vecOrigin, const Vector* vecVelocity, int modelindex, int lifetime, CBaseEntity *pOwner )
+		const Vector* vecOrigin, const Vector* vecVelocity, int modelindex, int lifetime, CBaseEntity *pOwner)
 	{
 		if ( !SuppressTE( filter ) )
 		{

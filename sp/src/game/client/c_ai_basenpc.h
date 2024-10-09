@@ -14,6 +14,7 @@
 
 #include "c_basecombatcharacter.h"
 
+
 // NOTE: MOved all controller code into c_basestudiomodel
 class C_AI_BaseNPC : public C_BaseCombatCharacter
 {
@@ -23,6 +24,8 @@ public:
 	DECLARE_CLIENTCLASS();
 
 	C_AI_BaseNPC();
+
+	virtual ShadowType_t			ShadowCastType();
 	virtual unsigned int	PhysicsSolidMaskForEntity( void ) const;
 	virtual bool			IsNPC( void ) { return true; }
 	bool					IsMoving( void ){ return m_bIsMoving; }

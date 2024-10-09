@@ -1137,6 +1137,8 @@ void CHL2_Player::Spawn(void)
 	//
 	//m_flMaxspeed = 320;
 
+
+
 	if ( !IsSuitEquipped() )
 		 StartWalking();
 

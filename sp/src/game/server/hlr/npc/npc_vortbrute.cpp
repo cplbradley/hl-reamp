@@ -53,6 +53,8 @@ enum //Schedules
 	SCHED_VORTBRUTE_RANGED_ATTACK,
 	SCHED_VORTBRUTE_CHASE_ENEMY,
 	SCHED_VORTBRUTE_RAGESLAM,
+	SCHED_VORTBRUTE_FLANK,
+	SCHED_VORTBRUTE_CHASE_ENEMY_FALLBACK,
 };
 
 enum //Tasks
@@ -64,6 +66,9 @@ enum //Tasks
 	TASK_VORTBRUTE_LEFTTHROW,
 	TASK_VORTBRUTE_FACE_ENEMY_LEAD,
 	TASK_VORTBRUTE_RAGESLAM,
+	TASK_VORTBRUTE_ANNOUNCE_FLANK,
+	TASK_VORTBRUTE_ANNOUNCE_TELELEAP,
+	TASK_VORTBRUTE_BEGIN_FLANK,
 };
 
 enum
@@ -72,6 +77,12 @@ enum
 	COND_OUT_OF_PUNCH_RANGE,
 	COND_IN_RANGE_TO_LEAP,
 	COND_IN_RANGE_TO_THROW,
+};
+
+enum SquadSlot_t
+{
+	SQUAD_SLOT_VORTBRUTE_TELELEAP = LAST_SHARED_SQUADSLOT,
+	SQUAD_SLOT_VORTBRUTE_FLANK
 };
 
 Activity ACT_VORTBRUTE_LEAPATTACK;
@@ -99,6 +110,7 @@ ConVar sk_vortbrute_projectile_speed("sk_vortbrute_projectile_speed", "0");
 ConVar sk_vortbrute_leap_frequency("sk_vortbrute_leap_frequency", "10");
 ConVar sk_vortbrute_throw_frequency("sk_vortbrute_throw_frequency", "5");
 ConVar sk_vortbrute_projectile_dmg("sk_vortbrute_projectile_dmg", "0");
+ConVar ai_debug_vortbrute("ai_debug_vortbrute", "0");
 
 
 LINK_ENTITY_TO_CLASS(brute_projectile, CBruteProjectile);
@@ -199,7 +211,7 @@ void CNPC_VortBrute::Spawn()
 	SetMaxHealth(sk_vortbrute_health.GetInt());
 	SetHealth(GetMaxHealth());
 	SetMoveType(MOVETYPE_STEP);
-	CapabilitiesAdd(bits_CAP_MOVE_GROUND | bits_CAP_MOVE_JUMP | bits_CAP_SKIP_NAV_GROUND_CHECK);
+	CapabilitiesAdd(bits_CAP_MOVE_GROUND | bits_CAP_MOVE_JUMP | bits_CAP_SKIP_NAV_GROUND_CHECK | bits_CAP_SQUAD);
 	SetEnemyClass(ENEMYCLASS_HEAVY);	
 	SetMovementClass(MOVECLASS_ALWAYSJUMP);
 	SetNavType(NAV_GROUND);
@@ -259,7 +271,8 @@ Vector CNPC_VortBrute::GetLeapDestination()
 
 	if (GetEnemyDistance() < 300.0f)
 	{
-		DevWarning(2, "Player is too close to justify a teleport leap. Teleport blocked...\n");
+		if (ai_debug_vortbrute.GetBool())
+			Warning("Player is too close to justify a teleport leap. Teleport blocked...\n");
 		return vec3_origin;
 	}
 
@@ -279,12 +292,14 @@ Vector CNPC_VortBrute::GetLeapDestination()
 
 	if (tr_down.fraction == 1.0) //If the downard trace doesn't hit anything, return 0,0,0
 	{
-		DevMsg("Teleport position has no ground to land on. Teleport blocked...\n");
+		if(ai_debug_vortbrute.GetBool())
+			Msg("Teleport position has no ground to land on. Teleport blocked...\n");
 		return vec3_origin;
 	}
 	if (tr_forward.fraction != 1.0) //If the forward trace hits something, return 0,0,0
 	{
-		DevMsg("Teleport position is blocked by something. Teleport blocked...\n");
+		if (ai_debug_vortbrute.GetBool())
+			Msg("Teleport position is blocked by something. Teleport blocked...\n");
 		return vec3_origin;
 	}
 
@@ -311,6 +326,9 @@ bool CNPC_VortBrute::IsLeapAttackValid()
 		return false;
 
 	if (GetLeapDestination() == vec3_origin && GetEnemyDistance() > 300.0f)
+		return false;
+
+	if (IsInSquad() && !OccupyStrategySlot(SQUAD_SLOT_VORTBRUTE_TELELEAP))
 		return false;
 
 	return true;
@@ -370,7 +388,7 @@ int CNPC_VortBrute::SelectSchedule(void)
 }
 int CNPC_VortBrute::SelectCombatSchedule(void)
 {
-	if (m_iMissCount >= 3)
+	if (m_iMissCount >= 5)
 		return SCHED_VORTBRUTE_RAGESLAM;
 
 	if (HasCondition(COND_IN_RANGE_TO_PUNCH))
@@ -381,6 +399,9 @@ int CNPC_VortBrute::SelectCombatSchedule(void)
 
 	if (HasCondition(COND_IN_RANGE_TO_LEAP))
 		return SCHED_VORTBRUTE_LEAPATTACK;
+
+	if (IsInSquad() && OccupyStrategySlot(SQUAD_SLOT_VORTBRUTE_FLANK))
+		return SCHED_VORTBRUTE_FLANK;
 
 	return SCHED_VORTBRUTE_CHASE_ENEMY;
 }
@@ -402,7 +423,8 @@ void CNPC_VortBrute::LeapTeleport()
 	}
 	else
 	{
-		DevWarning(2,"Something caused me to skip the teleport. See above for reason.\n");
+		if (ai_debug_vortbrute.GetBool())
+			Msg("Something caused me to skip the teleport. See above for reason.\n");
 	}
 }
 
@@ -478,12 +500,15 @@ void CNPC_VortBrute::HandleAnimEvent(animevent_t* pEvent)
 
 		EmitSound("BadDog.Smash");
 
-		DevMsg(2,"Landing Leap Attack\n");
+		if (ai_debug_vortbrute.GetBool())
+			Msg("Landing Leap Attack\n");
 		return;
 	}
 
 	if (pEvent->event == AE_VORTBRUTE_RIGHTTHROW_THROW)
 	{
+		if (!GetEnemy())
+			return;
 		int iAttachment = LookupAttachment("rightclaw");
 		Vector vecStart;
 		QAngle angStart;
@@ -493,7 +518,8 @@ void CNPC_VortBrute::HandleAnimEvent(animevent_t* pEvent)
 
 		if (vecDir == vec3_origin)
 		{
-			DevWarning(2, "Failed to find throw vector.");
+			if (ai_debug_vortbrute.GetBool())
+				Warning("Failed to find throw vector.");
 			return;
 		}
 
@@ -507,13 +533,16 @@ void CNPC_VortBrute::HandleAnimEvent(animevent_t* pEvent)
 
 	if (pEvent->event == AE_VORTBRUTE_RIGHTHOOK_CONNECT)
 	{
-		DevMsg("right hook connecting\n");
+		if (ai_debug_vortbrute.GetBool())
+			Msg("right hook connecting\n");
 		MeleeAttack();
 		return;
 	}
 	if (pEvent->event == AE_VORTBRUTE_LEFTHOOK_CONNECT)
 	{
-		DevMsg("left hook connecting\n");
+		if (ai_debug_vortbrute.GetBool())
+			Msg("left hook connecting\n");
+
 		MeleeAttack();
 		return;
 	}
@@ -537,6 +566,29 @@ void CNPC_VortBrute::StartTask(const Task_t* pTask)
 {
 	switch (pTask->iTask)
 	{
+	case TASK_VORTBRUTE_BEGIN_FLANK:
+	{
+		if (IsInSquad() && GetSquad()->NumMembers() > 1)
+		{
+			// Flank relative to the other shooter in our squad.
+			// If there's no other shooter, just flank relative to any squad member.
+			AISquadIter_t iter;
+			CAI_BaseNPC* pNPC = GetSquad()->GetFirstMember(&iter);
+			while (pNPC == this)
+			{
+				pNPC = GetSquad()->GetNextMember(&iter);
+			}
+
+			m_vSavePosition = pNPC->GetAbsOrigin();
+		}
+		else
+		{
+			// Flank relative to our current position.
+			m_vSavePosition = GetAbsOrigin();
+		}
+		TaskComplete();
+		break;
+	}
 	case TASK_VORTBRUTE_RAGESLAM:
 	{
 		SetActivity(ACT_VORTBRUTE_RAGESLAM);
@@ -652,6 +704,11 @@ void CNPC_VortBrute::BuildScheduleTestBits(void)
 		SetCustomInterruptCondition(COND_IN_RANGE_TO_THROW);
 		SetCustomInterruptCondition(COND_IN_RANGE_TO_PUNCH);
 	}
+	if (IsCurSchedule(SCHED_VORTBRUTE_FLANK))
+	{
+		SetCustomInterruptCondition(COND_IN_RANGE_TO_PUNCH);
+		SetCustomInterruptCondition(COND_IN_RANGE_TO_LEAP);
+	}
 }
 
 
@@ -687,6 +744,7 @@ AI_BEGIN_CUSTOM_NPC(npc_vortbrute,CNPC_VortBrute)
 	DECLARE_TASK(TASK_VORTBRUTE_LEFTTHROW)
 	DECLARE_TASK(TASK_VORTBRUTE_FACE_ENEMY_LEAD)
 	DECLARE_TASK(TASK_VORTBRUTE_RAGESLAM)
+	DECLARE_TASK(TASK_VORTBRUTE_BEGIN_FLANK)
 
 
 	DEFINE_SCHEDULE
@@ -707,7 +765,7 @@ AI_BEGIN_CUSTOM_NPC(npc_vortbrute,CNPC_VortBrute)
 
 			"	Tasks"
 			"		TASK_STOP_MOVING				0"
-			"		TASK_SET_FAIL_SCHEDULE			SCHEDULE:SCHED_CHASE_ENEMY_FAILED"
+			"		TASK_SET_FAIL_SCHEDULE			SCHEDULE:SCHED_VORTBRUTE_CHASE_ENEMY_FALLBACK"
 			//	"		TASK_SET_TOLERANCE_DISTANCE		24"
 			"		TASK_GET_CHASE_PATH_TO_ENEMY	300"
 			"		TASK_RUN_PATH					0"
@@ -763,4 +821,47 @@ AI_BEGIN_CUSTOM_NPC(npc_vortbrute,CNPC_VortBrute)
 			"		COND_TASK_FAILED"
 			"		COND_ENEMY_DEAD"
 		)
+		DEFINE_SCHEDULE
+		(
+			SCHED_VORTBRUTE_FLANK,
+
+			"	Tasks"
+			"		TASK_SET_FAIL_SCHEDULE					SCHEDULE:SCHED_ESTABLISH_LINE_OF_FIRE"
+			"		TASK_STOP_MOVING						0"
+			"		TASK_VORTBRUTE_BEGIN_FLANK				0"
+			"		TASK_GET_FLANK_ARC_PATH_TO_ENEMY_LOS	30"
+			"		TASK_RUN_PATH							0"
+			"		TASK_WAIT_FOR_MOVEMENT					0"
+			"		TASK_FACE_ENEMY							0"
+			"	"
+			"	Interrupts"
+			"		COND_TASK_FAILED"
+			"		COND_ENEMY_DEAD"
+			"		COND_IN_RANGE_TO_LEAP"
+			"		COND_IN_RANGE_TO_PUNCH"
+		)
+		DEFINE_SCHEDULE
+		(
+			SCHED_VORTBRUTE_CHASE_ENEMY_FALLBACK,
+
+			"	Tasks"
+			"		TASK_STOP_MOVING				0"
+			"		TASK_SET_FAIL_SCHEDULE			SCHEDULE:SCHED_ESTABLISH_LINE_OF_FIRE"
+			//	"		TASK_SET_TOLERANCE_DISTANCE		24"
+			"		TASK_GET_PATH_TO_ENEMY_LKP		300"
+			"		TASK_RUN_PATH					0"
+			"		TASK_WAIT_FOR_MOVEMENT			0"
+			"		TASK_FACE_ENEMY			0"
+			""
+			"	Interrupts"
+			"		COND_IN_RANGE_TO_LEAP"
+			"		COND_IN_RANGE_TO_PUNCH"
+			"		COND_IN_RANGE_TO_THROW"
+			"		COND_ENEMY_DEAD"
+			"		COND_ENEMY_UNREACHABLE"
+			"		COND_TASK_FAILED"
+			"		COND_LOST_ENEMY"
+
+		)
+
 AI_END_CUSTOM_NPC()

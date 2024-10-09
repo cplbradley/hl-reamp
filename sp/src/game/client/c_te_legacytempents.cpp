@@ -1237,7 +1237,7 @@ void CTempEnts::PhysicsProp( int modelindex, int skin, const Vector& pos, const 
 //			lifetime - 
 //			*pOwner - 
 //-----------------------------------------------------------------------------
-C_LocalTempEntity* CTempEnts::ClientProjectile(const Vector& vecOrigin, const Vector& vecVelocity, const Vector& vecAcceleration, int modelIndex, int lifetime, CBaseEntity* pOwner, const char* pszImpactEffect, const char* pszParticleEffect)
+C_LocalTempEntity* CTempEnts::ClientProjectile(const Vector& vecOrigin, const Vector& vecVelocity, const Vector& vecAcceleration, int modelIndex, int lifetime, CBaseEntity* pOwner, const char* pszImpactEffect, const char* pszParticleEffect, bool drawtrail)
 {
 	C_LocalTempEntity* pTemp;
 	const model_t* model;
@@ -1267,7 +1267,7 @@ C_LocalTempEntity* CTempEnts::ClientProjectile(const Vector& vecOrigin, const Ve
 	pTemp->clientIndex = ( pOwner != NULL ) ? pOwner->entindex() : 0; 
 	pTemp->SetOwnerEntity( pOwner );
 	pTemp->SetImpactEffect( pszImpactEffect );
-	if ( pszParticleEffect )
+	if ( pszParticleEffect && drawtrail )
 	{
 		// Add the entity to the ClientEntityList and create the particle system.
 		ClientEntityList().AddNonNetworkableEntity( pTemp );

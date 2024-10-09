@@ -9,6 +9,7 @@
 #include "hud_crosshair.h"
 #include "VGuiMatSurface\IMatSystemSurface.h"
 #include <vgui_controls/AnimationController.h>
+#include "c_baseplayer.h"
 
 #include "tier0/memdbgon.h"
 
@@ -20,6 +21,7 @@ public:
 	CHudFragLaunch(const char* pElementName);
 	virtual bool ShouldDraw();
 	virtual void Paint();
+	virtual void OnThink();
 	void Init();
 	virtual void ApplySettings(KeyValues* inResourceData);
 
@@ -45,7 +47,6 @@ CHudFragLaunch::CHudFragLaunch(const char* pElementName) : CHudElement(pElementN
 	SetPaintBackgroundEnabled(false);
 	Init();
 	SetHiddenBits(HIDEHUD_NEEDSUIT | HIDEHUD_PLAYERDEAD | HIDEHUD_WEAPON_WHEEL | HIDEHUD_WEAPONSELECTION | HIDEHUD_CINEMATIC_CAMERA);
-
 }
 void CHudFragLaunch::ApplySettings(KeyValues* inResourceData)
 {
@@ -57,6 +58,18 @@ void CHudFragLaunch::Init()
 	HOOK_HUD_MESSAGE(CHudFragLaunch, FragLaunch);
 	pIcon = gHUD.GetIcon("frag_launch");
 	SetAlpha(0);
+}
+
+void CHudFragLaunch::OnThink()
+{
+	CBasePlayer* player = CBasePlayer::GetLocalPlayer();
+
+	if (!player)
+		return;
+
+	if (!player->IsAlive())
+		SetAlpha(0);
+
 }
 bool CHudFragLaunch::ShouldDraw()
 {
@@ -83,7 +96,5 @@ void CHudFragLaunch::Paint()
 	SetSize(pIcon->Width(), pIcon->Height());
 	SetPos(screenCenterX - GetWide() / 2, screenCenterY + GetTall() / 2);
 	pIcon->DrawSelf(0, 0, gHUD.GetDefaultColor());
-
-
 }
 

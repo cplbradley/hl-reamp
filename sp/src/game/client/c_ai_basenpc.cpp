@@ -121,7 +121,7 @@ int C_AI_BaseNPC::InternalDrawModel(int flags)
 					// Set override material for glow color
 					IMaterial* pMatGlowColor = NULL;
 
-					if (bNightVision)
+					if (bNightVision && !pMatGlowColor)
 						pMatGlowColor = materials->FindMaterial("engine/nightvision_enemyoverlay", TEXTURE_GROUP_OTHER);
 					else
 						pMatGlowColor = GetShieldType(m_iVortEffectType);
@@ -414,4 +414,24 @@ void C_AI_BaseNPC::GetRagdollInitBoneArrays( matrix3x4_t *pDeltaBones0, matrix3x
 		SetupBones( pCurrentBones, MAXSTUDIOBONES, BONE_USED_BY_ANYTHING, gpGlobals->curtime );
 	}
 }
+ConVar ai_shadow_type("ai_shadow_type", "0");
 
+ShadowType_t C_AI_BaseNPC::ShadowCastType()
+{
+	switch (ai_shadow_type.GetInt())
+	{
+		case 0:
+		default:
+			return SHADOWS_SIMPLE;
+			break;
+		case 1:
+			return SHADOWS_RENDER_TO_TEXTURE;
+			break;
+		case 2:
+			return SHADOWS_RENDER_TO_TEXTURE_DYNAMIC;
+			break;
+		case 3:
+			return SHADOWS_RENDER_TO_DEPTH_TEXTURE;
+			break;
+	}
+}

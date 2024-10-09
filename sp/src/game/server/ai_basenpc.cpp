@@ -142,6 +142,11 @@ ConVar	ai_debug_think_ticks( "ai_debug_think_ticks", "0" );
 ConVar	ai_debug_doors( "ai_debug_doors", "0" );
 ConVar  ai_debug_enemies( "ai_debug_enemies", "0" );
 
+ConVar ai_test_speed_scale("ai_test_speed_scale", "1");
+
+ConVar sk_plasmadmg_slowdown_scale("sk_plasmadmg_slowdown_scale", "0.5");
+ConVar ai_debug_movespeed_scale("ai_debug_movespeed_scale", "0");
+
 ConVar	ai_rebalance_thinks( "ai_rebalance_thinks", "1" );
 ConVar	ai_use_efficiency( "ai_use_efficiency", "1" );
 ConVar	ai_use_frame_think_limits( "ai_use_frame_think_limits", "1" );
@@ -628,7 +633,7 @@ void CAI_BaseNPC::StopBuffing()
 void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 {
 	if (g_pGameRules->g_utlvec_vorteffectlist.HasElement(entindex()))
-		g_pGameRules->g_utlvec_vorteffectlist.FindAndRemove(entindex());
+		g_pGameRules->g_utlvec_vorteffectlist.FindAndFastRemove(entindex());
 
 	if (IsCurSchedule(SCHED_NPC_FREEZE))
 	{
@@ -988,6 +993,7 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 	if ( !BaseClass::OnTakeDamage_Alive( info ) )
 		return 0;
+
 	if (GetMaxHealth())
 	{
 		float healthfrac = GetHealth() / GetMaxHealth();
@@ -1015,7 +1021,14 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		PainSound( info );// "Ouch!"
 	}
 
-	
+#ifdef HLR
+
+	if (info.GetDamageType() == DMG_SHOCK)
+	{
+		float scale = g_pGameRules->SkillAdjustValue(sk_plasmadmg_slowdown_scale.GetFloat());
+		m_flMoveSpeedScale = scale;
+	}
+#endif
 	
 
 	if (nextdmg <= gpGlobals->curtime)
@@ -1678,6 +1691,7 @@ void BulletWizz( Vector vecSrc, Vector vecEndPos, edict_t *pShooter, bool isTrac
 		vecNearestPoint = vecSrc + vecBulletDir * flDist;
 		// FIXME: minus m_vecViewOffset?
 		flBulletDist = ( vecNearestPoint - pPlayer->EarPosition() ).Length();
+		
 	}
 }
 
@@ -4441,11 +4455,24 @@ void CAI_BaseNPC::NPCThink( void )
 	{
 		m_flNextDecisionTime = 0;
 	}
+
+#ifdef HLR
 	if (AmBeingBuffed())
 	{
 		DevMsg("Am being buffed, should be multiplying my playback rate by %f\n", m_fBuffPlaybackRate);
 		m_flPlaybackRate *= 2.0f;
 	}
+
+	m_flMoveSpeedScale += 0.05f;
+
+	if (m_flMoveSpeedScale > 1.f)
+		m_flMoveSpeedScale = 1.f;
+
+	if (ai_debug_movespeed_scale.GetBool())
+		engine->Con_NPrintf(0, "Speed Scale: %f", m_flMoveSpeedScale);
+
+	SetPlaybackRate(m_flPlaybackRate);
+#endif
 }
 
 //=========================================================
@@ -5182,20 +5209,6 @@ void CAI_BaseNPC::RunAI( void )
 {
 	AI_PROFILE_SCOPE(CAI_BaseNPC_RunAI);
 	g_AIRunTimer.Start();
-
-	if (IsStunned())
-	{
-		SetPlaybackRate(0.1f);
-		SetAnimTime(gpGlobals->curtime);
-		SetSimulationTime(gpGlobals->curtime);
-		CapabilitiesRemove(bits_CAP_MOVE_GROUND);
-	}
-	else
-	{
-		if (!m_afCapability & bits_CAP_MOVE_GROUND)
-			CapabilitiesAdd(bits_CAP_MOVE_GROUND);
-		SetPlaybackRate(1.0f);
-	}
 
 	if( ai_debug_squads.GetBool() )
 	{

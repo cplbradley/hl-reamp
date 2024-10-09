@@ -103,7 +103,7 @@ void CHLRVortProjectile::Touch(CBaseEntity *pOther) //i touched something
 		{
 			trace_t	tr; //initialize info
 			tr = BaseClass::GetTouchTrace(); //trace touch
-			Vector	vecNormalizedVel = GetAbsVelocity(); //this is how fast i'm going!
+			Vector vecNormalizedVel = GetAbsVelocity(); //this is how fast i'm going!
 
 			ClearMultiDamage(); //gotta reset everything before i zap ya
 			VectorNormalize(vecNormalizedVel); //convert the vector into a direction
@@ -167,17 +167,15 @@ unsigned int CHLRPistolProjectile::PhysicsSolidMaskForEntity() const
 void CHLRPistolProjectile::Spawn(void)
 {
 	Precache();
-	AddEffects(EF_NODRAW);
-	SetMoveType(MOVETYPE_FLY, MOVECOLLIDE_FLY_CUSTOM);
+	SetMoveType(MOVETYPE_FLY);
 	UTIL_SetSize(this, -Vector(10.0f, 10.0f, 1.0f), Vector(10.0f, 10.0f, 10.0f));
-	SetSolid(SOLID_NONE);
+	SetSolid(SOLID_CUSTOM);
+	AddSolidFlags(FSOLID_NOT_STANDABLE);
+	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 	SetModel("models/spitball_small.mdl");
-	//SetSolidFlags(FSOLID_TRIGGER);
 	SetRenderColor(255, 135, 115);
 	CreateTrail();
 	DrawSprite();
-	SetThink(&CHLRPistolProjectile::EnableTouch);
-	SetNextThink(gpGlobals->curtime + 0.01f);
 }
 void CHLRPistolProjectile::Precache(void)
 {
@@ -190,11 +188,6 @@ void CHLRPistolProjectile::Precache(void)
 
 void CHLRPistolProjectile::EnableTouch(void)
 {
-	SetTouch(&CHLRPistolProjectile::Touch);
-	SetSolid(SOLID_BBOX);
-	AddSolidFlags(FSOLID_NOT_SOLID || FSOLID_TRIGGER);
-	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
-	RemoveEffects(EF_NODRAW);
 }
 bool CHLRPistolProjectile::CreateTrail(void)
 {
@@ -250,40 +243,40 @@ void CHLRPistolProjectile::Touch(CBaseEntity *pOther) //i touched something
 		if (pOther->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE)
 			return;
 	}
-		if (pOther->m_takedamage != DAMAGE_NO) //can what i hit take damage?
+	if (pOther->m_takedamage != DAMAGE_NO) //can what i hit take damage?
+	{
+		SetThink(NULL);
+		trace_t	tr; //initialize a trace
+		tr = BaseClass::GetTouchTrace(); //assing the trace information from the touch
+		Vector	vecNormalizedVel = GetAbsVelocity(); //save the current velocity for use later
+		ClearMultiDamage(); //clear out any potential unwanted damage calls
+		VectorNormalize(vecNormalizedVel); //convert the velocity into a direction
+		CTakeDamageInfo	dmgInfo(this, GetOwnerEntity(), 12, DMG_CLUB); //initialize the damage information
+		if (GetOwnerEntity() && GetOwnerEntity()->IsPlayer())
 		{
-			SetThink(NULL);
-			trace_t	tr; //initialize a trace
-			tr = BaseClass::GetTouchTrace(); //assing the trace information from the touch
-			Vector	vecNormalizedVel = GetAbsVelocity(); //save the current velocity for use later
-			ClearMultiDamage(); //clear out any potential unwanted damage calls
-			VectorNormalize(vecNormalizedVel); //convert the velocity into a direction
-			CTakeDamageInfo	dmgInfo(this, GetOwnerEntity(), 12, DMG_CLUB); //initialize the damage information
-			if (GetOwnerEntity() && GetOwnerEntity()->IsPlayer())
-			{
-				dmgInfo.AdjustPlayerDamageInflictedForSkillLevel();
-			}
-			else
-			{
-				dmgInfo.AdjustPlayerDamageTakenForSkillLevel();
-			}
-			dmgInfo.SetDamagePosition(tr.endpos); //set the damage point at the end of the trace
-			//CalculateMeleeDamageForce(&dmgInfo, vecNormalizedVel, tr.endpos, 1.0f);
-			pOther->DispatchTraceAttack(dmgInfo, vecNormalizedVel, &tr); //set off the effects
-			//DispatchParticleEffect("smg_plasmaball_core", GetAbsOrigin(), GetAbsAngles(), this);
-			ApplyMultiDamage();
+			dmgInfo.AdjustPlayerDamageInflictedForSkillLevel();
 		}
-		SetSolid(SOLID_NONE); //no longer solid at all
-		SetSolidFlags(FSOLID_NOT_SOLID); //same thing
-		SetMoveType(MOVETYPE_NONE); //stop moving
-		DispatchParticleEffect("pistol_core", GetAbsOrigin(), GetAbsAngles(), this);
-		const trace_t *pTrace = &CBaseEntity::GetTouchTrace();
-		trace_t *pNewTrace = const_cast<trace_t*>(pTrace);
-		UTIL_DecalTrace(pNewTrace, "FadingScorch");
-		SetThink(&CHLRPistolProjectile::KillIt); //schedule remove command
-		SetTouch(NULL);
-		RemoveDeferred();
-		SetNextThink(gpGlobals->curtime + 0.01f); //execute remove command after 0.01 seconds
+		else
+		{
+			dmgInfo.AdjustPlayerDamageTakenForSkillLevel();
+		}
+		dmgInfo.SetDamagePosition(tr.endpos); //set the damage point at the end of the trace
+		//CalculateMeleeDamageForce(&dmgInfo, vecNormalizedVel, tr.endpos, 1.0f);
+		pOther->DispatchTraceAttack(dmgInfo, vecNormalizedVel, &tr); //set off the effects
+		//DispatchParticleEffect("smg_plasmaball_core", GetAbsOrigin(), GetAbsAngles(), this);
+		ApplyMultiDamage();
+	}
+	SetMoveType(MOVETYPE_NONE); //stop moving
+	DispatchParticleEffect("pistol_core", GetAbsOrigin(), GetAbsAngles(), this);
+	const trace_t *pTrace = &CBaseEntity::GetTouchTrace();
+	trace_t *pNewTrace = const_cast<trace_t*>(pTrace);
+	UTIL_DecalTrace(pNewTrace, "FadingScorch");
+	SetTouch(NULL);
+	
+	SetSolid(SOLID_NONE);
+	SetSolidFlags(FSOLID_NOT_SOLID);
+	SetThink(&CHLRPistolProjectile::KillIt);
+	SetNextThink(gpGlobals->curtime + 0.01f);
 }
 void CHLRPistolProjectile::KillIt(void)
 {

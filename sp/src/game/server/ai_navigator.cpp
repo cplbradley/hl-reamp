@@ -16,6 +16,8 @@
 #include "isaverestore.h"
 #include "saverestore_utlvector.h"
 
+#include "tier0/threadtools.h"
+
 #include "ai_navigator.h"
 #include "ai_node.h"
 #include "ai_route.h"
@@ -1561,22 +1563,27 @@ AIMoveResult_t CAI_Navigator::MoveJump()
 		AIMoveTrace_t moveTrace;
 		GetMoveProbe()->MoveLimit( NAV_JUMP, GetLocalOrigin(), GetPath()->CurWaypointPos(), 
 			MASK_NPCSOLID, GetNavTargetEntity(), &moveTrace );
+		//NDebugOverlay::Cross3D(GetPath()->CurWaypointPos(), 32.f, 255, 0, 0, false, 3.f);
 		if ( IsMoveBlocked( moveTrace ) )
 		{
 			return moveTrace.fStatus;
 		}
 
+		if (moveTrace.flTotalDist < 64.f)
+			return moveTrace.fStatus;
+
 		SetNavType(NAV_JUMP);
 
 		DbgNavMsg( GetOuter(), "Jump start\n" );
-		GetMotor()->MoveJumpStart( moveTrace.vJumpVelocity ); 
+		DevMsg("Jump Velocity len %f\n", moveTrace.vJumpVelocity.Length());
+		GetMotor()->MoveJumpStart( moveTrace.vJumpVelocity );
 	}	
 	// --------------------------------------------------
 	//  LANDING (from jump)
 	// --------------------------------------------------
 	else if (GetNavType() == NAV_JUMP && (GetEntFlags() & FL_ONGROUND)) 
 	{
-		// DevMsg( "jump to %f %f %f landed %f %f %f", GetPath()->CurWaypointPos().x, GetPath()->CurWaypointPos().y, GetPath()->CurWaypointPos().z, GetLocalOrigin().x, GetLocalOrigin().y, GetLocalOrigin().z );
+		DevMsg( "jump to %f %f %f landed %f %f %f", GetPath()->CurWaypointPos().x, GetPath()->CurWaypointPos().y, GetPath()->CurWaypointPos().z, GetLocalOrigin().x, GetLocalOrigin().y, GetLocalOrigin().z );
 
 		DbgNavMsg( GetOuter(), "Jump stop\n" );
 		AIMoveResult_t result = GetMotor()->MoveJumpStop( );

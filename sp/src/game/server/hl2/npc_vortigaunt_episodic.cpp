@@ -1718,7 +1718,8 @@ CAI_BaseNPC* CNPC_Vortigaunt::FindNearestNPCToBuff()
 			Warning("Shielder: NPC WITH INDEX %i IS CURRENTLY IN THE EFFECT LIST, VERIFYING\n", pNPC->entindex());
 			if (!VerifyNPC(pNPC))
 			{
-				Warning("Shielder: NPC FAILED TO VERIFY EFFECT\n");
+				Warning("Shielder: NPC FAILED TO VERIFY EFFECT, REMOVING FROM LIST\n");
+				g_pGameRules->g_utlvec_vorteffectlist.FindAndFastRemove(pNPC->entindex());
 				continue;
 			}
 			else
@@ -1770,7 +1771,8 @@ CAI_BaseNPC* CNPC_Vortigaunt::FindNearestNPCToShield()
 			Warning("Shielder: NPC WITH INDEX %i IS CURRENTLY IN THE EFFECT LIST, VERIFYING\n", pNPC->entindex());
 			if (!VerifyNPC(pNPC))
 			{
-				Warning("Shielder: NPC FAILED TO VERIFY EFFECT\n");
+				Warning("Shielder: NPC FAILED TO VERIFY EFFECT, REMOVING FROM LIST\n");
+				g_pGameRules->g_utlvec_vorteffectlist.FindAndFastRemove(pNPC->entindex());
 				continue;
 			}
 			else

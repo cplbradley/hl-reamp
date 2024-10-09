@@ -121,6 +121,9 @@ public:
 	int npcid;
 	int queuedid[32];
 	string_t m_iszIngoreEnt;
+	string_t m_iszEnemyCounter;
+
+	EHANDLE m_hEnemyCounter;
 };
 
 
@@ -208,4 +211,36 @@ protected:
 	ThreeStateDist_t	m_CriterionDistance;
 };
 
+#ifdef HLR
+class CEnemyCounter : public CBaseEntity
+{
+	DECLARE_CLASS(CEnemyCounter, CBaseEntity);
+	DECLARE_DATADESC();
+public:
+	void Spawn();
+	virtual int UpdateTransmitState() { return SetTransmitState(FL_EDICT_ALWAYS); }
+
+	void CounterThink();
+	bool ShouldDraw();
+
+	void SendData();
+
+	void InputEnable(inputdata_t& inputdata);
+	void InputDisable(inputdata_t& inputdata);
+	void InputAdd(inputdata_t& data);
+	void InputSubtract(inputdata_t& data);
+
+	COutputEvent OnHitZero;
+	COutputEvent OnHitThreshold;
+	int m_iEnemyCount;
+	int m_iDisplayThreshold;
+
+private:
+	
+	bool m_bEnabled;
+	bool bFiredOutput;
+	int iPrevCount;
+};
+
+#endif
 #endif // MONSTERMAKER_H

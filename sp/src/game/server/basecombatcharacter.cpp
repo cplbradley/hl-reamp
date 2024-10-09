@@ -842,14 +842,16 @@ void CBaseCombatCharacter::UpdateOnRemove(void)
 			UTIL_Remove(m_hMyWeapons[i]);
 		}
 	}
-
-	// tell owner ( if any ) that we're dead.This is mostly for NPCMaker functionality.
+#ifndef HLR //Moved to Event_Killed for HLR
+	// tell owner ( if any ) that we're dead. This is mostly for NPCMaker functionality.
 	CBaseEntity *pOwner = GetOwnerEntity();
 	if (pOwner)
 	{
 		pOwner->DeathNotice(this);
 		SetOwnerEntity(NULL);
 	}
+#endif
+
 
 #ifdef GLOWS_ENABLE
 	RemoveGlowEffect();
@@ -1663,6 +1665,15 @@ void CBaseCombatCharacter::Event_Killed(const CTakeDamageInfo &info)
 
 	// no longer standing on a nav area
 	ClearLastKnownArea();
+
+#ifdef HLR
+	CBaseEntity* pOwner = GetOwnerEntity();
+	if (pOwner)
+	{
+		pOwner->DeathNotice(this);
+		SetOwnerEntity(NULL);
+	}
+#endif
 
 #if 0
 	// L4D specific hack for zombie commentary mode

@@ -39,6 +39,7 @@
 #include "particle_parse.h"
 // NVNT turret recoil
 #include "haptics/haptic_utils.h"
+#include "hlr/weapons/actual_bullet.h"
 
 #ifdef HL2_DLL
 #include "hl2_player.h"
@@ -2485,7 +2486,8 @@ void CFuncTankGun::Fire( int bulletCount, const Vector &barrelEnd, const Vector 
 
 		case TANK_BULLET_LARGE:
 			info.m_iAmmoType = m_iLargeAmmoType;
-			FireBullets( info );
+			//FireBullets( info );
+			FireActualBullet(info, 8000, false, "AirboatGunHeavyTracer");
 			break;
 
 		default:

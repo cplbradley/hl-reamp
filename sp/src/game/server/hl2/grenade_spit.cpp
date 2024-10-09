@@ -49,7 +49,7 @@ CGrenadeSpit::CGrenadeSpit( void ) : m_bPlaySound( true ), m_pHissSound( NULL )
 void CGrenadeSpit::Spawn( void )
 {
 	Precache();
-	SetSolid( SOLID_BBOX );
+	SetSolid( SOLID_CUSTOM );
 	SetMoveType( MOVETYPE_FLYGRAVITY );
 	SetSolidFlags( FSOLID_NOT_STANDABLE );
 

@@ -38,6 +38,11 @@ public:
 	void SetAmmo2(int ammo2, bool playAnimation);
 	virtual void Paint( void );
 
+	virtual void LevelInit() {
+		CHudElement::LevelInit();
+		SetAlpha(255);
+	}
+
 protected:
 	virtual void OnThink();
 
@@ -105,6 +110,7 @@ void CHudAmmo::Reset()
 	m_iAmmo = 0;
 	m_iAmmo2 = 0;
 
+	SetAlpha(255);
 	UpdateAmmoDisplays();
 }
 

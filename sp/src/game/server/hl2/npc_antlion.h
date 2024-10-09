@@ -185,6 +185,9 @@ private:
 	bool	FindChasePosition( const Vector &targetPos, Vector &result );
 	bool	GetGroundPosition( const Vector &testPos, Vector &result );
 	bool	GetPathToSoundFleePoint( int soundType );
+
+	bool	GetPathToWallPoint();
+
 	inline bool	IsFlipped( void );
 
 	void	Burrow( void );
@@ -197,6 +200,8 @@ private:
 	void	InputEnableJump( inputdata_t &inputdata );
 	void	InputIgnoreBugbait( inputdata_t &inputdata );
 	void	InputHearBugbait( inputdata_t &inputdata );
+
+	void	InputTestWallJump(inputdata_t& inputdata);
 
 	bool	FindBurrow( const Vector &origin, float distance, int type, bool excludeNear = true );
 	void	CreateDust( bool placeDecal = true );
@@ -350,7 +355,9 @@ private:
 		SCHED_ANTLION_TAKE_COVER_FROM_ENEMY,
 		SCHED_ANTLION_ZAP_FLIP,
 		SCHED_ANTLION_WORKER_FLANK_RANDOM,
-		SCHED_ANTLION_TAKE_COVER_FROM_SAVEPOSITION
+		SCHED_ANTLION_TAKE_COVER_FROM_SAVEPOSITION,
+		SCHED_ANTLION_JUMP_TO_WALL_POINT,
+		SCHED_ANTLION_LEAVE_WALL_POINT,
 	};
 
 	//==================================================
@@ -379,6 +386,7 @@ private:
 		TASK_ANTLION_DROWN,
 		TASK_ANTLION_GET_PATH_TO_RANDOM_NODE,
 		TASK_ANTLION_FIND_COVER_FROM_SAVEPOSITION,
+		TASK_ANTLION_GET_PATH_TO_WALL_POINT,
 	};
 };
 

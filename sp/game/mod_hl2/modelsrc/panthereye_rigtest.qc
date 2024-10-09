@@ -107,8 +107,8 @@ $sequence walk {
 }
 $sequence run {
 	"panthereye_anims/a_runn.smd"
-		fadein 0.2
-		fadeout 0.2
+		fadein 0.1
+		fadeout 0.1
 		walkframe 16 LX LY
 		loop
 		activity "ACT_RUN" 1
@@ -116,4 +116,51 @@ $sequence run {
 $sequence idle "panth_idle.smd"  activity ACT_IDLE -1 loop fps 30
 $sequence rigtest "panthereye_rigtest_sequence_rigtest" fps 30.0 loop  fadein 0.2 fadeout 0.2 walkframe 30 LX LZ
 
+$sequence "leapattack" {
+	"panthereye_anims/panthereye_leappose.smd"
+	activity "ACT_FASTZOMBIE_LEAP_STRIKE" 1
+	activity "ACT_RANGE_ATTACK1" 1
+	{ event AE_FASTZOMBIE_LEAP 0 "" }
+	fps 30
+	loop
+}
+$sequence "jump" {
+	"panthereye_anims/panthereye_jump.smd"
+	activity "ACT_JUMP" 1
+	activity "ACT_RANGE_ATTACK1" 1
+	fps 30
+}
+$sequence "glide" {
+	"panthereye_anims/panthereye_glide.smd"
+	activity "ACT_GLIDE" 1
+	fps 30
+	loop
+	fadein 0.1
+	fadeout 0.1
+}
+$sequence "fall" {
+	"panthereye_anims/panthereye_fall.smd"
+	activity "ACT_HOVER" 1
+	fps 30
+	loop
+	fadein 0.1
+	fadeout 0.1
+}
+$sequence "land" {
+	"panthereye_anims/panthereye_land.smd"
+	activity "ACT_LAND" 1
+	fps 30
+}
+$sequence "swing" {
+	"panthereye_anims/panthereye_swing"
+	activity "ACT_MELEE_ATTACK1" 1
+	{ event AE_ZOMBIE_ATTACK_RIGHT 6 "" }
+	fps 30
+}
+$sequence "swing2" {
+	"panthereye_anims/panthereye_swing2"
+	activity "ACT_MELEE_ATTACK1" 1
+	{ event AE_ZOMBIE_ATTACK_LEFT 6 "" }
+	fps 30
+}
 $include	"panthereye_rigtest_wwmt_custom.qci"

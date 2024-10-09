@@ -39,6 +39,8 @@
 #include "haptics/haptic_utils.h"
 #include <vgui/ISurface.h>
 
+#include "vstdlib/jobthread.h"
+
 extern ConVar in_joystick;
 extern ConVar cam_idealpitch;
 extern ConVar cam_idealyaw;
@@ -671,6 +673,8 @@ AdjustYaw
 
 ==============================
 */
+
+ConVar thirdperson_platformer_viewlerp("thirdperson_platformer_viewlerp", "0.05");
 void CInput::AdjustYaw( float speed, QAngle& viewangles )
 {
 	if ( !(in_strafe.state & 1) )
@@ -688,7 +692,14 @@ void CInput::AdjustYaw( float speed, QAngle& viewangles )
 
 		if ( side || forward )
 		{
-			viewangles[YAW] = RAD2DEG(atan2(side, forward)) + g_ThirdPersonManager.GetCameraOffsetAngles()[ YAW ];
+			QAngle curAngle, idealAngle;
+			engine->GetViewAngles(curAngle);
+
+			idealAngle = curAngle;
+			idealAngle[YAW] = RAD2DEG(atan2(side, forward)) + g_ThirdPersonManager.GetCameraOffsetAngles()[ YAW ];
+			QAngle outAngle = Lerp(thirdperson_platformer_viewlerp.GetFloat(), curAngle, idealAngle);
+			viewangles[YAW] = outAngle[YAW];
+
 		}
 		if ( side || forward || KeyState (&in_right) || KeyState (&in_left) )
 		{
@@ -1412,7 +1423,6 @@ bool CInput::WriteUsercmdDeltaToBuffer( bf_write *buf, int from, int to, bool is
 		ValidateUserCmd( t, to );
 	}
 
-	// Write it into the buffer
 	WriteUsercmd( buf, t, f );
 
 	if ( buf->IsOverflowed() )

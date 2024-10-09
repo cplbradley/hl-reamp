@@ -28,6 +28,10 @@
 #include "GameEventListener.h"
 #include "dlight.h"
 
+#ifdef HLR
+#include "beam_shared.h"
+#endif
+
 #if defined USES_ECON_ITEMS
 #include "econ_item.h"
 #include "game_item_schema.h"
@@ -104,6 +108,8 @@ public:
 	bool m_bFury;
 	bool m_bGibbed;
 
+	
+
 	float m_fFocusOffsetTime;
 	bool m_bFocused;
 	bool m_bUseAltCrosshair;
@@ -163,7 +169,7 @@ public:
 	virtual void			Weapon_DropPrimary( void ) {}
 
 	virtual Vector			GetAutoaimVector( float flScale );
-	void					SetSuitUpdate(const char *name, int fgroup, int iNoRepeat);
+	void					SetSuitUpdate(const char *name, int fgroup, int iNoRepeat, bool male);
 
 	// Input handling
 	virtual bool	CreateMove( float flInputSampleTime, CUserCmd *pCmd );
@@ -202,7 +208,9 @@ public:
 
 	ArmorPieces_t armorpieces;
 
-
+	int		ButtonLookState() {
+		return m_iButtonLookState;
+	}
 	void SetArmorPieces();
 
 	// Eye position..
@@ -253,7 +261,7 @@ public:
 	virtual ShadowType_t		ShadowCastType() {
 		if (IsThirdPerson())
 		{
-			return SHADOWS_RENDER_TO_TEXTURE_DYNAMIC;
+			return SHADOWS_SIMPLE;
 		}
 		else
 		{
@@ -342,6 +350,8 @@ public:
 
 	virtual bool				ShouldDraw();
 	virtual int					DrawModel( int flags );
+
+
 
 	// Called when not in tactical mode. Allows view to be overriden for things like driving a tank.
 	virtual void				OverrideView( CViewSetup *pSetup );
@@ -462,6 +472,8 @@ protected:
 	fogparams_t				m_CurrentFog;
 	EHANDLE					m_hOldFogController;
 
+
+
 public:
 	int m_StuckLast;
 	
@@ -519,6 +531,10 @@ public:
 	float			m_flConstraintWidth;
 	float			m_flConstraintSpeedFactor;
 
+
+	Vector			m_vecGrapplePoint;
+	bool			m_bShouldGrapple;
+
 protected:
 
 	void				CalcPlayerView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
@@ -549,6 +565,8 @@ protected:
 
 	virtual void	FireGameEvent( IGameEvent *event );
 
+	virtual void FireEvent(const Vector& origin, const QAngle& angles, int event, const char* options);
+
 protected:
 	// Did we just enter a vehicle this frame?
 	bool			JustEnteredVehicle();
@@ -566,6 +584,8 @@ protected:
 	float			m_flStepSoundTime;
 	bool			m_IsFootprintOnLeft;
 
+	CBeam* beamrope;
+
 private:
 	// Make sure no one calls this...
 	C_BasePlayer& operator=( const C_BasePlayer& src );
@@ -577,6 +597,9 @@ private:
 	EHANDLE			m_hUseEntity;
 	
 	float			m_flMaxspeed;
+
+
+	int				m_iButtonLookState;
 
 	int				m_iBonusProgress;
 	int				m_iBonusChallenge;

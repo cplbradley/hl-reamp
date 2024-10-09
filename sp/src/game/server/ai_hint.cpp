@@ -1595,6 +1595,7 @@ hinttypedescs_t g_pszHintDescriptions[] =
 
 	{	HINT_ANTLION_BURROW_POINT, "Antlion: Burrow Point"	},
 	{	HINT_ANTLION_THUMPER_FLEE_POINT, "Antlion: Thumper Flee Point"	},
+	{	HINT_ANTLION_WALL_POINT, "Antlion: Wall Climb Point" },
 
 	//{	HINT_HEADCRAB_BURROW_POINT, "Obsolete / Unused"	},
 

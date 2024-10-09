@@ -93,6 +93,8 @@ public:
 	
 	virtual bool IsAlyxInDarknessMode();
 
+	
+
 private:
 
 	float	m_flLastHealthDropTime;

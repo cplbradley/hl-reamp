@@ -85,6 +85,9 @@ public:
 	virtual float		OverrideMaxYawSpeed( Activity activity )	{ return -1; }
 	bool				IsDeceleratingToGoal() const				{ return false; }
 
+	float				m_fMoveSpeedScale;
+	void				ScaleVelocity(float);
+
 	//---------------------------------
 	// Raw ground step forward to the specifed position
 	//

@@ -804,9 +804,12 @@ void CAI_MoveProbe::JumpMoveLimit( const Vector &vecStart, const Vector &vecEnd,
 	// --------------------------------------------------------------------------
 	Vector vecFrom;
 	IterativeFloorPoint( vecStart, collisionMask, &vecFrom );
+	//NDebugOverlay::Cross3D(vecFrom, 16.f, 0, 255, 0, false, 1.f);
 
 	Vector vecTo;
 	IterativeFloorPoint( vecEnd, collisionMask, StepHeight() * 0.5, &vecTo );
+	//NDebugOverlay::Cross3D(vecTo, 16.f, 0, 255, 255, false, 1.f);
+
 	if (!CheckStandPosition( vecTo, collisionMask))
 	{
 		pMoveTrace->fStatus = AIMR_ILLEGAL;
@@ -821,7 +824,7 @@ void CAI_MoveProbe::JumpMoveLimit( const Vector &vecStart, const Vector &vecEnd,
 		return;
 	}
 
-	if ((vecFrom - vecTo).Length2D() == 0.0)
+	if ((vecFrom - vecTo).Length2D() < 64.0f)
 	{
 		pMoveTrace->fStatus = AIMR_ILLEGAL;
 		pMoveTrace->flDistObstructed = flDist;
@@ -847,13 +850,15 @@ void CAI_MoveProbe::JumpMoveLimit( const Vector &vecStart, const Vector &vecEnd,
 
 	// initialize jump state
 	float minSuccessfulJumpHeight = 1024.0;
-	float minJumpHeight = 0.0;
+	float minJumpHeight = 16.0;
 	float minJumpStep = 1024.0;
 
 	// initial jump, sets baseline for minJumpHeight
 	Vector vecApex;
 	Vector rawJumpVel = CalcJumpLaunchVelocity(vecFrom, vecTo, gravity.z, &minJumpHeight, maxHorzVel, &vecApex );
 	float baselineJumpHeight = minJumpHeight;
+
+
 
 	// FIXME: this is a binary search, which really isn't the right thing to do.  If there's a gap 
 	// the npc can jump through, this won't reliably find it.  The only way I can think to do this is a 

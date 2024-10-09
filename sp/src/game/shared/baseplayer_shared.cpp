@@ -509,10 +509,11 @@ surfacedata_t *CBasePlayer::GetLadderSurface( const Vector &origin )
 
 void CBasePlayer::UpdateStepSound( surfacedata_t *psurface, const Vector &vecOrigin, const Vector &vecVelocity )
 {
-
 	ConVarRef thirdperson("g_thirdperson");
+
 	if (thirdperson.GetBool())
 		return;
+
 	bool bWalking;
 	float fvol;
 	Vector knee;

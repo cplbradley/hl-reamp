@@ -44,6 +44,8 @@ $Project "Shaders"
 			$File	"smb_vs30.fxc"
 			$File	"nightvision_enemyoverlay_ps30.fxc"
 			$File	"nightvision_enemyoverlay_vs30.fxc"
+			$File	"viewprojection_ps2x.fxc"
+			$File	"viewprojection_vs20.fxc"
 		}
 
 		$Folder "Headers"
@@ -69,6 +71,7 @@ $Project "Shaders"
 		$File	"nightvision_enemyoverlay_dx9.cpp"
 		$File	"hlr_player_dx9.cpp"
 		$File	"nightvision_postprocess_dx9.cpp"
+		$File	"viewprojection_dx9.cpp"
 		
 	}
 }

@@ -3400,6 +3400,9 @@
     <ClCompile Include="hlr\util\env_weather_controller.cpp">
       <Filter>Source Files\HLR\Util</Filter>
     </ClCompile>
+    <ClCompile Include="hlr\util\hlr_fovchanger.cpp">
+      <Filter>Source Files\HLR\Util</Filter>
+    </ClCompile>
     <ClCompile Include="hlr\util\hlr_projectile.cpp">
       <Filter>Source Files\HLR\Util</Filter>
     </ClCompile>
@@ -3407,6 +3410,9 @@
       <Filter>Source Files\HLR\Util</Filter>
     </ClCompile>
     <ClCompile Include="hlr\util\hlr_speedmod.cpp">
+      <Filter>Source Files\HLR\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\util\logic_auto_release.cpp">
       <Filter>Source Files\HLR\Util</Filter>
     </ClCompile>
     <ClCompile Include="hlr\util\logic_difficulty.cpp">
@@ -3645,6 +3651,12 @@
     </ClCompile>
     <ClCompile Include="toolframework_server.cpp">
       <Filter>Tools Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\entity\hlr_fireballshooter.cpp">
+      <Filter>Source Files\HLR\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="hlr\util\hlr_env_specialmessage.cpp">
+      <Filter>Source Files\HLR\Util</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

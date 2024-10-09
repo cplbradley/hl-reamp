@@ -806,6 +806,11 @@ private:
 	float				dmgtime;
 	float				nextdmg;
 
+
+#ifdef HLR
+	float				m_flMoveSpeedScale;
+#endif
+
 	static int			gm_iNextThinkRebalanceTick;
 	static float		gm_flTimeLastSpawn;
 	static int			gm_nSpawnedThisFrame;
@@ -821,6 +826,10 @@ public:
 
 	// Return the stored pose parameter for "move_yaw"
 	inline int			LookupPoseMoveYaw()		{ return m_poseMove_Yaw; }
+
+	float GetMoveSpeedScale() {
+		return m_flMoveSpeedScale;
+	}
  
 
 	//-----------------------------------------------------
@@ -1840,6 +1849,9 @@ public:
 	EnemyClass_t iEnemyClass;
 	EnemyClass_t GetEnemyClass() { return iEnemyClass; }
 	void SetEnemyClass(EnemyClass_t enemyclass) { iEnemyClass = enemyclass; }
+
+
+	const char* szEnemyName;
 
 	//---------------------------------
 	//  Damage

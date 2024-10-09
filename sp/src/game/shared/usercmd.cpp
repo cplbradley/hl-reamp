@@ -9,6 +9,7 @@
 #include "usercmd.h"
 #include "bitbuf.h"
 #include "checksum_md5.h"
+#include "vstdlib/jobthread.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -25,6 +26,7 @@
 //-----------------------------------------------------------------------------
 void WriteUsercmd( bf_write *buf, const CUserCmd *to, const CUserCmd *from )
 {
+
 	if ( to->command_number != ( from->command_number + 1 ) )
 	{
 		buf->WriteOneBit( 1 );

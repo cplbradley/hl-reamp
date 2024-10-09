@@ -3739,6 +3739,7 @@ void C_BaseAnimating::FireEvent( const Vector& origin, const QAngle& angles, int
 		{
 #ifndef HL2MP
 			char pSoundName[256];
+
 			if ( !options || !options[0] )
 			{
 				options = "NPC_CombineS";

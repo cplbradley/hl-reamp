@@ -120,6 +120,10 @@ DEFINE_FUNCTION(MakeParticle),
 
 DEFINE_FIELD(m_hIgnoreEntity, FIELD_EHANDLE),
 DEFINE_KEYFIELD(m_iszIngoreEnt, FIELD_STRING, "IgnoreEntity"),
+
+DEFINE_KEYFIELD(m_iszEnemyCounter, FIELD_STRING, "EnemyCounter"),
+DEFINE_FIELD(m_hEnemyCounter,FIELD_EHANDLE),
+
 END_DATADESC()
 
 
@@ -157,6 +161,12 @@ void CBaseNPCMaker::Spawn(void)
 	}
 
 	m_bSuccessfulSpawn = true;
+
+
+	if (m_iszEnemyCounter != NULL_STRING)
+	{
+		m_hEnemyCounter = gEntList.FindEntityByName(NULL, m_iszEnemyCounter);
+	}
 }
 void CBaseNPCMaker::Precache(void)
 {
@@ -339,6 +349,15 @@ void CBaseNPCMaker::Enable(void)
 	// can't be enabled once depleted
 	if (IsDepleted())
 		return;
+
+
+	if (m_hEnemyCounter)
+	{
+		CEnemyCounter* counter = dynamic_cast<CEnemyCounter*>(m_hEnemyCounter.Get());
+
+		if (counter && m_bDisabled != false)
+			counter->m_iEnemyCount += m_nMaxNumNPCs;
+	}
 
 	m_bDisabled = false;
 	SetThink(&CBaseNPCMaker::MakerThink);
@@ -687,6 +706,13 @@ void CBaseNPCMaker::DeathNotice(CBaseEntity *pVictim)
 			// Signal that all our children have been spawned and are now dead
 			m_OnAllSpawnedDead.FireOutput(this, this);
 		}
+	}
+
+	if (m_hEnemyCounter)
+	{
+		CEnemyCounter* counter = dynamic_cast<CEnemyCounter*>(m_hEnemyCounter.Get());
+		if (counter)
+			counter->m_iEnemyCount--;
 	}
 }
 
@@ -1288,3 +1314,118 @@ void CTemplateNPCMaker::InputSetMinimumSpawnDistance(inputdata_t &inputdata)
 {
 	m_iMinSpawnDistance = inputdata.value.Int();
 }
+
+
+#ifdef HLR
+
+LINK_ENTITY_TO_CLASS(hud_enemy_counter, CEnemyCounter);
+
+BEGIN_DATADESC(CEnemyCounter)
+DEFINE_FIELD(m_iEnemyCount, FIELD_INTEGER),
+DEFINE_FIELD(m_bEnabled, FIELD_BOOLEAN),
+DEFINE_FIELD(bFiredOutput, FIELD_BOOLEAN),
+
+DEFINE_KEYFIELD(m_iDisplayThreshold, FIELD_INTEGER, "DisplayThreshold"),
+
+DEFINE_INPUTFUNC(FIELD_VOID, "Enable", InputEnable),
+DEFINE_INPUTFUNC(FIELD_VOID, "Disable", InputDisable),
+DEFINE_INPUTFUNC(FIELD_INTEGER, "Add", InputAdd),
+DEFINE_INPUTFUNC(FIELD_INTEGER, "Subtract", InputSubtract),
+
+DEFINE_OUTPUT(OnHitZero, "OnHitZero"),
+DEFINE_OUTPUT(OnHitThreshold, "OnHisThreshold"),
+END_DATADESC()
+
+void CEnemyCounter::Spawn()
+{
+	m_bEnabled = false;
+	m_iEnemyCount = 0;
+}
+
+void CEnemyCounter::CounterThink()
+{
+	if (!m_bEnabled)
+	{
+		return;
+	}
+
+	if (iPrevCount != m_iEnemyCount)
+	{
+		SendData();
+		iPrevCount = m_iEnemyCount;
+	}
+
+	if (m_iEnemyCount == m_iDisplayThreshold && !bFiredOutput)
+	{
+		bFiredOutput = true;
+		OnHitThreshold.FireOutput(this, this);
+	}
+
+	if (m_bEnabled && m_iEnemyCount == 0)
+	{
+		OnHitZero.FireOutput(this, this);
+		m_bEnabled = false;
+	}
+
+	SetNextThink(gpGlobals->curtime + 0.1f);
+
+	Msg("Counter Enabled, thinking\n");
+}
+
+bool CEnemyCounter::ShouldDraw()
+{
+	if (!m_bEnabled)
+		return false;
+
+	if (m_iEnemyCount > m_iDisplayThreshold || m_iEnemyCount <= 0)
+		return false;
+
+	return true;
+}
+
+void CEnemyCounter::InputEnable(inputdata_t& inputdata)
+{
+	m_bEnabled = true;
+	SetThink(&CEnemyCounter::CounterThink);
+	SetNextThink(gpGlobals->curtime);
+}
+
+void CEnemyCounter::InputDisable(inputdata_t& inputdata)
+{
+	m_bEnabled = false;
+	SetThink(NULL);
+	SetNextThink(gpGlobals->curtime);
+	SendData();
+}
+
+void CEnemyCounter::InputAdd(inputdata_t& data)
+{
+	int count = data.value.Int();
+
+	if (!count)
+		m_iEnemyCount++;
+	else
+		m_iEnemyCount += count;
+}
+
+void CEnemyCounter::InputSubtract(inputdata_t& data)
+{
+	int count = data.value.Int();
+
+	if (!count)
+		m_iEnemyCount--;
+	else
+		m_iEnemyCount -= count;
+}
+
+void CEnemyCounter::SendData()
+{
+	Msg("Sending Data Count %i Threshold %i\n",m_iEnemyCount,m_iDisplayThreshold);
+	CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+	user.MakeReliable();
+	UserMessageBegin(user, "EnemyCount");
+	WRITE_BYTE(m_iEnemyCount);
+	WRITE_BYTE(m_iDisplayThreshold);
+	MessageEnd();
+}
+#endif

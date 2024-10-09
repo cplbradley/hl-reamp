@@ -74,7 +74,11 @@
 #include "ai_speech.h"
 #include "filesystem.h"
 #include "hlr/hlr_shareddefs.h"
-
+#include "hl2_player.h"
+#include "hl2_gamerules.h"
+#include "gamemovement.h"
+#include "buttons.h"
+#include "BasePropDoor.h"
 
 #if defined USES_ECON_ITEMS
 #include "econ_wearable.h"
@@ -106,7 +110,7 @@ static ConVar sv_maxusrcmdprocessticks( "sv_maxusrcmdprocessticks", "24", FCVAR_
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-
+extern IGameMovement* g_pGameMovement;
 
 static ConVar old_armor( "player_old_armor", "0" );
 
@@ -122,7 +126,47 @@ ConVar cl_forwardspeed( "cl_forwardspeed", "900", FCVAR_REPLICATED | FCVAR_CHEAT
 ConVar cl_backspeed( "cl_backspeed", "900", FCVAR_REPLICATED | FCVAR_CHEAT );
 #endif // CSTRIKE_DLL
 
+void CC_StartMasochistMode(void)
+{
+	CHL2_Player* player = dynamic_cast<CHL2_Player*>(UTIL_GetLocalPlayer());
+	if (!player)
+		return;
 
+	g_pGameRules->g_bStartInMasochist = true;
+
+	engine->ClientCommand(player->edict(), "map demo\n");
+}
+
+void CC_SetGrapplePoint(void)
+{
+	CBasePlayer* player = UTIL_GetLocalPlayer();
+	if (!player)
+		return;
+	Vector vecEyeDir;
+	QAngle angDir = player->EyeAngles();
+	AngleVectors(angDir, &vecEyeDir);
+	trace_t tr;
+	UTIL_TraceLine(player->EyePosition(), player->EyePosition() + (vecEyeDir * MAX_TRACE_LENGTH), MASK_SOLID, player, COLLISION_GROUP_NONE, &tr);
+
+	player->m_vecGrapplePoint = tr.endpos;
+
+	NDebugOverlay::Cross3D(player->m_vecGrapplePoint, 16, 0, 255, 255, false, 999);
+}
+
+void CC_GrappleMove(void)
+{
+	CBasePlayer* player = UTIL_GetLocalPlayer();
+	if (!player)
+		return;
+
+	if (player->m_bShouldGrapple)
+		player->m_bShouldGrapple = false;
+	else
+		player->m_bShouldGrapple = true;
+}
+static ConCommand setgrapplepoint("setgrapplepoint", CC_SetGrapplePoint);
+static ConCommand trygrapplemove("trygrapplemove", CC_GrappleMove);
+static ConCommand startmasochistmode("startmasochistmode", CC_StartMasochistMode, "startmasochistmode", FCVAR_REPLICATED | FCVAR_HIDDEN | FCVAR_CLIENTCMD_CAN_EXECUTE);
 
 // This is declared in the engine, too
 ConVar	sv_noclipduringpause( "sv_noclipduringpause", "0", FCVAR_REPLICATED | FCVAR_CHEAT, "If cheats are enabled, then you can noclip with the game paused (for doing screenshots, etc.)." );
@@ -195,6 +239,9 @@ ConVar	sk_player_chest( "sk_player_chest","1" );
 ConVar	sk_player_stomach( "sk_player_stomach","1" );
 ConVar	sk_player_arm( "sk_player_arm","1" );
 ConVar	sk_player_leg( "sk_player_leg","1" );
+
+
+ConVar cl_hev_gender("cl_hev_gender", "0", FCVAR_ARCHIVE);
 
 //ConVar	player_usercommand_timeout( "player_usercommand_timeout", "10", 0, "After this many seconds without a usercommand from a player, the client is kicked." );
 #ifdef _DEBUG
@@ -1354,6 +1401,8 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	m_bitsDamageType |= bitsDamage; // Save this so we can report it to the client
 	m_bitsHUDDamage = -1;  // make sure the damage bits get resent
 
+	bool mvox = cl_hev_gender.GetBool();
+
 	while (fTookDamage && (!ftrivial || g_pGameRules->Damage_IsTimeBased( bitsDamage ) ) && ffound && bitsDamage)
 	{
 		ffound = false;
@@ -1361,16 +1410,16 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		if (bitsDamage & DMG_CLUB)
 		{
 			if (fmajor)
-				SetSuitUpdate("!HEV_DMG4", false, SUIT_NEXT_IN_30SEC);	// minor fracture
+				SetSuitUpdate("!HEV_DMG4", false, SUIT_NEXT_IN_30SEC, mvox);	// minor fracture
 			bitsDamage &= ~DMG_CLUB;
 			ffound = true;
 		}
 		if (bitsDamage & (DMG_FALL | DMG_CRUSH))
 		{
 			if (fmajor)
-				SetSuitUpdate("!HEV_DMG5", false, SUIT_NEXT_IN_30SEC);	// major fracture
+				SetSuitUpdate("!HEV_DMG5", false, SUIT_NEXT_IN_30SEC, mvox);	// major fracture
 			else
-				SetSuitUpdate("!HEV_DMG4", false, SUIT_NEXT_IN_30SEC);	// minor fracture
+				SetSuitUpdate("!HEV_DMG4", false, SUIT_NEXT_IN_30SEC, mvox);	// minor fracture
 	
 			bitsDamage &= ~(DMG_FALL | DMG_CRUSH);
 			ffound = true;
@@ -1379,7 +1428,7 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		if (bitsDamage & DMG_BULLET)
 		{
 			if (m_lastDamageAmount > 5)
-				SetSuitUpdate("!HEV_DMG6", false, SUIT_NEXT_IN_30SEC);	// blood loss detected
+				SetSuitUpdate("!HEV_DMG6", false, SUIT_NEXT_IN_30SEC, mvox);	// blood loss detected
 			//else
 			//	SetSuitUpdate("!HEV_DMG0", false, SUIT_NEXT_IN_30SEC);	// minor laceration
 			
@@ -1390,9 +1439,9 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		if (bitsDamage & DMG_SLASH)
 		{
 			if (fmajor)
-				SetSuitUpdate("!HEV_DMG1", false, SUIT_NEXT_IN_30SEC);	// major laceration
+				SetSuitUpdate("!HEV_DMG1", false, SUIT_NEXT_IN_30SEC, mvox);	// major laceration
 			else
-				SetSuitUpdate("!HEV_DMG0", false, SUIT_NEXT_IN_30SEC);	// minor laceration
+				SetSuitUpdate("!HEV_DMG0", false, SUIT_NEXT_IN_30SEC, mvox);	// minor laceration
 
 			bitsDamage &= ~DMG_SLASH;
 			ffound = true;
@@ -1415,28 +1464,28 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 				m_rgbTimeBasedDamage[itbd_PoisonRecover] = 0;
 			}
 
-			SetSuitUpdate("!HEV_DMG3", false, SUIT_NEXT_IN_1MIN);	// blood toxins detected
+			SetSuitUpdate("!HEV_DMG3", false, SUIT_NEXT_IN_1MIN, mvox);	// blood toxins detected
 			bitsDamage &= ~( DMG_POISON | DMG_PARALYZE );
 			ffound = true;
 		}
 
 		if (bitsDamage & DMG_ACID)
 		{
-			SetSuitUpdate("!HEV_DET1", false, SUIT_NEXT_IN_1MIN);	// hazardous chemicals detected
+			SetSuitUpdate("!HEV_DET1", false, SUIT_NEXT_IN_1MIN, mvox);	// hazardous chemicals detected
 			bitsDamage &= ~DMG_ACID;
 			ffound = true;
 		}
 
 		if (bitsDamage & DMG_NERVEGAS)
 		{
-			SetSuitUpdate("!HEV_DET0", false, SUIT_NEXT_IN_1MIN);	// biohazard detected
+			SetSuitUpdate("!HEV_DET0", false, SUIT_NEXT_IN_1MIN, mvox);	// biohazard detected
 			bitsDamage &= ~DMG_NERVEGAS;
 			ffound = true;
 		}
 
 		if (bitsDamage & DMG_RADIATION)
 		{
-			SetSuitUpdate("!HEV_DET2", false, SUIT_NEXT_IN_1MIN);	// radiation detected
+			SetSuitUpdate("!HEV_DET2", false, SUIT_NEXT_IN_1MIN, mvox);	// radiation detected
 			bitsDamage &= ~DMG_RADIATION;
 			ffound = true;
 		}
@@ -1463,10 +1512,10 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	{
 		// first time we take major damage...
 		// turn automedic on if not on
-		SetSuitUpdate("!HEV_MED1", false, SUIT_NEXT_IN_30MIN);	// automedic on
+		SetSuitUpdate("!HEV_MED1", false, SUIT_NEXT_IN_30MIN, mvox);	// automedic on
 
 		// give morphine shot if not given recently
-		SetSuitUpdate("!HEV_HEAL7", false, SUIT_NEXT_IN_30MIN);	// morphine shot
+		SetSuitUpdate("!HEV_HEAL7", false, SUIT_NEXT_IN_30MIN, mvox);	// morphine shot
 	}
 	
 	if (fTookDamage && !ftrivial && fcritical && flHealthPrev < 75)
@@ -1474,13 +1523,13 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 		// already took major damage, now it's critical...
 		if (m_iHealth < 6)
-			SetSuitUpdate("!HEV_HLTH3", false, SUIT_NEXT_IN_10MIN);	// near death
+			SetSuitUpdate("!HEV_HLTH3", false, SUIT_NEXT_IN_10MIN, mvox);	// near death
 		else if (m_iHealth < 20)
-			SetSuitUpdate("!HEV_HLTH2", false, SUIT_NEXT_IN_10MIN);	// health critical
+			SetSuitUpdate("!HEV_HLTH2", false, SUIT_NEXT_IN_10MIN, mvox);	// health critical
 	
 		// give critical health warnings
 		if (!random->RandomInt(0,3) && flHealthPrev < 50)
-			SetSuitUpdate("!HEV_DMG7", false, SUIT_NEXT_IN_5MIN); //seek medical attention
+			SetSuitUpdate("!HEV_DMG7", false, SUIT_NEXT_IN_5MIN, mvox); //seek medical attention
 	}
 
 	// if we're taking time based damage, warn about its continuing effects
@@ -1489,10 +1538,10 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			if (flHealthPrev < 50)
 			{
 				if (!random->RandomInt(0,3))
-					SetSuitUpdate("!HEV_DMG7", false, SUIT_NEXT_IN_5MIN); //seek medical attention
+					SetSuitUpdate("!HEV_DMG7", false, SUIT_NEXT_IN_5MIN, mvox); //seek medical attention
 			}
 			else
-				SetSuitUpdate("!HEV_HLTH1", false, SUIT_NEXT_IN_10MIN);	// health dropping
+				SetSuitUpdate("!HEV_HLTH1", false, SUIT_NEXT_IN_10MIN, mvox);	// health dropping
 		}
 
 	// Do special explosion damage effect
@@ -1886,6 +1935,29 @@ void CBasePlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	ClearLastKnownArea();
 
+	DevMsg("Player killed by: %s\n", info.GetAttacker()->m_iClassname);
+
+	const char* killer = "#HLR_BadLuck";
+
+	if (info.GetAttacker()->IsNPC())
+	{
+		CAI_BaseNPC* pNPC = dynamic_cast<CAI_BaseNPC*>(info.GetAttacker());
+		if (pNPC)
+		{
+			killer = pNPC->szEnemyName;
+		}
+	}
+	else if (info.GetAttacker()->IsPlayer())
+	{
+		killer = "#HLR_Yourself";
+	}
+
+	CSingleUserRecipientFilter user(UTIL_GetLocalPlayer());
+	user.MakeReliable();
+	UserMessageBegin(user, "DeathScreen");
+	WRITE_STRING(killer);
+	MessageEnd();
+
 	DevMsg("Player recieved %f damage\n", info.GetDamage());
 	if (info.GetDamage() > 50)
 	{
@@ -1906,7 +1978,8 @@ void CBasePlayer::Event_Killed( const CTakeDamageInfo &info )
 			te->BreakModel(filter, 0.0f, WorldSpaceCenter(), vec3_angle, GetPlayerMaxs(), eyevec * -200, modelindex, 200, 1, 5.0f, BREAK_FLESH, true, BLOOD_COLOR_RED);
 		}
 	}
-
+	color32 blackish = { 0,0,0,100 };
+	UTIL_ScreenFade(this, blackish, 2.f, 0.f, FFADE_OUT | FFADE_STAYOUT);
 	BaseClass::Event_Killed( info );
 }
 
@@ -4418,12 +4491,11 @@ void CBasePlayer::CheckSuitUpdate()
 // seconds, then we won't repeat playback of this word or sentence
 // for at least that number of seconds.
 
-void CBasePlayer::SetSuitUpdate(const char *name, int fgroup, int iNoRepeatTime)
+void CBasePlayer::SetSuitUpdate(const char *name, int fgroup, int iNoRepeatTime, bool male)
 {
 	int i;
 	int isentence;
 	int iempty = -1;
-	
 	
 	// Ignore suit updates if no suit
 	if ( !IsSuitEquipped() )
@@ -4443,16 +4515,28 @@ void CBasePlayer::SetSuitUpdate(const char *name, int fgroup, int iNoRepeatTime)
 			m_rgSuitPlayList[i] = 0;
 		return;
 	}
+	char chSentence[128];
+	const char* szSentence;
+	if (male)
+	{
+		V_snprintf(chSentence, sizeof(chSentence), "%s_M", name);
+		szSentence = chSentence;
+	}
+	else
+		szSentence = name;
+
+	Msg("Sending Suit Update: %s\n", szSentence);
+
 	// get sentence or group number
 	if (!fgroup)
 	{
-		isentence = SENTENCEG_Lookup(name);	// Lookup sentence index (not group) by name
+		isentence = SENTENCEG_Lookup(szSentence);	// Lookup sentence index (not group) by name
 		if (isentence < 0)
 			return;
 	}
 	else
 		// mark group number as negative
-		isentence = -SENTENCEG_GetIndex(name);		// Lookup group index by name
+		isentence = -SENTENCEG_GetIndex(szSentence);		// Lookup group index by name
 
 	// check norepeat list - this list lets us cancel
 	// the playback of words or sentences that have already
@@ -4802,6 +4886,20 @@ void CBasePlayer::PostThink()
 	SimulatePlayerSimulatedEntities();
 #endif
 
+
+	if (m_bShouldGrapple)
+		TryGrappleMove();
+	else
+	{
+		if (m_bGrappleHooked)
+		{
+			SetGravity(1.0);
+			m_bGrappleHooked = false;
+		}
+	}
+
+
+	m_iButtonLookState = GetButtonLookState();
 }
 
 // handles touching physics objects
@@ -5066,12 +5164,15 @@ void CBasePlayer::InitialSpawn( void )
 {
 	m_iConnected = PlayerConnected;
 	gamestats->Event_PlayerConnected( this );
-	//ConVarRef masochist("g_masochist_mode");
-	CHL2_Player* pPlayer = dynamic_cast<CHL2_Player*>(UTIL_GetLocalPlayer());
-	if (g_masochist_mode.GetBool())
+
+	if (g_pGameRules->g_bStartInMasochist == true)
 	{
-		pPlayer->m_HL2Local.m_bMasochistMode = true;
-		g_masochist_mode.SetValue("0");
+		Warning("Masochist start detected\n");
+		CHL2_Player* player = dynamic_cast<CHL2_Player*>(UTIL_GetLocalPlayer());
+		if (!player)
+			return;
+		player->m_HL2Local.m_bMasochistMode = true;
+		g_pGameRules->g_bStartInMasochist = false;
 	}
 }
 
@@ -5153,7 +5254,7 @@ void CBasePlayer::Spawn( void )
 	m_flgeigerDelay = gpGlobals->curtime + 2.0;	// wait a few seconds until user-defined message registrations
 												// are recieved by all clients
 	
-	m_flFieldOfView		= 0.766;// some NPCs use this to determine whether or not the player is looking at them.
+	m_flFieldOfView		= 0.5f;// some NPCs use this to determine whether or not the player is looking at them.
 
 	m_vecAdditionalPVSOrigin = vec3_origin;
 	m_vecCameraPVSOrigin = vec3_origin;
@@ -5341,6 +5442,65 @@ void CBasePlayer::Precache( void )
 		m_fInitHUD = true;
 
 }
+enum PointerIcons{
+	NO_POINTER,
+	FINGER_POINTER,
+	PALM_POINTER,
+	LOCKED_POINTER
+};
+int CBasePlayer::GetButtonLookState()
+{
+	trace_t tr;
+	Vector vecDir;
+	QAngle angDir;
+	angDir = EyeAngles();
+	AngleVectors(angDir, &vecDir);
+	VectorNormalize(vecDir);
+	UTIL_TraceLine(EyePosition(), EyePosition() + (vecDir * 80.f), MASK_ALL, this, COLLISION_GROUP_NONE, &tr);
+
+	if (!tr.m_pEnt)
+		return NO_POINTER;
+
+	if (tr.m_pEnt->ClassMatches("func_door") || tr.m_pEnt->ClassMatches("func_door_rotating"))
+	{
+		CBaseDoor* pDoor = dynamic_cast<CBaseDoor*>(tr.m_pEnt);
+
+		if (!pDoor)
+			return NO_POINTER;
+
+		if (pDoor->m_bLocked)
+			return LOCKED_POINTER;
+
+		return PALM_POINTER;
+	}
+
+	if (tr.m_pEnt->ClassMatches("func_button"))
+	{
+		CBaseButton* button = dynamic_cast<CBaseButton*>(tr.m_pEnt);
+
+		if (!button)
+			return NO_POINTER;
+
+		if (button->HasSpawnFlags(SF_BUTTON_NO_POINTER) || button->m_toggle_state != TS_AT_BOTTOM)
+			return NO_POINTER;
+
+		if (button->IsButtonLocked())
+			return LOCKED_POINTER;
+
+		if (button->HasSpawnFlags(SF_BUTTON_ALT_POINTER))
+			return PALM_POINTER;
+		else
+			return FINGER_POINTER;
+	}
+
+	if (tr.m_pEnt->IsNPC())
+		return NO_POINTER;
+
+	if (tr.m_pEnt->ObjectCaps() & FCAP_IMPULSE_USE)
+		return PALM_POINTER;
+
+	return NO_POINTER;
+}
 
 void CBasePlayer::Dash(void)
 {
@@ -5375,9 +5535,6 @@ void CBasePlayer::CheckThirdPerson(void)
 }
 void CBasePlayer::CheckFloorSprite(void)
 {
-
-	if (!IsSuitEquipped())
-		return;
 	//access the EHANDLE
 	CHLRFloorSprite *m_pFloorSprite = dynamic_cast<CHLRFloorSprite*>(m_hFloorSprite.Get());
 
@@ -5427,7 +5584,38 @@ void CBasePlayer::GroundPound(void)
 }
 void CBasePlayer::DoubleJump(void)
 {
+	ResetSequence(GetSequence());
 	DispatchParticleEffect("doublejump", WorldSpaceCenter(), vec3_angle, this);
+}
+
+void CBasePlayer::TryGrappleMove()
+{
+	if (!m_bGrappleHooked)
+	{
+		VelocityPunch(Vector(0, 0, 500));
+		SetGroundEntity(NULL);
+		//SetGravity(0.5);
+		m_bGrappleHooked = true;
+	}
+
+	Vector vecSrc, vForward, vRight, vUp;
+
+	EyeVectors(&vForward, &vRight, &vUp);
+
+	vecSrc = EyePosition() + vRight * -8;
+
+	NDebugOverlay::Cross3D(m_vecGrapplePoint, 16, 0, 255, 255, false, 0.05f);
+	DebugDrawLine(vecSrc, m_vecGrapplePoint, 0, 255, 255, false, 0.05f);
+
+	if (!FInViewCone(m_vecGrapplePoint))
+	{
+		m_bShouldGrapple = false;
+	}
+
+	if ((m_vecGrapplePoint - GetAbsOrigin()).Length() < 128.f)
+	{
+		m_bShouldGrapple = false;
+	}
 }
 //-----------------------------------------------------------------------------
 // Purpose: Force this player to immediately respawn
@@ -8308,10 +8496,15 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropBool(SENDINFO(m_bUseAltCrosshair)),
 		SendPropBool(SENDINFO(m_bGibbed)),
 
+		SendPropInt(SENDINFO(m_iButtonLookState)),
+
 
 		SendPropVector(SENDINFO(m_vecRopeSegmentNormal)),
 		SendPropVector(SENDINFO(m_vecRopeSegmentVelocity)),
 		SendPropBool(SENDINFO(m_bClimbingRope)),
+
+		SendPropBool(SENDINFO(m_bShouldGrapple)),
+		SendPropVector(SENDINFO(m_vecGrapplePoint)),
 
 		SendPropInt		(SENDINFO(m_iFOVStart), 8, SPROP_UNSIGNED ),
 		SendPropFloat	(SENDINFO(m_flFOVTime) ),

@@ -48,5 +48,10 @@
 #define CL_EVENT_MFOOTSTEP_LEFT_LOUD	6008 // Loud material impact sounds from feet attachments
 #define CL_EVENT_MFOOTSTEP_RIGHT_LOUD	6009
 
+#ifdef HLR_CLIENT
+#define CL_EVENT_PLAYER_FOOTSTEP_LEFT 6010
+#define CL_EVENT_PLAYER_FOOTSTEP_RIGHT 6011
+#endif
+
 
 #endif // CL_ANIMEVENT_H

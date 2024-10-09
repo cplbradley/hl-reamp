@@ -24,7 +24,7 @@ set tt_all_chkpt=%tt_start%
 
 set BUILD_SHADER=call buildshaders.bat
 set ARG_EXTRA=
-%BUILD_SHADER% pbr_dx9_30			-game %GAMEDIR% -source %SOURCEDIR% -dx9_30	-force30 
+//%BUILD_SHADER% pbr_dx9_30			-game %GAMEDIR% -source %SOURCEDIR% -dx9_30	-force30 
 //%BUILD_SHADER% core_dx9_20b			-game %GAMEDIR% -source %SOURCEDIR% -dx9_20
 //%BUILD_SHADER% wigglywater			-game %GAMEDIR% -source %SOURCEDIR% -dx9_30 -force30
 //%BUILD_SHADER% alphacable			-game %GAMEDIR% -source %SOURCEDIR% -dx9_20b
@@ -35,6 +35,7 @@ set ARG_EXTRA=
 //%BUILD_SHADER% nightvision_enemyoverlay		-game %GAMEDIR% -source %SOURCEDIR% -dx9_30 -force30
 //%BUILD_SHADER% unlitstatic -game %GAMEDIR% -source %SOURCEDIR% -dx9_20b
 //%BUILD_SHADER% nvpostprocess -game %GAMEDIR% -source %SOURCEDIR% -dx9_30 -force30
+%BUILD_SHADER% viewprojection -game %GAMEDIR% -source %SOURCEDIR% -dx9_20
 
 
 rem echo.

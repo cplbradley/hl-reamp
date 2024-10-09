@@ -62,6 +62,8 @@ ConVar option_duck_method("option_duck_method", "1", FCVAR_REPLICATED|FCVAR_ARCH
 
 ConVar crash_game("crash_game", "0", FCVAR_CHEAT);
 
+ConVar g_airmovement_type("g_airmovement_type", "0", FCVAR_REPLICATED | FCVAR_ARCHIVE); // 0 = Classic Source, 1 = Air Acceleration
+
 #ifdef STAGING_ONLY
 #ifdef CLIENT_DLL
 ConVar debug_latch_reset_onduck( "debug_latch_reset_onduck", "1", FCVAR_CHEAT );
@@ -1143,6 +1145,45 @@ void CGameMovement::ReduceTimers( void )
 	}
 }
 
+
+
+#ifdef HLR
+
+ConVar sk_grapple_speed("sk_grapple_speed", "200");
+ConVar sk_grapple_max("sk_grapple_max", "750");
+void CGameMovement::GrappleMove(const Vector& vecGrapplePoint)
+{
+	if (vecGrapplePoint == vec3_origin)
+		return;
+
+	AirMove();
+
+	Vector destPoint = vecGrapplePoint + Vector(0, 0, -64);
+	Vector wishdir = (destPoint - mv->GetAbsOrigin()).Normalized();
+	float wishspd = sk_grapple_max.GetFloat();
+	float accelspd = sk_grapple_speed.GetFloat();
+	Vector wishvel = wishdir * wishspd;
+
+	/*Vector pushdir;
+	Vector vec = mv->m_vecVelocity;
+	vec[2] = 0.f;
+	VectorSubtract(wishvel, vec, pushdir);
+	float pushlen = VectorNormalize(pushdir);
+
+	float accelspeed = accelspd * gpGlobals->frametime * wishspd;
+
+	if (accelspeed > pushlen)
+		accelspeed = pushlen;
+
+	Vector avg = (wishdir + pushdir) * 0.5f;
+
+	//mv->m_vecVelocity += accelspeed * wishdir;*/
+
+	TangentialLocomotion(wishdir, wishspd, accelspd, wishvel);
+
+
+}
+#endif
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pMove - 
@@ -1779,6 +1820,25 @@ void CGameMovement::AirAccelerate( Vector& wishdir, float wishspeed, float accel
 	}
 }
 
+
+void CGameMovement::TangentialLocomotion(Vector& wishdir, float wishspeed, float accel, Vector& wishvel)
+{
+	//adapted from defunct Q3 movement code
+	Vector pushdir;
+	Vector vec = mv->m_vecVelocity;
+	vec[2] = 0.f;
+	VectorSubtract(wishvel, vec, pushdir);
+	float pushlen = VectorNormalize(pushdir);
+
+	float accelspeed = accel * gpGlobals->frametime * wishspeed;
+
+	if (accelspeed > pushlen)
+		accelspeed = pushlen;
+
+	Vector avg = (wishdir + pushdir) * 0.5f;
+
+	mv->m_vecVelocity += accelspeed * avg.Normalized();
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -1811,7 +1871,6 @@ void CGameMovement::AirMove(void)
 	vecViewAngle[2] = 0;
 	VectorCopy(wishvel, wishdir);   // Determine maginitude of speed of move
 	wishspeed = VectorNormalize(wishdir);
-
 	//
 	// clamp to server defined max speed
 	//
@@ -1821,16 +1880,38 @@ void CGameMovement::AirMove(void)
 		wishspeed = mv->m_flMaxSpeed;
 	}
 
+	float accel = sv_airaccelerate.GetFloat();
+
+	if (mv->m_flForwardMove != 0.f)
+		accel *= 0.005f;
 	//wishdir = vecViewAngle;
-	if (m_bBlockingAirControl)
+
+	if (!g_airmovement_type.GetBool())
 	{
-		if (m_bBlockDistanceFromOrigin)
-			AirAccelerate(wishdir, wishspeed, (10 * m_fDistanceFromOrigin));
+		if (m_bBlockingAirControl)
+		{
+			if (m_bBlockDistanceFromOrigin)
+				AirAccelerate(wishdir, wishspeed, (10 * m_fDistanceFromOrigin));
+		}
+		else
+		{
+			AirAccelerate(wishdir, wishspeed, accel);
+		}
 	}
 	else
 	{
-		AirAccelerate(wishdir, wishspeed, sv_airaccelerate.GetFloat());
+		if (m_bBlockingAirControl)
+		{
+			if (m_bBlockDistanceFromOrigin)
+				TangentialLocomotion(wishdir, wishspeed, (10 * m_fDistanceFromOrigin), wishvel);
+		}
+		else
+		{
+			TangentialLocomotion(wishdir, wishspeed * 0.5f, 5.f, wishvel * 0.5f);
+		}
 	}
+
+	
 	// Add in any base velocity to the current velocity.
 	VectorAdd(mv->m_vecVelocity, player->GetBaseVelocity(), mv->m_vecVelocity);
 	//VectorAdd(mv->m_vecVelocity, vecViewAngle, mv->m_vecVelocity);
@@ -1881,6 +1962,8 @@ void CGameMovement::Accelerate( Vector& wishdir, float wishspeed, float accel )
 	// If not going to add any speed, done.
 	if (addspeed <= 0)
 		return;
+
+	
 
 	// Determine amount of accleration.
 	accelspeed = accel * gpGlobals->frametime * wishspeed * player->m_surfaceFriction;
@@ -2158,10 +2241,15 @@ void CGameMovement::FullWalkMove( )
 		{
 			WalkMove();
 		}
+		else if (player->m_bShouldGrapple)
+		{
+			GrappleMove(player->m_vecGrapplePoint);  // Take into account movement when in air.
+		}
 		else
 		{
-			AirMove();  // Take into account movement when in air.
+			AirMove();
 		}
+
 
 		// Set final flags.
 		CategorizePosition();
@@ -3078,9 +3166,9 @@ bool CGameMovement::RopeMove()
 		AngleVectors(angOffset, &vecOffset);
 		player->SetAbsOrigin(player->m_vecRopeSegmentPosition + vecOffset * 64);
 
-		engine->Con_NPrintf(0, "wishdir: %f %f %f velocity %f %f %f climbspeed %f", wishdir.x, wishdir.y, wishdir.z, mv->m_vecVelocity.x, mv->m_vecVelocity.y, mv->m_vecVelocity.z, forwardSpeed);
-		engine->Con_NPrintf(1, "viewang %f %f %f viewflat %f %f %f fdot %f", viewAng.x, viewAng.y, viewAng.z, flatAng.x, flatAng.y, flatAng.z, fDot);
-		engine->Con_NPrintf(2, "ropeseg vel %f %f %f ropeseg pos %f %f %f", player->m_vecRopeSegmentVelocity[0], player->m_vecRopeSegmentVelocity[1], player->m_vecRopeSegmentVelocity[2], player->m_vecRopeSegmentPosition[0], player->m_vecRopeSegmentPosition[1], player->m_vecRopeSegmentPosition[2]);
+		//engine->Con_NPrintf(0, "wishdir: %f %f %f velocity %f %f %f climbspeed %f", wishdir.x, wishdir.y, wishdir.z, mv->m_vecVelocity.x, mv->m_vecVelocity.y, mv->m_vecVelocity.z, forwardSpeed);
+		//engine->Con_NPrintf(1, "viewang %f %f %f viewflat %f %f %f fdot %f", viewAng.x, viewAng.y, viewAng.z, flatAng.x, flatAng.y, flatAng.z, fDot);
+		//engine->Con_NPrintf(2, "ropeseg vel %f %f %f ropeseg pos %f %f %f", player->m_vecRopeSegmentVelocity[0], player->m_vecRopeSegmentVelocity[1], player->m_vecRopeSegmentVelocity[2], player->m_vecRopeSegmentPosition[0], player->m_vecRopeSegmentPosition[1], player->m_vecRopeSegmentPosition[2]);
 
 	}
 	

@@ -1,0 +1,29 @@
+#include "common_vs_fxc.h"
+#include "common_vertexlitgeneric_dx9.h"
+
+
+struct VS_INPUT
+{
+	float4 vPos						: POSITION;
+	float4 vNormal                  : NORMAL;
+	float2 vTexCoord_0				: TEXCOORD0;
+};
+
+struct VS_OUTPUT
+{
+	float4 vProjPos				:	POSITION;
+	float4 vViewProj			:	TEXCOORD0;
+};
+
+VS_OUTPUT main( const VS_INPUT v )
+{
+	VS_OUTPUT o = ( VS_OUTPUT )0;
+	
+	float3 wPos = mul(float4(v.vPos.xyz,1),cModel[0]);
+	float4 ProjPos = mul(float4(wPos, 1), cViewProj);
+	
+	o.vViewProj = ProjPos;
+	o.vProjPos = ProjPos;
+	
+	return o;
+};

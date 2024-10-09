@@ -108,9 +108,7 @@ void CHLRArmorPanel::InitModel()
 	SetCameraPositionAndAngles(m_vecRootPos, vec3_angle);
 	fFrac = 0.f;
 }
-float easeInOut(float t) {
-	return t < 0.5f ? 0.5f * pow(2 * t, 2.0f) : 0.5f * (2 - pow(2 * (1 - t), 2.0f));
-}
+
 Vector CHLRArmorPanel::GetInterpedCamPos()
 {
 	Vector vecRet;
@@ -663,6 +661,9 @@ void CHLRArmorCustomization::OnDataChanged()
 	PostActionSignal(new KeyValues("ApplyButtonEnable"));
 	UpdateEditorBodygroups();
 }
+
+
+
 class CHLRArmorFrame : public PropertyDialog
 {
 	DECLARE_CLASS_SIMPLE(CHLRArmorFrame, PropertyDialog);

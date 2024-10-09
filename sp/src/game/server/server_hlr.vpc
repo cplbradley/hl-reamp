@@ -96,6 +96,9 @@ $Project
 				$File "hlr/util/env_weather_controller.cpp"
 				$File "hlr/util/prop_armor_controller.cpp"
 				$File "hlr/util/trigger_destroy.cpp"
+				$File "hlr/util/hlr_fovchanger.cpp"
+				$File "hlr/util/logic_auto_release.cpp"
+				$File "hlr/util/hlr_env_specialmessage.cpp"
 			}
 			$Folder "Player"
 			{
@@ -117,6 +120,7 @@ $Project
 				$File "hlr/entity/hlr_powerups.cpp"
 				$File "hlr/entity/hlr_powerups.h"
 				$File "hlr/entity/light_strobe.cpp"
+				$File "hlr/entity/hlr_fireballshooter.cpp"
 			}
 		}
 		$Folder "FMOD"

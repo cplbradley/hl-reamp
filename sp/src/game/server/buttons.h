@@ -10,6 +10,8 @@
 #pragma once
 #endif
 
+#define SF_BUTTON_ALT_POINTER 16384
+#define SF_BUTTON_NO_POINTER 32768
 
 class CBaseButton : public CBaseToggle
 {
@@ -23,6 +25,7 @@ public:
 	void RotSpawn( void );
 	bool KeyValue( const char *szKeyName, const char *szValue );
 	int DrawDebugTextOverlays();
+	
 
 protected:
 
@@ -37,6 +40,8 @@ protected:
 	void ButtonUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 
 	bool OnUseLocked( CBaseEntity *pActivator );
+
+	virtual int UpdateTransmitState() { return SetTransmitState(FL_EDICT_ALWAYS); }
 
 	virtual void Lock();
 	virtual void Unlock();
@@ -85,6 +90,9 @@ protected:
 	COutputEvent m_OnOut;
 
 	int		m_nState;
+
+public:
+	bool IsButtonLocked() { return m_bLocked; }
 };
 
 

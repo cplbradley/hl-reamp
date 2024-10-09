@@ -210,7 +210,7 @@ void CBaseCombatWeapon::Spawn(void)
 #endif
 
 	// Bloat the box for player pickup
-	CollisionProp()->UseTriggerBounds(true, 36);
+	CollisionProp()->UseTriggerBounds(true, 12);
 
 	// Use more efficient bbox culling on the client. Otherwise, it'll setup bones for most
 	// characters even when they're not in the frustum.
@@ -2363,10 +2363,12 @@ void CBaseCombatWeapon::PrimaryAttack(void)
 
 	pPlayer->FireBullets(info);
 
-	if (!m_iClip1 && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
+	ConVarRef mvox("cl_hev_gender");
+
+	if (pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
 	{
 		// HEV suit - indicate out of ammo condition
-		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
+		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0, mvox.GetBool());
 	}
 
 	//Add our view kick in

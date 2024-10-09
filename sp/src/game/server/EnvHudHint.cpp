@@ -45,6 +45,7 @@ BEGIN_DATADESC(CEnvHudHint)
 
 	DEFINE_KEYFIELD(m_iszMessage, FIELD_STRING, "message"),
 	DEFINE_KEYFIELD(szWorldPosEnt,FIELD_STRING,"worldposent"),
+	DEFINE_FIELD(m_vecWorldPos,FIELD_VECTOR),
 	DEFINE_INPUTFUNC( FIELD_VOID, "ShowHudHint", InputShowHudHint ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "HideHudHint", InputHideHudHint ),
 

@@ -21,16 +21,17 @@
 #include "particle_parse.h"
 #include "SpriteTrail.h"
 #include "hlr/hlr_shareddefs.h"
+#include "soundenvelope.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 #define PLASMA_MODEL "models/spitball_small.mdl"
 #define PLASMA_MODEL_NPC "models/spitball_medium.mdl"
-#define PLASMA_SPEED 6000
+#define PLASMA_SPEED 8000
 extern ConVar    sk_plr_dmg_smg1_grenade;
 extern ConVar	sk_plr_dmg_smg1;
 extern ConVar	 sk_npc_dmg_smg1;
-ConVar sk_plasmarifle_firerate("sk_plasmarifle_firerate", "0.15");
+ConVar sk_plasmarifle_firerate("sk_plasmarifle_firerate", "0.09");
 
 class CPlasmaBall : public CBaseCombatCharacter
 {
@@ -83,14 +84,14 @@ void CPlasmaBall::Spawn(void)
 	Precache();
 	SetMoveType(MOVETYPE_FLY);
 	UTIL_SetSize(this, -Vector(1.0f, 1.0f, 1.0f), Vector(1.0f, 1.0f, 1.0f));
-	SetSolid(SOLID_BBOX);
-	//AddSolidFlags(FSOLID_NOT_SOLID || FSOLID_TRIGGER);
+	SetSolid(SOLID_CUSTOM);
+	AddSolidFlags(FSOLID_NOT_STANDABLE);
 	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 	//SetSolidFlags(FSOLID_TRIGGER);
 	CreateTrail();
 	AddEffects(EF_NODRAW);
 	SetThink(&CPlasmaBall::Unhide);
-	SetNextThink(gpGlobals->curtime + 0.01f);
+	SetNextThink(gpGlobals->curtime + 0.03f);
 	SetTouch(&CPlasmaBall::PlasmaTouch);
 }
 void CPlasmaBall::Precache(void)
@@ -138,24 +139,6 @@ bool CPlasmaBall::DrawSprite(void)
 }
 void CPlasmaBall::PlasmaTouch(CBaseEntity *pOther) //i touched something
 {
-	/*if (pOther->IsSolid()) //is what i touched solid?
-	{
-		if (pOther->IsSolidFlagSet(FSOLID_TRIGGER)) //is it a trigger?
-		{
-			return; //ignore it, keep going
-		}
-		if (pOther->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE) //is it another projectile?
-		{
-			return; //ignore it, keep going
-		}
-		if (pOther->GetCollisionGroup() == COLLISION_GROUP_WEAPON)
-		{
-			return;
-		}
-		if (pOther->IsPlayer())
-		{
-			return;
-		}*/
 	if (pOther->IsSolidFlagSet(FSOLID_TRIGGER | FSOLID_VOLUME_CONTENTS))
 	{
 		// Some NPCs are triggers that can take damage (like antlion grubs). We should hit them.
@@ -184,7 +167,7 @@ void CPlasmaBall::PlasmaTouch(CBaseEntity *pOther) //i touched something
 			VectorNormalize(vecNormalizedVel);
 			CTakeDamageInfo	dmgInfo(this, GetOwnerEntity(), sk_plr_dmg_smg1.GetFloat(), DMG_SHOCK);
 			dmgInfo.AdjustPlayerDamageInflictedForSkillLevel();
-			CalculateMeleeDamageForce(&dmgInfo, vecNormalizedVel, tr.endpos, 1.0f);
+			CalculateMeleeDamageForce(&dmgInfo, vecNormalizedVel, tr.endpos, 10.0f);
 			dmgInfo.SetDamagePosition(tr.endpos);
 			pOther->DispatchTraceAttack(dmgInfo, vecNormalizedVel, &tr);
 			ApplyMultiDamage();
@@ -222,96 +205,6 @@ void CPlasmaBall::ItemPostFrame(void)
 }
 
 
-class CStunBomb : public CBaseAnimating
-{
-	DECLARE_CLASS(CStunBomb, CBaseAnimating);
-public:
-	void Spawn(void);
-	void Precache(void);
-	void Stun(CBaseEntity *pOther);
-	void Touch(CBaseEntity *pOther);
-	void EndTimer();
-	void Destroy();
-
-	CHandle<CAI_BaseNPC> hNPC;
-
-	DECLARE_DATADESC();
-};
-
-LINK_ENTITY_TO_CLASS(hlr_stunbomb, CStunBomb);
-
-BEGIN_DATADESC(CStunBomb)
-END_DATADESC()
-
-void CStunBomb::Precache(void)
-{
-	PrecacheModel(PLASMA_MODEL);
-}
-void CStunBomb::Spawn(void)
-{
-	Precache();
-	SetModel(PLASMA_MODEL);
-	SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
-	UTIL_SetSize(this, -Vector(1.0f, 1.0f, 1.0f), Vector(1.0f, 1.0f, 1.0f));
-	SetSolid(SOLID_BBOX);
-	SetSolidFlags(FSOLID_NOT_SOLID | FSOLID_TRIGGER);
-	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
-	SetTouch(&CStunBomb::Touch);
-}
-void CStunBomb::Touch(CBaseEntity *pOther)
-{
-	if (!pOther)
-		return;
-	if (GetOwnerEntity() && pOther == GetOwnerEntity())
-		return;
-	if (pOther->IsSolid())
-	{
-		if (pOther->IsSolidFlagSet(FSOLID_TRIGGER)) //is it a trigger?
-		{
-			return; //ignore it, keep going
-		}
-		if (pOther->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE) //is it another projectile?
-		{
-			return; //ignore it, keep going
-		}
-		if (pOther->GetCollisionGroup() == COLLISION_GROUP_WEAPON)
-		{
-			return;
-		}
-		if (!pOther->IsNPC())
-			Destroy();
-		if (pOther->IsNPC())
-		{
-			SetTouch(NULL);
-			SetSolid(SOLID_NONE);
-			SetMoveType(MOVETYPE_NONE);
-			hNPC = pOther->MyNPCPointer();
-			hNPC.Set(pOther->MyNPCPointer());
-			if (!hNPC)
-				return;
-			string_t npcclass = hNPC->m_iClassname;
-			DevMsg("Freezing %s\n", npcclass);
-			hNPC->ToggleFreeze();
-			SetThink(&CStunBomb::EndTimer);
-			SetNextThink(gpGlobals->curtime + 10.0f);
-			SetModelName(NULL_STRING);
-		}
-	}
-}
-void CStunBomb::EndTimer()
-{
-	if (!hNPC)
-		return;
-	CAI_BaseNPC *pNPC = dynamic_cast<CAI_BaseNPC*>(hNPC.Get());
-	string_t npcclass = pNPC->m_iClassname;
-	DevMsg("Unfreezing %s\n", npcclass);
-	pNPC->ToggleFreeze();
-	Destroy();
-}
-void CStunBomb::Destroy()
-{
-	SUB_Remove();
-}
 class CWeaponPlasmaRifle : public CHLSelectFireMachineGun
 {
 	DECLARE_DATADESC();
@@ -375,6 +268,7 @@ protected:
 
 	Vector	m_vecTossVelocity;
 	float	m_flNextGrenadeCheck;
+	CSoundPatch* m_pAlarm;
 };
 
 IMPLEMENT_SERVERCLASS_ST(CWeaponPlasmaRifle, DT_WeaponPlasmaRifle)
@@ -390,6 +284,10 @@ BEGIN_DATADESC(CWeaponPlasmaRifle)
 
 DEFINE_FIELD(m_vecTossVelocity, FIELD_VECTOR),
 DEFINE_FIELD(m_flNextGrenadeCheck, FIELD_TIME),
+DEFINE_FIELD(bActive,FIELD_BOOLEAN),
+DEFINE_FIELD(iShots,FIELD_INTEGER),
+DEFINE_FIELD(fDrainTime,FIELD_FLOAT),
+DEFINE_FIELD(bCanShootAgain,FIELD_BOOLEAN),
 
 END_DATADESC()
 
@@ -484,6 +382,7 @@ void CWeaponPlasmaRifle::Precache(void)
 	UTIL_PrecacheOther("hlr_stunbomb");
 	PrecacheParticleSystem("plasmarifle_altfire_beam");
 	PrecacheParticleSystem("plasmarifle_overheat");
+	PrecacheScriptSound("PlasmaRifle.Overheat");
 	BaseClass::Precache();
 }
 
@@ -651,6 +550,11 @@ bool CWeaponPlasmaRifle::Reload(void)
 bool CWeaponPlasmaRifle::Holster(CBaseCombatWeapon *pSwitchingTo)
 {
 	StopParticleEffects(this);
+	if (m_pAlarm)
+	{
+		CSoundEnvelopeController::GetController().Shutdown(m_pAlarm);
+		m_pAlarm = NULL;
+	}
 	return BaseClass::Holster(pSwitchingTo);
 }
 //-----------------------------------------------------------------------------
@@ -680,53 +584,6 @@ ConVar sk_plasmarifle_altfire_dmg("sk_plasmarifle_altfire_dmg", "16");
 //-----------------------------------------------------------------------------
 void CWeaponPlasmaRifle::SecondaryAttack(void)
 {
-	// Only the player fires this way so we can cast
-	/*CBasePlayer* pPlayer = ToBasePlayer(GetOwner());
-	if (pPlayer == NULL)
-		return;
-	if (!pPlayer->GetAmmoCount(m_iPrimaryAmmoType))
-		return;
-
-	if (bShootingSecondary)
-	{
-		Vector vecStartPos = pPlayer->EyePosition();
-		QAngle angDir = pPlayer->EyeAngles();
-		Vector vecDir;
-		AngleVectors(angDir, &vecDir);
-		VectorNormalize(vecDir);
-		trace_t tr;
-		UTIL_TraceLine(vecStartPos, vecStartPos + (vecDir * MAX_TRACE_LENGTH), MASK_SHOT, pPlayer, COLLISION_GROUP_NONE, &tr);
-		vecBeamEnd = tr.endpos;
-		pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);
-		RadiusDamage(CTakeDamageInfo(this, GetOwnerEntity(), sk_plasmarifle_altfire_dmg.GetFloat(), DMG_ENERGYBEAM), vecBeamEnd, 32.0f, CLASS_PLAYER | CLASS_PLAYER_ALLY, GetOwnerEntity());
-		//DispatchParticleEffect("vort_shield_beam", tr.startpos, tr.endpos, vec3_angle, this);
-	}
-
-	/*
-	Vector	vecEye = pPlayer->EyePosition();
-	Vector	vForward, vRight, vUp;
-	Vector vecAng;
-	pPlayer->EyeVectors(&vecAng);
-	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
-	QAngle qEyeAng = pPlayer->EyeAngles();
-	Vector	muzzlePoint = pPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * 6.0f + vUp * -3.0f;
-	Vector vecSrc = vecEye + vForward * 18.0f + vRight * 8.0f + Vector(0, 0, -8);
-	//CheckThrowPosition(pPlayer, vecEye, vecSrc);
-
-	float vertfactor = 180.0f;
-	Vector vecThrow = vecAng * 1200.0f + Vector(0, 0, vertfactor);
-
-	SendWeaponAnim(ACT_VM_PRIMARYATTACK);
-
-	CStunBomb *pBomb = (CStunBomb*)CBaseEntity::Create("hlr_stunbomb", muzzlePoint, vec3_angle, GetOwnerEntity());
-	pBomb->Spawn();
-	pBomb->ApplyLocalAngularVelocityImpulse(AngularImpulse(200, random->RandomInt(-600, 600), 0));
-	pBomb->SetAbsVelocity(vecThrow);
-	m_flNextSecondaryAttack = gpGlobals->curtime + 2.0f;
-	*/
-
-
-
 	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
 	if ( pPlayer == NULL )
 	return;
@@ -853,7 +710,9 @@ void CWeaponPlasmaRifle::PrimaryAttack(void)
 			random->RandomFloat(-250, -500)));
 		
 		m_nShotsFired++;
-		iShots++;
+
+		if(!pPlayer->HasOverdrive())
+			iShots++;
 		if (iShots >= 30)
 			fDrainTime = gpGlobals->curtime + 8.0f;
 		else
@@ -880,10 +739,13 @@ void CWeaponPlasmaRifle::PrimaryAttack(void)
 	pPlayer->CreateMuzzleLight(0, 200, 255, vecSrc);
 	m_iPrimaryAttacks++;
 	gamestats->Event_WeaponFired(pPlayer, true, GetClassname());
-	if (!m_iClip1 && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
+
+	ConVarRef mvox("cl_hev_gender");
+
+	if (pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
 	{
 		// HEV suit - indicate out of ammo condition
-		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
+		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0,mvox.GetBool());
 	}
 	SendWeaponAnim(GetPrimaryAttackActivity());
 	pPlayer->SetAnimation(PLAYER_ATTACK1);
@@ -1008,6 +870,7 @@ void CWeaponPlasmaRifle::ItemPostFrame(void)
 	BaseClass::ItemPostFrame();
 
 	CBasePlayer* pPlayer = UTIL_GetLocalPlayer();
+
 	if (!(pPlayer->m_nButtons & IN_ATTACK) || !bCanShootAgain)
 	{
 		if (fDrainTime <= gpGlobals->curtime)
@@ -1022,8 +885,28 @@ void CWeaponPlasmaRifle::ItemPostFrame(void)
 	bActive = (pPlayer->GetActiveWeapon() == this);
 
 
-	if (iShots >= 60)
+	if (iShots >= 70)
 		Overheat();
+
+
+	if (iShots >= 45)
+	{
+		CPASAttenuationFilter filter(this);
+
+		if (!m_pAlarm)
+		{
+			m_pAlarm = CSoundEnvelopeController::GetController().SoundCreate(filter, entindex(), "PlasmaRifle.Overheat");
+			CSoundEnvelopeController::GetController().Play(m_pAlarm, 1.0, 100);
+		}
+	}
+	else
+	{
+		if (m_pAlarm)
+		{
+			CSoundEnvelopeController::GetController().Shutdown(m_pAlarm);
+			m_pAlarm = NULL;
+		}
+	}
 
 /*	if ((pPlayer->m_nButtons & IN_ATTACK2) && (pPlayer->GetAmmoCount(m_iPrimaryAmmoType)))
 	{

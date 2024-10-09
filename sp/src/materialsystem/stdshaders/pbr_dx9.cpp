@@ -37,6 +37,9 @@ static ConVar mat_pbr_force_enabled("mat_pbr_force_enabled", "0");
 static ConVar mat_pbr_debug("mat_pbr_debug", "0");
 static ConVar mat_pbr_multidetail_version("mat_pbr_multidetail_version", "0");
 static ConVar mat_pbr_diffusecontribution("mat_pbr_diffusecontribution", "0");
+static ConVar building_cubemaps("building_cubemaps", "0");
+static ConVar g_hide_sm30error("g_hide_sm30error","1");
+static ConVar g_hide_dxerror("g_hide_dxerror","1");
 
 // Variables for this shader
 struct PBR_Vars_t
@@ -50,6 +53,8 @@ struct PBR_Vars_t
     int baseColor;
     int normalTexture;
     int bumpMap;
+    int bumpFrame;
+    int bumpTransform;
     int envMap;
     int baseTextureFrame;
     int baseTextureTransform;
@@ -90,6 +95,8 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
         SHADER_PARAM(NORMALTEXTURE, SHADER_PARAM_TYPE_TEXTURE, "", "Normal texture (deprecated, use $bumpmap)");
         SHADER_PARAM(NORMALMAP, SHADER_PARAM_TYPE_TEXTURE, "", "Normal texture");
         SHADER_PARAM(BUMPMAP, SHADER_PARAM_TYPE_TEXTURE, "", "Bumpmap");
+        SHADER_PARAM(BUMPFRAME, SHADER_PARAM_TYPE_INTEGER, "0", "frame number for $bumpmap")
+        SHADER_PARAM(BUMPTRANSFORM, SHADER_PARAM_TYPE_MATRIX, "center .5 .5 scale 1 1 rotate 0 translate 0 0", "$bumpmap texcoord transform")
         SHADER_PARAM(PARALLAX, SHADER_PARAM_TYPE_BOOL, "0", "Use Parallax Occlusion Mapping.");
         SHADER_PARAM(PARALLAXDEPTH, SHADER_PARAM_TYPE_FLOAT, "0.0030", "Depth of the Parallax Map");
         SHADER_PARAM(PARALLAXCENTER, SHADER_PARAM_TYPE_FLOAT, "0.5", "Center depth of the Parallax Map");
@@ -114,6 +121,8 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
         info.baseColor = IS_FLAG_SET(MATERIAL_VAR_MODEL) ? COLOR2 : COLOR;
         info.normalTexture = NORMALTEXTURE;
         info.bumpMap = NORMALMAP;
+        info.bumpFrame = BUMPFRAME;
+        info.bumpTransform = BUMPTRANSFORM;
         info.baseTextureFrame = FRAME;
         info.baseTextureTransform = BASETEXTURETRANSFORM;
         info.alphaTestReference = ALPHATESTREFERENCE;
@@ -194,31 +203,28 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
     // Define shader fallback
     SHADER_FALLBACK
     {
-        ConVarRef sm30error("g_hide_sm30error");
-        ConVarRef dxerror("g_hide_dxerror");
-        if (mat_pbr_force_enabled.GetBool() == true)
-         return 0;
+        //if (mat_pbr_force_enabled.GetBool() == true)
+        // return 0;
         
         if (g_pHardwareConfig->GetDXSupportLevel() < 95)
         {
-            dxerror.SetValue(0);
+            //g_hide_dxerror.SetValue("0");
             if (IS_FLAG_SET(MATERIAL_VAR_MODEL))
                 return "VertexLitGeneric";
             else
                 return "LightmappedGeneric";
         }
-        if (!g_pHardwareConfig->SupportsShaderModel_3_0() || mat_pbr_force_20b.GetBool() == true)
+        if (!g_pHardwareConfig->SupportsShaderModel_3_0())
         {
-            
-            sm30error.SetValue(0);
+            //g_hide_sm30error.SetValue("0");
             if (IS_FLAG_SET(MATERIAL_VAR_MODEL))
                 return "VertexLitGeneric";
             else
                 return "LightmappedGeneric";
         }
 
-        sm30error.SetValue(1);
-        dxerror.SetValue(1);
+        //g_hide_sm30error.SetValue("1");
+        //g_hide_dxerror.SetValue("1");
         return 0;
     };
 
@@ -410,6 +416,7 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
             if (bHasEnvTexture)
             {
                 pShaderShadow->EnableTexture(SAMPLER_ENVMAP, true); // Envmap
+
                 if (g_pHardwareConfig->GetHDRType() == HDR_TYPE_NONE)
                 {
                     pShaderShadow->EnableSRGBRead(SAMPLER_ENVMAP, true); // Envmap is only sRGB with HDR disabled?
@@ -519,11 +526,12 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
                     BindTexture(SAMPLER_ENVMAP2, defGlobals->pPrevEnvMap);
                 }
                 else
-                    BindTexture(SAMPLER_ENVMAP2, info.envMap, 0);
+                    BindTexture(SAMPLER_ENVMAP2, info.envMap);
             }
             else
             {
                 pShaderAPI->BindStandardTexture(SAMPLER_ENVMAP, TEXTURE_BLACK);
+                pShaderAPI->BindStandardTexture(SAMPLER_ENVMAP2, TEXTURE_BLACK);
             }
             // Setting up emissive texture
             if (bHasEmissionTexture)
@@ -538,7 +546,7 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
             // Setting up normal map
             if (bHasNormalTexture)
             {
-                BindTexture(SAMPLER_NORMAL, info.bumpMap, 0);
+                BindTexture(SAMPLER_NORMAL, info.bumpMap,info.bumpFrame);
             }
             else
             {
@@ -661,9 +669,7 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
             // Setting up base texture transform
             SetVertexShaderTextureTransform(VERTEX_SHADER_SHADER_SPECIFIC_CONST_0, info.baseTextureTransform);
             SetVertexShaderTextureScaledTransform(VERTEX_SHADER_SHADER_SPECIFIC_CONST_6, info.baseTextureTransform, info.m_nDetailScale);
-
-
-           
+            SetVertexShaderTextureTransform(VERTEX_SHADER_SHADER_SPECIFIC_CONST_3, info.bumpTransform);
 
             // This is probably important
             SetModulationPixelShaderDynamicState_LinearColorSpace(1);
@@ -753,7 +759,7 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
 
 
 
-            float fdfc = mat_pbr_diffusecontribution.GetFloat();
+            int bBuilding = building_cubemaps.GetBool() ? 1 : 0;
             float flDetailParams[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
             //blend factor
             flDetailParams[0] = GetFloatParam(info.m_nDetailTextureBlendFactor, params, 0.5f);
@@ -761,8 +767,7 @@ BEGIN_VS_SHADER(PBR, "PBR shader")
             flDetailParams[1] = bHasDetailMask ? 1 : 0;
             //multidetail
             flDetailParams[2] = bMultiDetail ? 1 : 0;
-            //debug state
-            flDetailParams[3] = fdfc;
+            flDetailParams[3] = bBuilding;
             pShaderAPI->SetPixelShaderConstant(26, flDetailParams, 1);
         }
 

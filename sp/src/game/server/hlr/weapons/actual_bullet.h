@@ -21,10 +21,11 @@ public:
 	int m_Speed;
 	FireBulletsInfo_t info;
 	bool m_bPenetrate;
+	float fKillTime;
 };
 
 ///so this is the actual bullet creation function. in order to have proper functionality, you need to know what tracer type the weapon uses by default, in addition to how fast that tracer moves.
-inline void FireActualBullet(FireBulletsInfo_t& info, int iSpeed, bool usemodel, const char* tracertype = NULL, int modelindex = -1, bool penetrate = false, Vector tracerSrc = vec3_origin, Vector tracerDir = vec3_origin)
+inline void FireActualBullet(FireBulletsInfo_t& info, int iSpeed, bool usemodel, const char* tracertype = NULL, int modelindex = -1, bool penetrate = false, bool drawtrail = false, Vector tracerSrc = vec3_origin, Vector tracerDir = vec3_origin)
 {
 	if (!info.m_pAttacker)
 	{
@@ -53,9 +54,9 @@ inline void FireActualBullet(FireBulletsInfo_t& info, int iSpeed, bool usemodel,
 		if (!usemodel)
 			UTIL_Tracer(info.m_vecSrc, tr.endpos, info.m_pAttacker->entindex(), -1, (float)iSpeed, false, tracertype, 0);
 		else if (penetrate)
-			UTIL_ModelTracer(tracerSrc, tracerDir, (float)iSpeed, modelindex, info.m_pAttacker);
+			UTIL_ModelTracer(tracerSrc, tracerDir, (float)iSpeed, modelindex, info.m_pAttacker,drawtrail);
 		else
-			UTIL_ModelTracer(info.m_vecSrc, vecShotDir, (float)iSpeed, modelindex, info.m_pAttacker);
+			UTIL_ModelTracer(info.m_vecSrc, vecShotDir, (float)iSpeed, modelindex, info.m_pAttacker, drawtrail);
 
 	}
 }

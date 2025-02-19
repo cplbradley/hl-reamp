@@ -731,6 +731,9 @@ void CNPC_MetroPolice::Spawn( void )
 	m_nBurstReloadCount = METROPOLICE_BURST_RELOAD_COUNT;
 	SetBurstMode( false );
 
+
+	SetEnemyRace(RACE_SYNTHETIC);
+
 	// Clear out spawnflag if we're missing the smg1
 	if( HasSpawnFlags( SF_METROPOLICE_ALWAYS_STITCH ) )
 	{

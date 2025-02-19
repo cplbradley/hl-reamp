@@ -34,8 +34,8 @@ set ARG_EXTRA=
 
 //%BUILD_SHADER% nightvision_enemyoverlay		-game %GAMEDIR% -source %SOURCEDIR% -dx9_30 -force30
 //%BUILD_SHADER% unlitstatic -game %GAMEDIR% -source %SOURCEDIR% -dx9_20b
-//%BUILD_SHADER% nvpostprocess -game %GAMEDIR% -source %SOURCEDIR% -dx9_30 -force30
-%BUILD_SHADER% viewprojection -game %GAMEDIR% -source %SOURCEDIR% -dx9_20
+%BUILD_SHADER% nvpostprocess -game %GAMEDIR% -source %SOURCEDIR% -dx9_30 -force30
+//%BUILD_SHADER% viewprojection -game %GAMEDIR% -source %SOURCEDIR% -dx9_20
 
 
 rem echo.

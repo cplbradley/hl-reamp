@@ -79,7 +79,9 @@ float4 main(PS_INPUT i) : COLOR
 	
 	float4 fbColor = tex2D(FBSampler,i.texCoord);
 	
-	return float4(fbColor.rgb + additivelayer.rgb,1);
+	fbColor.g *= 3.0;
+	
+	return float4(fbColor.rgb + additivelayer.rgb,fbColor.a);
 	
 };
 	

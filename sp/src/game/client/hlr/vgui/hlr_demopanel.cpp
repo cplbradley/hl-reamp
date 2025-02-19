@@ -14,7 +14,7 @@
 #include "../common/xbox/xboxstubs.h"
 #include "steam/steam_api.h"
 #include "cdll_client_int.h"
-
+#include "vgui_basepanel.h"
 #include <vgui_controls/QueryBox.h>
 #include <vgui_controls/PropertyDialog.h>
 #include <vgui_controls/MessageBox.h>
@@ -32,6 +32,7 @@ class CVGUIDemoPanel : public Frame
 	DECLARE_CLASS_SIMPLE(CVGUIDemoPanel, Frame);
 public:
 	CVGUIDemoPanel(Panel* parent);
+
 	Button* pEasyButton;
 	Button* pNormalButton;
 	Button* pHardButton;
@@ -46,13 +47,20 @@ public:
 CVGUIDemoPanel::CVGUIDemoPanel(Panel* parent) : BaseClass(parent,"DemoPanel")
 {
 	SetScheme(vgui::scheme()->LoadSchemeFromFile("resource/SourceScheme.res", "SourceScheme"));
-	SetBounds(0, 0, 384, 128);
+	SetSize(384, 128);
 	SetSizeable(false);
 	SetMoveable(false);
+	
+	MoveToCenterOfScreen();
 
-	pEasyButton = new Button(parent, "EasyButton", "#GameUI_SkillEasy",this,"StartEasy");
-	pNormalButton = new Button(parent, "MediumButton", "#GameUI_SkillNormal",this,"StartMedium");
-	pHardButton = new Button(parent, "HardButton", "#GameUI_SkillHard",this,"StartHard");
+	pEasyButton = new Button(this, "EasyButton", "#GameUI_SkillEasy", this, "StartEasy");
+	pEasyButton->SetButtonActivationType(Button::ACTIVATE_ONPRESSEDANDRELEASED);
+
+	pNormalButton = new Button(this, "MediumButton", "#GameUI_SkillNormal",this,"StartMedium");
+	pNormalButton->SetButtonActivationType(Button::ACTIVATE_ONPRESSEDANDRELEASED);
+
+	pHardButton = new Button(this, "HardButton", "#GameUI_SkillHard",this,"StartHard");
+	pHardButton->SetButtonActivationType(Button::ACTIVATE_ONPRESSEDANDRELEASED);
 
 	LoadControlSettings("resource/ui/DemoDialogue.res");
 }
@@ -61,15 +69,15 @@ void CVGUIDemoPanel::OnCommand(const char* command)
 {
 	if (!stricmp(command, "StartEasy"))
 	{
-		StartDemo(0);
+		StartDemo(1);
 	}
 	else if (!stricmp(command, "StartMedium"))
 	{
-		StartDemo(1);
+		StartDemo(2);
 	}
 	else if (!stricmp(command, "StartHard"))
 	{
-		StartDemo(2);
+		StartDemo(3);
 	}
 	else BaseClass::OnCommand(command);
 }
@@ -80,8 +88,10 @@ void CVGUIDemoPanel::StartDemo(int difficulty)
 	char txt[32];
 	Q_strncpy(txt, cmd, sizeof(txt));
 	sprintf(txt + strlen(txt), "%i", difficulty);
-	Msg(txt);
+	//Msg(txt);
 	engine->ClientCmd(txt);
+	engine->ClientCmd("progress_enable\nmap demo_no_cubicles");
+	BaseClass::OnClose();
 }
 
 

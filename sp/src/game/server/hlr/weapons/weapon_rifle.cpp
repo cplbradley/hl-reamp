@@ -219,7 +219,7 @@ void CWeaponRifle::PrimaryAttack(void)
 
 	int iAttachment = LookupAttachment("muzzle");
 	Vector vecSrc;
-	
+	pOwner->SnapEyeAngles(pOwner->EyeAngles() + pOwner->GetPunchAngle());
 	Vector vUp, vRight, vForward;
 	pOwner->EyeVectors(&vForward, &vRight, &vUp);
 	if (!m_bInZoom)
@@ -234,18 +234,19 @@ void CWeaponRifle::PrimaryAttack(void)
 			DispatchParticleEffect("muzzleflash_orange_core_model", PATTACH_POINT_FOLLOW, pOwner->GetViewModel(), iAttachment, true);
 
 		QAngle punch = QAngle(random->RandomFloat(-2, -1), random->RandomFloat(-2, 2), 0);
-		pOwner->AbsViewPunch(punch / 2);
+		pOwner->ViewPunch(punch);
 		
 	}
 	else
 	{
 		QAngle punch = QAngle(random->RandomFloat(-2, -1), random->RandomFloat(-2, 2), 0);
-		pOwner->AbsViewPunch(punch / 2);
+		pOwner->ViewPunch(punch / 2);
 		//pOwner->SnapEyeAngles(pOwner->EyeAngles() + (punch / 2));
 	}
 	Vector vecAbsStart = pOwner->EyePosition();
-	Vector vecAbsEnd = vecAbsStart + (vForward * MAX_TRACE_LENGTH);
-	Vector vecAiming = pOwner->GetAutoaimVector(AUTOAIM_SCALE_DIRECT_ONLY);
+	Vector vecAiming;
+	AngleVectors(pOwner->EyeAngles() + pOwner->GetPunchAngle(), &vecAiming);
+	Vector vecAbsEnd = vecAbsStart + (vecAiming * MAX_TRACE_LENGTH);
 	trace_t tr;
 	UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_SOLID_BRUSHONLY, pOwner, COLLISION_GROUP_NONE, &tr);
 	Vector vecDir = (tr.endpos - vecSrc).Normalized();
@@ -257,7 +258,7 @@ void CWeaponRifle::PrimaryAttack(void)
 	info.m_vecSpread = GetBulletSpread();
 	info.m_pAttacker = GetOwnerEntity();
 	info.m_iDamageType = DMG_BULLET | DMG_DIRECT;
-	FireActualBullet(info, 12000, true, NULL, tracermodelindex,true,true,vecSrc,vecDir);
+	FireActualBullet(info, 12000, true, NULL, tracermodelindex, true, true, vecSrc, vecDir);
 
 	pOwner->CreateMuzzleLight(255, 200, 0,vecSrc);
 

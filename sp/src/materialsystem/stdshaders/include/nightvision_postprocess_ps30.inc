@@ -7,13 +7,8 @@
 // defined $LIGHTING_PREVIEW && defined $FASTPATH && $LIGHTING_PREVIEW && $FASTPATH
 // ($FLASHLIGHT || $FLASHLIGHTSHADOWS) && $LIGHTING_PREVIEW
 
-#ifndef NIGHTVISION_POSTPROCESS_PS30_H
-#define NIGHTVISION_POSTPROCESS_PS30_H
-
-#include "shaderapi/ishaderapi.h"
-#include "shaderapi/ishadershadow.h"
-#include "materialsystem/imaterialvar.h"
-
+#pragma once
+#include "shaderlib/cshader.h"
 class nightvision_postprocess_ps30_Static_Index
 {
 public:
@@ -45,5 +40,3 @@ public:
 
 #define shaderDynamicTest_nightvision_postprocess_ps30 1
 
-
-#endif	// NIGHTVISION_POSTPROCESS_PS30_H

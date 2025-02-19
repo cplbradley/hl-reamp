@@ -35,6 +35,7 @@
 #include "particle_parse.h"
 #include "particle_system.h"
 #include "explode.h"
+#include "spark.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -209,7 +210,7 @@ int AE_ANTLIONGUARD_VOICE_GRUNT;
 int AE_ANTLIONGUARD_VOICE_ROAR;
 int AE_ANTLIONGUARD_BURROW_OUT;
 int AE_CHARGER_SLIDE;
-
+int AE_CHARGER_SLIDE_STOP;
 
 struct PhysicsObjectCriteria_t
 {
@@ -398,6 +399,10 @@ private:
 	string_t		m_strShoveTargets;
 
 	CSprite			*m_hCaveGlow[2];
+
+#ifdef HLR
+	bool bShouldSpark;
+#endif
 
 #if ANTLIONGUARD_BLOOD_EFFECTS
 	CNetworkVar( uint8, m_iBleedingLevel );
@@ -810,10 +815,7 @@ void CNPC_AntlionGuard::Spawn( void )
 	SetMoveType( MOVETYPE_STEP );
 
 	SetNavType( NAV_GROUND );
-	SetBloodColor( BLOOD_COLOR_MECH );
-
-	SetRenderMode(kRenderTransColor);
-	SetRenderColor(190, 200, 255, 255);
+	SetBloodColor(BLOOD_COLOR_MECH);
 
 
 	m_bPlayedSurpriseAnim = false;
@@ -832,6 +834,8 @@ void CNPC_AntlionGuard::Spawn( void )
 	m_iChargeMisses = 0;
 	m_flNextHeavyFlinchTime = 0;
 	m_bDecidedNotToStop = false;
+
+	bShouldSpark = false;
 
 	ClearHintGroup();
 	
@@ -1748,6 +1752,13 @@ void CNPC_AntlionGuard::HandleAnimEvent( animevent_t *pEvent )
 	if (pEvent->event == AE_CHARGER_SLIDE)
 	{
 		EmitSound("Charger.Scrape", pEvent->eventtime);
+		bShouldSpark = true;
+		return;
+	}
+
+	if (pEvent->event == AE_CHARGER_SLIDE_STOP)
+	{
+		bShouldSpark = false;
 		return;
 	}
 	if ( pEvent->event == AE_ANTLIONGUARD_SHOVE_PHYSOBJECT )
@@ -3005,6 +3016,16 @@ void CNPC_AntlionGuard::RunTask( const Task_t *pTask )
 					return;
 				}
 
+				if (bShouldSpark)
+				{
+					Vector vecUp = Vector(0, 0, 1);
+					Vector vecLeft, vecRight;
+					GetAttachment(LookupAttachment("LeftFoot"), vecLeft);
+					GetAttachment(LookupAttachment("RightFoot"), vecRight);
+
+					DoSpark(this, vecLeft, 1,1, false, vecUp);
+					DoSpark(this, vecRight, 1,1, false, vecUp);
+				}
 				// Still in the process of slowing down. Run movement until it's done.
 				AutoMovement();
 				return;
@@ -4768,6 +4789,7 @@ AI_BEGIN_CUSTOM_NPC( npc_antlionguard, CNPC_AntlionGuard )
 	DECLARE_ANIMEVENT( AE_ANTLIONGUARD_BURROW_OUT )
 	DECLARE_ANIMEVENT( AE_ANTLIONGUARD_VOICE_ROAR )
 	DECLARE_ANIMEVENT( AE_CHARGER_SLIDE )
+	DECLARE_ANIMEVENT( AE_CHARGER_SLIDE_STOP )
 
 	DECLARE_CONDITION( COND_ANTLIONGUARD_PHYSICS_TARGET )
 	DECLARE_CONDITION( COND_ANTLIONGUARD_PHYSICS_TARGET_INVALID )

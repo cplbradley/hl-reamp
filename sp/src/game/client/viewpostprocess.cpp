@@ -2640,7 +2640,7 @@ void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, b
 					}
 					UpdateScreenEffectTexture(0, x, y, w, h);
 
-					DoHLRPostProcessing(pRenderContext, x, y, w, h);
+					
 
 					bool bVisionOverride = ( localplayer_visionflags.GetInt() & ( 0x01 ) ); // Pyro-vision Goggles
 
@@ -2683,7 +2683,8 @@ void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, b
 			{
 				DoPostBloomTonemapping( pRenderContext, x, y, w, h, flAutoExposureMin, flAutoExposureMax );
 			}
-			
+
+			DoHLRPostProcessing(pRenderContext, x, y, w, h);
 		}
 		break;
 

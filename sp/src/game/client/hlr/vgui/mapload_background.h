@@ -32,9 +32,11 @@ public:
 
 protected:
 	void			ApplySchemeSettings(vgui::IScheme *pScheme);
+	void OnMessage(const KeyValues* params, vgui::VPANEL fromPanel);
 
 private:
 	vgui::ImagePanel			*m_pBackground;
+	vgui::Label* m_pLoadingTip;
 };
 
 #endif	// !MAPLOAD_BACKGROUND_H

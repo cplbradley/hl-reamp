@@ -3658,6 +3658,9 @@
     <ClCompile Include="hlr\util\hlr_env_specialmessage.cpp">
       <Filter>Source Files\HLR\Util</Filter>
     </ClCompile>
+    <ClCompile Include="hlr\npc\npc_chaingunner.cpp">
+      <Filter>Source Files\HLR\NPC</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

@@ -176,6 +176,13 @@ enum EnemyClass_t {
 	ENEMYCLASS_HEAVY,
 	ENEMYCLASS_SUPERHEAVY
 };
+
+enum EnemyRace_t {
+	RACE_ORGANIC = 0,
+	RACE_HYBRID,
+	RACE_SYNTHETIC,
+	RACE_VORTIGAUNT
+};
 //-------------------------------------
 //
 // Return codes from CanPlaySequence.
@@ -1849,6 +1856,14 @@ public:
 	EnemyClass_t iEnemyClass;
 	EnemyClass_t GetEnemyClass() { return iEnemyClass; }
 	void SetEnemyClass(EnemyClass_t enemyclass) { iEnemyClass = enemyclass; }
+
+private:
+	EnemyRace_t iEnemyRace = RACE_ORGANIC;
+public:
+	void SetEnemyRace(EnemyRace_t race) {
+		iEnemyRace = race;
+	}
+	EnemyRace_t GetEnemyRace() { return iEnemyRace; }
 
 
 	const char* szEnemyName;

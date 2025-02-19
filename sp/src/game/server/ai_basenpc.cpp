@@ -1081,6 +1081,9 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		if (AmBeingShielded())
 			infoCopy.ScaleDamage(0.1f);
 
+		if ((info.GetDamageType() & DMG_SHOCK) && GetEnemyRace() == RACE_SYNTHETIC)
+			infoCopy.ScaleDamage(1.25f);
+
 		// only fire once per frame
 		m_OnDamaged.FireOutput( info.GetAttacker(), this);
 
@@ -1120,6 +1123,8 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	{
 		SetCondition( COND_PHYSICS_DAMAGE );
 	}
+
+	
 
 	if ( m_iHealth <= ( m_iMaxHealth / 2 ) )
 	{

@@ -1282,7 +1282,7 @@ void CViewRender::Render( vrect_t *rect )
 
 	    RenderView( view, nClearFlags, flags );
 
-		if ( UseVR() )
+		/*if (UseVR())
 		{
 			bool bDoUndistort = ! engine->IsTakingScreenshot();
 
@@ -1303,7 +1303,7 @@ void CViewRender::Render( vrect_t *rect )
 				bool bTranslucent = !g_pMatSystemSurface->IsCursorVisible();
 				g_ClientVirtualReality.OverlayHUDQuadWithUndistort( view, bDoUndistort, g_pClientMode->ShouldBlackoutAroundHUD(), bTranslucent );
 			}
-		}
+		}*/
     }
 
 

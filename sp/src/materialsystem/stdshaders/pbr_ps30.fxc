@@ -70,13 +70,12 @@ sampler EnvmapSampler2			: register( s14 );
 struct PS_INPUT
 {
     float4 baseTexCoord             : TEXCOORD0;
-	float2 normalTexCoord			: TEXCOORD1;
-    float4 lightAtten               : TEXCOORD2;
-    float3 worldPos                 : TEXCOORD3;
-    float3 projPos                  : TEXCOORD4;
-    float4 lightmapTexCoord1And2    : TEXCOORD5; 
-    float4 lightmapTexCoord3        : TEXCOORD6;
-	float3x3 mTangentSpaceTranspose : TEXCOORD7;
+    float4 lightAtten               : TEXCOORD1;
+    float3 worldPos                 : TEXCOORD2;
+    float3 projPos                  : TEXCOORD3;
+    float4 lightmapTexCoord1And2    : TEXCOORD4; 
+    float4 lightmapTexCoord3        : TEXCOORD5;
+	float3x3 mTangentSpaceTranspose : TEXCOORD6;
 };
 
 float4 multidetailV1(float4 basetexture, float4 detailColor, float4 detailMask, float detailBlendFactor)
@@ -127,7 +126,6 @@ float4 main(PS_INPUT i) : COLOR
 	
 	bool bHasDetailMask = g_DetailParams.y;
 	bool bMultiDetail = g_DetailParams.z;
-	float fDebugState = g_ParallaxParms.w;
 	bool bBuildingCubemaps = g_DetailParams.w;
 	
 	float detailBlendFactor = g_DetailParams.x;
@@ -245,16 +243,10 @@ float4 main(PS_INPUT i) : COLOR
         float3 specularIrradiance = lerp(lookupHigh, lookupLow, roughness * roughness);
 		
         float3 diffuseIBL = diffuseContributionFactor * f3Albedo * diffuseIrradiance;
-		
-		if(fDebugState == 1.0f)
-			return float4(diffuseIBL,1.0f);
-			
-		//float3 diffuseIBL = f3Albedo * diffuseIrradiance;
+
 
 #if LIGHTMAPPED
 		float3 envBRDF = EnvBRDFScatterSpecular(fresnelReflectance,roughness,dot(normal,f3ViewDir));
-		if(fDebugState == 2.0f)
-			return float4(envBRDF,1.0f);
 			
         float3 specularIBL = envBRDF * specularIrradiance;
 		ambientLighting = diffuseIBL + specularIBL;

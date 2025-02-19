@@ -91,7 +91,7 @@ ConVar hunter_flechette_min_range( "hunter_flechette_min_range", "100" );
 ConVar hunter_flechette_volley_size( "hunter_flechette_volley_size", "8" );
 ConVar hunter_flechette_speed( "hunter_flechette_speed", "2000" );
 ConVar sk_hunter_dmg_flechette( "sk_hunter_dmg_flechette", "4.0" );
-ConVar sk_hunter_flechette_explode_dmg( "sk_hunter_flechette_explode_dmg", "12.0" );
+ConVar sk_hunter_flechette_explode_dmg( "sk_hunter_flechette_explode_dmg", "4.0" );
 ConVar sk_hunter_flechette_explode_radius( "sk_hunter_flechette_explode_radius", "128.0" );
 ConVar hunter_flechette_explode_delay( "hunter_flechette_explode_delay", "2.5" );
 ConVar hunter_flechette_delay( "hunter_flechette_delay", "0.1" );
@@ -367,6 +367,8 @@ protected:
 	EHANDLE m_hSeekTarget;
 	bool m_bThrownBack;
 
+	bool bAttachedToPlayer;
+
 	DECLARE_DATADESC();
 	//DECLARE_SERVERCLASS();
 };
@@ -600,6 +602,13 @@ void CHunterFlechette::StickTo( CBaseEntity *pOther, trace_t &tr )
 		SetSolidFlags( FSOLID_NOT_SOLID );
 	}
 
+	if (bAttachedToPlayer)
+	{
+		CBasePlayer* pPlayer = UTIL_GetLocalPlayer();
+		if (pPlayer)
+			pPlayer->m_iNumAttachedFlechettes++;
+	}
+
 	// Do an impact effect.
 	//Vector vecDir = GetAbsVelocity();
 	//float speed = VectorNormalize( vecDir );
@@ -615,7 +624,7 @@ void CHunterFlechette::StickTo( CBaseEntity *pOther, trace_t &tr )
 	//DispatchEffect( "BoltImpact", data );
 	
 	Vector vecVelocity = GetAbsVelocity();
-	bool bAttachedToBuster = StriderBuster_OnFlechetteAttach( pOther, vecVelocity );
+	//bool bAttachedToBuster = StriderBuster_OnFlechetteAttach( pOther, vecVelocity );
 
 	SetTouch( NULL );
 
@@ -627,14 +636,15 @@ void CHunterFlechette::StickTo( CBaseEntity *pOther, trace_t &tr )
 	SetContextThink( NULL, 0, s_szHunterFlechetteSeekThink );
 
 	// Get ready to explode.
-	if ( !bAttachedToBuster )
+	if ( !bAttachedToPlayer )
 	{
 		SetThink( &CHunterFlechette::ExplodeThink );
 		SetNextThink( gpGlobals->curtime );
 	}
 	else
 	{
-		SetThink(&CHunterFlechette::ExplodeThink);
+		SetThink(&CHunterFlechette::DangerSoundThink);
+		SetNextThink(gpGlobals->curtime + (hunter_flechette_explode_delay.GetFloat() - HUNTER_FLECHETTE_WARN_TIME));
 	}
 
 	// Play our impact animation.
@@ -738,6 +748,12 @@ void CHunterFlechette::FlechetteTouch( CBaseEntity *pOther )
 		
 			// We hit a physics object that survived the impact. Stick to it.
 			StickTo( pOther, tr );
+		}
+		else if (pOther->IsPlayer())
+		{
+			SetTouch(NULL);
+			bAttachedToPlayer = true;
+			StickTo(pOther, tr);
 		}
 		else
 		{
@@ -915,7 +931,16 @@ void CHunterFlechette::Explode()
 		nDamageType |= DMG_PREVENT_PHYSICS_FORCE;
 	}
 
-	RadiusDamage( CTakeDamageInfo( this, GetOwnerEntity(), sk_hunter_flechette_explode_dmg.GetFloat(), nDamageType ), GetAbsOrigin(), sk_hunter_flechette_explode_radius.GetFloat(), CLASS_NONE, NULL );
+	if (bAttachedToPlayer && UTIL_GetLocalPlayer())
+	{
+		int numAttached = UTIL_GetLocalPlayer()->m_iNumAttachedFlechettes;
+		RadiusDamage(CTakeDamageInfo(this, GetOwnerEntity(), sk_hunter_flechette_explode_dmg.GetFloat() * numAttached, nDamageType), GetAbsOrigin(), sk_hunter_flechette_explode_radius.GetFloat(), CLASS_NONE, NULL);
+
+		UTIL_GetLocalPlayer()->m_iNumAttachedFlechettes--;
+	}
+	else
+		RadiusDamage(CTakeDamageInfo(this, GetOwnerEntity(), sk_hunter_flechette_explode_dmg.GetFloat() * 2.f, nDamageType), GetAbsOrigin(), sk_hunter_flechette_explode_radius.GetFloat(), CLASS_NONE, NULL);
+	
 		
     AddEffects( EF_NODRAW );
 

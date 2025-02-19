@@ -4900,6 +4900,8 @@ void CBasePlayer::PostThink()
 
 
 	m_iButtonLookState = GetButtonLookState();
+
+	UpdateMaxSpeed();
 }
 
 // handles touching physics objects
@@ -5032,7 +5034,10 @@ Vector CBasePlayer::GetSmoothedVelocity( void )
 
 CBaseEntity	*g_pLastSpawn = NULL;
 
-
+void CBasePlayer::UpdateMaxSpeed()
+{
+	m_flMaxspeed = m_flDesiredSpeed - (m_iNumAttachedFlechettes * GameRules()->SkillAdjustValue(8.f));
+}
 //-----------------------------------------------------------------------------
 // Purpose: Finds a player start entity of the given classname. If any entity of
 //			of the given classname has the SF_PLAYER_START_MASTER flag set, that
@@ -5465,7 +5470,7 @@ int CBasePlayer::GetButtonLookState()
 	{
 		CBaseDoor* pDoor = dynamic_cast<CBaseDoor*>(tr.m_pEnt);
 
-		if (!pDoor)
+		if (!pDoor || pDoor && !pDoor->HasSpawnFlags(SF_DOOR_PUSE))
 			return NO_POINTER;
 
 		if (pDoor->m_bLocked)

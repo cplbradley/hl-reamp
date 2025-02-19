@@ -293,6 +293,9 @@ struct matrix3x4_t
 
 #define M_PI_F		((float)(M_PI))	// Shouldn't collide with anything.
 
+#define M_PI_OVER_TWO 1.57079632679489661923 // half pi in double format
+#define M_PI_OVER_TWO_F ((float)(M_PI_OVER_TWO))
+
 // NJS: Inlined to prevent floats from being autopromoted to doubles, as with the old system.
 #ifndef RAD2DEG
 	#define RAD2DEG( x  )  ( (float)(x) * (float)(180.f / M_PI_F) )

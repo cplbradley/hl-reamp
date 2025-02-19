@@ -381,6 +381,9 @@ void CHUDAutoAim::OnThink()
 				{
 					C_AI_BaseNPC* pNPC = pLocalPlayer->m_HL2Local.m_hAutoAimTarget->MyNPCPointer();
 					vecTarget = pNPC->AutoAimTarget();
+
+					if (pLocalPlayer->GetActiveWeapon() && FClassnameIs(pLocalPlayer->GetActiveWeapon(), "weapon_rifle"))
+						vecTarget = pNPC->EyePosition();
 				}
 				else
 					vecTarget = pLocalPlayer->m_HL2Local.m_hAutoAimTarget->WorldSpaceCenter();

@@ -708,7 +708,7 @@ public:
 	void	SetConnected( PlayerConnectedState iConnected ) { m_iConnected = iConnected; }
 	virtual void EquipSuit( bool bPlayEffects = true );
 	virtual void RemoveSuit( void );
-	void	SetMaxSpeed( float flMaxSpeed ) { m_flMaxspeed = flMaxSpeed; }
+	void	SetMaxSpeed( float flMaxSpeed ) { m_flDesiredSpeed = flMaxSpeed; }
 
 	void	NotifyNearbyRadiationSource( float flRange );
 
@@ -722,12 +722,7 @@ public:
 
 	virtual float GetPlayerMaxSpeed();
 
-	virtual bool HasFury(void) { return m_bFury; }
-	virtual bool HasQuadJump(void) { return m_bQuadJump; }
-	virtual bool HasOverdrive(void) { return m_bOverdrive; }
-	bool m_bQuadJump;
-	bool m_bOverdrive;
-	bool m_bFury;
+
 
 	
 
@@ -738,11 +733,26 @@ public:
 
 	//Damage Resistance
 public:
+
+#ifdef HLR
+	virtual bool HasFury(void) { return m_bFury; }
+	virtual bool HasQuadJump(void) { return m_bQuadJump; }
+	virtual bool HasOverdrive(void) { return m_bOverdrive; }
+	bool m_bQuadJump;
+	bool m_bOverdrive;
+	bool m_bFury;
+
+	float m_flDesiredSpeed;
+
+	int m_iNumAttachedFlechettes;
+
 	virtual bool HasBlocker(void);
 	virtual void SetBlockerDamageType(int dmgtype);
 	virtual void SetBlockerDamageLeft(int dmgleft, int dmgtype);
 	virtual int GetBlockerDamageLeft(int dmgtype);
 	virtual void ToggleDamageBlocker(void);
+
+	void UpdateMaxSpeed();
 
 	CNetworkVar(bool,m_bHasBlocker);
 	CNetworkVar(int,m_iDamageBlockerType);
@@ -779,6 +789,7 @@ public:
 
 	bool m_bGrappleHooked;
 	CNetworkVar(bool,m_bShouldGrapple);
+#endif
 
 
 public:
